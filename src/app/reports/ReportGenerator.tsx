@@ -7,12 +7,25 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import type { ReportData, Client, Settings } from '@/lib/types';
-import { ReportDisplay } from './ReportDisplay';
 import { addDays } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { generateReport } from './actions';
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from '@/components/ui/skeleton';
+import dynamic from 'next/dynamic';
+
+const ReportDisplay = dynamic(() => import('./ReportDisplay').then((mod) => mod.ReportDisplay), {
+  ssr: false,
+  loading: () => (
+    <div className="space-y-4">
+        <Skeleton className="h-32 w-full" />
+        <div className="grid grid-cols-2 gap-4">
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-64 w-full" />
+        </div>
+    </div>
+  )
+});
 
 type ReportGeneratorProps = {
     clients: Client[];
