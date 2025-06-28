@@ -3,9 +3,11 @@ import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Image from 'next/image';
-import { ToWords } from 'to-words';
+// import { ToWords } from 'to-words'; // Temporarily disabled
 
 // Helper function to convert number to French words for currency
+// Temporarily disabled to fix build issue.
+/*
 const numberToWordsFr = (amount: number, currency: Settings['currency']): string => {
     const currencyInfo = {
         EUR: { name: 'Euro', plural: 'Euros', fractionalUnit: { name: 'Centime', plural: 'Centimes' } },
@@ -40,11 +42,12 @@ const numberToWordsFr = (amount: number, currency: Settings['currency']): string
     words = words.replace(/ et zéro centimes?/i, '').replace(/ seulement/i, '');
     return words.charAt(0).toUpperCase() + words.slice(1);
 };
-
+*/
 
 export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoice, client: Client, settings: Settings }) {
   const emptyRowsCount = Math.max(0, 15 - invoice.items.length);
-  const totalInWordsString = numberToWordsFr(invoice.totalAmount, settings.currency);
+  // Temporarily use a placeholder string instead of converting to words
+  const totalInWordsString = `Arrêtée la présente facture à la somme de ${formatCurrency(invoice.totalAmount, settings.currency)}.`;
 
   return (
     <div className="bg-white p-6 font-sans text-xs text-gray-800" id="invoice-content">
@@ -136,7 +139,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
       <div className="flex justify-between items-start mt-1 px-1">
         <div className="w-2/3 pt-1">
             <p className="font-bold text-gray-700">Arrêtée la présente facture à la somme de :</p>
-            <p className="italic">{totalInWordsString}.</p>
+            <p className="italic">{totalInWordsString}</p>
         </div>
         <div className="w-full max-w-[240px]">
           <table className="w-full">
