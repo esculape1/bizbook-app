@@ -9,8 +9,6 @@ import type { ReportData, Settings } from "@/lib/types";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Download } from "lucide-react";
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 
 type ReportDisplayProps = {
   data: ReportData;
@@ -43,8 +41,11 @@ const StatCard = ({ title, value, className }: { title: string, value: string, c
 export function ReportDisplay({ data, currency }: ReportDisplayProps) {
   if (!data) return null;
 
-  const generatePdf = () => {
+  const generatePdf = async () => {
     if (!data) return;
+
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
 
     const doc = new jsPDF();
     const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
