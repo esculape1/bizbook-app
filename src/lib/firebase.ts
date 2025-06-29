@@ -11,46 +11,29 @@ const firebaseConfig = {
 };
 
 let db: Firestore | null = null;
+let connectionStatus: string;
 
-// --- START: Enhanced Debugging ---
-console.log("================ VÉRIFICATION DE LA CONFIGURATION FIREBASE ================");
-console.log("Les valeurs suivantes sont lues depuis votre environnement (.env.local) :");
+console.log("\n--- Vérification de la connexion à Firebase ---");
 
-let allKeysPresent = true;
-for (const [key, value] of Object.entries(firebaseConfig)) {
-    if (value) {
-        // Hide sensitive keys in the log
-        const displayValue = key === 'apiKey' ? `***${value.slice(-4)}` : value;
-        console.log(`✅ ${key}: ${displayValue}`);
-    } else {
-        console.log(`❌ ${key}: NON DÉFINIE`);
-        allKeysPresent = false;
-    }
-}
-console.log("========================================================================");
-// --- END: Enhanced Debugging ---
-
+const allKeysPresent = Object.values(firebaseConfig).every(Boolean);
 
 if (allKeysPresent) {
   try {
     const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     db = getFirestore(app);
-    console.log("✅ Connexion à Firebase initialisée avec succès.");
+    connectionStatus = `✅ Connecté avec succès au projet : ${firebaseConfig.projectId}`;
   } catch (error) {
-    console.error("********************************************************************************");
-    console.error("❌ ERREUR LORS DE L'INITIALISATION DE FIREBASE :");
-    console.error("   Même si toutes les clés sont présentes, une erreur s'est produite.");
-    console.error("   Veuillez vérifier que les valeurs de vos clés sont correctes dans la console Firebase.");
-    console.error("   Erreur détaillée :", error);
-    console.error("********************************************************************************");
+    console.error("❌ ERREUR D'INITIALISATION : Les clés Firebase sont présentes mais incorrectes.", error);
+    connectionStatus = "❌ Échec de la connexion. Vérifiez la validité de vos clés dans la console Firebase.";
   }
 } else {
-  console.warn("********************************************************************************");
-  console.warn("⚠️ AVERTISSEMENT : Connexion à la base de données échouée.");
-  console.warn("   Certaines variables d'environnement sont manquantes.");
-  console.warn("   Veuillez vérifier votre fichier .env.local à la racine du projet.");
-  console.warn("   Assurez-vous d'avoir redémarré le serveur après avoir modifié le fichier.");
-  console.warn("********************************************************************************");
+  console.warn("❌ ERREUR DE CONFIGURATION : Clés Firebase manquantes.");
+  console.warn("   Veuillez vérifier que votre fichier .env.local contient toutes les clés NEXT_PUBLIC_FIREBASE_*");
+  connectionStatus = "❌ Échec de la connexion. Clés manquantes dans .env.local.";
 }
+
+console.log(`Statut final: ${connectionStatus}`);
+console.log("-------------------------------------------\n");
+
 
 export { db };
