@@ -6,8 +6,10 @@ import { formatCurrency } from "@/lib/utils";
 import { ExpenseForm } from "./ExpenseForm";
 
 export default async function ExpensesPage() {
-  const expenses = await getExpenses();
-  const settings = await getSettings();
+  const [expenses, settings] = await Promise.all([
+    getExpenses(),
+    getSettings(),
+  ]);
 
   return (
     <div className="flex flex-col gap-6">

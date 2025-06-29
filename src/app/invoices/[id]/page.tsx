@@ -6,7 +6,11 @@ import { PageHeader } from "@/components/PageHeader";
 export default async function InvoiceDetailPage({ params }: { params: { id: string } }) {
   const { id } = params;
   
-  const invoice = await getInvoiceById(id);
+  const [invoice, settings] = await Promise.all([
+    getInvoiceById(id),
+    getSettings()
+  ]);
+
   if (!invoice) {
     notFound();
   }
@@ -16,8 +20,6 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
       // This should not happen if data is consistent, but good to handle
       notFound();
   }
-
-  const settings = await getSettings();
 
   return (
     <div className="flex flex-col gap-6">

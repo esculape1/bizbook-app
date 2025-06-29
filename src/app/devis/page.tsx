@@ -8,10 +8,12 @@ import { QuoteForm } from "./QuoteForm";
 import { formatCurrency } from "@/lib/utils";
 
 export default async function DevisPage() {
-  const quotes = await getQuotes();
-  const clients = await getClients();
-  const products = await getProducts();
-  const settings = await getSettings();
+  const [quotes, clients, products, settings] = await Promise.all([
+    getQuotes(),
+    getClients(),
+    getProducts(),
+    getSettings(),
+  ]);
 
   const statusColors = {
     Draft: 'bg-gray-500/20 text-gray-700',

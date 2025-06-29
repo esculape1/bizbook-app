@@ -11,10 +11,12 @@ import { DeleteInvoiceButton } from "./DeleteInvoiceButton";
 import { RecordPaymentButton } from "./RecordPaymentButton";
 
 export default async function InvoicesPage() {
-  const invoices = await getInvoices();
-  const clients = await getClients();
-  const products = await getProducts();
-  const settings = await getSettings();
+  const [invoices, clients, products, settings] = await Promise.all([
+    getInvoices(),
+    getClients(),
+    getProducts(),
+    getSettings(),
+  ]);
 
   const statusColors = {
     Paid: 'bg-green-500/20 text-green-700',

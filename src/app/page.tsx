@@ -7,14 +7,16 @@ import { getClients, getProducts, getInvoices, getExpenses, getSettings } from "
 import { formatCurrency } from "@/lib/utils";
 
 export default async function DashboardPage() {
-  const clients = await getClients();
-  const products = await getProducts();
-  const invoices = await getInvoices();
-  const expenses = await getExpenses();
-  const settings = await getSettings();
+  const [clients, products, invoices, expenses, settings] = await Promise.all([
+    getClients(),
+    getProducts(),
+    getInvoices(),
+    getExpenses(),
+    getSettings(),
+  ]);
 
-  const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.status === 'Paid' ? inv.totalAmount : 0), 0);
-  const totalDue = invoices.reduce((sum, inv) => sum + (inv.status !== 'Paid' ? inv.totalAmount : 0), 0);
+  const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.amountPaid || 0), 0);
+  const totalDue = invoices.reduce((sum, inv) => sum + inv.totalAmount - (inv.amountPaid || 0), 0);
   const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
 
   return (
@@ -27,7 +29,7 @@ export default async function DashboardPage() {
           title="Chiffre d'affaires" 
           value={formatCurrency(totalRevenue, settings.currency)} 
           icon={<DollarSign />} 
-          description="Total des factures payées"
+          description="Total des paiements reçus"
           className="bg-chart-1/10 text-chart-1 border-chart-1/20"
         />
         <StatCard 
@@ -55,7 +57,7 @@ export default async function DashboardPage() {
           title="Total Impayé" 
           value={formatCurrency(totalDue, settings.currency)} 
           icon={<Receipt />}
-          description={`${invoices.filter(i => i.status !== 'Paid').length} factures en attente`}
+          description={`${invoices.filter(i => i.status !== 'Paid').length} factures non soldées`}
           className="bg-chart-4/10 text-chart-4 border-chart-4/20"
         />
       </div>

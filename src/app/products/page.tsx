@@ -8,8 +8,10 @@ import { EditProductButton } from "./EditProductButton";
 import { DeleteProductButton } from "./DeleteProductButton";
 
 export default async function ProductsPage() {
-  const products = await getProducts();
-  const settings = await getSettings();
+  const [products, settings] = await Promise.all([
+    getProducts(),
+    getSettings()
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
