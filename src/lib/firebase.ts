@@ -13,7 +13,8 @@ const firebaseConfig = {
 let db: Firestore | null = null;
 
 // Only run the detailed connection check in a local development environment.
-// In CI/CD (like GitHub Actions), the env variables are injected differently and this check can give false negatives.
+// In CI/CD (like GitHub Actions), env variables are injected differently and this check can give false negatives.
+// The build process on the deployment server is not a 'development' environment.
 if (process.env.NODE_ENV === 'development') {
     let connectionStatus: string;
     console.log("\n--- Vérification de la connexion à Firebase ---");
@@ -38,13 +39,13 @@ if (process.env.NODE_ENV === 'development') {
     console.log(`Statut final: ${connectionStatus}`);
     console.log("-------------------------------------------\n");
 } else {
-    // For production/build environments, just initialize.
-    if (Object.values(firebaseConfig).every(Boolean)) {
+    // For production/build environments, just initialize without logging.
+    if (Object.values(firebaseConfig).every(v => v)) {
         try {
             const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
             db = getFirestore(app);
         } catch(e) {
-            console.error("Firebase initialization failed in production build:", e);
+            console.error("Firebase initialization failed in production-like environment:", e);
         }
     }
 }
