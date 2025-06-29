@@ -25,6 +25,10 @@ const nextConfig = {
   experimental: {
     allowedDevOrigins: ['https://3000-firebase-studio-1750673315832.cluster-axf5tvtfjjfekvhwxwkkkzsk2y.cloudworkstations.dev'],
   },
+  webpack: (config) => {
+    config.experiments = { ...config.experiments, asyncWebAssembly: true };
+    return config;
+  },
 };
 
 module.exports = nextConfig;
