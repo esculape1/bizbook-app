@@ -12,6 +12,9 @@ import { signIn } from '../auth/actions';
 import { useTransition, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { auth as firebaseAuth } from '@/lib/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 const signInSchema = z.object({
   email: z.string().email({ message: 'Adresse email invalide.' }),
@@ -23,6 +26,7 @@ type SignInFormValues = z.infer<typeof signInSchema>;
 export default function LoginPage() {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
@@ -35,9 +39,25 @@ export default function LoginPage() {
   const onSubmit = (data: SignInFormValues) => {
     setError(null);
     startTransition(async () => {
-      const result = await signIn(data);
-      if (result?.error) {
-        setError(result.error);
+      if (!firebaseAuth) {
+        setError("La configuration de Firebase est manquante. Impossible de se connecter.");
+        return;
+      }
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(firebaseAuth, data.email, data.password);
+        const idToken = await userCredential.user.getIdToken();
+        
+        await signIn(idToken);
+        router.push('/');
+        
+      } catch (authError: any) {
+        if (authError.code === 'auth/invalid-credential' || authError.code === 'auth/user-not-found' || authError.code === 'auth/wrong-password') {
+          setError('Email ou mot de passe incorrect.');
+        } else {
+          setError('Une erreur est survenue lors de la connexion.');
+          console.error(authError);
+        }
       }
     });
   };

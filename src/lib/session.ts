@@ -4,18 +4,6 @@ import { auth, db } from './firebase-admin';
 import type { User } from './types';
 
 const SESSION_COOKIE_NAME = 'session';
-const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days in ms
-
-export async function createSession(uid: string) {
-  const sessionCookie = await auth.createSessionCookie(uid, { expiresIn });
-  cookies().set(SESSION_COOKIE_NAME, sessionCookie, {
-    maxAge: expiresIn,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    sameSite: 'lax',
-  });
-}
 
 export async function getSession(): Promise<User | null> {
   const sessionCookie = cookies().get(SESSION_COOKIE_NAME)?.value;
