@@ -1,37 +1,35 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getSession } from './lib/session';
 
-const protectedRoutes = ['/', '/clients', '/products', '/devis', '/invoices', '/expenses', '/reports', '/settings'];
-const adminRoutes = ['/settings', '/reports'];
 const publicRoutes = ['/login', '/signup'];
+const SESSION_COOKIE_NAME = 'session';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
-  const isAdminRoute = adminRoutes.some(route => pathname.startsWith(route));
+  const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
+
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
-  
-  const user = await getSession();
 
-  if (isProtectedRoute) {
-    if (!user) {
-      // User is not authenticated, redirect to login
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-
-    if (isAdminRoute && user.role !== 'Admin') {
-      // Non-admin user trying to access admin route, redirect to dashboard
+  // If user is on a public route
+  if (isPublicRoute) {
+    // If they have a session, redirect them to the dashboard
+    if (sessionCookie) {
       return NextResponse.redirect(new URL('/', request.url));
     }
+    // Otherwise, allow them to access the public route
+    return NextResponse.next();
   }
 
-  if (isPublicRoute && user) {
-    // Authenticated user trying to access login/signup, redirect to dashboard
-    return NextResponse.redirect(new URL('/', request.url));
+  // For all other (protected) routes
+  // If the user does not have a session, redirect to login
+  if (!sessionCookie) {
+    // Add the original destination to the query params to redirect back after login
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    return NextResponse.redirect(url);
   }
 
+  // If user has a session, allow access
   return NextResponse.next();
 }
 
