@@ -42,10 +42,6 @@ export function ReportDisplay({ data, currency }: ReportDisplayProps) {
   if (!data) return null;
 
   const generatePdf = async () => {
-    alert("La génération de PDF est temporairement désactivée pour corriger un problème de déploiement.");
-    
-    // The following code is temporarily disabled to fix a build issue.
-    /*
     if (!data) return;
 
     const { default: jsPDF } = await import('jspdf');
@@ -138,7 +134,6 @@ export function ReportDisplay({ data, currency }: ReportDisplayProps) {
 
     const fileName = `Rapport_${data.clientName.replace(/ /g, '_')}_${format(data.startDate, "yyyy-MM-dd")}_au_${format(data.endDate, "yyyy-MM-dd")}.pdf`;
     doc.save(fileName);
-    */
   };
 
   return (

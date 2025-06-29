@@ -3,11 +3,9 @@ import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Image from 'next/image';
-// import { ToWords } from 'to-words'; // Temporarily disabled
+import { ToWords } from 'to-words';
 
 // Helper function to convert number to French words for currency
-// Temporarily disabled to fix build issue.
-/*
 const numberToWordsFr = (amount: number, currency: Settings['currency']): string => {
     const currencyInfo = {
         EUR: { name: 'Euro', plural: 'Euros', fractionalUnit: { name: 'Centime', plural: 'Centimes' } },
@@ -42,12 +40,10 @@ const numberToWordsFr = (amount: number, currency: Settings['currency']): string
     words = words.replace(/ et zéro centimes?/i, '').replace(/ seulement/i, '');
     return words.charAt(0).toUpperCase() + words.slice(1);
 };
-*/
 
 export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoice, client: Client, settings: Settings }) {
   const emptyRowsCount = Math.max(0, 15 - invoice.items.length);
-  // Temporarily use a placeholder string instead of converting to words
-  const totalInWordsString = `Arrêtée la présente facture à la somme de ${formatCurrency(invoice.totalAmount, settings.currency)}.`;
+  const totalInWordsString = numberToWordsFr(invoice.totalAmount, settings.currency);
 
   return (
     <div className="bg-white p-6 font-sans text-xs text-gray-800" id="invoice-content">
