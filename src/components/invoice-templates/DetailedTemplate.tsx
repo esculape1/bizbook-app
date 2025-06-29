@@ -51,10 +51,10 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
     setTotalInWordsString(numberToWordsFr(invoice.totalAmount, settings.currency));
   }, [invoice.totalAmount, settings.currency]);
 
-  const emptyRowsCount = Math.max(0, 15 - invoice.items.length);
+  const emptyRowsCount = Math.max(0, 12 - invoice.items.length);
 
   return (
-    <div className="bg-white p-6 font-sans text-xs text-gray-800" id="invoice-content">
+    <div className="bg-white p-4 font-sans text-xs text-gray-800 min-h-[29.7cm]" id="invoice-content">
       {/* Header */}
       <div className="flex justify-between items-start mb-1 p-1">
         <div className="w-1/3">
@@ -105,7 +105,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
       </div>
 
       {/* Items Table */}
-      <div className="overflow-x-auto px-1">
+      <div className="overflow-x-auto px-1 flex-grow">
         <table className="w-full border-collapse">
           <thead className="bg-gray-100">
             <tr>
@@ -140,7 +140,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
       </div>
 
       {/* Totals and Signature */}
-      <div className="flex justify-between items-start mt-1 px-1">
+      <div className="flex justify-between items-start mt-2 px-1">
         <div className="w-2/3 pt-1">
             <p className="font-bold text-gray-700">Arrêtée la présente facture à la somme de :</p>
             <p className="italic">{totalInWordsString}</p>
@@ -169,15 +169,15 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
         </div>
       </div>
       
-      <div className="flex justify-end items-end mt-2 pt-1 px-1">
+      <div className="flex justify-end items-end mt-4 pt-2 px-1">
         <div className="w-2/5 text-center">
           <p className="font-bold text-gray-700">Signature et Cachet</p>
-          <div className="mt-2 border-b-2 border-gray-400 h-24 w-full mx-auto"></div>
+          <div className="mt-2 border-b-2 border-gray-400 h-16 w-full mx-auto"></div>
           <p className="text-gray-600 mt-1">{settings.managerName}</p>
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 text-center text-gray-500 border-t pt-1 pb-2 text-[10px]">
+      <div className="text-center text-gray-500 border-t pt-2 mt-4 text-[10px]">
         <p>Merci de votre confiance.</p>
         <p>{settings.companyName} - {settings.legalName}</p>
       </div>
