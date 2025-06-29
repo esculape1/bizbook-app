@@ -1,2 +1,2 @@
-// This file is deprecated. Please use next.config.js instead.
-// See the error logs for more details.
+// This configuration file is deprecated.
+// The primary configuration is now at the project root in /next.config.js
