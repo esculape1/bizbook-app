@@ -11,29 +11,43 @@ const firebaseConfig = {
 };
 
 let db: Firestore | null = null;
-let connectionStatus: string;
 
-console.log("\n--- Vérification de la connexion à Firebase ---");
+// Only run the detailed connection check in a local development environment.
+// In CI/CD (like GitHub Actions), the env variables are injected differently and this check can give false negatives.
+if (process.env.NODE_ENV === 'development') {
+    let connectionStatus: string;
+    console.log("\n--- Vérification de la connexion à Firebase ---");
 
-const allKeysPresent = Object.values(firebaseConfig).every(Boolean);
+    const allKeysPresent = Object.values(firebaseConfig).every(Boolean);
 
-if (allKeysPresent) {
-  try {
-    const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    db = getFirestore(app);
-    connectionStatus = `✅ Connecté avec succès au projet : ${firebaseConfig.projectId}`;
-  } catch (error) {
-    console.error("❌ ERREUR D'INITIALISATION : Les clés Firebase sont présentes mais incorrectes.", error);
-    connectionStatus = "❌ Échec de la connexion. Vérifiez la validité de vos clés dans la console Firebase.";
-  }
+    if (allKeysPresent) {
+      try {
+        const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+        db = getFirestore(app);
+        connectionStatus = `✅ Connecté avec succès au projet : ${firebaseConfig.projectId}`;
+      } catch (error) {
+        console.error("❌ ERREUR D'INITIALISATION : Les clés Firebase sont présentes mais incorrectes.", error);
+        connectionStatus = "❌ Échec de la connexion. Vérifiez la validité de vos clés dans la console Firebase.";
+      }
+    } else {
+      console.warn("❌ ERREUR DE CONFIGURATION : Clés Firebase manquantes.");
+      console.warn("   Veuillez vérifier que votre fichier .env.local contient toutes les clés NEXT_PUBLIC_FIREBASE_*");
+      connectionStatus = "❌ Échec de la connexion. Clés manquantes dans .env.local.";
+    }
+
+    console.log(`Statut final: ${connectionStatus}`);
+    console.log("-------------------------------------------\n");
 } else {
-  console.warn("❌ ERREUR DE CONFIGURATION : Clés Firebase manquantes.");
-  console.warn("   Veuillez vérifier que votre fichier .env.local contient toutes les clés NEXT_PUBLIC_FIREBASE_*");
-  connectionStatus = "❌ Échec de la connexion. Clés manquantes dans .env.local.";
+    // For production/build environments, just initialize.
+    if (Object.values(firebaseConfig).every(Boolean)) {
+        try {
+            const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+            db = getFirestore(app);
+        } catch(e) {
+            console.error("Firebase initialization failed in production build:", e);
+        }
+    }
 }
-
-console.log(`Statut final: ${connectionStatus}`);
-console.log("-------------------------------------------\n");
 
 
 export { db };
