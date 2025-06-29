@@ -8,10 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import Link from 'next/link';
-import { signUp } from '../auth/actions';
+import { completeSignUp } from '../auth/actions';
 import { useTransition, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import { auth as firebaseAuth } from '@/lib/firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 const signUpSchema = z.object({
   name: z.string().min(2, { message: 'Le nom doit contenir au moins 2 caractères.' }),
@@ -37,9 +39,35 @@ export default function SignupPage() {
   const onSubmit = (data: SignUpFormValues) => {
     setError(null);
     startTransition(async () => {
-      const result = await signUp(data);
-      if (result?.error) {
-        setError(result.error);
+       if (!firebaseAuth) {
+        setError("La configuration de Firebase est manquante sur le client. Impossible de s'inscrire.");
+        return;
+      }
+      try {
+        // Étape 1: Créer l'utilisateur avec l'authentification Firebase côté client.
+        const userCredential = await createUserWithEmailAndPassword(firebaseAuth, data.email, data.password);
+        
+        // Étape 2: Appeler l'action serveur pour créer le document Firestore.
+        const result = await completeSignUp({
+          uid: userCredential.user.uid,
+          email: data.email,
+          name: data.name,
+        });
+
+        // Si l'action serveur renvoie une erreur, l'afficher.
+        if (result?.error) {
+            setError(result.error);
+        }
+        // En cas de succès, l'action serveur redirige, donc il n'y a rien d'autre à faire ici.
+
+      } catch (authError: any) {
+        // Gérer les erreurs de création de compte spécifiques à Firebase Auth.
+        if (authError.code === 'auth/email-already-in-use') {
+          setError('Cette adresse email est déjà utilisée par un autre compte.');
+        } else {
+          setError("Une erreur inattendue est survenue lors de la création de votre compte.");
+          console.error("Erreur Firebase Auth:", authError);
+        }
       }
     });
   };

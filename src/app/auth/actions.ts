@@ -6,45 +6,48 @@ import { auth, db } from '@/lib/firebase-admin';
 import { clearSession } from '@/lib/session';
 import { cookies } from 'next/headers';
 
-const signUpSchema = z.object({
+const completeSignUpSchema = z.object({
+  uid: z.string().min(1, { message: "L'UID est requis." }),
   name: z.string().min(2, { message: 'Le nom doit contenir au moins 2 caractères.' }),
   email: z.string().email({ message: 'Adresse email invalide.' }),
-  password: z.string().min(6, { message: 'Le mot de passe doit contenir au moins 6 caractères.' }),
 });
 
-export async function signUp(formData: unknown) {
-  const validatedFields = signUpSchema.safeParse(formData);
+/**
+ * Cette action est appelée APRÈS que l'utilisateur a été créé côté client avec l'Auth SDK.
+ * Son rôle est de créer le document utilisateur correspondant dans Firestore.
+ */
+export async function completeSignUp(userData: { uid: string, name: string, email: string }) {
+  const validatedFields = completeSignUpSchema.safeParse(userData);
 
   if (!validatedFields.success) {
-    const errorMessages = validatedFields.error.errors.map(e => e.message).join(', ');
-    return { error: `Validation échouée: ${errorMessages}` };
+    // Si les données sont invalides, on supprime l'utilisateur qui vient d'être créé pour éviter un compte orphelin.
+    if(userData.uid) {
+      await auth.deleteUser(userData.uid).catch(e => console.error("Échec du nettoyage de l'utilisateur auth:", e));
+    }
+    return { error: "Données utilisateur invalides. Impossible de finaliser l'inscription." };
   }
 
-  const { name, email, password } = validatedFields.data;
+  const { uid, name, email } = validatedFields.data;
 
   try {
-    const userCredential = await auth.createUser({ email, password, displayName: name });
     const userDoc = {
       name,
       email,
-      role: 'User' // Assign 'User' as the default role
+      role: 'User' // Rôle par défaut pour tout nouvel utilisateur
     };
-    await db.collection('users').doc(userCredential.uid).set(userDoc);
-    
-    // NOTE: We no longer automatically sign in the user.
-    // This simplifies the flow and avoids the previous bug.
-    // The user will be redirected to the login page to sign in themselves.
+    await db.collection('users').doc(uid).set(userDoc);
     
   } catch (error: any) {
-    console.error("Erreur d'inscription:", error);
-    if (error.code === 'auth/email-already-exists') {
-      return { error: 'Cette adresse email est déjà utilisée.' };
-    }
-    return { error: 'Une erreur est survenue lors de l\'inscription.' };
+    console.error("Erreur lors de la création du document utilisateur dans Firestore:", error);
+    // En cas d'échec, on supprime l'utilisateur pour qu'il puisse réessayer.
+    await auth.deleteUser(uid).catch(e => console.error("Échec du nettoyage de l'utilisateur auth:", e));
+    return { error: 'Une erreur est survenue lors de la création de votre profil. Veuillez réessayer.' };
   }
   
+  // Si tout réussit, on redirige vers la page de connexion.
   redirect('/login');
 }
+
 
 export async function signIn(idToken: string) {
   const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
