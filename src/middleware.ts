@@ -1,9 +1,37 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getSession } from './lib/session';
 
-// L'authentification est temporairement désactivée.
-// Ce middleware est configuré pour autoriser toutes les requêtes.
-export function middleware(request: NextRequest) {
+const protectedRoutes = ['/', '/clients', '/products', '/devis', '/invoices', '/expenses', '/reports', '/settings'];
+const adminRoutes = ['/settings', '/reports'];
+const publicRoutes = ['/login', '/signup'];
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+  const isAdminRoute = adminRoutes.some(route => pathname.startsWith(route));
+  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
+  
+  const user = await getSession();
+
+  if (isProtectedRoute) {
+    if (!user) {
+      // User is not authenticated, redirect to login
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    if (isAdminRoute && user.role !== 'Admin') {
+      // Non-admin user trying to access admin route, redirect to dashboard
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+  }
+
+  if (isPublicRoute && user) {
+    // Authenticated user trying to access login/signup, redirect to dashboard
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
   return NextResponse.next();
 }
 

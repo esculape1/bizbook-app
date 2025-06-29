@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -29,16 +28,17 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import type { User } from '@/lib/types';
+import { signOut } from '@/app/auth/actions';
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/clients', label: 'Clients', icon: Users },
-  { href: '/products', label: 'Produits', icon: Box },
-  { href: '/devis', label: 'Devis', icon: FileClock },
-  { href: '/invoices', label: 'Factures', icon: FileText },
-  { href: '/expenses', label: 'Dépenses', icon: Wallet },
-  { href: '/reports', label: 'Rapports', icon: BarChart3 },
-  { href: '/settings', label: 'Paramètres', icon: Settings },
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'User'] },
+  { href: '/clients', label: 'Clients', icon: Users, roles: ['Admin', 'User'] },
+  { href: '/products', label: 'Produits', icon: Box, roles: ['Admin', 'User'] },
+  { href: '/devis', label: 'Devis', icon: FileClock, roles: ['Admin', 'User'] },
+  { href: '/invoices', label: 'Factures', icon: FileText, roles: ['Admin', 'User'] },
+  { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: ['Admin', 'User'] },
+  { href: '/reports', label: 'Rapports', icon: BarChart3, roles: ['Admin'] },
+  { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['Admin'] },
 ];
 
 const navItemStyles = [
@@ -74,6 +74,9 @@ const activeRingClasses = [
 
 export function AppLayout({ children, user }: { children: ReactNode, user: User }) {
   const pathname = usePathname();
+  const userRole = user?.role || 'User';
+
+  const accessibleNavItems = navItems.filter(item => item.roles.includes(userRole));
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -89,7 +92,7 @@ export function AppLayout({ children, user }: { children: ReactNode, user: User 
             <span className="sr-only">BizBook</span>
           </Link>
           {navItems.map((item, index) => (
-            <Link
+            item.roles.includes(userRole) && <Link
               key={item.href}
               href={item.href}
               className={cn(
@@ -126,7 +129,7 @@ export function AppLayout({ children, user }: { children: ReactNode, user: User 
                 <span>BizBook</span>
               </Link>
               {navItems.map((item, index) => (
-                  <Link
+                  item.roles.includes(userRole) && <Link
                     key={item.href}
                     href={item.href}
                     className={cn(
@@ -160,6 +163,9 @@ export function AppLayout({ children, user }: { children: ReactNode, user: User 
                   <p className="text-xs leading-none text-muted-foreground">
                       {user.email}
                   </p>
+                  <p className="text-xs leading-none text-muted-foreground pt-1 font-semibold">
+                      Rôle: {user.role}
+                  </p>
                   </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -168,7 +174,14 @@ export function AppLayout({ children, user }: { children: ReactNode, user: User 
                   <Link href="/settings" className="w-full">Settings</Link>
                 </DropdownMenuItem>
               <DropdownMenuSeparator />
-               {/* Logout button removed for development */}
+               <DropdownMenuItem>
+                 <form action={signOut} className="w-full">
+                   <button type="submit" className="flex items-center w-full">
+                     <LogOut className="mr-2 h-4 w-4" />
+                     <span>Déconnexion</span>
+                   </button>
+                 </form>
+               </DropdownMenuItem>
               </DropdownMenuContent>
           </DropdownMenu>
           </div>
