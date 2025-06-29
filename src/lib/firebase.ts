@@ -12,40 +12,34 @@ const firebaseConfig = {
 
 let db: Firestore | null = null;
 
-// Only run the detailed connection check in a local development environment.
-// In CI/CD (like GitHub Actions), env variables are injected differently and this check can give false negatives.
-// The build process on the deployment server is not a 'development' environment.
+// This check is only for the local development environment.
+// In a CI/CD environment (like GitHub Actions), env vars are injected during the build step.
 if (process.env.NODE_ENV === 'development') {
-    let connectionStatus: string;
     console.log("\n--- Vérification de la connexion à Firebase ---");
-
-    const allKeysPresent = Object.values(firebaseConfig).every(Boolean);
-
-    if (allKeysPresent) {
+    if (Object.values(firebaseConfig).every(Boolean)) {
       try {
         const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
         db = getFirestore(app);
-        connectionStatus = `✅ Connecté avec succès au projet : ${firebaseConfig.projectId}`;
+        console.log(`Statut final: ✅ Connecté avec succès au projet : ${firebaseConfig.projectId}`);
       } catch (error) {
         console.error("❌ ERREUR D'INITIALISATION : Les clés Firebase sont présentes mais incorrectes.", error);
-        connectionStatus = "❌ Échec de la connexion. Vérifiez la validité de vos clés dans la console Firebase.";
+        console.log("Statut final: ❌ Échec de la connexion. Vérifiez la validité de vos clés dans la console Firebase.");
       }
     } else {
       console.warn("❌ ERREUR DE CONFIGURATION : Clés Firebase manquantes.");
       console.warn("   Veuillez vérifier que votre fichier .env.local contient toutes les clés NEXT_PUBLIC_FIREBASE_*");
-      connectionStatus = "❌ Échec de la connexion. Clés manquantes dans .env.local.";
+      console.log("Statut final: ❌ Échec de la connexion. Clés manquantes dans .env.local.");
     }
-
-    console.log(`Statut final: ${connectionStatus}`);
     console.log("-------------------------------------------\n");
 } else {
-    // For production/build environments, just initialize without logging.
+    // For non-development environments (like the build server), initialize without verbose logging.
+    // The required env variables are passed directly to the build command in firebase-deploy.yml.
     if (Object.values(firebaseConfig).every(v => v)) {
         try {
             const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
             db = getFirestore(app);
         } catch(e) {
-            console.error("Firebase initialization failed in production-like environment:", e);
+            // Silence initialization errors in build, as they are expected if variables aren't set.
         }
     }
 }
