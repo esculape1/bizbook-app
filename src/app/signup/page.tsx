@@ -16,6 +16,8 @@ import { AlertCircle } from 'lucide-react';
 import { auth as firebaseAuth } from '@/lib/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 
+export const dynamic = 'force-dynamic';
+
 const signUpSchema = z.object({
   name: z.string().min(2, { message: 'Le nom doit contenir au moins 2 caractères.' }),
   email: z.string().email({ message: 'Adresse email invalide.' }),

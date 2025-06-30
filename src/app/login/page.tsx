@@ -17,6 +17,8 @@ import { useRouter } from 'next/navigation';
 import { auth as firebaseAuth } from '@/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
+export const dynamic = 'force-dynamic';
+
 const signInSchema = z.object({
   email: z.string().email({ message: 'Adresse email invalide.' }),
   password: z.string().min(1, { message: 'Le mot de passe est requis.' }),
