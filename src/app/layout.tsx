@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { AppLayout } from '@/components/AppLayout';
@@ -15,6 +16,10 @@ export const metadata: Metadata = {
   title: 'BizBook',
   description: 'Gestion commerciale simplifiée',
 };
+
+// Force dynamic rendering for the entire app, as it's heavily session-based.
+// This resolves issues with `cookies()` being used in the layout.
+export const dynamic = 'force-dynamic';
 
 export default async function RootLayout({
   children,
