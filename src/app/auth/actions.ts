@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -60,6 +61,7 @@ export async function signIn(idToken: string) {
       path: '/',
       sameSite: 'lax',
     });
+    return {};
   } catch (error) {
     console.error("Erreur de création de session:", error);
     return { error: "Impossible de créer la session. Veuillez réessayer." };

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -64,6 +65,8 @@ export default function SignupPage() {
         // Gérer les erreurs de création de compte spécifiques à Firebase Auth.
         if (authError.code === 'auth/email-already-in-use') {
           setError('Cette adresse email est déjà utilisée par un autre compte.');
+        } else if (authError.code === 'auth/weak-password') {
+          setError('Le mot de passe est trop faible. Il doit contenir au moins 6 caractères.');
         } else {
           setError("Une erreur inattendue est survenue lors de la création de votre compte.");
           console.error("Erreur Firebase Auth:", authError);

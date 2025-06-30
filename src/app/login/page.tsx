@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -48,15 +49,19 @@ export default function LoginPage() {
         const userCredential = await signInWithEmailAndPassword(firebaseAuth, data.email, data.password);
         const idToken = await userCredential.user.getIdToken();
         
-        await signIn(idToken);
-        router.push('/');
+        const result = await signIn(idToken);
+        if (result?.error) {
+          setError(result.error);
+        } else {
+          router.push('/');
+        }
         
       } catch (authError: any) {
-        if (authError.code === 'auth/invalid-credential' || authError.code === 'auth/user-not-found' || authError.code === 'auth/wrong-password') {
-          setError('Email ou mot de passe incorrect.');
+        if (authError.code === 'auth/invalid-credential') {
+          setError('Email ou mot de passe incorrect. Veuillez réessayer.');
         } else {
-          setError('Une erreur est survenue lors de la connexion.');
-          console.error(authError);
+          setError('Une erreur est survenue lors de la connexion. Veuillez contacter le support.');
+          console.error("Erreur d'authentification Firebase:", authError);
         }
       }
     });
