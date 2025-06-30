@@ -23,26 +23,19 @@ export default async function RootLayout({
 }>) {
   const user = await getSession();
 
-  // For public pages like login/signup, we don't need the AppLayout
-  if (!user) {
-    return (
-      <html lang="en" className={inter.variable} suppressHydrationWarning>
-        <head />
-        <body className="font-body antialiased" suppressHydrationWarning={true}>
-          {children}
-          <Toaster />
-        </body>
-      </html>
-    )
-  }
-
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head />
       <body className="font-body antialiased" suppressHydrationWarning={true}>
-        <AppLayout user={user}>
-          {children}
-        </AppLayout>
+        {user ? (
+            <AppLayout user={user}>
+              {children}
+            </AppLayout>
+          ) : (
+            <>
+              {children}
+            </>
+        )}
         <Toaster />
       </body>
     </html>

@@ -36,8 +36,8 @@ export async function getSession(): Promise<User | null> {
       role: userData.role,
     };
   } catch (error) {
-    console.error('Error verifying session cookie:', error);
     // The cookie is invalid (expired, malformed, etc.), so clear it.
+    console.error('Session cookie invalide, suppression:', error);
     cookieStore.delete(SESSION_COOKIE_NAME);
     return null;
   }
