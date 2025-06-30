@@ -22,7 +22,10 @@ const nextConfig = {
       },
     ],
   },
-  allowedDevOrigins: ['https://3000-firebase-studio-1750673315832.cluster-axf5tvtfjjfekvhwxwkkkzsk2y.cloudworkstations.dev'],
+  allowedDevOrigins: [
+    'https://3000-firebase-studio-1750673315832.cluster-axf5tvtfjjfekvhwxwkkkzsk2y.cloudworkstations.dev',
+    'http://3000-firebase-studio-1750673315832.cluster-axf5tvtfjjfekvhwxwkkkzsk2y.cloudworkstations.dev'
+  ],
   webpack: (config) => {
     config.experiments = { ...config.experiments, asyncWebAssembly: true };
     config.module.rules.push({
