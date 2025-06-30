@@ -20,6 +20,7 @@ export const metadata: Metadata = {
 // Force dynamic rendering for the entire app, as it's heavily session-based.
 // This resolves issues with `cookies()` being used in the layout.
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function RootLayout({
   children,
