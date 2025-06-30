@@ -1,20 +1,29 @@
 import admin from 'firebase-admin';
 
 if (!admin.apps.length) {
+  console.log("Tentative d'initialisation de Firebase Admin...");
   try {
     const serviceAccountString = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
     if (!serviceAccountString) {
-      throw new Error('La variable d\'environnement FIREBASE_SERVICE_ACCOUNT_JSON n\'est pas définie. Assurez-vous qu\'elle est présente dans votre fichier .env.local.');
+      console.error("ERREUR: La variable d'environnement FIREBASE_SERVICE_ACCOUNT_JSON est vide ou non définie.");
+      throw new Error('La variable d\'environnement FIREBASE_SERVICE_ACCOUNT_JSON n\'est pas définie.');
     }
+    console.log("Clé de service trouvée dans l'environnement. Tentative de parsing...");
+
     const serviceAccount = JSON.parse(serviceAccountString);
+    console.log("Clé de service parsée avec succès.");
 
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
+    console.log("✅ Firebase Admin initialisé avec succès !");
   } catch (error: any) {
-    // This will crash the server if the service account is invalid, which is better than failing silently.
-    console.error('ERREUR FATALE D\'INITIALISATION FIREBASE ADMIN:', error.message);
-    throw new Error('Impossible d\'initialiser Firebase Admin SDK. Vérifiez le format de votre clé de service dans .env.local.');
+    console.error('❌ ERREUR FATALE D\'INITIALISATION FIREBASE ADMIN:', error.message);
+    if (error.message.includes('Unexpected token')) {
+      console.error("💡 PISTE: L'erreur de parsing suggère que la clé dans .env.local n'est pas un JSON valide ou n'est pas correctement entourée de guillemets simples ('').");
+    }
+    // This will now crash the app, which is what we want if it can't initialize.
+    throw new Error('Impossible d\'initialiser Firebase Admin SDK. Vérifiez les logs du serveur pour les détails.');
   }
 }
 
