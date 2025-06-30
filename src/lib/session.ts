@@ -19,8 +19,7 @@ export async function getSession(): Promise<User | null> {
     const userDoc = await userDocRef.get();
 
     if (!userDoc.exists) {
-      // If the user is deleted from the DB, the cookie is invalid.
-      cookieStore.delete(SESSION_COOKIE_NAME);
+      // User document doesn't exist. The cookie is stale.
       return null;
     }
 
@@ -36,9 +35,9 @@ export async function getSession(): Promise<User | null> {
       role: userData.role,
     };
   } catch (error) {
-    // The cookie is invalid (expired, malformed, etc.), so clear it.
-    console.error('Session cookie invalide, suppression:', error);
-    cookieStore.delete(SESSION_COOKIE_NAME);
+    // The cookie is invalid (expired, malformed, etc.).
+    // We will not delete it here to avoid side effects.
+    // The middleware will handle redirection on the next protected route access.
     return null;
   }
 }
