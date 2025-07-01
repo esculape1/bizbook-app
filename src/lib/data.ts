@@ -1,26 +1,16 @@
-import {
-  collection,
-  doc,
-  getDocs,
-  getDoc,
-  addDoc,
-  setDoc,
-  query,
-  orderBy,
-  Timestamp,
-  limit,
-  deleteDoc
-} from 'firebase/firestore';
-import { db } from './firebase';
-import type { Client, Product, Invoice, Expense, Settings, User, Quote } from './types';
+import { db } from './firebase-admin';
+import { Timestamp } from 'firebase-admin/firestore';
+import type { Client, Product, Invoice, Expense, Settings, Quote } from './types';
 
 // Helper to convert Firestore docs to plain objects
-function docToObject<T>(doc: any): T {
+function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
   const data = doc.data();
   // Convert Timestamps to ISO strings
-  for (const key in data) {
-    if (data[key] instanceof Timestamp) {
-      data[key] = data[key].toDate().toISOString();
+  if (data) {
+    for (const key in data) {
+      if (data[key] instanceof Timestamp) {
+        data[key] = data[key].toDate().toISOString();
+      }
     }
   }
   return { id: doc.id, ...data } as T;
@@ -31,17 +21,17 @@ const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Ve
 // CLIENTS
 export async function getClients(): Promise<Client[]> {
   if (!db) return [];
-  const clientsCol = collection(db, 'clients');
-  const q = query(clientsCol, orderBy('registrationDate', 'desc'));
-  const clientSnapshot = await getDocs(q);
+  const clientsCol = db.collection('clients');
+  const q = clientsCol.orderBy('registrationDate', 'desc');
+  const clientSnapshot = await q.get();
   return clientSnapshot.docs.map(doc => docToObject<Client>(doc));
 }
 
 export async function getClientById(id: string): Promise<Client | null> {
   if (!db) return null;
-  const clientDocRef = doc(db, 'clients', id);
-  const clientDoc = await getDoc(clientDocRef);
-  if (clientDoc.exists()) {
+  const clientDocRef = db.collection('clients').doc(id);
+  const clientDoc = await clientDocRef.get();
+  if (clientDoc.exists) {
     return docToObject<Client>(clientDoc);
   }
   return null;
@@ -54,63 +44,63 @@ export async function addClient(clientData: Omit<Client, 'id' | 'registrationDat
     registrationDate: new Date().toISOString(),
     status: 'Active',
   };
-  const docRef = await addDoc(collection(db, 'clients'), newClientData);
+  const docRef = await db.collection('clients').add(newClientData);
   return { id: docRef.id, ...newClientData };
 }
 
 export async function updateClient(id: string, clientData: Partial<Omit<Client, 'id' | 'registrationDate'>>): Promise<void> {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const clientDocRef = doc(db, 'clients', id);
-  await setDoc(clientDocRef, clientData, { merge: true });
+  const clientDocRef = db.collection('clients').doc(id);
+  await clientDocRef.set(clientData, { merge: true });
 }
 
 export async function deleteClient(id: string): Promise<void> {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const clientDocRef = doc(db, 'clients', id);
-  await deleteDoc(clientDocRef);
+  const clientDocRef = db.collection('clients').doc(id);
+  await clientDocRef.delete();
 }
 
 // PRODUCTS
 export async function getProducts(): Promise<Product[]> {
   if (!db) return [];
-  const productsCol = collection(db, 'products');
-  const q = query(productsCol, orderBy('name'));
-  const productSnapshot = await getDocs(q);
+  const productsCol = db.collection('products');
+  const q = productsCol.orderBy('name');
+  const productSnapshot = await q.get();
   return productSnapshot.docs.map(doc => docToObject<Product>(doc));
 }
 
 export async function addProduct(productData: Omit<Product, 'id'>): Promise<Product> {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const docRef = await addDoc(collection(db, 'products'), productData);
+  const docRef = await db.collection('products').add(productData);
   return { id: docRef.id, ...productData };
 }
 
 export async function updateProduct(id: string, productData: Partial<Omit<Product, 'id'>>): Promise<void> {
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const productDocRef = doc(db, 'products', id);
-    await setDoc(productDocRef, productData, { merge: true });
+    const productDocRef = db.collection('products').doc(id);
+    await productDocRef.set(productData, { merge: true });
 }
 
 export async function deleteProduct(id: string): Promise<void> {
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const productDocRef = doc(db, 'products', id);
-    await deleteDoc(productDocRef);
+    const productDocRef = db.collection('products').doc(id);
+    await productDocRef.delete();
 }
 
 // QUOTES
 export async function getQuotes(): Promise<Quote[]> {
     if (!db) return [];
-    const quotesCol = collection(db, 'quotes');
-    const q = query(quotesCol, orderBy('date', 'desc'));
-    const quoteSnapshot = await getDocs(q);
+    const quotesCol = db.collection('quotes');
+    const q = quotesCol.orderBy('date', 'desc');
+    const quoteSnapshot = await q.get();
     return quoteSnapshot.docs.map(doc => docToObject<Quote>(doc));
 }
 
 export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>): Promise<Quote> {
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const quotesCol = collection(db, 'quotes');
-    const q = query(quotesCol, orderBy('quoteNumber', 'desc'), limit(1));
-    const latestQuoteSnap = await getDocs(q);
+    const quotesCol = db.collection('quotes');
+    const q = quotesCol.orderBy('quoteNumber', 'desc').limit(1);
+    const latestQuoteSnap = await q.get();
     
     let latestQuoteNumber = 0;
     if (!latestQuoteSnap.empty) {
@@ -124,24 +114,24 @@ export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>): Pr
         ...quoteData,
         quoteNumber: `DEV2024-${(latestQuoteNumber + 1).toString().padStart(3, '0')}`,
     };
-    const docRef = await addDoc(quotesCol, newQuoteData);
+    const docRef = await quotesCol.add(newQuoteData);
     return { id: docRef.id, ...newQuoteData };
 }
 
 // INVOICES
 export async function getInvoices(): Promise<Invoice[]> {
     if (!db) return [];
-    const invoicesCol = collection(db, 'invoices');
-    const q = query(invoicesCol, orderBy('date', 'desc'));
-    const invoiceSnapshot = await getDocs(q);
+    const invoicesCol = db.collection('invoices');
+    const q = invoicesCol.orderBy('date', 'desc');
+    const invoiceSnapshot = await q.get();
     return invoiceSnapshot.docs.map(doc => docToObject<Invoice>(doc));
 }
 
 export async function getInvoiceById(id: string): Promise<Invoice | null> {
     if (!db) return null;
-    const invoiceDocRef = doc(db, 'invoices', id);
-    const invoiceDoc = await getDoc(invoiceDocRef);
-    if (invoiceDoc.exists()) {
+    const invoiceDocRef = db.collection('invoices').doc(id);
+    const invoiceDoc = await invoiceDocRef.get();
+    if (invoiceDoc.exists) {
         return docToObject<Invoice>(invoiceDoc);
     }
     return null;
@@ -149,9 +139,9 @@ export async function getInvoiceById(id: string): Promise<Invoice | null> {
 
 export async function addInvoice(invoiceData: Omit<Invoice, 'id' | 'invoiceNumber'>): Promise<Invoice> {
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const invoicesCol = collection(db, 'invoices');
-    const q = query(invoicesCol, orderBy('invoiceNumber', 'desc'), limit(1));
-    const latestInvoiceSnap = await getDocs(q);
+    const invoicesCol = db.collection('invoices');
+    const q = invoicesCol.orderBy('invoiceNumber', 'desc').limit(1);
+    const latestInvoiceSnap = await q.get();
     
     let latestInvoiceNumber = 0;
     if (!latestInvoiceSnap.empty) {
@@ -165,35 +155,35 @@ export async function addInvoice(invoiceData: Omit<Invoice, 'id' | 'invoiceNumbe
         ...invoiceData,
         invoiceNumber: `FACT2024-${(latestInvoiceNumber + 1).toString().padStart(3, '0')}`,
     };
-    const docRef = await addDoc(invoicesCol, newInvoiceData);
+    const docRef = await invoicesCol.add(newInvoiceData);
     return { id: docRef.id, ...newInvoiceData };
 }
 
 export async function updateInvoice(id: string, invoiceData: Partial<Omit<Invoice, 'id'>>): Promise<void> {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const invoiceDocRef = doc(db, 'invoices', id);
-  await setDoc(invoiceDocRef, invoiceData, { merge: true });
+  const invoiceDocRef = db.collection('invoices').doc(id);
+  await invoiceDocRef.set(invoiceData, { merge: true });
 }
 
 export async function deleteInvoice(id: string): Promise<void> {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const invoiceDocRef = doc(db, 'invoices', id);
-  await deleteDoc(invoiceDocRef);
+  const invoiceDocRef = db.collection('invoices').doc(id);
+  await invoiceDocRef.delete();
 }
 
 
 // EXPENSES
 export async function getExpenses(): Promise<Expense[]> {
   if (!db) return [];
-  const expensesCol = collection(db, 'expenses');
-  const q = query(expensesCol, orderBy('date', 'desc'));
-  const expenseSnapshot = await getDocs(q);
+  const expensesCol = db.collection('expenses');
+  const q = expensesCol.orderBy('date', 'desc');
+  const expenseSnapshot = await q.get();
   return expenseSnapshot.docs.map(doc => docToObject<Expense>(doc));
 }
 
 export async function addExpense(expenseData: Omit<Expense, 'id'>): Promise<Expense> {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const docRef = await addDoc(collection(db, 'expenses'), expenseData);
+  const docRef = await db.collection('expenses').add(expenseData);
   return { id: docRef.id, ...expenseData };
 }
 
@@ -214,14 +204,14 @@ const defaultSettings: Settings = {
 
 export async function getSettings(): Promise<Settings> {
   if (!db) return defaultSettings;
-  const settingsDocRef = doc(db, 'settings', 'main');
+  const settingsDocRef = db.collection('settings').doc('main');
   try {
-      const settingsDoc = await getDoc(settingsDocRef);
-      if (settingsDoc.exists()) {
+      const settingsDoc = await settingsDocRef.get();
+      if (settingsDoc.exists) {
         const data = settingsDoc.data();
         return { ...defaultSettings, ...data } as Settings;
       }
-      await setDoc(settingsDocRef, defaultSettings);
+      await settingsDocRef.set(defaultSettings);
       return defaultSettings;
   } catch (e) {
       console.warn("Impossible de récupérer les paramètres, utilisation des valeurs par défaut.", e);
@@ -231,9 +221,9 @@ export async function getSettings(): Promise<Settings> {
 
 export async function updateSettings(settingsData: Partial<Settings>): Promise<Settings> {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const settingsDocRef = doc(db, 'settings', 'main');
+  const settingsDocRef = db.collection('settings').doc('main');
   const currentSettings = await getSettings();
   const newSettings = { ...currentSettings, ...settingsData };
-  await setDoc(settingsDocRef, newSettings, { merge: true });
+  await settingsDocRef.set(newSettings, { merge: true });
   return newSettings;
 }
