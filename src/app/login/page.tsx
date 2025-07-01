@@ -60,11 +60,6 @@ export default function LoginPage() {
             </div>
             <LoginButton />
           </form>
-          <div className="mt-6 text-center text-sm text-muted-foreground border-t pt-4">
-            <p className="font-semibold">Identifiants de démonstration :</p>
-            <p>Admin: <span className="font-mono">admin@bizbook.com</span> / <span className="font-mono">password</span></p>
-            <p>User: <span className="font-mono">user@bizbook.com</span> / <span className="font-mono">password</span></p>
-          </div>
         </CardContent>
       </Card>
     </div>

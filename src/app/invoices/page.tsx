@@ -1,3 +1,4 @@
+
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,8 +10,15 @@ import Link from "next/link";
 import { EditInvoiceForm } from "./EditInvoiceForm";
 import { DeleteInvoiceButton } from "./DeleteInvoiceButton";
 import { RecordPaymentButton } from "./RecordPaymentButton";
+import { getSession } from "@/lib/session";
+import { redirect } from "next/navigation";
 
 export default async function InvoicesPage() {
+  const user = await getSession();
+  if (user?.role !== 'Admin') {
+    redirect('/');
+  }
+
   const [invoices, clients, products, settings] = await Promise.all([
     getInvoices(),
     getClients(),

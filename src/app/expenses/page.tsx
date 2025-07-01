@@ -1,11 +1,19 @@
+
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getExpenses, getSettings } from "@/lib/data";
 import { formatCurrency } from "@/lib/utils";
 import { ExpenseForm } from "./ExpenseForm";
+import { getSession } from "@/lib/session";
+import { redirect } from "next/navigation";
 
 export default async function ExpensesPage() {
+  const user = await getSession();
+  if (user?.role !== 'Admin') {
+    redirect('/');
+  }
+  
   const [expenses, settings] = await Promise.all([
     getExpenses(),
     getSettings(),
