@@ -36,10 +36,10 @@ const navItems = [
   { href: '/clients', label: 'Clients', icon: Users, roles: ['Admin', 'User'] },
   { href: '/products', label: 'Produits', icon: Box, roles: ['Admin', 'User'] },
   { href: '/devis', label: 'Devis', icon: FileClock, roles: ['Admin', 'User'] },
-  { href: '/invoices', label: 'Factures', icon: FileText, roles: ['Admin'] },
-  { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: ['Admin'] },
+  { href: '/invoices', label: 'Factures', icon: FileText, roles: ['Admin', 'User'] },
+  { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: ['Admin', 'User'] },
   { href: '/reports', label: 'Rapports', icon: BarChart3, roles: ['Admin', 'User'] },
-  { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['Admin'] },
+  { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['Admin', 'User'] },
 ];
 
 const navItemStyles = [

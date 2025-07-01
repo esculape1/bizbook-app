@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { addQuote, getClients, getProducts } from '@/lib/data';
 import { revalidatePath } from 'next/cache';
 import type { QuoteItem } from '@/lib/types';
+import { getSession } from '@/lib/session';
 
 const quoteItemSchema = z.object({
   productId: z.string(),
@@ -23,6 +24,11 @@ const quoteSchema = z.object({
 });
 
 export async function createQuote(formData: unknown) {
+  const session = await getSession();
+  if (session?.role !== 'Admin') {
+    return { message: "Action non autorisée." };
+  }
+
   const validatedFields = quoteSchema.safeParse(formData);
 
   if (!validatedFields.success) {

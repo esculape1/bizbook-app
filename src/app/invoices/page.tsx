@@ -11,20 +11,17 @@ import { EditInvoiceForm } from "./EditInvoiceForm";
 import { DeleteInvoiceButton } from "./DeleteInvoiceButton";
 import { RecordPaymentButton } from "./RecordPaymentButton";
 import { getSession } from "@/lib/session";
-import { redirect } from "next/navigation";
 
 export default async function InvoicesPage() {
-  const user = await getSession();
-  if (user?.role !== 'Admin') {
-    redirect('/');
-  }
-
-  const [invoices, clients, products, settings] = await Promise.all([
+  const [invoices, clients, products, settings, user] = await Promise.all([
     getInvoices(),
     getClients(),
     getProducts(),
     getSettings(),
+    getSession()
   ]);
+
+  const canEdit = user?.role === 'Admin';
 
   const statusColors = {
     Paid: 'bg-green-500/20 text-green-700',
@@ -42,7 +39,7 @@ export default async function InvoicesPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Factures"
-        actions={<InvoiceForm clients={clients} products={products} settings={settings} />}
+        actions={canEdit ? <InvoiceForm clients={clients} products={products} settings={settings} /> : undefined}
       />
       <Card>
         <CardContent className="pt-6">
@@ -55,7 +52,7 @@ export default async function InvoicesPage() {
                 <TableHead>Statut</TableHead>
                 <TableHead className="text-right">Montant Total</TableHead>
                 <TableHead className="text-right">Montant Dû</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                {canEdit && <TableHead className="text-right">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -77,13 +74,15 @@ export default async function InvoicesPage() {
                   </TableCell>
                   <TableCell className="text-right">{formatCurrency(invoice.totalAmount, settings.currency)}</TableCell>
                   <TableCell className="text-right font-medium text-destructive">{formatCurrency(amountDue > 0 ? amountDue : 0, settings.currency)}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end">
-                      <RecordPaymentButton invoice={invoice} settings={settings} />
-                      <EditInvoiceForm invoice={invoice} clients={clients} products={products} settings={settings} />
-                      <DeleteInvoiceButton id={invoice.id} invoiceNumber={invoice.invoiceNumber} />
-                    </div>
-                  </TableCell>
+                  {canEdit && (
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end">
+                        <RecordPaymentButton invoice={invoice} settings={settings} />
+                        <EditInvoiceForm invoice={invoice} clients={clients} products={products} settings={settings} />
+                        <DeleteInvoiceButton id={invoice.id} invoiceNumber={invoice.invoiceNumber} />
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               )})}
             </TableBody>

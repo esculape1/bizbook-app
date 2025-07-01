@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import { addClient, deleteClient as deleteClientFromDB, updateClient as updateClientInDB } from '@/lib/data';
 import { revalidatePath } from 'next/cache';
+import { getSession } from '@/lib/session';
 
 const clientSchema = z.object({
   name: z.string().min(1, { message: "Le nom est requis." }),
@@ -18,6 +19,11 @@ const clientSchema = z.object({
 type NewClient = z.infer<typeof clientSchema>;
 
 export async function createClient(data: NewClient) {
+  const session = await getSession();
+  if (session?.role !== 'Admin') {
+    return { message: "Action non autorisée." };
+  }
+
   const validatedFields = clientSchema.safeParse(data);
 
   if (!validatedFields.success) {
@@ -39,6 +45,11 @@ export async function createClient(data: NewClient) {
 }
 
 export async function updateClient(id: string, data: NewClient) {
+  const session = await getSession();
+  if (session?.role !== 'Admin') {
+    return { message: "Action non autorisée." };
+  }
+
   const validatedFields = clientSchema.safeParse(data);
 
   if (!validatedFields.success) {
@@ -60,6 +71,11 @@ export async function updateClient(id: string, data: NewClient) {
 }
 
 export async function deleteClient(id: string) {
+  const session = await getSession();
+  if (session?.role !== 'Admin') {
+    return { message: "Action non autorisée." };
+  }
+    
   try {
     await deleteClientFromDB(id);
     revalidatePath('/clients');

@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import { addProduct, updateProduct as updateProductInDB, deleteProduct as deleteProductFromDB } from '@/lib/data';
 import { revalidatePath } from 'next/cache';
+import { getSession } from '@/lib/session';
 
 const productSchema = z.object({
   name: z.string().min(1, { message: "Le nom est requis." }),
@@ -17,6 +18,11 @@ const productSchema = z.object({
 });
 
 export async function createProduct(formData: unknown) {
+  const session = await getSession();
+  if (session?.role !== 'Admin') {
+    return { message: "Action non autorisée." };
+  }
+
   const validatedFields = productSchema.safeParse(formData);
 
   if (!validatedFields.success) {
@@ -39,6 +45,11 @@ export async function createProduct(formData: unknown) {
 }
 
 export async function updateProduct(id: string, formData: unknown) {
+    const session = await getSession();
+    if (session?.role !== 'Admin') {
+      return { message: "Action non autorisée." };
+    }
+    
     const validatedFields = productSchema.safeParse(formData);
 
     if (!validatedFields.success) {
@@ -61,6 +72,11 @@ export async function updateProduct(id: string, formData: unknown) {
 }
 
 export async function deleteProduct(id: string) {
+    const session = await getSession();
+    if (session?.role !== 'Admin') {
+      return { message: "Action non autorisée." };
+    }
+    
     try {
         await deleteProductFromDB(id);
         revalidatePath('/products');

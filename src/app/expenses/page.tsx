@@ -6,24 +6,21 @@ import { getExpenses, getSettings } from "@/lib/data";
 import { formatCurrency } from "@/lib/utils";
 import { ExpenseForm } from "./ExpenseForm";
 import { getSession } from "@/lib/session";
-import { redirect } from "next/navigation";
 
 export default async function ExpensesPage() {
-  const user = await getSession();
-  if (user?.role !== 'Admin') {
-    redirect('/');
-  }
-  
-  const [expenses, settings] = await Promise.all([
+  const [expenses, settings, user] = await Promise.all([
     getExpenses(),
     getSettings(),
+    getSession()
   ]);
+
+  const canEdit = user?.role === 'Admin';
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Dépenses"
-        actions={<ExpenseForm currency={settings.currency} />}
+        actions={canEdit ? <ExpenseForm currency={settings.currency} /> : undefined}
       />
       <Card>
         <CardContent className="pt-6">

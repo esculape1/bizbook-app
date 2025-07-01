@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import { addExpense } from '@/lib/data';
 import { revalidatePath } from 'next/cache';
+import { getSession } from '@/lib/session';
 
 const expenseSchema = z.object({
   date: z.date({ required_error: "La date est requise." }),
@@ -13,6 +14,11 @@ const expenseSchema = z.object({
 });
 
 export async function createExpense(formData: unknown) {
+  const session = await getSession();
+  if (session?.role !== 'Admin') {
+    return { message: "Action non autorisée." };
+  }
+
   const validatedFields = expenseSchema.safeParse(formData);
 
   if (!validatedFields.success) {

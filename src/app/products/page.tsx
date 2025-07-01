@@ -6,18 +6,22 @@ import { formatCurrency } from "@/lib/utils";
 import { ProductForm } from "./ProductForm";
 import { EditProductButton } from "./EditProductButton";
 import { DeleteProductButton } from "./DeleteProductButton";
+import { getSession } from "@/lib/session";
 
 export default async function ProductsPage() {
-  const [products, settings] = await Promise.all([
+  const [products, settings, user] = await Promise.all([
     getProducts(),
-    getSettings()
+    getSettings(),
+    getSession(),
   ]);
+
+  const canEdit = user?.role === 'Admin';
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Produits"
-        actions={<ProductForm />}
+        actions={canEdit ? <ProductForm /> : undefined}
       />
       <Card>
         <CardContent className="pt-6">
@@ -32,7 +36,7 @@ export default async function ProductsPage() {
                 <TableHead className="text-right">Quantité</TableHead>
                 <TableHead className="text-right">Point de Cde.</TableHead>
                 <TableHead className="text-right">Stock Sécu.</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                {canEdit && <TableHead className="text-right">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -46,12 +50,14 @@ export default async function ProductsPage() {
                   <TableCell className="text-right">{product.quantityInStock}</TableCell>
                   <TableCell className="text-right">{product.reorderPoint}</TableCell>
                   <TableCell className="text-right">{product.safetyStock}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end">
-                      <EditProductButton product={product} />
-                      <DeleteProductButton id={product.id} name={product.name} />
-                    </div>
-                  </TableCell>
+                  {canEdit && (
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end">
+                        <EditProductButton product={product} />
+                        <DeleteProductButton id={product.id} name={product.name} />
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>

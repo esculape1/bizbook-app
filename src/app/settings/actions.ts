@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import { updateSettings } from '@/lib/data';
 import { revalidatePath } from 'next/cache';
+import { getSession } from '@/lib/session';
 
 const settingsSchema = z.object({
   companyName: z.string().min(1, { message: "Le nom de l'entreprise est requis." }),
@@ -20,6 +21,11 @@ const settingsSchema = z.object({
 });
 
 export async function saveSettings(formData: z.infer<typeof settingsSchema>) {
+  const session = await getSession();
+  if (session?.role !== 'Admin') {
+    return { success: false, message: "Action non autorisée." };
+  }
+  
   try {
     const { logo, ...settingsToSave } = formData;
     

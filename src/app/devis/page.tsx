@@ -6,14 +6,18 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { QuoteForm } from "./QuoteForm";
 import { formatCurrency } from "@/lib/utils";
+import { getSession } from "@/lib/session";
 
 export default async function DevisPage() {
-  const [quotes, clients, products, settings] = await Promise.all([
+  const [quotes, clients, products, settings, user] = await Promise.all([
     getQuotes(),
     getClients(),
     getProducts(),
     getSettings(),
+    getSession()
   ]);
+
+  const canEdit = user?.role === 'Admin';
 
   const statusColors = {
     Draft: 'bg-gray-500/20 text-gray-700',
@@ -33,7 +37,7 @@ export default async function DevisPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Devis"
-        actions={<QuoteForm clients={clients} products={products} settings={settings} />}
+        actions={canEdit ? <QuoteForm clients={clients} products={products} settings={settings} /> : undefined}
       />
       <Card>
         <CardContent className="pt-6">

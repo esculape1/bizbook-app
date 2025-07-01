@@ -14,6 +14,7 @@ import {
 import { revalidatePath } from 'next/cache';
 import type { InvoiceItem, Invoice, Payment } from '@/lib/types';
 import { randomUUID } from 'crypto';
+import { getSession } from '@/lib/session';
 
 const invoiceItemSchema = z.object({
   productId: z.string(),
@@ -49,6 +50,11 @@ const updateInvoiceSchema = z.object({
 
 
 export async function createInvoice(formData: unknown) {
+  const session = await getSession();
+  if (session?.role !== 'Admin') {
+    return { message: "Action non autorisée." };
+  }
+
   const validatedFields = invoiceSchema.safeParse(formData);
 
   if (!validatedFields.success) {
@@ -132,6 +138,11 @@ export async function createInvoice(formData: unknown) {
 }
 
 export async function updateInvoice(id: string, invoiceNumber: string, formData: unknown) {
+  const session = await getSession();
+  if (session?.role !== 'Admin') {
+    return { message: "Action non autorisée." };
+  }
+
   const validatedFields = updateInvoiceSchema.safeParse(formData);
 
   if (!validatedFields.success) {
@@ -233,6 +244,11 @@ export async function updateInvoice(id: string, invoiceNumber: string, formData:
 }
 
 export async function deleteInvoice(id: string) {
+  const session = await getSession();
+  if (session?.role !== 'Admin') {
+    return { message: "Action non autorisée." };
+  }
+
   try {
     const invoiceToDelete = await getInvoiceById(id);
     if (!invoiceToDelete) {
@@ -272,6 +288,11 @@ const paymentSchema = z.object({
 });
 
 export async function recordPayment(invoiceId: string, formData: unknown) {
+  const session = await getSession();
+  if (session?.role !== 'Admin') {
+    return { message: "Action non autorisée." };
+  }
+
   const validatedFields = paymentSchema.safeParse(formData);
 
   if (!validatedFields.success) {
