@@ -1,3 +1,4 @@
+
 import admin from 'firebase-admin';
 
 if (!admin.apps.length) {
@@ -27,6 +28,5 @@ if (!admin.apps.length) {
   }
 }
 
-// These lines will now only be reached if initialization was successful.
-export const auth = admin.auth();
+// We only need Firestore from the admin SDK now.
 export const db = admin.firestore();
