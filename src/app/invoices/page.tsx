@@ -8,7 +8,7 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { InvoiceForm } from "./InvoiceForm";
 import Link from "next/link";
 import { EditInvoiceForm } from "./EditInvoiceForm";
-import { CancelInvoiceButton } from "./CancelInvoiceButton";
+import { CancelInvoiceButton } from "./DeleteInvoiceButton";
 import { RecordPaymentButton } from "./RecordPaymentButton";
 import { getSession } from "@/lib/session";
 
