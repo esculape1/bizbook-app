@@ -8,7 +8,7 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { InvoiceForm } from "./InvoiceForm";
 import Link from "next/link";
 import { EditInvoiceForm } from "./EditInvoiceForm";
-import { DeleteInvoiceButton } from "./DeleteInvoiceButton";
+import { CancelInvoiceButton } from "./CancelInvoiceButton";
 import { RecordPaymentButton } from "./RecordPaymentButton";
 import { getSession } from "@/lib/session";
 
@@ -27,12 +27,14 @@ export default async function InvoicesPage() {
     Paid: 'bg-green-500/20 text-green-700',
     Unpaid: 'bg-red-500/20 text-red-700',
     'Partially Paid': 'bg-yellow-500/20 text-yellow-700',
+    Cancelled: 'bg-gray-500/20 text-gray-600',
   }
 
   const statusTranslations: { [key: string]: string } = {
     Paid: 'Payée',
     Unpaid: 'Impayée',
     'Partially Paid': 'Partiellement Payée',
+    Cancelled: 'Annulée',
   };
 
   return (
@@ -58,8 +60,9 @@ export default async function InvoicesPage() {
             <TableBody>
               {invoices.map((invoice) => {
                 const amountDue = invoice.totalAmount - (invoice.amountPaid || 0);
+                const isCancelledOrPaid = invoice.status === 'Cancelled' || invoice.status === 'Paid';
                 return (
-                <TableRow key={invoice.id}>
+                <TableRow key={invoice.id} className={cn(invoice.status === 'Cancelled' && 'bg-muted/50 text-muted-foreground')}>
                   <TableCell className="font-medium">
                     <Link href={`/invoices/${invoice.id}`} className="text-primary hover:underline">
                       {invoice.invoiceNumber}
@@ -79,7 +82,7 @@ export default async function InvoicesPage() {
                       <div className="flex items-center justify-end">
                         <RecordPaymentButton invoice={invoice} settings={settings} />
                         <EditInvoiceForm invoice={invoice} clients={clients} products={products} settings={settings} />
-                        <DeleteInvoiceButton id={invoice.id} invoiceNumber={invoice.invoiceNumber} />
+                        <CancelInvoiceButton id={invoice.id} invoiceNumber={invoice.invoiceNumber} disabled={isCancelledOrPaid} />
                       </div>
                     </TableCell>
                   )}

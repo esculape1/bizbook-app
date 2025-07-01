@@ -7,7 +7,6 @@ import {
   getClients,
   getProducts,
   updateInvoice as updateInvoiceInDB,
-  deleteInvoice as deleteInvoiceFromDB,
   getInvoiceById,
   updateProduct,
 } from '@/lib/data';
@@ -45,7 +44,7 @@ const updateInvoiceSchema = z.object({
     items: z.array(updateInvoiceItemSchema),
     vat: z.coerce.number(),
     discount: z.coerce.number(),
-    status: z.enum(['Paid', 'Unpaid', 'Partially Paid']),
+    status: z.enum(['Paid', 'Unpaid', 'Partially Paid', 'Cancelled']),
 });
 
 
@@ -243,36 +242,39 @@ export async function updateInvoice(id: string, invoiceNumber: string, formData:
   }
 }
 
-export async function deleteInvoice(id: string) {
+export async function cancelInvoice(id: string) {
   const session = await getSession();
   if (session?.role !== 'Admin') {
     return { message: "Action non autorisée." };
   }
 
   try {
-    const invoiceToDelete = await getInvoiceById(id);
-    if (!invoiceToDelete) {
-        throw new Error("Facture non trouvée pour la suppression.");
+    const invoiceToCancel = await getInvoiceById(id);
+    if (!invoiceToCancel) {
+      throw new Error("Facture non trouvée pour l'annulation.");
     }
     
-    const products = await getProducts();
-    for (const item of invoiceToDelete.items) {
+    // Restore stock if the invoice is not already cancelled
+    if (invoiceToCancel.status !== 'Cancelled') {
+      const products = await getProducts();
+      for (const item of invoiceToCancel.items) {
         const product = products.find(p => p.id === item.productId);
         if (product) {
-            const newStock = product.quantityInStock + item.quantity;
-            await updateProduct(item.productId, { quantityInStock: newStock });
+          const newStock = product.quantityInStock + item.quantity;
+          await updateProduct(item.productId, { quantityInStock: newStock });
         }
+      }
+      // Update invoice status to 'Cancelled'
+      await updateInvoiceInDB(id, { status: 'Cancelled' });
     }
-
-    await deleteInvoiceFromDB(id);
 
     revalidatePath('/invoices');
     revalidatePath('/');
     revalidatePath('/products');
     return { success: true };
   } catch (error) {
-    console.error('Failed to delete invoice:', error);
-    const message = error instanceof Error ? error.message : 'Erreur de la base de données: Impossible de supprimer la facture.';
+    console.error("Échec de l'annulation de la facture:", error);
+    const message = error instanceof Error ? error.message : "Erreur de la base de données: Impossible d'annuler la facture.";
     return {
       success: false,
       message,

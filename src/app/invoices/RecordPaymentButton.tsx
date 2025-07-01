@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -51,7 +52,7 @@ export function RecordPaymentButton({ invoice, settings }: RecordPaymentButtonPr
     },
   });
   
-  const isPaid = invoice.status === 'Paid' || amountDue <= 0;
+  const isActionDisabled = invoice.status === 'Paid' || invoice.status === 'Cancelled' || amountDue <= 0;
 
   const onSubmit = (data: PaymentFormValues) => {
     startTransition(async () => {
@@ -81,7 +82,7 @@ export function RecordPaymentButton({ invoice, settings }: RecordPaymentButtonPr
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" disabled={isPaid} title={isPaid ? "Facture déjà payée" : "Enregistrer un paiement"}>
+        <Button variant="ghost" size="icon" disabled={isActionDisabled} title={isActionDisabled ? "Action non disponible" : "Enregistrer un paiement"}>
           <CreditCard className="h-4 w-4" />
         </Button>
       </DialogTrigger>

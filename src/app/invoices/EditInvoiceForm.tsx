@@ -37,7 +37,7 @@ const invoiceSchema = z.object({
   items: z.array(invoiceItemSchema).min(1, "Ajoutez au moins un produit."),
   vat: z.coerce.number().min(0).default(0),
   discount: z.coerce.number().min(0).default(0),
-  status: z.enum(['Paid', 'Unpaid', 'Partially Paid']),
+  status: z.enum(['Paid', 'Unpaid', 'Partially Paid', 'Cancelled']),
 });
 
 type InvoiceFormValues = z.infer<typeof invoiceSchema>;
@@ -113,7 +113,7 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" disabled={invoice.status === 'Cancelled'}>
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
@@ -208,6 +208,7 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
                         <SelectItem value="Unpaid">Impayée</SelectItem>
                         <SelectItem value="Paid">Payée</SelectItem>
                         <SelectItem value="Partially Paid">Partiellement Payée</SelectItem>
+                        <SelectItem value="Cancelled">Annulée</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

@@ -1,3 +1,4 @@
+
 export type User = {
   id: string;
   name: string;
@@ -87,7 +88,7 @@ export type Invoice = {
   discount: number; // as a percentage
   discountAmount: number;
   totalAmount: number;
-  status: 'Paid' | 'Unpaid' | 'Partially Paid';
+  status: 'Paid' | 'Unpaid' | 'Partially Paid' | 'Cancelled';
   amountPaid: number;
   payments: Payment[];
 };
