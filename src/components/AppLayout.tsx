@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -102,7 +101,7 @@ export function AppLayout({ children, user }: { children: ReactNode, user: User 
                 pathname === item.href && `ring-2 ring-offset-1 ring-offset-background ${activeRingClasses[index]}`
               )}
             >
-              <item.icon className="h-4 w-4" />
+              <item.icon className="h-5 w-5" />
               {item.label}
             </Link>
           ))}
@@ -139,7 +138,7 @@ export function AppLayout({ children, user }: { children: ReactNode, user: User 
                       pathname === item.href && `ring-2 ring-offset-2 ring-offset-background ${activeRingClasses[index]}`
                     )}
                   >
-                    <item.icon className="h-5 w-5" />
+                    <item.icon className="h-6 w-6" />
                     {item.label}
                   </Link>
               ))}
