@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SalesChart } from "@/components/dashboard/SalesChart";
@@ -5,6 +6,7 @@ import { LowStockTable } from "@/components/dashboard/LowStockTable";
 import { DollarSign, Users, Box, Receipt, Wallet } from "lucide-react";
 import { getClients, getProducts, getInvoices, getExpenses, getSettings } from "@/lib/data";
 import { formatCurrency } from "@/lib/utils";
+import { OverdueInvoicesTable } from "@/components/dashboard/OverdueInvoicesTable";
 
 export default async function DashboardPage() {
   const [clients, products, invoices, expenses, settings] = await Promise.all([
@@ -61,7 +63,7 @@ export default async function DashboardPage() {
           className="bg-chart-4/10 text-chart-4 border-chart-4/20"
         />
       </div>
-      <div className="grid gap-6 lg:grid-cols-5">
+      <div className="grid gap-6 lg:grid-cols-7">
         <Card className="lg:col-span-3 bg-muted/30">
           <CardHeader className="text-center">
             <CardTitle>Aperçu des Ventes</CardTitle>
@@ -70,14 +72,11 @@ export default async function DashboardPage() {
             <SalesChart invoices={invoices} products={products} currency={settings.currency} />
           </CardContent>
         </Card>
-        <Card className="lg:col-span-2 bg-destructive/5">
-          <CardHeader className="text-center">
-            <CardTitle>Alerte de Stock Faible</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <LowStockTable products={products} />
-          </CardContent>
-        </Card>
+        
+        <OverdueInvoicesTable invoices={invoices} />
+
+        <LowStockTable products={products} />
+
       </div>
     </div>
   );
