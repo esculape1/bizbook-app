@@ -23,7 +23,7 @@ export const settingsSchema = z.object({
 
 export type SettingsFormValues = z.infer<typeof settingsSchema>;
 
-export async function saveSettings(formData: SettingsFormValues) {
+export async function saveSettings(formData: SettingsFormValues, initialLogoUrl?: string | null) {
   const session = await getSession();
   if (session?.role !== 'Admin') {
     return { success: false, message: "Action non autorisée." };
@@ -36,8 +36,8 @@ export async function saveSettings(formData: SettingsFormValues) {
       ...otherSettings,
     };
     
-    // The logo from the form is the data URI. We map it to the `logoUrl` field.
-    if (logo) {
+    // Only update the logo if it has changed from the initial value
+    if (logo && logo !== initialLogoUrl) {
       settingsToUpdate.logoUrl = logo;
     }
 

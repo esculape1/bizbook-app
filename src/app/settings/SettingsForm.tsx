@@ -34,7 +34,7 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
       companyIfu: initialSettings.companyIfu,
       companyRccm: initialSettings.companyRccm,
       currency: initialSettings.currency,
-      logo: initialSettings.logoUrl,
+      logo: initialSettings.logoUrl, // Important: pass existing logoUrl
       invoiceNumberFormat: initialSettings.invoiceNumberFormat,
       invoiceTemplate: initialSettings.invoiceTemplate,
     },
@@ -61,7 +61,7 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
 
   const onSubmit = (data: SettingsFormValues) => {
     startTransition(async () => {
-      const result = await saveSettings(data);
+      const result = await saveSettings(data, initialSettings.logoUrl);
       if (result.success) {
         toast({
           title: "Paramètres enregistrés",
@@ -190,7 +190,7 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
                 <FormField
                   control={form.control}
                   name="logo"
-                  render={({ field }) => (
+                  render={() => ( // We don't need the field object here
                     <FormItem>
                       <FormLabel>Logo de l'entreprise</FormLabel>
                       <div className="flex items-center gap-4">
@@ -203,12 +203,9 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
                             data-ai-hint="logo"
                         />}
                         <FormControl>
-                          <Input 
-                            type="file" 
+                           <Input
+                            type="file"
                             accept="image/png, image/jpeg, image/gif"
-                            onBlur={field.onBlur}
-                            name={field.name}
-                            ref={field.ref}
                             onChange={handleLogoChange}
                             className="max-w-xs"
                             disabled={!canEdit}
