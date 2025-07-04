@@ -32,35 +32,35 @@ export default async function DashboardPage() {
           value={formatCurrency(totalRevenue, settings.currency)} 
           icon={<DollarSign />} 
           description="Total des paiements reçus"
-          className="bg-chart-1/10 text-chart-1 border-chart-1/20"
+          className="bg-green-500/10 text-green-700 border-green-500/20"
         />
         <StatCard 
           title="Total Dépenses" 
           value={formatCurrency(totalExpenses, settings.currency)} 
           icon={<Wallet />}
           description="Total des dépenses enregistrées"
-          className="bg-chart-5/10 text-chart-5 border-chart-5/20"
+          className="bg-red-500/10 text-red-700 border-red-500/20"
         />
         <StatCard 
           title="Clients Actifs" 
           value={clients.filter(c => c.status === 'Active').length.toString()} 
           icon={<Users />}
           description={`${clients.length} clients au total`}
-          className="bg-chart-2/10 text-chart-2 border-chart-2/20"
+          className="bg-blue-500/10 text-blue-700 border-blue-500/20"
         />
         <StatCard 
           title="Produits en Stock" 
           value={products.length.toString()} 
           icon={<Box />}
           description="Nombre de références uniques"
-          className="bg-chart-3/10 text-chart-3 border-chart-3/20"
+          className="bg-orange-500/10 text-orange-700 border-orange-500/20"
         />
         <StatCard 
           title="Total Impayé" 
           value={formatCurrency(totalDue, settings.currency)} 
           icon={<Receipt />}
           description={`${invoices.filter(i => i.status !== 'Paid').length} factures non soldées`}
-          className="bg-chart-4/10 text-chart-4 border-chart-4/20"
+          className="bg-yellow-500/10 text-yellow-700 border-yellow-500/20"
         />
       </div>
       <div className="grid gap-6 lg:grid-cols-7">
