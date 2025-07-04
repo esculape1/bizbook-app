@@ -33,7 +33,10 @@ export async function saveSettings(formData: SettingsFormValues) {
     const validatedData = settingsSchema.parse(formData);
     await updateSettings(validatedData);
     
-    revalidatePath('/', 'layout');
+    revalidatePath('/settings');
+    revalidatePath('/invoices');
+    revalidatePath('/devis');
+    revalidatePath('/'); // For dashboard and templates using settings
     return { success: true };
   } catch (error) {
     console.error('Failed to save settings:', error);

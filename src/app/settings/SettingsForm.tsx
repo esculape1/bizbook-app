@@ -171,7 +171,7 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
                 <FormField
                   control={form.control}
                   name="logoUrl"
-                  render={({ field }) => (
+                  render={({ field: { onChange, onBlur, name, ref } }) => (
                     <FormItem>
                       <FormLabel>Logo de l'entreprise</FormLabel>
                       <div className="flex items-center gap-4">
@@ -183,35 +183,35 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
                             className="rounded-md bg-muted object-cover"
                             data-ai-hint="logo"
                         />}
-                        <FormControl>
-                           <Input
-                            type="file"
-                            accept="image/png, image/jpeg, image/gif"
-                            onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                    if (file.size > 500 * 1024) { // 500KB limit
-                                    form.setError("logoUrl", { type: "manual", message: "Le fichier ne doit pas dépasser 500KB." });
-                                    return;
-                                    }
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => {
-                                    const dataUri = reader.result as string;
-                                    if (dataUri) {
-                                        setLogoPreview(dataUri);
-                                        field.onChange(dataUri); // Use field.onChange here
-                                        form.clearErrors("logoUrl");
-                                    } else {
-                                        form.setError("logoUrl", { type: "manual", message: "Impossible de lire le fichier." });
-                                    }
-                                    };
-                                    reader.readAsDataURL(file);
-                                }
-                            }}
-                            className="max-w-xs"
-                            disabled={!canEdit}
-                          />
-                        </FormControl>
+                        <Input
+                          name={name}
+                          type="file"
+                          ref={ref}
+                          onBlur={onBlur}
+                          accept="image/png, image/jpeg, image/gif"
+                          onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                  if (file.size > 500 * 1024) { // 500KB limit
+                                  form.setError("logoUrl", { type: "manual", message: "Le fichier ne doit pas dépasser 500KB." });
+                                  return;
+                                  }
+                                  const reader = new FileReader();
+                                  reader.onloadend = () => {
+                                  const dataUri = reader.result as string;
+                                  if (dataUri) {
+                                      setLogoPreview(dataUri);
+                                      onChange(dataUri); // Updates react-hook-form's state
+                                  } else {
+                                      form.setError("logoUrl", { type: "manual", message: "Impossible de lire le fichier." });
+                                  }
+                                  };
+                                  reader.readAsDataURL(file);
+                              }
+                          }}
+                          className="max-w-xs"
+                          disabled={!canEdit}
+                        />
                       </div>
                       <FormDescription>
                         Téléchargez un nouveau logo. Il sera affiché sur vos factures. (Max 500KB)
