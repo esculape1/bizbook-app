@@ -2,10 +2,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { Badge, badgeVariants } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn, formatCurrency } from "@/lib/utils";
-import type { ReportData, Settings } from "@/lib/types";
+import type { ReportData, Settings, Invoice } from "@/lib/types";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Download } from "lucide-react";
@@ -15,16 +15,25 @@ type ReportDisplayProps = {
   currency: Settings['currency'];
 };
 
-const statusColors = {
-    Paid: 'bg-green-500/20 text-green-700',
-    Unpaid: 'bg-red-500/20 text-red-700',
-    'Partially Paid': 'bg-yellow-500/20 text-yellow-700',
-};
+const getStatusVariant = (status: Invoice['status']): "success" | "warning" | "destructive" | "outline" => {
+    switch (status) {
+      case 'Paid':
+        return 'success';
+      case 'Partially Paid':
+        return 'warning';
+      case 'Unpaid':
+        return 'destructive';
+      case 'Cancelled':
+      default:
+        return 'outline';
+    }
+}
 
 const statusTranslations: { [key: string]: string } = {
     Paid: 'Payée',
     Unpaid: 'Impayée',
     'Partially Paid': 'Partiellement Payée',
+    Cancelled: 'Annulée'
 };
 
 const StatCard = ({ title, value, className }: { title: string, value: string, className?: string }) => (
@@ -239,7 +248,7 @@ export function ReportDisplay({ data, currency }: ReportDisplayProps) {
                   <TableCell>{invoice.clientName}</TableCell>
                   <TableCell>{format(new Date(invoice.date), "dd/MM/yyyy")}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={cn("border", statusColors[invoice.status as keyof typeof statusColors])}>
+                    <Badge variant={getStatusVariant(invoice.status)}>
                       {statusTranslations[invoice.status]}
                     </Badge>
                   </TableCell>

@@ -19,11 +19,18 @@ export default async function DevisPage() {
 
   const canEdit = user?.role === 'Admin';
 
-  const statusColors = {
-    Draft: 'bg-gray-500/20 text-gray-700',
-    Sent: 'bg-blue-500/20 text-blue-700',
-    Accepted: 'bg-green-500/20 text-green-700',
-    Declined: 'bg-red-500/20 text-red-700',
+  const getStatusVariant = (status: 'Draft' | 'Sent' | 'Accepted' | 'Declined'): "outline" | "default" | "success" | "destructive" => {
+    switch (status) {
+      case 'Accepted':
+        return 'success';
+      case 'Declined':
+        return 'destructive';
+      case 'Sent':
+        return 'default';
+      case 'Draft':
+      default:
+        return 'outline';
+    }
   }
 
   const statusTranslations = {
@@ -58,7 +65,7 @@ export default async function DevisPage() {
                   <TableCell>{quote.clientName}</TableCell>
                   <TableCell>{new Date(quote.date).toLocaleDateString('fr-FR')}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={cn("border", statusColors[quote.status])}>
+                    <Badge variant={getStatusVariant(quote.status)}>
                       {statusTranslations[quote.status]}
                     </Badge>
                   </TableCell>

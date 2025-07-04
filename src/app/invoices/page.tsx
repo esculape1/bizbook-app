@@ -11,6 +11,7 @@ import { EditInvoiceForm } from "./EditInvoiceForm";
 import { CancelInvoiceButton } from "./DeleteInvoiceButton";
 import { RecordPaymentButton } from "./RecordPaymentButton";
 import { getSession } from "@/lib/session";
+import type { Invoice } from "@/lib/types";
 
 export default async function InvoicesPage() {
   const [invoices, clients, products, settings, user] = await Promise.all([
@@ -23,11 +24,18 @@ export default async function InvoicesPage() {
 
   const canEdit = user?.role === 'Admin';
 
-  const statusColors = {
-    Paid: 'bg-green-500/20 text-green-700',
-    Unpaid: 'bg-red-500/20 text-red-700',
-    'Partially Paid': 'bg-yellow-500/20 text-yellow-700',
-    Cancelled: 'bg-gray-500/20 text-gray-600',
+  const getStatusVariant = (status: Invoice['status']): "success" | "warning" | "destructive" | "outline" => {
+    switch (status) {
+      case 'Paid':
+        return 'success';
+      case 'Partially Paid':
+        return 'warning';
+      case 'Unpaid':
+        return 'destructive';
+      case 'Cancelled':
+      default:
+        return 'outline';
+    }
   }
 
   const statusTranslations: { [key: string]: string } = {
@@ -71,7 +79,7 @@ export default async function InvoicesPage() {
                   <TableCell>{invoice.clientName}</TableCell>
                   <TableCell>{new Date(invoice.date).toLocaleDateString('fr-FR')}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={cn("border", statusColors[invoice.status])}>
+                    <Badge variant={getStatusVariant(invoice.status)}>
                       {statusTranslations[invoice.status] || invoice.status}
                     </Badge>
                   </TableCell>

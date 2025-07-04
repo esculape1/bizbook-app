@@ -41,7 +41,7 @@ export default function ClientsList({ clients, userRole }: { clients: Client[], 
                   <TableCell>{client.ifu}</TableCell>
                   <TableCell>{client.rccm}</TableCell>
                   <TableCell>
-                    <Badge variant={client.status === 'Active' ? 'default' : 'outline'} className={client.status === 'Active' ? 'bg-green-500/20 text-green-700' : ''}>
+                    <Badge variant={client.status === 'Active' ? 'success' : 'outline'}>
                       {client.status}
                     </Badge>
                   </TableCell>
