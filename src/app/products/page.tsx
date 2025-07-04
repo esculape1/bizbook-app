@@ -7,6 +7,7 @@ import { ProductForm } from "./ProductForm";
 import { EditProductButton } from "./EditProductButton";
 import { DeleteProductButton } from "./DeleteProductButton";
 import { getSession } from "@/lib/session";
+import { StockInventoryReport } from "./StockInventoryReport";
 
 export default async function ProductsPage() {
   const [products, settings, user] = await Promise.all([
@@ -21,7 +22,12 @@ export default async function ProductsPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Produits"
-        actions={canEdit ? <ProductForm /> : undefined}
+        actions={
+          <div className="flex items-center gap-2">
+            <StockInventoryReport products={products} settings={settings} />
+            {canEdit ? <ProductForm /> : null}
+          </div>
+        }
       />
       <Card>
         <CardContent className="pt-6">
