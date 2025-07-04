@@ -19,24 +19,15 @@ import { Textarea } from '@/components/ui/textarea';
 export function SettingsForm({ initialSettings, userRole }: { initialSettings: Settings, userRole: User['role'] | undefined }) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-  const [logoPreview, setLogoPreview] = useState<string | null>(initialSettings.logoUrl);
+  const [logoPreview, setLogoPreview] = useState<string | null | undefined>(initialSettings.logoUrl);
 
   const canEdit = userRole === 'Admin';
 
   const form = useForm<SettingsFormValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
-      companyName: initialSettings.companyName,
-      legalName: initialSettings.legalName,
-      managerName: initialSettings.managerName,
-      companyAddress: initialSettings.companyAddress,
-      companyPhone: initialSettings.companyPhone,
-      companyIfu: initialSettings.companyIfu,
-      companyRccm: initialSettings.companyRccm,
-      currency: initialSettings.currency,
-      logoUrl: initialSettings.logoUrl,
-      invoiceNumberFormat: initialSettings.invoiceNumberFormat,
-      invoiceTemplate: initialSettings.invoiceTemplate,
+      ...initialSettings,
+      logoUrl: initialSettings.logoUrl || "",
     },
   });
 
@@ -171,40 +162,39 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
                 <FormField
                   control={form.control}
                   name="logoUrl"
-                  render={({ field: { onChange, onBlur, name, ref } }) => (
+                  render={({ field }) => (
                     <FormItem>
                       <FormLabel>Logo de l'entreprise</FormLabel>
                       <div className="flex items-center gap-4">
-                        {logoPreview && <Image 
-                            src={logoPreview} 
-                            alt="Aperçu du logo"
-                            width={80} 
-                            height={80} 
-                            className="rounded-md bg-muted object-cover"
-                            data-ai-hint="logo"
-                        />}
+                        {logoPreview && (
+                            <Image 
+                                src={logoPreview} 
+                                alt="Aperçu du logo"
+                                width={80} 
+                                height={80} 
+                                className="rounded-md bg-muted object-cover"
+                                data-ai-hint="logo"
+                            />
+                        )}
                         <Input
-                          name={name}
                           type="file"
-                          ref={ref}
-                          onBlur={onBlur}
                           accept="image/png, image/jpeg, image/gif"
                           onChange={(e) => {
                               const file = e.target.files?.[0];
                               if (file) {
                                   if (file.size > 500 * 1024) { // 500KB limit
-                                  form.setError("logoUrl", { type: "manual", message: "Le fichier ne doit pas dépasser 500KB." });
-                                  return;
+                                    form.setError("logoUrl", { type: "manual", message: "Le fichier ne doit pas dépasser 500KB." });
+                                    return;
                                   }
                                   const reader = new FileReader();
                                   reader.onloadend = () => {
-                                  const dataUri = reader.result as string;
-                                  if (dataUri) {
-                                      setLogoPreview(dataUri);
-                                      onChange(dataUri); // Updates react-hook-form's state
-                                  } else {
-                                      form.setError("logoUrl", { type: "manual", message: "Impossible de lire le fichier." });
-                                  }
+                                    const dataUri = reader.result as string;
+                                    if (dataUri) {
+                                        setLogoPreview(dataUri);
+                                        field.onChange(dataUri);
+                                    } else {
+                                        form.setError("logoUrl", { type: "manual", message: "Impossible de lire le fichier." });
+                                    }
                                   };
                                   reader.readAsDataURL(file);
                               }
