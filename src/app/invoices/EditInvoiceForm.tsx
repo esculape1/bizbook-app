@@ -130,11 +130,13 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
       }
     });
   };
+  
+  const isEditDisabled = invoice.status === 'Cancelled' || invoice.status === 'Paid';
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" disabled={invoice.status === 'Cancelled'}>
+        <Button variant="ghost" size="icon" disabled={isEditDisabled}>
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>

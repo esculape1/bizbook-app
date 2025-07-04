@@ -280,13 +280,14 @@ export async function cancelInvoice(id: string) {
           await updateProduct(item.productId, { quantityInStock: newStock });
         }
       }
-      // Update invoice status to 'Cancelled'
-      await updateInvoiceInDB(id, { status: 'Cancelled' });
+      // Update invoice status to 'Cancelled' and reset paid amount
+      await updateInvoiceInDB(id, { status: 'Cancelled', amountPaid: 0 });
     }
 
     revalidatePath('/invoices');
     revalidatePath('/');
     revalidatePath('/products');
+    revalidatePath(`/invoices/${id}`);
     return { success: true };
   } catch (error) {
     console.error("Échec de l'annulation de la facture:", error);

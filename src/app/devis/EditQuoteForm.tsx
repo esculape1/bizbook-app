@@ -118,11 +118,13 @@ export function EditQuoteForm({ quote, clients, products, settings }: EditQuoteF
     Accepted: 'Accepté',
     Declined: 'Refusé',
   }
+  
+  const isEditDisabled = quote.status === 'Accepted' || quote.status === 'Declined';
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" title="Modifier le devis">
+        <Button variant="ghost" size="icon" title="Modifier le devis" disabled={isEditDisabled}>
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
