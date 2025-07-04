@@ -49,7 +49,7 @@ export function AppLayout({ children, user }: { children: ReactNode, user: User 
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <header className="sticky top-0 flex h-16 items-center justify-between border-b bg-background px-4 md:px-6 z-50">
+      <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-50">
         
         {/* Left Side: Logo & Mobile Menu */}
         <div className="flex items-center gap-4">
@@ -94,15 +94,17 @@ export function AppLayout({ children, user }: { children: ReactNode, user: User 
         </div>
 
         {/* Center: Desktop Navigation */}
-        <nav className="hidden md:flex">
-          <div className="flex items-center gap-1 rounded-full bg-muted p-1">
+        <nav className="hidden flex-1 items-center justify-center md:flex">
+          <div className="flex items-center gap-2 rounded-xl bg-muted p-1 shadow-inner">
             {accessibleNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "rounded-full px-4 py-1.5 text-sm font-medium transition-colors hover:bg-background hover:text-foreground",
-                  pathname === item.href ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+                  "rounded-lg px-4 py-1.5 text-base font-medium transition-colors",
+                  pathname === item.href
+                    ? "bg-primary text-primary-foreground shadow"
+                    : "text-muted-foreground hover:bg-background/50"
                 )}
               >
                 {item.label}
