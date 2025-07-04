@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -9,28 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
-import { saveSettings } from './actions';
+import { saveSettings, settingsSchema, type SettingsFormValues } from './actions';
 import type { Settings, User } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
-
-const settingsSchema = z.object({
-  companyName: z.string().min(1, { message: "Le nom de l'entreprise est requis." }),
-  legalName: z.string().min(1, { message: "La raison sociale est requise." }),
-  managerName: z.string().min(1, { message: "Le nom du gérant est requis." }),
-  companyAddress: z.string().min(1, { message: "L'adresse est requise." }),
-  companyPhone: z.string().min(1, { message: "Le téléphone est requis." }),
-  companyIfu: z.string().min(1, { message: "L'IFU est requis." }),
-  companyRccm: z.string().min(1, { message: "Le RCCM est requis." }),
-  currency: z.enum(['EUR', 'USD', 'GBP', 'XOF']),
-  logo: z.string().optional(),
-  invoiceNumberFormat: z.enum(['YEAR-NUM', 'PREFIX-YEAR-NUM', 'PREFIX-NUM']),
-  invoiceTemplate: z.enum(['modern', 'classic', 'simple', 'detailed']),
-});
-
-type SettingsFormValues = z.infer<typeof settingsSchema>;
 
 export function SettingsForm({ initialSettings, userRole }: { initialSettings: Settings, userRole: User['role'] | undefined }) {
   const [isPending, startTransition] = useTransition();
@@ -206,7 +190,7 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
                 <FormField
                   control={form.control}
                   name="logo"
-                  render={() => (
+                  render={({ field }) => (
                     <FormItem>
                       <FormLabel>Logo de l'entreprise</FormLabel>
                       <div className="flex items-center gap-4">
@@ -222,6 +206,9 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
                           <Input 
                             type="file" 
                             accept="image/png, image/jpeg, image/gif"
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
                             onChange={handleLogoChange}
                             className="max-w-xs"
                             disabled={!canEdit}
@@ -231,7 +218,7 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
                       <FormDescription>
                         Téléchargez un nouveau logo. Il sera affiché sur vos factures. (Max 500KB)
                       </FormDescription>
-                      <FormMessage>{form.formState.errors.logo?.message}</FormMessage>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />

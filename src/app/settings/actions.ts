@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -6,7 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/session';
 import type { Settings } from '@/lib/types';
 
-const settingsSchema = z.object({
+export const settingsSchema = z.object({
   companyName: z.string().min(1, { message: "Le nom de l'entreprise est requis." }),
   legalName: z.string().min(1, { message: "La raison sociale est requise." }),
   managerName: z.string().min(1, { message: "Le nom du gérant est requis." }),
@@ -20,7 +21,9 @@ const settingsSchema = z.object({
   invoiceTemplate: z.enum(['modern', 'classic', 'simple', 'detailed']),
 });
 
-export async function saveSettings(formData: z.infer<typeof settingsSchema>) {
+export type SettingsFormValues = z.infer<typeof settingsSchema>;
+
+export async function saveSettings(formData: SettingsFormValues) {
   const session = await getSession();
   if (session?.role !== 'Admin') {
     return { success: false, message: "Action non autorisée." };
