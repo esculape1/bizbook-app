@@ -25,6 +25,8 @@ const quoteItemSchema = z.object({
   productName: z.string(),
   quantity: z.coerce.number().min(1, "Qté > 0"),
   unitPrice: z.coerce.number(),
+  reference: z.string(),
+  total: z.coerce.number(),
 });
 
 const quoteSchema = z.object({
@@ -90,6 +92,8 @@ export function QuoteForm({ clients, products, settings }: QuoteFormProps) {
       form.setValue(`items.${index}.productName`, product.name);
       form.setValue(`items.${index}.unitPrice`, product.unitPrice);
       form.setValue(`items.${index}.quantity`, 1);
+      form.setValue(`items.${index}.reference`, product.reference);
+      form.setValue(`items.${index}.total`, product.unitPrice);
     }
   };
 
@@ -266,7 +270,7 @@ export function QuoteForm({ clients, products, settings }: QuoteFormProps) {
                   </TableBody>
                 </Table>
               </div>
-              <Button type="button" variant="outline" size="sm" onClick={() => append({ productId: '', productName: '', quantity: 1, unitPrice: 0 })}>
+              <Button type="button" variant="outline" size="sm" onClick={() => append({ productId: '', productName: '', quantity: 1, unitPrice: 0, reference: '', total: 0 })}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Ajouter un article
               </Button>
