@@ -27,7 +27,9 @@ type SalesChartProps = {
 
 export function SalesChart({ invoices, products, currency }: SalesChartProps) {
     const salesData = products.map(product => {
-        const productSales = invoices.flatMap(inv => inv.items)
+        const productSales = invoices
+            .filter(inv => inv.status === 'Paid' || inv.status === 'Partially Paid')
+            .flatMap(inv => inv.items)
             .filter(item => item.productId === product.id)
             .reduce((sum, item) => sum + item.total, 0);
         

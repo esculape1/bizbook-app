@@ -80,5 +80,11 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* To use your real image, replace the URL below */
+    /* data-ai-hint: pagne burkinabe */
+    background-image: url('https://placehold.co/1920x1080.png');
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: center;
   }
 }

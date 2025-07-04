@@ -49,7 +49,7 @@ export function AppLayout({ children, user }: { children: ReactNode, user: User 
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-50">
+      <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 z-50">
         
         {/* Left Side: Logo & Mobile Menu */}
         <div className="flex items-center gap-4">
@@ -155,7 +155,7 @@ export function AppLayout({ children, user }: { children: ReactNode, user: User 
             </DropdownMenu>
         </div>
       </header>
-      <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-muted/20">
+      <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background/90 backdrop-blur-sm">
         {children}
       </main>
     </div>
