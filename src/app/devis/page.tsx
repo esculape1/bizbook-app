@@ -1,12 +1,17 @@
+
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getQuotes, getClients, getProducts, getSettings } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import { QuoteForm } from "./QuoteForm";
 import { formatCurrency } from "@/lib/utils";
 import { getSession } from "@/lib/session";
+import type { Quote } from "@/lib/types";
+import { EditQuoteForm } from "./EditQuoteForm";
+import { DeleteQuoteButton } from "./DeleteQuoteButton";
+import { QuoteViewerDialog } from "./QuoteViewerDialog";
+
 
 export default async function DevisPage() {
   const [quotes, clients, products, settings, user] = await Promise.all([
@@ -56,10 +61,13 @@ export default async function DevisPage() {
                 <TableHead>Date</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead className="text-right">Montant</TableHead>
+                {canEdit && <TableHead className="text-right">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {quotes.map((quote) => (
+              {quotes.map((quote) => {
+                const client = clients.find(c => c.id === quote.clientId);
+                return (
                 <TableRow key={quote.id}>
                   <TableCell className="font-medium">{quote.quoteNumber}</TableCell>
                   <TableCell>{quote.clientName}</TableCell>
@@ -70,8 +78,17 @@ export default async function DevisPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">{formatCurrency(quote.totalAmount, settings.currency)}</TableCell>
+                  {canEdit && client && (
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end">
+                        <QuoteViewerDialog quote={quote} client={client} settings={settings} />
+                        <EditQuoteForm quote={quote} clients={clients} products={products} settings={settings} />
+                        <DeleteQuoteButton id={quote.id} quoteNumber={quote.quoteNumber} />
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
-              ))}
+              )})}
             </TableBody>
           </Table>
         </CardContent>

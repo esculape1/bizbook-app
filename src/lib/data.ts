@@ -96,6 +96,16 @@ export async function getQuotes(): Promise<Quote[]> {
     return quoteSnapshot.docs.map(doc => docToObject<Quote>(doc));
 }
 
+export async function getQuoteById(id: string): Promise<Quote | null> {
+    if (!db) return null;
+    const quoteDocRef = db.collection('quotes').doc(id);
+    const quoteDoc = await quoteDocRef.get();
+    if (quoteDoc.exists) {
+        return docToObject<Quote>(quoteDoc);
+    }
+    return null;
+}
+
 export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>): Promise<Quote> {
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
     const quotesCol = db.collection('quotes');
@@ -116,6 +126,18 @@ export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>): Pr
     };
     const docRef = await quotesCol.add(newQuoteData);
     return { id: docRef.id, ...newQuoteData };
+}
+
+export async function updateQuote(id: string, quoteData: Partial<Omit<Quote, 'id'>>): Promise<void> {
+  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+  const quoteDocRef = db.collection('quotes').doc(id);
+  await quoteDocRef.set(quoteData, { merge: true });
+}
+
+export async function deleteQuote(id: string): Promise<void> {
+  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+  const quoteDocRef = db.collection('quotes').doc(id);
+  await quoteDocRef.delete();
 }
 
 // INVOICES
