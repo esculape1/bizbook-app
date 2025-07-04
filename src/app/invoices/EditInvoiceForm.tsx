@@ -21,27 +21,6 @@ import { updateInvoice } from './actions';
 import type { Client, Product, Settings, Invoice, InvoiceItem } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
-const invoiceItemSchema = z.object({
-  productId: z.string().min(1, "Produit requis"),
-  productName: z.string(),
-  reference: z.string(),
-  quantity: z.coerce.number().min(1, "Qté > 0"),
-  unitPrice: z.coerce.number().min(0),
-  total: z.coerce.number(),
-});
-
-const invoiceSchema = z.object({
-  clientId: z.string().min(1, "Client requis"),
-  date: z.date({ required_error: "Date requise" }),
-  dueDate: z.date({ required_error: "Date d'échéance requise" }),
-  items: z.array(invoiceItemSchema).min(1, "Ajoutez au moins un produit."),
-  vat: z.coerce.number().min(0).default(0),
-  discount: z.coerce.number().min(0).default(0),
-  status: z.enum(['Paid', 'Unpaid', 'Partially Paid', 'Cancelled']),
-});
-
-type InvoiceFormValues = z.infer<typeof invoiceSchema>;
-
 type EditInvoiceFormProps = {
   invoice: Invoice;
   clients: Client[];
@@ -54,12 +33,53 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
+  const invoiceItemSchema = z.object({
+    productId: z.string().min(1, "Produit requis"),
+    productName: z.string(),
+    reference: z.string(),
+    quantity: z.coerce.number().min(1, "Qté > 0"),
+    unitPrice: z.coerce.number().min(0),
+    total: z.coerce.number(),
+    purchasePrice: z.coerce.number(),
+  });
+
+  const invoiceSchema = z.object({
+    clientId: z.string().min(1, "Client requis"),
+    date: z.date({ required_error: "Date requise" }),
+    dueDate: z.date({ required_error: "Date d'échéance requise" }),
+    items: z.array(invoiceItemSchema).min(1, "Ajoutez au moins un produit.")
+      .superRefine((items, ctx) => {
+          items.forEach((item, index) => {
+              if (item.unitPrice < item.purchasePrice) {
+                  ctx.addIssue({
+                      path: [`${index}`, 'unitPrice'],
+                      message: `>= ${formatCurrency(item.purchasePrice, settings.currency)}`,
+                      code: z.ZodIssueCode.custom,
+                  });
+              }
+          });
+      }),
+    vat: z.coerce.number().min(0).default(0),
+    discount: z.coerce.number().min(0).default(0),
+    status: z.enum(['Paid', 'Unpaid', 'Partially Paid', 'Cancelled']),
+  });
+
+  type InvoiceFormValues = z.infer<typeof invoiceSchema>;
+
+
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
       ...invoice,
       date: new Date(invoice.date),
       dueDate: new Date(invoice.dueDate),
+      items: invoice.items.map(item => {
+        const product = products.find(p => p.id === item.productId);
+        return {
+          ...item,
+          purchasePrice: product?.purchasePrice ?? 0,
+        }
+      }),
     },
   });
 
@@ -88,6 +108,7 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
       form.setValue(`items.${index}.unitPrice`, product.unitPrice);
       form.setValue(`items.${index}.quantity`, 1);
       form.setValue(`items.${index}.reference`, product.reference);
+      form.setValue(`items.${index}.purchasePrice`, product.purchasePrice ?? 0);
     }
   };
 
@@ -269,7 +290,12 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
                             control={form.control}
                             name={`items.${index}.unitPrice`}
                             render={({ field }) => (
-                               <Input type="number" {...field} step="0.01" className="w-24"/>
+                               <FormItem>
+                                 <FormControl>
+                                   <Input type="number" {...field} step="0.01" className="w-24"/>
+                                 </FormControl>
+                                 <FormMessage/>
+                               </FormItem>
                             )}
                           />
                         </TableCell>
@@ -284,7 +310,7 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
                   </TableBody>
                 </Table>
               </div>
-              <Button type="button" variant="outline" size="sm" onClick={() => append({ productId: '', productName: '', quantity: 1, unitPrice: 0, reference: '', total: 0 })}>
+              <Button type="button" variant="outline" size="sm" onClick={() => append({ productId: '', productName: '', quantity: 1, unitPrice: 0, reference: '', total: 0, purchasePrice: 0 })}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Ajouter un article
               </Button>

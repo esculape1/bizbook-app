@@ -20,24 +20,6 @@ import { createInvoice } from './actions';
 import type { Client, Product, Settings } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
-const invoiceItemSchema = z.object({
-  productId: z.string().min(1, "Produit requis"),
-  productName: z.string(),
-  quantity: z.coerce.number().min(1, "Qté > 0"),
-  unitPrice: z.coerce.number(),
-});
-
-const invoiceSchema = z.object({
-  clientId: z.string().min(1, "Client requis"),
-  date: z.date({ required_error: "Date requise" }),
-  dueDate: z.date({ required_error: "Date d'échéance requise" }),
-  items: z.array(invoiceItemSchema).min(1, "Ajoutez au moins un produit."),
-  vat: z.coerce.number().min(0).default(20),
-  discount: z.coerce.number().min(0).default(0),
-});
-
-type InvoiceFormValues = z.infer<typeof invoiceSchema>;
-
 type InvoiceFormProps = {
   clients: Client[];
   products: Product[];
@@ -48,6 +30,36 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+
+  const invoiceItemSchema = z.object({
+    productId: z.string().min(1, "Produit requis"),
+    productName: z.string(),
+    quantity: z.coerce.number().min(1, "Qté > 0"),
+    unitPrice: z.coerce.number().min(0, "Prix invalide"),
+    purchasePrice: z.coerce.number(),
+  });
+  
+  const invoiceSchema = z.object({
+    clientId: z.string().min(1, "Client requis"),
+    date: z.date({ required_error: "Date requise" }),
+    dueDate: z.date({ required_error: "Date d'échéance requise" }),
+    items: z.array(invoiceItemSchema).min(1, "Ajoutez au moins un produit.")
+      .superRefine((items, ctx) => {
+        items.forEach((item, index) => {
+          if (item.unitPrice < item.purchasePrice) {
+            ctx.addIssue({
+              path: [`${index}`, 'unitPrice'],
+              message: `>= ${formatCurrency(item.purchasePrice, settings.currency)}`,
+              code: z.ZodIssueCode.custom,
+            });
+          }
+        });
+      }),
+    vat: z.coerce.number().min(0).default(20),
+    discount: z.coerce.number().min(0).default(0),
+  });
+
+  type InvoiceFormValues = z.infer<typeof invoiceSchema>;
 
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
@@ -75,8 +87,7 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
   const watchedVat = useWatch({ control: form.control, name: 'vat' });
 
   const subTotal = watchedItems.reduce((acc, item) => {
-    const product = products.find(p => p.id === item.productId);
-    return acc + (product?.unitPrice || 0) * (item.quantity || 0);
+    return acc + (item.unitPrice || 0) * (item.quantity || 0);
   }, 0);
   
   const discountAmount = subTotal * (watchedDiscount / 100);
@@ -90,6 +101,7 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
       form.setValue(`items.${index}.productName`, product.name);
       form.setValue(`items.${index}.unitPrice`, product.unitPrice);
       form.setValue(`items.${index}.quantity`, 1);
+      form.setValue(`items.${index}.purchasePrice`, product.purchasePrice ?? 0);
     }
   };
 
@@ -220,8 +232,7 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
                       </TableRow>
                     )}
                     {fields.map((item, index) => {
-                      const product = products.find(p => p.id === watchedItems[index]?.productId);
-                      const itemTotal = (product?.unitPrice || 0) * (watchedItems[index]?.quantity || 0);
+                      const itemTotal = (watchedItems[index]?.unitPrice || 0) * (watchedItems[index]?.quantity || 0);
 
                       return (
                       <TableRow key={item.id}>
@@ -254,7 +265,20 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
                             )}
                           />
                         </TableCell>
-                        <TableCell>{formatCurrency(product?.unitPrice || 0, settings.currency)}</TableCell>
+                        <TableCell>
+                           <FormField
+                            control={form.control}
+                            name={`items.${index}.unitPrice`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <Input type="number" {...field} step="0.01" className="w-24"/>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </TableCell>
                         <TableCell className="text-right">{formatCurrency(itemTotal, settings.currency)}</TableCell>
                         <TableCell>
                           <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
@@ -266,7 +290,7 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
                   </TableBody>
                 </Table>
               </div>
-              <Button type="button" variant="outline" size="sm" onClick={() => append({ productId: '', productName: '', quantity: 1, unitPrice: 0 })}>
+              <Button type="button" variant="outline" size="sm" onClick={() => append({ productId: '', productName: '', quantity: 1, unitPrice: 0, purchasePrice: 0 })}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Ajouter un article
               </Button>

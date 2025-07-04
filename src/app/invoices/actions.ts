@@ -20,6 +20,7 @@ const invoiceItemSchema = z.object({
   productName: z.string(),
   quantity: z.coerce.number(),
   unitPrice: z.coerce.number(),
+  purchasePrice: z.coerce.number(), // For validation
 });
 
 const invoiceSchema = z.object({
@@ -35,6 +36,7 @@ const updateInvoiceItemSchema = z.object({
     productId: z.string(),
     quantity: z.coerce.number(),
     unitPrice: z.coerce.number(),
+    // We don't need all fields here, server will fetch them
 });
 
 const updateInvoiceSchema = z.object({
@@ -77,18 +79,26 @@ export async function createInvoice(formData: unknown) {
     for (const item of items) {
       const product = products.find(p => p.id === item.productId);
       if (!product) throw new Error(`Produit non trouvé: ${item.productId}`);
+      
       if (product.quantityInStock < item.quantity) {
           return {
               message: `Stock insuffisant pour ${product.name}. Stock actuel: ${product.quantityInStock}, demandé: ${item.quantity}.`,
           };
       }
+      
+      if (item.unitPrice < (product.purchasePrice ?? 0)) {
+        return {
+          message: `Le prix de vente pour ${product.name} ne peut être inférieur au prix d'achat.`,
+        };
+      }
+
       invoiceItems.push({
         productId: item.productId,
         productName: product.name,
         reference: product.reference,
         quantity: item.quantity,
-        unitPrice: product.unitPrice,
-        total: item.quantity * product.unitPrice,
+        unitPrice: item.unitPrice, // Use user-provided price
+        total: item.quantity * item.unitPrice,
       });
     }
 
@@ -187,17 +197,23 @@ export async function updateInvoice(id: string, invoiceNumber: string, formData:
         productsToUpdate[item.productId] -= item.quantity;
     }
     
-    const invoiceItems: InvoiceItem[] = items.map(item => {
-      const product = products.find(p => p.id === item.productId)!;
-      return {
-        productId: item.productId,
-        productName: product.name,
-        reference: product.reference,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        total: item.quantity * item.unitPrice,
-      };
-    });
+    const invoiceItems: InvoiceItem[] = [];
+    for (const item of items) {
+        const product = products.find(p => p.id === item.productId)!;
+        
+        if (item.unitPrice < (product.purchasePrice ?? 0)) {
+            throw new Error(`Le prix de vente pour ${product.name} ne peut être inférieur au prix d'achat.`);
+        }
+        
+        invoiceItems.push({
+            productId: item.productId,
+            productName: product.name,
+            reference: product.reference,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.quantity * item.unitPrice,
+        });
+    }
 
     const subTotal = invoiceItems.reduce((sum, item) => sum + item.total, 0);
     const discountAmount = subTotal * (discount / 100);
