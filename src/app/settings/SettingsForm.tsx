@@ -40,29 +40,6 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
     },
   });
 
-  const handleLogoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!canEdit) return;
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.size > 500 * 1024) { // 500KB limit
-        form.setError("logoUrl", { type: "manual", message: "Le fichier ne doit pas dépasser 500KB." });
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUri = reader.result as string;
-        if (dataUri) {
-          setLogoPreview(dataUri);
-          form.setValue("logoUrl", dataUri, { shouldValidate: true });
-          form.clearErrors("logoUrl");
-        } else {
-          form.setError("logoUrl", { type: "manual", message: "Impossible de lire le fichier." });
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
   const onSubmit = (data: SettingsFormValues) => {
     startTransition(async () => {
       const result = await saveSettings(data);
@@ -194,7 +171,7 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
                 <FormField
                   control={form.control}
                   name="logoUrl"
-                  render={() => ( // We don't need the field object here
+                  render={({ field }) => (
                     <FormItem>
                       <FormLabel>Logo de l'entreprise</FormLabel>
                       <div className="flex items-center gap-4">
@@ -210,7 +187,27 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
                            <Input
                             type="file"
                             accept="image/png, image/jpeg, image/gif"
-                            onChange={handleLogoChange}
+                            onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                    if (file.size > 500 * 1024) { // 500KB limit
+                                    form.setError("logoUrl", { type: "manual", message: "Le fichier ne doit pas dépasser 500KB." });
+                                    return;
+                                    }
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                    const dataUri = reader.result as string;
+                                    if (dataUri) {
+                                        setLogoPreview(dataUri);
+                                        field.onChange(dataUri); // Use field.onChange here
+                                        form.clearErrors("logoUrl");
+                                    } else {
+                                        form.setError("logoUrl", { type: "manual", message: "Impossible de lire le fichier." });
+                                    }
+                                    };
+                                    reader.readAsDataURL(file);
+                                }
+                            }}
                             className="max-w-xs"
                             disabled={!canEdit}
                           />
