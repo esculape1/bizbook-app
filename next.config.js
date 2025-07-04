@@ -4,6 +4,15 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  async redirects() {
+    return [
+      {
+        source: '/dashboard',
+        destination: '/',
+        permanent: true,
+      },
+    ]
+  },
   generateEtags: false,
   images: {
     remotePatterns: [
