@@ -19,7 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 export function SettingsForm({ initialSettings, userRole }: { initialSettings: Settings, userRole: User['role'] | undefined }) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-  const [logoPreview, setLogoPreview] = useState<string | null>(initialSettings.logoUrl || "https://placehold.co/80x80.png");
+  const [logoPreview, setLogoPreview] = useState<string | null>(initialSettings.logoUrl);
 
   const canEdit = userRole === 'Admin';
 
