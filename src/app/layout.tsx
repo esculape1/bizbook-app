@@ -5,6 +5,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { Toaster } from "@/components/ui/toaster";
 import { Inter } from 'next/font/google';
 import { getSession } from '@/lib/session';
+import { getSettings } from '@/lib/data';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -22,14 +23,17 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const user = await getSession();
+  const [user, settings] = await Promise.all([
+    getSession(),
+    getSettings()
+  ]);
 
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head />
       <body className="font-body antialiased" suppressHydrationWarning={true}>
         {user ? (
-            <AppLayout user={user}>
+            <AppLayout user={user} settings={settings}>
               {children}
             </AppLayout>
           ) : (

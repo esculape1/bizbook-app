@@ -1,8 +1,10 @@
+
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
+import Image from 'next/image';
 import {
   LayoutDashboard,
   Users,
@@ -27,7 +29,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
-import type { User } from '@/lib/types';
+import type { User, Settings as AppSettings } from '@/lib/types';
 import { signOut } from '@/app/auth/actions';
 
 const navItems = [
@@ -41,11 +43,21 @@ const navItems = [
   { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['Admin', 'User'] },
 ];
 
-export function AppLayout({ children, user }: { children: ReactNode, user: User }) {
+export function AppLayout({ children, user, settings }: { children: ReactNode, user: User, settings: AppSettings }) {
   const pathname = usePathname();
   const userRole = user?.role || 'User';
 
   const accessibleNavItems = navItems.filter(item => item.roles.includes(userRole));
+
+  const Logo = () => (
+    settings.logoUrl ? (
+      <Image src={settings.logoUrl} alt="BizBook Logo" width={32} height={32} className="rounded-sm object-contain" data-ai-hint="logo" />
+    ) : (
+      <div className="p-2 rounded-lg bg-primary/20 text-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-6"><path d="M2 9.5a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0Z"/><path d="M12.5 4H15a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5"/><path d="m14 6-2.5 2.5"/><path d="m18 10-6 6"/></svg>
+      </div>
+    )
+  );
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -63,9 +75,7 @@ export function AppLayout({ children, user }: { children: ReactNode, user: User 
               <SheetContent side="left">
                 <nav className="grid gap-6 text-lg font-medium">
                   <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
-                    <div className="p-2 rounded-lg bg-primary/20 text-primary">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-6"><path d="M2 9.5a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0Z"/><path d="M12.5 4H15a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5"/><path d="m14 6-2.5 2.5"/><path d="m18 10-6 6"/></svg>
-                    </div>
+                    <Logo />
                     <span>BizBook</span>
                   </Link>
                   {accessibleNavItems.map((item) => (
@@ -86,9 +96,7 @@ export function AppLayout({ children, user }: { children: ReactNode, user: User 
             </Sheet>
             
             <Link href="/" className="hidden items-center gap-2 text-lg font-semibold md:flex">
-              <div className="p-2 rounded-lg bg-primary/20 text-primary">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-6"><path d="M2 9.5a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0Z"/><path d="M12.5 4H15a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5"/><path d="m14 6-2.5 2.5"/><path d="m18 10-6 6"/></svg>
-              </div>
+              <Logo />
               <span className="hidden lg:flex">BizBook</span>
             </Link>
         </div>

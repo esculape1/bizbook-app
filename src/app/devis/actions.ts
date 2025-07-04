@@ -2,9 +2,9 @@
 'use server';
 
 import { z } from 'zod';
-import { addQuote, getClients, getProducts, updateQuote as updateQuoteInDB, deleteQuote as deleteQuoteFromDB, getQuoteById } from '@/lib/data';
+import { addQuote, getClients, getProducts, updateQuote as updateQuoteInDB, deleteQuote as deleteQuoteFromDB, getQuoteById, addInvoice, updateProduct } from '@/lib/data';
 import { revalidatePath } from 'next/cache';
-import type { Quote, QuoteItem } from '@/lib/types';
+import type { Quote, QuoteItem, InvoiceItem } from '@/lib/types';
 import { getSession } from '@/lib/session';
 
 const quoteItemSchema = z.object({
@@ -113,6 +113,11 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
   try {
     const { clientId, date, expiryDate, items, vat, discount, status } = validatedFields.data;
     
+    const originalQuote = await getQuoteById(id);
+    if (!originalQuote) {
+        return { message: 'Devis original non trouvé.' };
+    }
+
     const clients = await getClients();
     const products = await getProducts();
 
@@ -120,6 +125,20 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
     if (!client) {
       return { message: 'Client non trouvé.' };
     }
+
+    // Pre-emptive stock check if status is changing to 'Accepted'
+    if (status === 'Accepted' && originalQuote.status !== 'Accepted') {
+      for (const item of items) {
+          const product = products.find(p => p.id === item.productId);
+          if (!product) {
+              return { message: `Produit avec ID ${item.productId} non trouvé.` };
+          }
+          if (product.quantityInStock < item.quantity) {
+              return { message: `Impossible d'accepter le devis. Stock insuffisant pour ${product.name}. Stock: ${product.quantityInStock}, Demandé: ${item.quantity}.` };
+          }
+      }
+    }
+
 
     const quoteItems: QuoteItem[] = items.map(item => {
       const product = products.find(p => p.id === item.productId);
@@ -155,6 +174,42 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
       totalAmount,
       status,
     });
+
+    // Create invoice if status changed to 'Accepted'
+    if (status === 'Accepted' && originalQuote.status !== 'Accepted') {
+      const invoiceItems: InvoiceItem[] = quoteItems.map(item => ({ ...item }));
+
+      // Create invoice
+      await addInvoice({
+        clientId,
+        clientName: client.name,
+        date: new Date().toISOString(),
+        dueDate: new Date(new Date().setDate(new Date().getDate() + 30)).toISOString(),
+        items: invoiceItems,
+        subTotal,
+        vat,
+        vatAmount,
+        discount,
+        discountAmount,
+        totalAmount,
+        status: 'Unpaid',
+        amountPaid: 0,
+        payments: [],
+      });
+
+      // Update stock
+      for (const item of invoiceItems) {
+        const product = products.find(p => p.id === item.productId)!;
+        const newStock = product.quantityInStock - item.quantity;
+        await updateProduct(item.productId, { quantityInStock: newStock });
+      }
+
+      revalidatePath('/invoices');
+      revalidatePath('/products');
+      revalidatePath('/');
+    }
+
+
     revalidatePath('/devis');
     return {};
   } catch (error) {
