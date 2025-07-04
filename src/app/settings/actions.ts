@@ -1,10 +1,10 @@
-
 'use server';
 
 import { z } from 'zod';
 import { updateSettings } from '@/lib/data';
 import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/session';
+import type { Settings } from '@/lib/types';
 
 const settingsSchema = z.object({
   companyName: z.string().min(1, { message: "Le nom de l'entreprise est requis." }),
@@ -15,7 +15,7 @@ const settingsSchema = z.object({
   companyIfu: z.string().min(1, { message: "L'IFU est requis." }),
   companyRccm: z.string().min(1, { message: "Le RCCM est requis." }),
   currency: z.enum(['EUR', 'USD', 'GBP', 'XOF']),
-  logo: z.any().optional(),
+  logo: z.string().optional(),
   invoiceNumberFormat: z.enum(['YEAR-NUM', 'PREFIX-YEAR-NUM', 'PREFIX-NUM']),
   invoiceTemplate: z.enum(['modern', 'classic', 'simple', 'detailed']),
 });
@@ -27,12 +27,18 @@ export async function saveSettings(formData: z.infer<typeof settingsSchema>) {
   }
   
   try {
-    const { logo, ...settingsToSave } = formData;
+    const { logo, ...otherSettings } = formData;
     
-    // In a real app, you would handle file upload here and get a URL.
-    // For this mock, we don't change the logo URL.
+    const settingsToUpdate: Partial<Settings> = {
+      ...otherSettings,
+    };
+    
+    // The logo from the form is the data URI. We map it to the `logoUrl` field.
+    if (logo) {
+      settingsToUpdate.logoUrl = logo;
+    }
 
-    await updateSettings(settingsToSave);
+    await updateSettings(settingsToUpdate);
     revalidatePath('/', 'layout');
     return { success: true };
   } catch (error) {

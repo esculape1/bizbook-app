@@ -25,7 +25,7 @@ const settingsSchema = z.object({
   companyIfu: z.string().min(1, { message: "L'IFU est requis." }),
   companyRccm: z.string().min(1, { message: "Le RCCM est requis." }),
   currency: z.enum(['EUR', 'USD', 'GBP', 'XOF']),
-  logo: z.any().optional(),
+  logo: z.string().optional(),
   invoiceNumberFormat: z.enum(['YEAR-NUM', 'PREFIX-YEAR-NUM', 'PREFIX-NUM']),
   invoiceTemplate: z.enum(['modern', 'classic', 'simple', 'detailed']),
 });
@@ -50,6 +50,7 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
       companyIfu: initialSettings.companyIfu,
       companyRccm: initialSettings.companyRccm,
       currency: initialSettings.currency,
+      logo: initialSettings.logoUrl,
       invoiceNumberFormat: initialSettings.invoiceNumberFormat,
       invoiceTemplate: initialSettings.invoiceTemplate,
     },
@@ -59,17 +60,18 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
     if (!canEdit) return;
     const file = event.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit
-        form.setError("logo", { type: "manual", message: "Le fichier ne doit pas dépasser 2MB." });
+      if (file.size > 500 * 1024) { // 500KB limit
+        form.setError("logo", { type: "manual", message: "Le fichier ne doit pas dépasser 500KB." });
         return;
       }
       const reader = new FileReader();
       reader.onloadend = () => {
-        setLogoPreview(reader.result as string);
+        const dataUri = reader.result as string;
+        setLogoPreview(dataUri);
+        form.setValue("logo", dataUri, { shouldValidate: true });
         form.clearErrors("logo");
       };
       reader.readAsDataURL(file);
-      form.setValue("logo", file);
     }
   }
 
@@ -204,7 +206,7 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
                 <FormField
                   control={form.control}
                   name="logo"
-                  render={({ field }) => (
+                  render={() => (
                     <FormItem>
                       <FormLabel>Logo de l'entreprise</FormLabel>
                       <div className="flex items-center gap-4">
@@ -227,9 +229,9 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
                         </FormControl>
                       </div>
                       <FormDescription>
-                        Téléchargez un nouveau logo. Il sera affiché sur vos factures. (Max 2MB)
+                        Téléchargez un nouveau logo. Il sera affiché sur vos factures. (Max 500KB)
                       </FormDescription>
-                      <FormMessage />
+                      <FormMessage>{form.formState.errors.logo?.message}</FormMessage>
                     </FormItem>
                   )}
                 />
