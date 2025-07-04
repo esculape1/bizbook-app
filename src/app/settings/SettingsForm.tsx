@@ -34,7 +34,7 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
       companyIfu: initialSettings.companyIfu,
       companyRccm: initialSettings.companyRccm,
       currency: initialSettings.currency,
-      logo: initialSettings.logoUrl, // Important: pass existing logoUrl
+      logoUrl: initialSettings.logoUrl,
       invoiceNumberFormat: initialSettings.invoiceNumberFormat,
       invoiceTemplate: initialSettings.invoiceTemplate,
     },
@@ -45,15 +45,19 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 500 * 1024) { // 500KB limit
-        form.setError("logo", { type: "manual", message: "Le fichier ne doit pas dépasser 500KB." });
+        form.setError("logoUrl", { type: "manual", message: "Le fichier ne doit pas dépasser 500KB." });
         return;
       }
       const reader = new FileReader();
       reader.onloadend = () => {
         const dataUri = reader.result as string;
-        setLogoPreview(dataUri);
-        form.setValue("logo", dataUri, { shouldValidate: true });
-        form.clearErrors("logo");
+        if (dataUri) {
+          setLogoPreview(dataUri);
+          form.setValue("logoUrl", dataUri, { shouldValidate: true });
+          form.clearErrors("logoUrl");
+        } else {
+          form.setError("logoUrl", { type: "manual", message: "Impossible de lire le fichier." });
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -61,7 +65,7 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
 
   const onSubmit = (data: SettingsFormValues) => {
     startTransition(async () => {
-      const result = await saveSettings(data, initialSettings.logoUrl);
+      const result = await saveSettings(data);
       if (result.success) {
         toast({
           title: "Paramètres enregistrés",
@@ -189,7 +193,7 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
 
                 <FormField
                   control={form.control}
-                  name="logo"
+                  name="logoUrl"
                   render={() => ( // We don't need the field object here
                     <FormItem>
                       <FormLabel>Logo de l'entreprise</FormLabel>

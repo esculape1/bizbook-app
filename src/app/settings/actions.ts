@@ -16,36 +16,32 @@ export const settingsSchema = z.object({
   companyIfu: z.string().min(1, { message: "L'IFU est requis." }),
   companyRccm: z.string().min(1, { message: "Le RCCM est requis." }),
   currency: z.enum(['EUR', 'USD', 'GBP', 'XOF']),
-  logo: z.string().optional(),
+  logoUrl: z.string().optional(),
   invoiceNumberFormat: z.enum(['YEAR-NUM', 'PREFIX-YEAR-NUM', 'PREFIX-NUM']),
   invoiceTemplate: z.enum(['modern', 'classic', 'simple', 'detailed']),
 });
 
 export type SettingsFormValues = z.infer<typeof settingsSchema>;
 
-export async function saveSettings(formData: SettingsFormValues, initialLogoUrl?: string | null) {
+export async function saveSettings(formData: SettingsFormValues) {
   const session = await getSession();
   if (session?.role !== 'Admin') {
     return { success: false, message: "Action non autorisée." };
   }
   
   try {
-    const { logo, ...otherSettings } = formData;
+    const validatedData = settingsSchema.parse(formData);
+    await updateSettings(validatedData);
     
-    const settingsToUpdate: Partial<Settings> = {
-      ...otherSettings,
-    };
-    
-    // Only update the logo if it has changed from the initial value
-    if (logo && logo !== initialLogoUrl) {
-      settingsToUpdate.logoUrl = logo;
-    }
-
-    await updateSettings(settingsToUpdate);
     revalidatePath('/', 'layout');
     return { success: true };
   } catch (error) {
     console.error('Failed to save settings:', error);
+    
+    if (error instanceof z.ZodError) {
+        return { success: false, message: "Les données sont invalides." };
+    }
+
     const message = error instanceof Error ? error.message : "Erreur lors de la sauvegarde.";
     return { success: false, message };
   }
