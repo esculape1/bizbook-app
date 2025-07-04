@@ -17,24 +17,36 @@ function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
 }
 
 const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Veuillez vérifier la configuration de Firebase.";
+const DB_READ_ERROR = "Erreur de lecture dans la base de données. L'application peut être partiellement fonctionnelle.";
 
 // CLIENTS
 export async function getClients(): Promise<Client[]> {
   if (!db) return [];
-  const clientsCol = db.collection('clients');
-  const q = clientsCol.orderBy('registrationDate', 'desc');
-  const clientSnapshot = await q.get();
-  return clientSnapshot.docs.map(doc => docToObject<Client>(doc));
+  try {
+    const clientsCol = db.collection('clients');
+    const q = clientsCol.orderBy('registrationDate', 'desc');
+    const clientSnapshot = await q.get();
+    return clientSnapshot.docs.map(doc => docToObject<Client>(doc));
+  } catch (error) {
+    console.error("Impossible de récupérer les clients:", error);
+    // Return empty array to prevent crashing the app
+    return [];
+  }
 }
 
 export async function getClientById(id: string): Promise<Client | null> {
   if (!db) return null;
-  const clientDocRef = db.collection('clients').doc(id);
-  const clientDoc = await clientDocRef.get();
-  if (clientDoc.exists) {
-    return docToObject<Client>(clientDoc);
+  try {
+    const clientDocRef = db.collection('clients').doc(id);
+    const clientDoc = await clientDocRef.get();
+    if (clientDoc.exists) {
+      return docToObject<Client>(clientDoc);
+    }
+    return null;
+  } catch (error) {
+    console.error(`Impossible de récupérer le client ${id}:`, error);
+    return null;
   }
-  return null;
 }
 
 export async function addClient(clientData: Omit<Client, 'id' | 'registrationDate' | 'status'>): Promise<Client> {
@@ -63,10 +75,15 @@ export async function deleteClient(id: string): Promise<void> {
 // PRODUCTS
 export async function getProducts(): Promise<Product[]> {
   if (!db) return [];
-  const productsCol = db.collection('products');
-  const q = productsCol.orderBy('name');
-  const productSnapshot = await q.get();
-  return productSnapshot.docs.map(doc => docToObject<Product>(doc));
+  try {
+    const productsCol = db.collection('products');
+    const q = productsCol.orderBy('name');
+    const productSnapshot = await q.get();
+    return productSnapshot.docs.map(doc => docToObject<Product>(doc));
+  } catch (error) {
+    console.error("Impossible de récupérer les produits:", error);
+    return [];
+  }
 }
 
 export async function addProduct(productData: Omit<Product, 'id'>): Promise<Product> {
@@ -90,20 +107,30 @@ export async function deleteProduct(id: string): Promise<void> {
 // QUOTES
 export async function getQuotes(): Promise<Quote[]> {
     if (!db) return [];
-    const quotesCol = db.collection('quotes');
-    const q = quotesCol.orderBy('date', 'desc');
-    const quoteSnapshot = await q.get();
-    return quoteSnapshot.docs.map(doc => docToObject<Quote>(doc));
+    try {
+      const quotesCol = db.collection('quotes');
+      const q = quotesCol.orderBy('date', 'desc');
+      const quoteSnapshot = await q.get();
+      return quoteSnapshot.docs.map(doc => docToObject<Quote>(doc));
+    } catch (error) {
+      console.error("Impossible de récupérer les devis:", error);
+      return [];
+    }
 }
 
 export async function getQuoteById(id: string): Promise<Quote | null> {
     if (!db) return null;
-    const quoteDocRef = db.collection('quotes').doc(id);
-    const quoteDoc = await quoteDocRef.get();
-    if (quoteDoc.exists) {
-        return docToObject<Quote>(quoteDoc);
+    try {
+      const quoteDocRef = db.collection('quotes').doc(id);
+      const quoteDoc = await quoteDocRef.get();
+      if (quoteDoc.exists) {
+          return docToObject<Quote>(quoteDoc);
+      }
+      return null;
+    } catch (error) {
+      console.error(`Impossible de récupérer le devis ${id}:`, error);
+      return null;
     }
-    return null;
 }
 
 export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>): Promise<Quote> {
@@ -143,20 +170,30 @@ export async function deleteQuote(id: string): Promise<void> {
 // INVOICES
 export async function getInvoices(): Promise<Invoice[]> {
     if (!db) return [];
-    const invoicesCol = db.collection('invoices');
-    const q = invoicesCol.orderBy('date', 'desc');
-    const invoiceSnapshot = await q.get();
-    return invoiceSnapshot.docs.map(doc => docToObject<Invoice>(doc));
+    try {
+      const invoicesCol = db.collection('invoices');
+      const q = invoicesCol.orderBy('date', 'desc');
+      const invoiceSnapshot = await q.get();
+      return invoiceSnapshot.docs.map(doc => docToObject<Invoice>(doc));
+    } catch (error) {
+      console.error("Impossible de récupérer les factures:", error);
+      return [];
+    }
 }
 
 export async function getInvoiceById(id: string): Promise<Invoice | null> {
     if (!db) return null;
-    const invoiceDocRef = db.collection('invoices').doc(id);
-    const invoiceDoc = await invoiceDocRef.get();
-    if (invoiceDoc.exists) {
-        return docToObject<Invoice>(invoiceDoc);
+    try {
+      const invoiceDocRef = db.collection('invoices').doc(id);
+      const invoiceDoc = await invoiceDocRef.get();
+      if (invoiceDoc.exists) {
+          return docToObject<Invoice>(invoiceDoc);
+      }
+      return null;
+    } catch (error) {
+      console.error(`Impossible de récupérer la facture ${id}:`, error);
+      return null;
     }
-    return null;
 }
 
 export async function addInvoice(invoiceData: Omit<Invoice, 'id' | 'invoiceNumber'>): Promise<Invoice> {
@@ -197,10 +234,15 @@ export async function deleteInvoice(id: string): Promise<void> {
 // EXPENSES
 export async function getExpenses(): Promise<Expense[]> {
   if (!db) return [];
-  const expensesCol = db.collection('expenses');
-  const q = expensesCol.orderBy('date', 'desc');
-  const expenseSnapshot = await q.get();
-  return expenseSnapshot.docs.map(doc => docToObject<Expense>(doc));
+  try {
+    const expensesCol = db.collection('expenses');
+    const q = expensesCol.orderBy('date', 'desc');
+    const expenseSnapshot = await q.get();
+    return expenseSnapshot.docs.map(doc => docToObject<Expense>(doc));
+  } catch (error) {
+    console.error("Impossible de récupérer les dépenses:", error);
+    return [];
+  }
 }
 
 export async function addExpense(expenseData: Omit<Expense, 'id'>): Promise<Expense> {
@@ -236,7 +278,7 @@ export async function getSettings(): Promise<Settings> {
       await settingsDocRef.set(defaultSettings);
       return defaultSettings;
   } catch (e) {
-      console.warn("Impossible de récupérer les paramètres, utilisation des valeurs par défaut.", e);
+      console.warn(DB_READ_ERROR, e);
       return defaultSettings;
   }
 }
