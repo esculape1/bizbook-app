@@ -304,7 +304,7 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Choisir un modèle" />
-                              </Triaigger>
+                              </SelectTrigger>
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="modern">Moderne</SelectItem>
