@@ -15,25 +15,37 @@ import { useToast } from '@/hooks/use-toast';
 import { saveSettings, settingsSchema, type SettingsFormValues } from './actions';
 import type { Settings, User } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
+import { z } from 'zod';
+
+// Create a schema for the form validation, omitting the logo which is handled separately.
+const formSchema = settingsSchema.omit({ logoUrl: true });
+type SettingsClientFormValues = z.infer<typeof formSchema>;
 
 export function SettingsForm({ initialSettings, userRole }: { initialSettings: Settings, userRole: User['role'] | undefined }) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  // State for the logo is now handled separately from the form hook.
   const [logoPreview, setLogoPreview] = useState<string | null | undefined>(initialSettings.logoUrl);
+  const [logoError, setLogoError] = useState<string | null>(null);
 
   const canEdit = userRole === 'Admin';
 
-  const form = useForm<SettingsFormValues>({
-    resolver: zodResolver(settingsSchema),
+  const form = useForm<SettingsClientFormValues>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       ...initialSettings,
-      logoUrl: initialSettings.logoUrl || "",
     },
   });
 
-  const onSubmit = (data: SettingsFormValues) => {
+  const onSubmit = (data: SettingsClientFormValues) => {
     startTransition(async () => {
-      const result = await saveSettings(data);
+      // Combine the form data with the logo from state before saving.
+      const finalData: SettingsFormValues = {
+        ...data,
+        logoUrl: logoPreview || "",
+      };
+
+      const result = await saveSettings(finalData);
       if (result.success) {
         toast({
           title: "Paramètres enregistrés",
@@ -48,6 +60,30 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
       }
     });
   };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLogoError(null); // Reset error on new file selection
+      if (file.size > 500 * 1024) { // 500KB limit
+        setLogoError("Le fichier ne doit pas dépasser 500KB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUri = reader.result as string;
+        if (dataUri) {
+          setLogoPreview(dataUri);
+        } else {
+          setLogoError("Impossible de lire le fichier.");
+        }
+      };
+      reader.onerror = () => {
+        setLogoError("Erreur lors de la lecture du fichier.");
+      }
+      reader.readAsDataURL(file);
+    }
+  }
   
   return (
     <div className="flex flex-col gap-6">
@@ -159,57 +195,34 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
                   />
               </div>
 
-                <FormField
-                  control={form.control}
-                  name="logoUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Logo de l'entreprise</FormLabel>
-                      <div className="flex items-center gap-4">
-                        {logoPreview && (
-                            <Image 
-                                src={logoPreview} 
-                                alt="Aperçu du logo"
-                                width={80} 
-                                height={80} 
-                                className="rounded-md bg-muted object-cover"
-                                data-ai-hint="logo"
-                            />
-                        )}
-                        <Input
-                          type="file"
-                          accept="image/png, image/jpeg, image/gif"
-                          onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                  if (file.size > 500 * 1024) { // 500KB limit
-                                    form.setError("logoUrl", { type: "manual", message: "Le fichier ne doit pas dépasser 500KB." });
-                                    return;
-                                  }
-                                  const reader = new FileReader();
-                                  reader.onloadend = () => {
-                                    const dataUri = reader.result as string;
-                                    if (dataUri) {
-                                        setLogoPreview(dataUri);
-                                        field.onChange(dataUri);
-                                    } else {
-                                        form.setError("logoUrl", { type: "manual", message: "Impossible de lire le fichier." });
-                                    }
-                                  };
-                                  reader.readAsDataURL(file);
-                              }
-                          }}
-                          className="max-w-xs"
-                          disabled={!canEdit}
+                {/* This input is now handled outside of react-hook-form to prevent resolver crash */}
+                <FormItem>
+                  <FormLabel>Logo de l'entreprise</FormLabel>
+                  <div className="flex items-center gap-4">
+                    {logoPreview && (
+                        <Image 
+                            src={logoPreview} 
+                            alt="Aperçu du logo"
+                            width={80} 
+                            height={80} 
+                            className="rounded-md bg-muted object-cover"
+                            data-ai-hint="logo"
                         />
-                      </div>
-                      <FormDescription>
-                        Téléchargez un nouveau logo. Il sera affiché sur vos factures. (Max 500KB)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    )}
+                    <Input
+                      type="file"
+                      accept="image/png, image/jpeg, image/gif"
+                      onChange={handleLogoChange}
+                      className="max-w-xs"
+                      disabled={!canEdit}
+                    />
+                  </div>
+                  <FormDescription>
+                    Téléchargez un nouveau logo. Il sera affiché sur vos factures. (Max 500KB)
+                  </FormDescription>
+                  {logoError && <p className="text-sm font-medium text-destructive">{logoError}</p>}
+                </FormItem>
+
               </fieldset>
             </CardContent>
           </Card>
