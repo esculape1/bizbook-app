@@ -10,6 +10,12 @@ export async function askAI(query: string): Promise<{ status: 'success', respons
     return { status: 'error', error: 'Action non autorisée.' };
   }
   
+  // Explicit check for the API key in the production environment (like Vercel)
+  if (process.env.NODE_ENV === 'production' && !process.env.GOOGLE_API_KEY) {
+    console.error("La variable d'environnement GOOGLE_API_KEY n'est pas définie en production.");
+    return { status: 'error', error: "La clé API de l'assistant IA n'est pas configurée sur le serveur. Veuillez l'ajouter dans les variables d'environnement de votre projet sur Vercel." };
+  }
+  
   if (!query) {
     return { status: 'error', error: "La question ne peut pas être vide." };
   }
@@ -22,7 +28,7 @@ export async function askAI(query: string): Promise<{ status: 'success', respons
     
     const errorString = (e.message || '').toLowerCase();
     if (errorString.includes('api key') || errorString.includes('permission denied') || errorString.includes('authentication')) {
-        return { status: 'error', error: "Erreur d'authentification de l'IA. Assurez-vous que la clé API Gemini est valide et correctement configurée dans le fichier .env." };
+        return { status: 'error', error: "Erreur d'authentification de l'IA. Assurez-vous que la clé API Gemini est valide et correctement configurée dans le fichier .env (pour le développement local) ou dans les variables d'environnement de Vercel (pour l'application en ligne)." };
     }
     
     return { status: 'error', error: "L'analyse par IA a rencontré une erreur. Veuillez réessayer." };
