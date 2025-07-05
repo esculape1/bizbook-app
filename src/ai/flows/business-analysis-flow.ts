@@ -13,12 +13,12 @@ import type { Client, Invoice, Product, Expense } from '@/lib/types';
 const ClientSchema = z.object({
   id: z.string(),
   name: z.string(),
-  email: z.string().optional(),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  ifu: z.string().optional(),
-  rccm: z.string().optional(),
-  taxRegime: z.string().optional(),
+  email: z.string().email().or(z.literal('')).nullable().optional(),
+  phone: z.string().nullable().optional(),
+  address: z.string().nullable().optional(),
+  ifu: z.string().nullable().optional(),
+  rccm: z.string().nullable().optional(),
+  taxRegime: z.string().nullable().optional(),
   registrationDate: z.string().describe("ISO date string"),
   status: z.enum(['Active', 'Inactive']),
 });
@@ -49,7 +49,7 @@ const PaymentSchema = z.object({
   date: z.string().describe("ISO date string"),
   amount: z.number(),
   method: z.enum(['Espèces', 'Virement bancaire', 'Chèque', 'Autre']),
-  notes: z.string().optional(),
+  notes: z.string().nullable().optional(),
 });
 
 const InvoiceSchema = z.object({
@@ -88,7 +88,7 @@ const SettingsSchema = z.object({
   companyIfu: z.string(),
   companyRccm: z.string(),
   currency: z.enum(['EUR', 'USD', 'GBP', 'XOF']),
-  logoUrl: z.string().optional(),
+  logoUrl: z.string().nullable().optional(),
   invoiceNumberFormat: z.enum(['PREFIX-YEAR-NUM', 'YEAR-NUM', 'PREFIX-NUM']),
   invoiceTemplate: z.enum(['modern', 'classic', 'simple', 'detailed']),
 });
@@ -107,7 +107,8 @@ const getInvoicesTool = ai.defineTool(
         if (parsed.success) {
             validData.push(parsed.data);
         } else {
-            console.warn(`Skipping invalid invoice object (ID: ${(item as Invoice).id}):`, parsed.error.flatten());
+            const itemId = (item && typeof item === 'object' && (item as any).id) ? (item as any).id : 'ID inconnu';
+            console.warn(`Skipping invalid invoice object (ID: ${itemId}):`, parsed.error.flatten());
         }
     }
     return validData;
@@ -128,7 +129,8 @@ const getExpensesTool = ai.defineTool(
         if (parsed.success) {
             validData.push(parsed.data);
         } else {
-            console.warn(`Skipping invalid expense object (ID: ${(item as Expense).id}):`, parsed.error.flatten());
+            const itemId = (item && typeof item === 'object' && (item as any).id) ? (item as any).id : 'ID inconnu';
+            console.warn(`Skipping invalid expense object (ID: ${itemId}):`, parsed.error.flatten());
         }
     }
     return validData;
@@ -149,7 +151,8 @@ const getProductsTool = ai.defineTool(
         if (parsed.success) {
             validData.push(parsed.data);
         } else {
-            console.warn(`Skipping invalid product object (ID: ${(item as Product).id}):`, parsed.error.flatten());
+            const itemId = (item && typeof item === 'object' && (item as any).id) ? (item as any).id : 'ID inconnu';
+            console.warn(`Skipping invalid product object (ID: ${itemId}):`, parsed.error.flatten());
         }
     }
     return validData;
@@ -170,7 +173,8 @@ const getClientsTool = ai.defineTool(
         if (parsed.success) {
             validData.push(parsed.data);
         } else {
-            console.warn(`Skipping invalid client object (ID: ${(item as Client).id}):`, parsed.error.flatten());
+            const itemId = (item && typeof item === 'object' && (item as any).id) ? (item as any).id : 'ID inconnu';
+            console.warn(`Skipping invalid client object (ID: ${itemId}):`, parsed.error.flatten());
         }
     }
     return validData;
@@ -183,7 +187,27 @@ const getSettingsTool = ai.defineTool(
     description: "Récupère les paramètres de l'entreprise, comme le nom ou la devise par défaut (currency).",
     outputSchema: SettingsSchema,
   },
-  async () => await getSettings()
+  async () => {
+    const rawData = await getSettings();
+    const parsed = SettingsSchema.safeParse(rawData);
+    if (parsed.success) {
+        return parsed.data;
+    }
+    // This should ideally not fail, but as a fallback, return a default-like structure.
+    console.error("Failed to parse settings, returning a fallback. Please check your settings data.", parsed.error.flatten());
+    return {
+        companyName: 'Erreur Paramètres',
+        legalName: 'Erreur Paramètres',
+        managerName: 'Erreur Paramètres',
+        companyAddress: '',
+        companyPhone: '',
+        companyIfu: '',
+        companyRccm: '',
+        currency: 'XOF',
+        invoiceNumberFormat: 'PREFIX-YEAR-NUM',
+        invoiceTemplate: 'detailed',
+    }
+  }
 );
 
 const businessAnalysisFlow = ai.defineFlow(
@@ -193,11 +217,12 @@ const businessAnalysisFlow = ai.defineFlow(
         outputSchema: z.string().describe("La réponse de l'assistant IA"),
     },
     async (query) => {
+        const today = new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
         const systemPrompt = `Tu es un assistant expert en analyse de données pour une entreprise qui utilise l'application BizBook.
 Ta mission est de répondre aux questions de l'utilisateur en te basant exclusivement sur les données fournies par les outils à ta disposition.
 Sois concis, précis et professionnel.
 Réponds toujours en français.
-La date d'aujourd'hui est le ${new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}. Utilise cette information pour interpréter les questions relatives au temps (ex: "ce mois-ci", "la semaine dernière").
+La date d'aujourd'hui est le ${today}. Utilise cette information pour interpréter les questions relatives au temps (ex: "ce mois-ci", "la semaine dernière").
 N'invente jamais d'informations. Si les données ne sont pas disponibles pour répondre à une question, indique-le clairement à l'utilisateur.
 Utilise l'outil getSettings pour connaître la devise de l'entreprise et formate tous les montants monétaires en conséquence.`;
 
