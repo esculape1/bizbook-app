@@ -34,6 +34,8 @@ const updatePurchaseSchema = z.object({
   date: z.date({ required_error: "Date requise" }),
   items: z.array(purchaseItemSchema).min(1, "Ajoutez au moins un produit."),
   status: z.enum(['Pending', 'Received', 'Cancelled']),
+  transportCost: z.coerce.number().min(0).default(0),
+  otherFees: z.coerce.number().min(0).default(0),
 });
 
 type PurchaseFormValues = z.infer<typeof updatePurchaseSchema>;
@@ -55,6 +57,8 @@ export function EditPurchaseForm({ purchase, suppliers, products, settings }: Ed
     defaultValues: {
       ...purchase,
       date: new Date(purchase.date),
+      transportCost: purchase.transportCost || 0,
+      otherFees: purchase.otherFees || 0,
     },
   });
 
@@ -64,11 +68,13 @@ export function EditPurchaseForm({ purchase, suppliers, products, settings }: Ed
   });
 
   const watchedItems = useWatch({ control: form.control, name: 'items' });
+  const watchedTransportCost = useWatch({ control: form.control, name: 'transportCost' });
+  const watchedOtherFees = useWatch({ control: form.control, name: 'otherFees' });
 
   const subTotal = watchedItems.reduce((acc, item) => {
     return acc + (item.purchasePrice || 0) * (item.quantity || 0);
   }, 0);
-  const totalAmount = subTotal;
+  const totalAmount = subTotal + (watchedTransportCost || 0) + (watchedOtherFees || 0);
 
   const handleProductChange = (productId: string, index: number) => {
     const product = products.find(p => p.id === productId);
@@ -269,13 +275,51 @@ export function EditPurchaseForm({ purchase, suppliers, products, settings }: Ed
               <FormMessage>{form.formState.errors.items?.message || form.formState.errors.items?.root?.message}</FormMessage>
             </div>
             
-            <div className="flex justify-end">
-                <div className="w-full md:w-[280px] space-y-2 text-sm bg-muted/50 p-4 rounded-md">
-                    <div className="flex justify-between font-bold text-base">
-                        <span>Total:</span>
-                        <span>{formatCurrency(totalAmount, settings.currency)}</span>
-                    </div>
-                </div>
+             <div className="flex flex-col md:flex-row justify-between items-start gap-8">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 w-full md:w-auto">
+                <FormField
+                    control={form.control}
+                    name="transportCost"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Coût du Transport</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} />
+                        </FormControl>
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="otherFees"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Autres Frais</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} />
+                        </FormControl>
+                    </FormItem>
+                    )}
+                />
+              </div>
+              <div className="w-full md:w-[280px] space-y-2 text-sm bg-muted/50 p-4 rounded-md">
+                  <div className="flex justify-between">
+                      <span>Sous-total articles:</span>
+                      <span>{formatCurrency(subTotal, settings.currency)}</span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                      <span>Coût du transport:</span>
+                      <span>{formatCurrency(watchedTransportCost || 0, settings.currency)}</span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                      <span>Autres frais:</span>
+                      <span>{formatCurrency(watchedOtherFees || 0, settings.currency)}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-base border-t pt-2 mt-2">
+                      <span>Total Achat:</span>
+                      <span>{formatCurrency(totalAmount, settings.currency)}</span>
+                  </div>
+              </div>
             </div>
 
             <DialogFooter className="sticky bottom-0 bg-background/95 pt-4">

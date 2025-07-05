@@ -11,7 +11,7 @@ import {
   updateProduct,
 } from '@/lib/data';
 import { revalidatePath } from 'next/cache';
-import type { PurchaseItem, Purchase } from '@/lib/types';
+import type { PurchaseItem, Purchase, Product } from '@/lib/types';
 import { getSession } from '@/lib/session';
 
 const purchaseItemSchema = z.object({
@@ -26,6 +26,8 @@ const purchaseSchema = z.object({
   supplierId: z.string().min(1, "Fournisseur requis"),
   date: z.date({ required_error: "Date requise" }),
   items: z.array(purchaseItemSchema).min(1, "Ajoutez au moins un produit."),
+  transportCost: z.coerce.number().min(0).default(0),
+  otherFees: z.coerce.number().min(0).default(0),
 });
 
 const updatePurchaseSchema = purchaseSchema.extend({
@@ -44,7 +46,7 @@ export async function createPurchase(formData: unknown) {
   }
 
   try {
-    const { supplierId, date, items } = validatedFields.data;
+    const { supplierId, date, items, transportCost, otherFees } = validatedFields.data;
     
     const suppliers = await getSuppliers();
     const products = await getProducts();
@@ -68,6 +70,7 @@ export async function createPurchase(formData: unknown) {
     });
 
     const subTotal = purchaseItems.reduce((sum, item) => sum + item.total, 0);
+    const totalAmount = subTotal + transportCost + otherFees;
 
     await addPurchase({
       supplierId,
@@ -75,7 +78,9 @@ export async function createPurchase(formData: unknown) {
       date: date.toISOString(),
       items: purchaseItems,
       subTotal,
-      totalAmount: subTotal,
+      transportCost,
+      otherFees,
+      totalAmount,
       status: 'Pending',
     });
 
@@ -102,22 +107,81 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
   }
 
   try {
-    const { supplierId, date, items, status } = validatedFields.data;
+    const { supplierId, date, items, status, transportCost, otherFees } = validatedFields.data;
     
-    const originalPurchase = await getPurchaseById(id);
+    const [originalPurchase, suppliers, allProducts] = await Promise.all([
+      getPurchaseById(id),
+      getSuppliers(),
+      getProducts()
+    ]);
+    
     if (!originalPurchase) {
       return { message: 'Achat original non trouvé.' };
     }
 
-    const suppliers = await getSuppliers();
-    const products = await getProducts();
     const supplier = suppliers.find(c => c.id === supplierId);
     if (!supplier) {
       return { message: 'Fournisseur non trouvé.' };
     }
 
+    const wasReceived = originalPurchase.status === 'Received';
+    const isNowReceived = status === 'Received';
+    
+    const stockUpdates: { [productId: string]: number } = {};
+    const priceUpdates: { [productId: string]: number } = {};
+
+    // 1. Determine stock changes
+    if (wasReceived) {
+      for (const item of originalPurchase.items) {
+        stockUpdates[item.productId] = (stockUpdates[item.productId] || 0) - item.quantity;
+      }
+    }
+    if (isNowReceived) {
+      for (const item of items) {
+        stockUpdates[item.productId] = (stockUpdates[item.productId] || 0) + item.quantity;
+      }
+    }
+
+    // 2. Determine price updates (only if becoming "Received")
+    if (isNowReceived) {
+      const subTotal = items.reduce((sum, i) => sum + i.quantity * i.purchasePrice, 0);
+      const additionalCosts = transportCost + otherFees;
+      const costRatio = subTotal > 0 ? additionalCosts / subTotal : 0;
+      
+      for (const item of items) {
+        const landedItemPrice = item.purchasePrice * (1 + costRatio);
+        priceUpdates[item.productId] = landedItemPrice;
+      }
+    }
+
+    // 3. Apply updates to products in a batch
+    const productUpdatePromises: Promise<void>[] = [];
+    const allProductIds = new Set([...Object.keys(stockUpdates), ...Object.keys(priceUpdates)]);
+
+    for (const productId of allProductIds) {
+      const product = allProducts.find(p => p.id === productId);
+      if (product) {
+        const updatePayload: Partial<Omit<Product, 'id'>> = {};
+        
+        if (stockUpdates[productId] !== undefined) {
+          updatePayload.quantityInStock = product.quantityInStock + stockUpdates[productId];
+        }
+
+        if (priceUpdates[productId] !== undefined) {
+          updatePayload.purchasePrice = priceUpdates[productId];
+        }
+
+        if (Object.keys(updatePayload).length > 0) {
+          productUpdatePromises.push(updateProduct(productId, updatePayload));
+        }
+      }
+    }
+    await Promise.all(productUpdatePromises);
+
+
+    // 4. Update the Purchase document itself
     const purchaseItems: PurchaseItem[] = items.map(item => {
-      const product = products.find(p => p.id === item.productId);
+      const product = allProducts.find(p => p.id === item.productId);
       if (!product) throw new Error(`Produit non trouvé: ${item.productId}`);
       return {
         productId: item.productId,
@@ -128,8 +192,8 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
         total: item.quantity * item.purchasePrice,
       };
     });
-
     const subTotal = purchaseItems.reduce((sum, item) => sum + item.total, 0);
+    const totalAmount = subTotal + transportCost + otherFees;
 
     const purchaseData: Omit<Purchase, 'id'> = {
       purchaseNumber,
@@ -138,41 +202,12 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
       date: date.toISOString(),
       items: purchaseItems,
       subTotal,
-      totalAmount: subTotal,
+      transportCost,
+      otherFees,
+      totalAmount,
       status,
     };
-
     await updatePurchaseInDB(id, purchaseData);
-
-    // --- Stock Management ---
-    const stockWasUpdated = originalPurchase.status === 'Received';
-    const stockWillBeUpdated = status === 'Received';
-
-    if (stockWasUpdated && !stockWillBeUpdated) { // Reverting stock
-      for (const item of originalPurchase.items) {
-        const product = products.find(p => p.id === item.productId);
-        if (product) {
-          await updateProduct(item.productId, { quantityInStock: product.quantityInStock - item.quantity });
-        }
-      }
-    } else if (!stockWasUpdated && stockWillBeUpdated) { // Applying stock
-      for (const item of purchaseItems) {
-        const product = products.find(p => p.id === item.productId);
-        if (product) {
-          await updateProduct(item.productId, { quantityInStock: product.quantityInStock + item.quantity });
-        }
-      }
-    } else if (stockWasUpdated && stockWillBeUpdated) { // Adjusting stock
-      for (const newItem of purchaseItems) {
-        const originalItem = originalPurchase.items.find(i => i.productId === newItem.productId);
-        const quantityDiff = newItem.quantity - (originalItem?.quantity || 0);
-        
-        const product = products.find(p => p.id === newItem.productId);
-        if (product) {
-          await updateProduct(newItem.productId, { quantityInStock: product.quantityInStock + quantityDiff });
-        }
-      }
-    }
 
     revalidatePath('/purchases');
     revalidatePath('/products');

@@ -76,6 +76,8 @@ export type Purchase = {
   date: string;
   items: PurchaseItem[];
   subTotal: number;
+  transportCost: number;
+  otherFees: number;
   totalAmount: number;
   status: 'Pending' | 'Received' | 'Cancelled';
 };
