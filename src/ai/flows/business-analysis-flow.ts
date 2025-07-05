@@ -8,7 +8,6 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 import { getClients, getInvoices, getProducts, getExpenses, getSettings } from '@/lib/data';
-import type { Client, Invoice, Product, Expense } from '@/lib/types';
 
 const ClientSchema = z.object({
   id: z.string(),
