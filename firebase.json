@@ -1,13 +1,3 @@
 {
-  "hosting": {
-    "source": ".",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "frameworksBackend": {
-      "region": "us-central1"
-    }
-  }
+  "//": "This file was for Firebase Hosting. It is not needed for deploying to other platforms like Vercel. You can safely ignore or delete it."
 }
