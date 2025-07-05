@@ -117,20 +117,20 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
           <tbody>
             {quote.items.map((item, index) => (
               <tr key={index}>
-                <td className="py-0.5 px-1.5 align-top border border-gray-300 h-5">{item.reference}</td>
-                <td className="py-0.5 px-1.5 align-top border border-gray-300">{item.productName}</td>
-                <td className="py-0.5 px-1.5 text-right align-top border border-gray-300">{formatCurrency(item.unitPrice, settings.currency)}</td>
-                <td className="py-0.5 px-1.5 text-right align-top border border-gray-300">{item.quantity}</td>
-                <td className="py-0.5 px-1.5 text-right align-top border border-gray-300">{formatCurrency(item.total, settings.currency)}</td>
+                <td className="py-0.5 px-1.5 border border-gray-300 h-5 font-serif text-sm font-bold text-center align-middle">{item.reference}</td>
+                <td className="py-0.5 px-1.5 border border-gray-300 h-5 font-serif text-sm font-bold text-center align-middle">{item.productName}</td>
+                <td className="py-0.5 px-1.5 border border-gray-300 h-5 font-serif text-sm font-bold text-center align-middle">{formatCurrency(item.unitPrice, settings.currency)}</td>
+                <td className="py-0.5 px-1.5 border border-gray-300 h-5 font-serif text-sm font-bold text-center align-middle">{item.quantity}</td>
+                <td className="py-0.5 px-1.5 border border-gray-300 h-5 font-serif text-sm font-bold text-center align-middle">{formatCurrency(item.total, settings.currency)}</td>
               </tr>
             ))}
             {Array.from({ length: emptyRowsCount }).map((_, index) => (
               <tr key={`empty-${index}`}>
-                <td className="py-0.5 px-1.5 h-5 border border-gray-300">&nbsp;</td>
-                <td className="border border-gray-300"></td>
-                <td className="border border-gray-300"></td>
-                <td className="border border-gray-300"></td>
-                <td className="border border-gray-300"></td>
+                <td className="py-0.5 px-1.5 h-5 border border-gray-300 font-serif text-sm font-bold text-center align-middle">&nbsp;</td>
+                <td className="py-0.5 px-1.5 h-5 border border-gray-300 font-serif text-sm font-bold text-center align-middle"></td>
+                <td className="py-0.5 px-1.5 h-5 border border-gray-300 font-serif text-sm font-bold text-center align-middle"></td>
+                <td className="py-0.5 px-1.5 h-5 border border-gray-300 font-serif text-sm font-bold text-center align-middle"></td>
+                <td className="py-0.5 px-1.5 h-5 border border-gray-300 font-serif text-sm font-bold text-center align-middle"></td>
               </tr>
             ))}
           </tbody>

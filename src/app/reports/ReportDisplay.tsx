@@ -187,9 +187,9 @@ export function ReportDisplay({ data, currency }: ReportDisplayProps) {
                     <TableBody>
                         {data.productSales.map(item => (
                             <TableRow key={item.productName}>
-                                <TableCell className="font-medium">{item.productName}</TableCell>
-                                <TableCell className="text-right">{item.quantitySold}</TableCell>
-                                <TableCell className="text-right">{formatCurrency(item.totalValue, currency)}</TableCell>
+                                <TableCell className="font-serif text-sm font-bold text-center align-middle">{item.productName}</TableCell>
+                                <TableCell className="font-serif text-sm font-bold text-center align-middle">{item.quantitySold}</TableCell>
+                                <TableCell className="font-serif text-sm font-bold text-center align-middle">{formatCurrency(item.totalValue, currency)}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -214,10 +214,10 @@ export function ReportDisplay({ data, currency }: ReportDisplayProps) {
                     <TableBody>
                         {data.expenses.map(exp => (
                             <TableRow key={exp.id}>
-                                <TableCell>{format(new Date(exp.date), "dd/MM/yyyy")}</TableCell>
-                                <TableCell className="font-medium">{exp.description}</TableCell>
-                                <TableCell>{exp.category}</TableCell>
-                                <TableCell className="text-right">{formatCurrency(exp.amount, currency)}</TableCell>
+                                <TableCell className="font-serif text-sm font-bold text-center align-middle">{format(new Date(exp.date), "dd/MM/yyyy")}</TableCell>
+                                <TableCell className="font-serif text-sm font-bold text-center align-middle">{exp.description}</TableCell>
+                                <TableCell className="font-serif text-sm font-bold text-center align-middle">{exp.category}</TableCell>
+                                <TableCell className="font-serif text-sm font-bold text-center align-middle">{formatCurrency(exp.amount, currency)}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -244,15 +244,15 @@ export function ReportDisplay({ data, currency }: ReportDisplayProps) {
             <TableBody>
               {data.allInvoices.map((invoice) => (
                 <TableRow key={invoice.id}>
-                  <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                  <TableCell>{invoice.clientName}</TableCell>
-                  <TableCell>{format(new Date(invoice.date), "dd/MM/yyyy")}</TableCell>
-                  <TableCell>
+                  <TableCell className="font-serif text-sm font-bold text-center align-middle">{invoice.invoiceNumber}</TableCell>
+                  <TableCell className="font-serif text-sm font-bold text-center align-middle">{invoice.clientName}</TableCell>
+                  <TableCell className="font-serif text-sm font-bold text-center align-middle">{format(new Date(invoice.date), "dd/MM/yyyy")}</TableCell>
+                  <TableCell className="font-serif text-sm font-bold text-center align-middle">
                     <Badge variant={getStatusVariant(invoice.status)}>
                       {statusTranslations[invoice.status]}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">{formatCurrency(invoice.totalAmount, currency)}</TableCell>
+                  <TableCell className="font-serif text-sm font-bold text-center align-middle">{formatCurrency(invoice.totalAmount, currency)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
