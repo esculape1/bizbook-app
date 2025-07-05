@@ -52,7 +52,7 @@ export async function getClientById(id: string): Promise<Client | null> {
 
 export async function addClient(clientData: Omit<Client, 'id' | 'registrationDate' | 'status'>): Promise<Client> {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const newClientData = {
+  const newClientData: Omit<Client, 'id'> = {
     ...clientData,
     registrationDate: new Date().toISOString(),
     status: 'Active',
@@ -89,7 +89,7 @@ export async function getSuppliers(): Promise<Supplier[]> {
 
 export async function addSupplier(supplierData: Omit<Supplier, 'id' | 'registrationDate'>): Promise<Supplier> {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const newSupplierData = {
+  const newSupplierData: Omit<Supplier, 'id'> = {
     ...supplierData,
     registrationDate: new Date().toISOString(),
   };
@@ -188,7 +188,7 @@ export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>): Pr
         }
     }
 
-    const newQuoteData = {
+    const newQuoteData: Omit<Quote, 'id'> = {
         ...quoteData,
         quoteNumber: `PRO2024-${(latestQuoteNumber + 1).toString().padStart(3, '0')}`,
     };
@@ -251,7 +251,7 @@ export async function addInvoice(invoiceData: Omit<Invoice, 'id' | 'invoiceNumbe
         }
     }
 
-    const newInvoiceData = {
+    const newInvoiceData: Omit<Invoice, 'id'> = {
         ...invoiceData,
         invoiceNumber: `FACT2024-${(latestInvoiceNumber + 1).toString().padStart(3, '0')}`,
     };
@@ -315,7 +315,7 @@ export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'purchaseN
         }
     }
 
-    const newPurchaseData = {
+    const newPurchaseData: Omit<Purchase, 'id'> = {
         ...purchaseData,
         purchaseNumber: `ACH2024-${(latestPurchaseNumber + 1).toString().padStart(3, '0')}`,
     };
