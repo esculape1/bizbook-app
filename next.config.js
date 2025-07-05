@@ -10,7 +10,6 @@ const nextConfig = {
       },
     ]
   },
-  generateEtags: false,
   images: {
     remotePatterns: [
       {
