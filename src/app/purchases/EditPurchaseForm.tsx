@@ -26,7 +26,6 @@ const purchaseItemSchema = z.object({
   productName: z.string(),
   reference: z.string(),
   quantity: z.coerce.number().min(1, "Qté > 0"),
-  purchasePrice: z.coerce.number().min(0, "Prix invalide"),
 });
 
 const updatePurchaseSchema = z.object({
@@ -34,6 +33,8 @@ const updatePurchaseSchema = z.object({
   date: z.date({ required_error: "Date requise" }),
   items: z.array(purchaseItemSchema).min(1, "Ajoutez au moins un produit."),
   status: z.enum(['Pending', 'Received', 'Cancelled']),
+  premierVersement: z.coerce.number().min(0).default(0),
+  deuxiemeVersement: z.coerce.number().min(0).default(0),
   transportCost: z.coerce.number().min(0).default(0),
   otherFees: z.coerce.number().min(0).default(0),
 });
@@ -57,6 +58,8 @@ export function EditPurchaseForm({ purchase, suppliers, products, settings }: Ed
     defaultValues: {
       ...purchase,
       date: new Date(purchase.date),
+      premierVersement: purchase.premierVersement || 0,
+      deuxiemeVersement: purchase.deuxiemeVersement || 0,
       transportCost: purchase.transportCost || 0,
       otherFees: purchase.otherFees || 0,
     },
@@ -66,15 +69,13 @@ export function EditPurchaseForm({ purchase, suppliers, products, settings }: Ed
     control: form.control,
     name: "items"
   });
-
-  const watchedItems = useWatch({ control: form.control, name: 'items' });
+  
+  const watchedPremierVersement = useWatch({ control: form.control, name: 'premierVersement' });
+  const watchedDeuxiemeVersement = useWatch({ control: form.control, name: 'deuxiemeVersement' });
   const watchedTransportCost = useWatch({ control: form.control, name: 'transportCost' });
   const watchedOtherFees = useWatch({ control: form.control, name: 'otherFees' });
 
-  const subTotal = watchedItems.reduce((acc, item) => {
-    return acc + (item.purchasePrice || 0) * (item.quantity || 0);
-  }, 0);
-  const totalAmount = subTotal + (watchedTransportCost || 0) + (watchedOtherFees || 0);
+  const totalAmount = (watchedPremierVersement || 0) + (watchedDeuxiemeVersement || 0) + (watchedTransportCost || 0) + (watchedOtherFees || 0);
 
   const handleProductChange = (productId: string, index: number) => {
     const product = products.find(p => p.id === productId);
@@ -82,7 +83,6 @@ export function EditPurchaseForm({ purchase, suppliers, products, settings }: Ed
       form.setValue(`items.${index}.productName`, product.name);
       form.setValue(`items.${index}.reference`, product.reference);
       form.setValue(`items.${index}.quantity`, 1);
-      form.setValue(`items.${index}.purchasePrice`, product.purchasePrice || 0);
     }
   };
 
@@ -202,17 +202,13 @@ export function EditPurchaseForm({ purchase, suppliers, products, settings }: Ed
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-2/5">Produit</TableHead>
+                      <TableHead className="w-4/5">Produit</TableHead>
                       <TableHead>Qté</TableHead>
-                      <TableHead>Prix d'Achat U.</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {fields.map((item, index) => {
-                      const itemTotal = (watchedItems[index]?.purchasePrice || 0) * (watchedItems[index]?.quantity || 0);
-                      return (
+                    {fields.map((item, index) => (
                       <TableRow key={item.id}>
                         <TableCell>
                           <FormField
@@ -243,32 +239,17 @@ export function EditPurchaseForm({ purchase, suppliers, products, settings }: Ed
                             )}
                           />
                         </TableCell>
-                         <TableCell>
-                          <FormField
-                            control={form.control}
-                            name={`items.${index}.purchasePrice`}
-                            render={({ field }) => (
-                               <FormItem>
-                                 <FormControl>
-                                   <Input type="number" {...field} step="0.01" className="w-24"/>
-                                 </FormControl>
-                                 <FormMessage/>
-                               </FormItem>
-                            )}
-                          />
-                        </TableCell>
-                        <TableCell className="text-right">{formatCurrency(itemTotal, settings.currency)}</TableCell>
                         <TableCell>
                           <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </TableCell>
                       </TableRow>
-                    )})}
+                    ))}
                   </TableBody>
                 </Table>
               </div>
-              <Button type="button" variant="outline" size="sm" onClick={() => append({ productId: '', productName: '', reference: '', quantity: 1, purchasePrice: 0 })}>
+              <Button type="button" variant="outline" size="sm" onClick={() => append({ productId: '', productName: '', reference: '', quantity: 1 })}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Ajouter un article
               </Button>
@@ -276,7 +257,31 @@ export function EditPurchaseForm({ purchase, suppliers, products, settings }: Ed
             </div>
             
              <div className="flex flex-col md:flex-row justify-between items-start gap-8">
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 w-full md:w-auto">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-4 w-full md:w-auto flex-grow">
+                <FormField
+                    control={form.control}
+                    name="premierVersement"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Premier Versement</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} />
+                        </FormControl>
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="deuxiemeVersement"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Deuxième Versement</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} />
+                        </FormControl>
+                    </FormItem>
+                    )}
+                />
                 <FormField
                     control={form.control}
                     name="transportCost"
@@ -302,10 +307,15 @@ export function EditPurchaseForm({ purchase, suppliers, products, settings }: Ed
                     )}
                 />
               </div>
-              <div className="w-full md:w-[280px] space-y-2 text-sm bg-muted/50 p-4 rounded-md">
+              <div className="w-full md:w-[320px] space-y-2 text-sm bg-muted/50 p-4 rounded-md">
+                  <h3 className="font-bold mb-2">Résumé du Coût Global</h3>
                   <div className="flex justify-between">
-                      <span>Sous-total articles:</span>
-                      <span>{formatCurrency(subTotal, settings.currency)}</span>
+                      <span>Premier versement:</span>
+                      <span>{formatCurrency(watchedPremierVersement || 0, settings.currency)}</span>
+                  </div>
+                   <div className="flex justify-between">
+                      <span>Deuxième versement:</span>
+                      <span>{formatCurrency(watchedDeuxiemeVersement || 0, settings.currency)}</span>
                   </div>
                   <div className="flex justify-between text-muted-foreground">
                       <span>Coût du transport:</span>

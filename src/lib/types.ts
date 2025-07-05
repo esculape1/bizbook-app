@@ -64,8 +64,6 @@ export type PurchaseItem = {
   productName: string;
   reference: string;
   quantity: number;
-  purchasePrice: number;
-  total: number;
 };
 
 export type Purchase = {
@@ -75,9 +73,10 @@ export type Purchase = {
   supplierName: string;
   date: string;
   items: PurchaseItem[];
-  subTotal: number;
   transportCost: number;
   otherFees: number;
+  premierVersement: number;
+  deuxiemeVersement: number;
   totalAmount: number;
   status: 'Pending' | 'Received' | 'Cancelled';
 };
