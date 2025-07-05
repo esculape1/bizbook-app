@@ -113,7 +113,7 @@ export async function getQuotes(): Promise<Quote[]> {
       const quoteSnapshot = await q.get();
       return quoteSnapshot.docs.map(doc => docToObject<Quote>(doc));
     } catch (error) {
-      console.error("Impossible de récupérer les devis:", error);
+      console.error("Impossible de récupérer les proformas:", error);
       return [];
     }
 }
@@ -128,7 +128,7 @@ export async function getQuoteById(id: string): Promise<Quote | null> {
       }
       return null;
     } catch (error) {
-      console.error(`Impossible de récupérer le devis ${id}:`, error);
+      console.error(`Impossible de récupérer la proforma ${id}:`, error);
       return null;
     }
 }
@@ -143,13 +143,16 @@ export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>): Pr
     if (!latestQuoteSnap.empty) {
         const lastQuote = latestQuoteSnap.docs[0].data() as Quote;
         if (lastQuote.quoteNumber && lastQuote.quoteNumber.includes('-')) {
-            latestQuoteNumber = parseInt(lastQuote.quoteNumber.split('-')[1], 10);
+            const numberPart = lastQuote.quoteNumber.split('-')[1];
+            if (numberPart) {
+                latestQuoteNumber = parseInt(numberPart, 10);
+            }
         }
     }
 
     const newQuoteData = {
         ...quoteData,
-        quoteNumber: `DEV2024-${(latestQuoteNumber + 1).toString().padStart(3, '0')}`,
+        quoteNumber: `PRO2024-${(latestQuoteNumber + 1).toString().padStart(3, '0')}`,
     };
     const docRef = await quotesCol.add(newQuoteData);
     return { id: docRef.id, ...newQuoteData };

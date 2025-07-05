@@ -23,7 +23,7 @@ export default function LoginPage() {
   const [state, formAction] = useFormState(signIn, undefined);
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <div className="flex min-h-screen flex-col items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Connexion</CardTitle>
@@ -62,17 +62,23 @@ export default function LoginPage() {
           </form>
         </CardContent>
         <CardFooter className="flex flex-col items-start text-sm text-muted-foreground pt-4">
-            <div className="flex items-start gap-2 p-3 bg-blue-500/10 rounded-md border border-blue-500/20">
+            <div className="flex items-start gap-2 p-3 bg-blue-500/10 rounded-md border border-blue-500/20 mb-4">
                 <Info className="h-4 w-4 mt-0.5 text-blue-700 flex-shrink-0" />
                 <div>
                     <p className="font-semibold text-blue-800">Comptes de démonstration</p>
                     <p>Admin: <span className="font-mono">admin@bizbook.com</span></p>
                     <p>Utilisateur: <span className="font-mono">user@bizbook.com</span></p>
                     <p>Mot de passe (pour les deux): <span className="font-mono">password</span></p>
+                    <p className="text-xs mt-2 text-blue-900/80">AVERTISSEMENT: Ce système de connexion est uniquement pour la démonstration. Ne l'utilisez pas avec des données réelles avant de le sécuriser.</p>
                 </div>
             </div>
         </CardFooter>
       </Card>
+      <footer className="text-center p-4 mt-6 text-xs text-muted-foreground">
+        © {new Date().getFullYear()} BizBook. Conçu et développé par DLG Caverne Consortium.
+        <br />
+        Email: dlgbiomed@gmail.com | Tél: +226 25 46 55 12 / +226 70 15 06 99
+      </footer>
     </div>
   );
 }

@@ -108,8 +108,8 @@ export function QuoteForm({ clients, products, settings }: QuoteFormProps) {
         });
       } else {
         toast({
-          title: "Devis créé",
-          description: "Le nouveau devis a été enregistré.",
+          title: "Proforma créée",
+          description: "La nouvelle proforma a été enregistrée.",
         });
         form.reset();
         setIsOpen(false);
@@ -122,12 +122,12 @@ export function QuoteForm({ clients, products, settings }: QuoteFormProps) {
       <DialogTrigger asChild>
         <Button onClick={() => setIsOpen(true)}>
           <PlusCircle className="mr-2" />
-          Créer un devis
+          Créer une proforma
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Créer un nouveau devis</DialogTitle>
+          <DialogTitle>Créer une nouvelle proforma</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
@@ -159,7 +159,7 @@ export function QuoteForm({ clients, products, settings }: QuoteFormProps) {
                 name="date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col pt-2">
-                    <FormLabel>Date du devis</FormLabel>
+                    <FormLabel>Date de la proforma</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -327,7 +327,7 @@ export function QuoteForm({ clients, products, settings }: QuoteFormProps) {
             <DialogFooter>
               <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>Annuler</Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? 'Enregistrement...' : 'Enregistrer le devis'}
+                {isPending ? 'Enregistrement...' : 'Enregistrer la proforma'}
               </Button>
             </DialogFooter>
           </form>

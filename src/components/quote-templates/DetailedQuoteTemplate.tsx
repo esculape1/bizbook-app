@@ -68,7 +68,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
           )}
         </div>
         <div className="w-1/3 text-right">
-          <h1 className="text-base font-bold text-gray-900">DEVIS</h1>
+          <h1 className="text-base font-bold text-gray-900">FACTURE PROFORMA</h1>
           <p className="mt-1">{quote.quoteNumber}</p>
           <p className="mt-0.5 text-gray-500">Date: {format(new Date(quote.date), 'd MMMM yyyy', { locale: fr })}</p>
           <p className="text-gray-500">Valable jusqu'au: {format(new Date(quote.expiryDate), 'd MMMM yyyy', { locale: fr })}</p>
@@ -140,7 +140,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
       {/* Totals and Signature */}
       <div className="flex justify-between items-start mt-2 px-1">
         <div className="w-2/3 pt-1">
-            <p className="font-bold text-gray-700">Arrêté le présent devis à la somme de :</p>
+            <p className="font-bold text-gray-700">Arrêtée la présente facture proforma à la somme de :</p>
             <p className="italic">{totalInWordsString}</p>
         </div>
         <div className="w-full max-w-[240px]">

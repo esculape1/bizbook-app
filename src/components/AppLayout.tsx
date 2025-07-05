@@ -36,7 +36,7 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'User'] },
   { href: '/clients', label: 'Clients', icon: Users, roles: ['Admin', 'User'] },
   { href: '/products', label: 'Produits', icon: Box, roles: ['Admin', 'User'] },
-  { href: '/devis', label: 'Devis', icon: FileClock, roles: ['Admin', 'User'] },
+  { href: '/devis', label: 'Proforma', icon: FileClock, roles: ['Admin', 'User'] },
   { href: '/invoices', label: 'Factures', icon: FileText, roles: ['Admin', 'User'] },
   { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: ['Admin', 'User'] },
   { href: '/reports', label: 'Rapports', icon: BarChart3, roles: ['Admin', 'User'] },
@@ -60,7 +60,7 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
   );
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
+    <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 z-50">
         
         {/* Left Side: Logo & Mobile Menu */}
@@ -163,9 +163,14 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
             </DropdownMenu>
         </div>
       </header>
-      <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 bg-background/90 backdrop-blur-sm">
+      <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
         {children}
       </main>
+      <footer className="text-center p-4 text-xs text-muted-foreground bg-background/90 backdrop-blur-sm">
+        © {new Date().getFullYear()} BizBook. Conçu et développé par DLG Caverne Consortium.
+        <br />
+        Email: dlgbiomed@gmail.com | Tél: +226 25 46 55 12 / +226 70 15 06 99
+    </footer>
     </div>
   );
 }

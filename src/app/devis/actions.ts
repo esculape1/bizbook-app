@@ -38,7 +38,7 @@ export async function createQuote(formData: unknown) {
 
   if (!validatedFields.success) {
     return {
-      message: 'Certains champs sont invalides. Impossible de créer le devis.',
+      message: 'Certains champs sont invalides. Impossible de créer la proforma.',
     };
   }
   
@@ -90,7 +90,7 @@ export async function createQuote(formData: unknown) {
     return {};
   } catch (error) {
     console.error('Failed to create quote:', error);
-    const message = error instanceof Error ? error.message : 'Erreur de la base de données: Impossible de créer le devis.';
+    const message = error instanceof Error ? error.message : 'Erreur de la base de données: Impossible de créer la proforma.';
     return { message };
   }
 }
@@ -106,7 +106,7 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
   if (!validatedFields.success) {
       console.log(validatedFields.error.flatten().fieldErrors);
     return {
-      message: 'Certains champs sont invalides. Impossible de mettre à jour le devis.',
+      message: 'Certains champs sont invalides. Impossible de mettre à jour la proforma.',
     };
   }
   
@@ -115,7 +115,7 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
     
     const originalQuote = await getQuoteById(id);
     if (!originalQuote) {
-        return { message: 'Devis original non trouvé.' };
+        return { message: 'Proforma originale non trouvée.' };
     }
 
     const clients = await getClients();
@@ -134,7 +134,7 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
               return { message: `Produit avec ID ${item.productId} non trouvé.` };
           }
           if (product.quantityInStock < item.quantity) {
-              return { message: `Impossible d'accepter le devis. Stock insuffisant pour ${product.name}. Stock: ${product.quantityInStock}, Demandé: ${item.quantity}.` };
+              return { message: `Impossible d'accepter la proforma. Stock insuffisant pour ${product.name}. Stock: ${product.quantityInStock}, Demandé: ${item.quantity}.` };
           }
       }
     }
@@ -214,7 +214,7 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
     return {};
   } catch (error) {
     console.error('Failed to update quote:', error);
-    const message = error instanceof Error ? error.message : 'Erreur de la base de données: Impossible de mettre à jour le devis.';
+    const message = error instanceof Error ? error.message : 'Erreur de la base de données: Impossible de mettre à jour la proforma.';
     return { message };
   }
 }
@@ -232,7 +232,7 @@ export async function deleteQuote(id: string) {
     return { success: true };
   } catch (error) {
     console.error('Failed to delete quote:', error);
-    const message = error instanceof Error ? error.message : 'Erreur de la base de données: Impossible de supprimer le devis.';
+    const message = error instanceof Error ? error.message : 'Erreur de la base de données: Impossible de supprimer la proforma.';
     return {
       success: false,
       message,

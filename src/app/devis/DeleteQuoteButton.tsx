@@ -26,14 +26,14 @@ export function DeleteQuoteButton({ id, quoteNumber }: { id: string, quoteNumber
       const result = await deleteQuote(id);
       if (result?.success) {
         toast({
-          title: "Devis supprimé",
-          description: `Le devis ${quoteNumber} a été supprimé avec succès.`,
+          title: "Proforma supprimée",
+          description: `La proforma ${quoteNumber} a été supprimée avec succès.`,
         });
       } else {
         toast({
           variant: "destructive",
           title: "Erreur",
-          description: result?.message || "La suppression du devis a échoué.",
+          description: result?.message || "La suppression de la proforma a échoué.",
         });
       }
     });
@@ -42,15 +42,15 @@ export function DeleteQuoteButton({ id, quoteNumber }: { id: string, quoteNumber
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="icon" title="Supprimer le devis">
+        <Button variant="ghost" size="icon" title="Supprimer la proforma">
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer ce devis ?</AlertDialogTitle>
+          <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer cette proforma ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Cette action est irréversible. Le devis "{quoteNumber}" sera définitivement supprimé.
+            Cette action est irréversible. La proforma "{quoteNumber}" sera définitivement supprimée.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

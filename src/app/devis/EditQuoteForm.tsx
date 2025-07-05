@@ -104,8 +104,8 @@ export function EditQuoteForm({ quote, clients, products, settings }: EditQuoteF
         });
       } else {
         toast({
-          title: "Devis mis à jour",
-          description: "Les informations du devis ont été modifiées.",
+          title: "Proforma mise à jour",
+          description: "Les informations de la proforma ont été modifiées.",
         });
         setIsOpen(false);
       }
@@ -124,13 +124,13 @@ export function EditQuoteForm({ quote, clients, products, settings }: EditQuoteF
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" title="Modifier le devis" disabled={isEditDisabled}>
+        <Button variant="ghost" size="icon" title="Modifier la proforma" disabled={isEditDisabled}>
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
-          <DialogTitle>Modifier le devis {quote.quoteNumber}</DialogTitle>
+          <DialogTitle>Modifier la proforma {quote.quoteNumber}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4 max-h-[80vh] overflow-y-auto px-2">
@@ -162,7 +162,7 @@ export function EditQuoteForm({ quote, clients, products, settings }: EditQuoteF
                 name="date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col pt-2">
-                    <FormLabel>Date du devis</FormLabel>
+                    <FormLabel>Date de la proforma</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>

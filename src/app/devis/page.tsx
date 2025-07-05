@@ -48,7 +48,7 @@ export default async function DevisPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        title="Devis"
+        title="Proforma"
         actions={canEdit ? <QuoteForm clients={clients} products={products} settings={settings} /> : undefined}
       />
       <Card>
@@ -56,7 +56,7 @@ export default async function DevisPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>N° Devis</TableHead>
+                <TableHead>N° Proforma</TableHead>
                 <TableHead>Client</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Statut</TableHead>

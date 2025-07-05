@@ -21,7 +21,7 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
     if (printContent) {
       const printWindow = window.open('', '', 'height=800,width=800');
       if (printWindow) {
-        printWindow.document.write('<html><head><title>Imprimer le Devis</title>');
+        printWindow.document.write('<html><head><title>Imprimer la Proforma</title>');
         
         const styles = Array.from(document.styleSheets)
           .map(styleSheet => {
@@ -62,21 +62,21 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
         const width = pdfWidth;
         const height = width / ratio;
         pdf.addImage(imgData, 'PNG', 0, 0, width, height > pdfHeight ? pdfHeight : height);
-        pdf.save(`Devis_${quote.quoteNumber}.pdf`);
+        pdf.save(`Proforma_${quote.quoteNumber}.pdf`);
     }
   }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" title="Voir le devis">
+        <Button variant="ghost" size="icon" title="Voir la proforma">
           <Eye className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl p-0">
         <div className="p-6">
             <DialogHeader>
-            <DialogTitle>Aperçu du Devis - {quote.quoteNumber}</DialogTitle>
+            <DialogTitle>Aperçu de la Proforma - {quote.quoteNumber}</DialogTitle>
             </DialogHeader>
         </div>
         <div className="max-h-[70vh] overflow-y-auto bg-gray-50">
