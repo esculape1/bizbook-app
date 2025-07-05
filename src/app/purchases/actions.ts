@@ -149,6 +149,7 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
     if (isNowReceived) {
       const totalAmount = premierVersement + deuxiemeVersement + transportCost + otherFees;
       const totalQuantity = items.reduce((sum, i) => sum + i.quantity, 0);
+      // Stability check: prevent division by zero
       landedCostPerUnit = totalQuantity > 0 ? totalAmount / totalQuantity : 0;
     }
 
@@ -192,7 +193,7 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
     });
     const totalAmount = premierVersement + deuxiemeVersement + transportCost + otherFees;
 
-    const purchaseData: Omit<Purchase, 'id'> = {
+    const purchaseData: Partial<Omit<Purchase, 'id'>> = {
       purchaseNumber,
       supplierId,
       supplierName: supplier.name,
