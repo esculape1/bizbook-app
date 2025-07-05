@@ -49,26 +49,28 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
     setTotalInWordsString(numberToWordsFr(quote.totalAmount, settings.currency));
   }, [quote.totalAmount, settings.currency]);
 
-  const emptyRowsCount = Math.max(0, 12 - quote.items.length);
+  // Adjust empty rows logic to fit on one page if 10 items or less
+  const emptyRowsCount = quote.items.length <= 10 ? Math.max(0, 10 - quote.items.length) : 0;
 
   return (
-    <div className="bg-white p-4 font-sans text-xs text-gray-800 min-h-[29.7cm]" id="quote-content">
+    // A4 sizing and margins simulation
+    <div className="bg-white p-6 font-serif text-sm text-gray-800 min-h-[29.7cm] flex flex-col" id="quote-content">
       {/* Header */}
-      <div className="flex justify-between items-start mb-1 p-1">
+      <div className="flex justify-between items-start mb-2">
         <div className="w-1/3">
           {settings.logoUrl && (
             <Image 
                 src={settings.logoUrl} 
                 alt={`${settings.companyName} logo`} 
-                width={32} 
-                height={32} 
+                width={40} 
+                height={40} 
                 className="object-contain"
                 data-ai-hint="logo"
             />
           )}
         </div>
         <div className="w-1/3 text-right">
-          <h1 className="text-base font-bold text-gray-900">FACTURE PROFORMA</h1>
+          <h1 className="text-xl font-bold text-gray-900">FACTURE PROFORMA</h1>
           <p className="mt-1">{quote.quoteNumber}</p>
           <p className="mt-0.5 text-gray-500">Date: {format(new Date(quote.date), 'd MMMM yyyy', { locale: fr })}</p>
           <p className="text-gray-500">Valable jusqu'au: {format(new Date(quote.expiryDate), 'd MMMM yyyy', { locale: fr })}</p>
@@ -76,11 +78,11 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
       </div>
 
       {/* Company & Client Info */}
-      <div className="flex justify-between mb-2 p-1">
+      <div className="flex justify-between mb-4">
         <div className="w-2/5">
           <h2 className="font-bold text-gray-600 border-b pb-1 mb-1">DE</h2>
           <div className="space-y-0.5">
-            <p className="font-bold text-sm">{settings.companyName}</p>
+            <p className="font-bold">{settings.companyName}</p>
             <p>{settings.legalName}</p>
             <p>{settings.companyAddress}</p>
             <p>Tél: {settings.companyPhone}</p>
@@ -91,7 +93,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
         <div className="w-2/5">
           <h2 className="font-bold text-gray-600 border-b pb-1 mb-1">À</h2>
           <div className="space-y-0.5">
-            <p className="font-bold text-sm">{client.name}</p>
+            <p className="font-bold">{client.name}</p>
             <p>{client.address}</p>
             <p>Contact: {client.phone}</p>
             {client.email && <p>Email: {client.email}</p>}
@@ -103,7 +105,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
       </div>
 
       {/* Items Table */}
-      <div className="overflow-x-auto px-1 flex-grow">
+      <div className="overflow-x-auto flex-grow">
         <table className="w-full border-collapse">
           <thead className="bg-gray-100">
             <tr>
@@ -117,20 +119,20 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
           <tbody>
             {quote.items.map((item, index) => (
               <tr key={index}>
-                <td className="py-0.5 px-1.5 border border-gray-300 h-5 font-serif text-sm font-bold text-center align-middle">{item.reference}</td>
-                <td className="py-0.5 px-1.5 border border-gray-300 h-5 font-serif text-sm font-bold text-center align-middle">{item.productName}</td>
-                <td className="py-0.5 px-1.5 border border-gray-300 h-5 font-serif text-sm font-bold text-center align-middle">{formatCurrency(item.unitPrice, settings.currency)}</td>
-                <td className="py-0.5 px-1.5 border border-gray-300 h-5 font-serif text-sm font-bold text-center align-middle">{item.quantity}</td>
-                <td className="py-0.5 px-1.5 border border-gray-300 h-5 font-serif text-sm font-bold text-center align-middle">{formatCurrency(item.total, settings.currency)}</td>
+                <td className="py-1 px-1.5 border border-gray-300 h-6 font-bold text-center align-middle">{item.reference}</td>
+                <td className="py-1 px-1.5 border border-gray-300 h-6 font-bold text-center align-middle">{item.productName}</td>
+                <td className="py-1 px-1.5 border border-gray-300 h-6 font-bold text-center align-middle">{formatCurrency(item.unitPrice, settings.currency)}</td>
+                <td className="py-1 px-1.5 border border-gray-300 h-6 font-bold text-center align-middle">{item.quantity}</td>
+                <td className="py-1 px-1.5 border border-gray-300 h-6 font-bold text-center align-middle">{formatCurrency(item.total, settings.currency)}</td>
               </tr>
             ))}
             {Array.from({ length: emptyRowsCount }).map((_, index) => (
               <tr key={`empty-${index}`}>
-                <td className="py-0.5 px-1.5 h-5 border border-gray-300 font-serif text-sm font-bold text-center align-middle">&nbsp;</td>
-                <td className="py-0.5 px-1.5 h-5 border border-gray-300 font-serif text-sm font-bold text-center align-middle"></td>
-                <td className="py-0.5 px-1.5 h-5 border border-gray-300 font-serif text-sm font-bold text-center align-middle"></td>
-                <td className="py-0.5 px-1.5 h-5 border border-gray-300 font-serif text-sm font-bold text-center align-middle"></td>
-                <td className="py-0.5 px-1.5 h-5 border border-gray-300 font-serif text-sm font-bold text-center align-middle"></td>
+                <td className="py-1 px-1.5 h-6 border border-gray-300">&nbsp;</td>
+                <td className="py-1 px-1.5 h-6 border border-gray-300"></td>
+                <td className="py-1 px-1.5 h-6 border border-gray-300"></td>
+                <td className="py-1 px-1.5 h-6 border border-gray-300"></td>
+                <td className="py-1 px-1.5 h-6 border border-gray-300"></td>
               </tr>
             ))}
           </tbody>
@@ -138,12 +140,12 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
       </div>
 
       {/* Totals and Signature */}
-      <div className="flex justify-between items-start mt-2 px-1">
+      <div className="flex justify-between items-start mt-4">
         <div className="w-2/3 pt-1">
             <p className="font-bold text-gray-700">Arrêtée la présente facture proforma à la somme de :</p>
             <p className="italic">{totalInWordsString}</p>
         </div>
-        <div className="w-full max-w-[240px]">
+        <div className="w-full max-w-[250px]">
           <table className="w-full">
             <tbody>
               <tr>
@@ -167,15 +169,15 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
         </div>
       </div>
       
-      <div className="flex justify-end items-end mt-4 pt-2 px-1">
+      <div className="flex justify-end items-end mt-8 pt-4">
         <div className="w-2/5 text-center">
           <p className="font-bold text-gray-700">Signature et Cachet</p>
-          <div className="mt-2 border-b-2 border-gray-400 h-16 w-full mx-auto"></div>
+          <div className="mt-4 border-b-2 border-gray-400 h-16 w-full mx-auto"></div>
           <p className="text-gray-600 mt-1">{settings.managerName}</p>
         </div>
       </div>
 
-      <div className="text-center text-gray-500 border-t pt-2 mt-4 text-[10px]">
+      <div className="text-center text-xs text-gray-500 border-t pt-2 mt-auto">
         <p>Merci de votre confiance.</p>
         <p>{settings.companyName} - {settings.legalName}</p>
       </div>
