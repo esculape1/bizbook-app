@@ -33,7 +33,7 @@ export default function AnalysisPage() {
     
     startTransition(async () => {
       const result = await askAI(input);
-      if (result.error) {
+      if (result.status === 'error') {
         toast({
           variant: 'destructive',
           title: 'Erreur',
