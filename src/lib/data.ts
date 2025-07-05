@@ -1,6 +1,7 @@
+
 import { db } from './firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
-import type { Client, Product, Invoice, Expense, Settings, Quote } from './types';
+import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier } from './types';
 
 // Helper to convert Firestore docs to plain objects
 function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
@@ -51,7 +52,7 @@ export async function getClientById(id: string): Promise<Client | null> {
 
 export async function addClient(clientData: Omit<Client, 'id' | 'registrationDate' | 'status'>): Promise<Client> {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const newClientData: Omit<Client, 'id'> = {
+  const newClientData = {
     ...clientData,
     registrationDate: new Date().toISOString(),
     status: 'Active',
@@ -71,6 +72,43 @@ export async function deleteClient(id: string): Promise<void> {
   const clientDocRef = db.collection('clients').doc(id);
   await clientDocRef.delete();
 }
+
+// SUPPLIERS
+export async function getSuppliers(): Promise<Supplier[]> {
+  if (!db) return [];
+  try {
+    const suppliersCol = db.collection('suppliers');
+    const q = suppliersCol.orderBy('registrationDate', 'desc');
+    const supplierSnapshot = await q.get();
+    return supplierSnapshot.docs.map(doc => docToObject<Supplier>(doc));
+  } catch (error) {
+    console.error("Impossible de récupérer les fournisseurs:", error);
+    return [];
+  }
+}
+
+export async function addSupplier(supplierData: Omit<Supplier, 'id' | 'registrationDate'>): Promise<Supplier> {
+  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+  const newSupplierData = {
+    ...supplierData,
+    registrationDate: new Date().toISOString(),
+  };
+  const docRef = await db.collection('suppliers').add(newSupplierData);
+  return { id: docRef.id, ...newSupplierData };
+}
+
+export async function updateSupplier(id: string, supplierData: Partial<Omit<Supplier, 'id' | 'registrationDate'>>): Promise<void> {
+  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+  const supplierDocRef = db.collection('suppliers').doc(id);
+  await supplierDocRef.set(supplierData, { merge: true });
+}
+
+export async function deleteSupplier(id: string): Promise<void> {
+  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+  const supplierDocRef = db.collection('suppliers').doc(id);
+  await supplierDocRef.delete();
+}
+
 
 // PRODUCTS
 export async function getProducts(): Promise<Product[]> {

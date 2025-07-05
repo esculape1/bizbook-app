@@ -31,12 +31,12 @@ import type { Client } from '@/lib/types';
 
 const clientSchema = z.object({
   name: z.string().min(1, { message: "Le nom est requis." }),
-  email: z.string().email({ message: "Email invalide." }).or(z.literal('')),
-  phone: z.string(),
-  address: z.string(),
-  ifu: z.string(),
-  rccm: z.string(),
-  taxRegime: z.string(),
+  email: z.string().email({ message: "Email invalide." }).or(z.literal('')).optional(),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  ifu: z.string().optional(),
+  rccm: z.string().optional(),
+  taxRegime: z.string().optional(),
 });
 
 type ClientFormValues = z.infer<typeof clientSchema>;
@@ -50,12 +50,12 @@ export function EditClientButton({ client }: { client: Client }) {
     resolver: zodResolver(clientSchema),
     defaultValues: {
       name: client.name,
-      email: client.email,
-      phone: client.phone,
-      address: client.address,
-      ifu: client.ifu,
-      rccm: client.rccm,
-      taxRegime: client.taxRegime,
+      email: client.email || '',
+      phone: client.phone || '',
+      address: client.address || '',
+      ifu: client.ifu || '',
+      rccm: client.rccm || '',
+      taxRegime: client.taxRegime || '',
     },
   });
 
@@ -110,7 +110,7 @@ export function EditClientButton({ client }: { client: Client }) {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Email (Optionnel)</FormLabel>
                     <FormControl>
                       <Input placeholder="email@exemple.com" {...field} />
                     </FormControl>
@@ -125,7 +125,7 @@ export function EditClientButton({ client }: { client: Client }) {
                     name="phone"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Contact</FormLabel>
+                        <FormLabel>Contact (Optionnel)</FormLabel>
                         <FormControl>
                         <Input placeholder="Numéro de téléphone" {...field} />
                         </FormControl>
@@ -138,7 +138,7 @@ export function EditClientButton({ client }: { client: Client }) {
                     name="taxRegime"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel>Régime Fiscal</FormLabel>
+                        <FormLabel>Régime Fiscal (Optionnel)</FormLabel>
                         <FormControl>
                         <Input placeholder="Régime fiscal" {...field} />
                         </FormControl>
@@ -152,7 +152,7 @@ export function EditClientButton({ client }: { client: Client }) {
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Adresse / Localisation</FormLabel>
+                  <FormLabel>Adresse / Localisation (Optionnel)</FormLabel>
                   <FormControl>
                     <Textarea placeholder="Adresse complète du client" {...field} />
                   </FormControl>
@@ -166,7 +166,7 @@ export function EditClientButton({ client }: { client: Client }) {
                 name="ifu"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>N° IFU</FormLabel>
+                    <FormLabel>N° IFU (Optionnel)</FormLabel>
                     <FormControl>
                       <Input placeholder="Numéro IFU" {...field} />
                     </FormControl>
@@ -179,7 +179,7 @@ export function EditClientButton({ client }: { client: Client }) {
                 name="rccm"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>N° RCCM</FormLabel>
+                    <FormLabel>N° RCCM (Optionnel)</FormLabel>
                     <FormControl>
                       <Input placeholder="Numéro RCCM" {...field} />
                     </FormControl>

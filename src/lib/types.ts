@@ -9,14 +9,24 @@ export type User = {
 export type Client = {
   id: string;
   name: string;
-  email: string;
-  phone: string;
-  address: string;
-  ifu: string;
-  rccm: string;
-  taxRegime: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  ifu?: string;
+  rccm?: string;
+  taxRegime?: string;
   registrationDate: string;
   status: 'Active' | 'Inactive';
+};
+
+export type Supplier = {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  contactPerson?: string;
+  registrationDate: string;
 };
 
 export type Product = {

@@ -25,42 +25,38 @@ import {
 } from '@/components/ui/form';
 import { PlusCircle } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
-import { createClient } from './actions';
+import { createSupplier } from './actions';
 import { useToast } from "@/hooks/use-toast";
 
-const clientSchema = z.object({
+const supplierSchema = z.object({
   name: z.string().min(1, { message: "Le nom est requis." }),
   email: z.string().email({ message: "Email invalide." }).or(z.literal('')).optional(),
   phone: z.string().optional(),
   address: z.string().optional(),
-  ifu: z.string().optional(),
-  rccm: z.string().optional(),
-  taxRegime: z.string().optional(),
+  contactPerson: z.string().optional(),
 });
 
-type ClientFormValues = z.infer<typeof clientSchema>;
+type SupplierFormValues = z.infer<typeof supplierSchema>;
 
-export function ClientForm() {
+export function SupplierForm() {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
-  const form = useForm<ClientFormValues>({
-    resolver: zodResolver(clientSchema),
+  const form = useForm<SupplierFormValues>({
+    resolver: zodResolver(supplierSchema),
     defaultValues: {
       name: '',
       email: '',
       phone: '',
       address: '',
-      ifu: '',
-      rccm: '',
-      taxRegime: '',
+      contactPerson: '',
     },
   });
 
-  const onSubmit = (data: ClientFormValues) => {
+  const onSubmit = (data: SupplierFormValues) => {
     startTransition(async () => {
-      const result = await createClient(data);
+      const result = await createSupplier(data);
       if (result?.message) {
         toast({
           variant: "destructive",
@@ -69,8 +65,8 @@ export function ClientForm() {
         });
       } else {
         toast({
-          title: "Client ajouté",
-          description: "Le nouveau client a été enregistré avec succès.",
+          title: "Fournisseur ajouté",
+          description: "Le nouveau fournisseur a été enregistré.",
         });
         form.reset();
         setIsOpen(false);
@@ -83,29 +79,42 @@ export function ClientForm() {
       <DialogTrigger asChild>
         <Button onClick={() => setIsOpen(true)}>
           <PlusCircle className="mr-2" />
-          Ajouter un client
+          Ajouter un fournisseur
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Ajouter un nouveau client</DialogTitle>
+          <DialogTitle>Ajouter un nouveau fournisseur</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nom / Entreprise</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Nom du fournisseur" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
                 control={form.control}
-                name="name"
+                name="contactPerson"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nom / Entreprise</FormLabel>
+                    <FormLabel>Personne à contacter (Optionnel)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Nom du client" {...field} />
+                      <Input placeholder="Nom du contact" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="email"
@@ -119,82 +128,39 @@ export function ClientForm() {
                   </FormItem>
                 )}
               />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-                <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Contact (Optionnel)</FormLabel>
-                        <FormControl>
-                        <Input placeholder="Numéro de téléphone" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="taxRegime"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Régime Fiscal (Optionnel)</FormLabel>
-                        <FormControl>
-                        <Input placeholder="Régime fiscal" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
+              <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                  <FormItem>
+                      <FormLabel>Téléphone (Optionnel)</FormLabel>
+                      <FormControl>
+                      <Input placeholder="Numéro de téléphone" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                  </FormItem>
+                  )}
+              />
             </div>
             <FormField
               control={form.control}
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Adresse / Localisation (Optionnel)</FormLabel>
+                  <FormLabel>Adresse (Optionnel)</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Adresse complète du client" {...field} />
+                    <Textarea placeholder="Adresse complète" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="ifu"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>N° IFU (Optionnel)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Numéro IFU" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="rccm"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>N° RCCM (Optionnel)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Numéro RCCM" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
             <DialogFooter>
               <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>
                 Annuler
               </Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? 'Enregistrement...' : 'Enregistrer le client'}
+                {isPending ? 'Enregistrement...' : 'Enregistrer'}
               </Button>
             </DialogFooter>
           </form>

@@ -16,6 +16,7 @@ import {
   Wallet,
   LogOut,
   FileClock,
+  Briefcase,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -35,6 +36,7 @@ import { signOut } from '@/app/auth/actions';
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'User'] },
   { href: '/clients', label: 'Clients', icon: Users, roles: ['Admin', 'User'] },
+  { href: '/suppliers', label: 'Fournisseurs', icon: Briefcase, roles: ['Admin', 'User'] },
   { href: '/products', label: 'Produits', icon: Box, roles: ['Admin', 'User'] },
   { href: '/devis', label: 'Proforma', icon: FileClock, roles: ['Admin', 'User'] },
   { href: '/invoices', label: 'Factures', icon: FileText, roles: ['Admin', 'User'] },

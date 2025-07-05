@@ -8,12 +8,12 @@ import { getSession } from '@/lib/session';
 
 const clientSchema = z.object({
   name: z.string().min(1, { message: "Le nom est requis." }),
-  email: z.string().email({ message: "Email invalide." }).or(z.literal('')),
-  phone: z.string(),
-  address: z.string(),
-  ifu: z.string(),
-  rccm: z.string(),
-  taxRegime: z.string(),
+  email: z.string().email({ message: "Email invalide." }).or(z.literal('')).optional(),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  ifu: z.string().optional(),
+  rccm: z.string().optional(),
+  taxRegime: z.string().optional(),
 });
 
 type NewClient = z.infer<typeof clientSchema>;
