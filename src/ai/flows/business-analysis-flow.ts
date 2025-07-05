@@ -28,7 +28,7 @@ const ProductSchema = z.object({
   name: z.string(),
   reference: z.string(),
   category: z.string(),
-  purchasePrice: z.number(),
+  purchasePrice: z.number().nullable().optional(),
   unitPrice: z.number(),
   quantityInStock: z.number(),
   reorderPoint: z.number(),
@@ -68,7 +68,7 @@ const InvoiceSchema = z.object({
   totalAmount: z.number(),
   status: z.enum(['Paid', 'Unpaid', 'Partially Paid', 'Cancelled']),
   amountPaid: z.number(),
-  payments: z.array(PaymentSchema),
+  payments: z.array(PaymentSchema).nullable().optional(),
 });
 
 const ExpenseSchema = z.object({
