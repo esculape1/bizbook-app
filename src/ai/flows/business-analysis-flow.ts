@@ -156,7 +156,7 @@ Utilise l'outil getSettings pour connaître la devise de l'entreprise et formate
             tools: [getInvoicesTool, getExpensesTool, getProductsTool, getClientsTool, getSettingsTool],
         });
 
-        return text;
+        return text || '';
     }
 );
 
