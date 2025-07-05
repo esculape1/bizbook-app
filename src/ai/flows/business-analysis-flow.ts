@@ -8,6 +8,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 import { getClients, getInvoices, getProducts, getExpenses, getSettings } from '@/lib/data';
+import type { Client, Invoice, Product, Expense } from '@/lib/types';
 
 const ClientSchema = z.object({
   id: z.string(),
@@ -98,7 +99,19 @@ const getInvoicesTool = ai.defineTool(
     description: 'Récupère la liste de toutes les factures de l\'entreprise.',
     outputSchema: z.array(InvoiceSchema),
   },
-  async () => await getInvoices()
+  async () => {
+    const rawData = await getInvoices();
+    const validData: z.infer<typeof InvoiceSchema>[] = [];
+    for (const item of rawData) {
+        const parsed = InvoiceSchema.safeParse(item);
+        if (parsed.success) {
+            validData.push(parsed.data);
+        } else {
+            console.warn(`Skipping invalid invoice object (ID: ${(item as Invoice).id}):`, parsed.error.flatten());
+        }
+    }
+    return validData;
+  }
 );
 
 const getExpensesTool = ai.defineTool(
@@ -107,7 +120,19 @@ const getExpensesTool = ai.defineTool(
     description: 'Récupère la liste de toutes les dépenses de l\'entreprise.',
     outputSchema: z.array(ExpenseSchema),
   },
-  async () => await getExpenses()
+  async () => {
+    const rawData = await getExpenses();
+    const validData: z.infer<typeof ExpenseSchema>[] = [];
+    for (const item of rawData) {
+        const parsed = ExpenseSchema.safeParse(item);
+        if (parsed.success) {
+            validData.push(parsed.data);
+        } else {
+            console.warn(`Skipping invalid expense object (ID: ${(item as Expense).id}):`, parsed.error.flatten());
+        }
+    }
+    return validData;
+  }
 );
 
 const getProductsTool = ai.defineTool(
@@ -116,16 +141,40 @@ const getProductsTool = ai.defineTool(
     description: 'Récupère la liste de tous les produits en stock ou catalogués.',
     outputSchema: z.array(ProductSchema),
   },
-  async () => await getProducts()
+  async () => {
+    const rawData = await getProducts();
+    const validData: z.infer<typeof ProductSchema>[] = [];
+    for (const item of rawData) {
+        const parsed = ProductSchema.safeParse(item);
+        if (parsed.success) {
+            validData.push(parsed.data);
+        } else {
+            console.warn(`Skipping invalid product object (ID: ${(item as Product).id}):`, parsed.error.flatten());
+        }
+    }
+    return validData;
+  }
 );
 
 const getClientsTool = ai.defineTool(
   {
     name: 'getClients',
-    description: 'Récupère la liste de tous les clients de l\'entreprise.',
+    description: 'Récupère la liste de tous les clients de l'entreprise.',
     outputSchema: z.array(ClientSchema),
   },
-  async () => await getClients()
+  async () => {
+    const rawData = await getClients();
+    const validData: z.infer<typeof ClientSchema>[] = [];
+    for (const item of rawData) {
+        const parsed = ClientSchema.safeParse(item);
+        if (parsed.success) {
+            validData.push(parsed.data);
+        } else {
+            console.warn(`Skipping invalid client object (ID: ${(item as Client).id}):`, parsed.error.flatten());
+        }
+    }
+    return validData;
+  }
 );
 
 const getSettingsTool = ai.defineTool(
