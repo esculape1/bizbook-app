@@ -145,19 +145,19 @@ const businessAnalysisFlow = ai.defineFlow(
     },
     async (query) => {
         const { text } = await ai.generate({
-            model: 'googleai/gemini-2.0-flash',
+            model: 'googleai/gemini-1.5-pro-latest',
             prompt: query,
             system: `Tu es un assistant expert en analyse de données pour une entreprise qui utilise l'application BizBook.
 Ta mission est de répondre aux questions de l'utilisateur en te basant exclusivement sur les données fournies par les outils à ta disposition.
 Sois concis, précis et professionnel.
 Réponds toujours en français.
-La date d'aujourd'hui est le ${new Date().toLocaleDateString('fr-FR')}. Utilise cette information pour interpréter les questions relatives au temps (ex: "ce mois-ci", "la semaine dernière").
+La date d'aujourd'hui est le ${new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}. Utilise cette information pour interpréter les questions relatives au temps (ex: "ce mois-ci", "la semaine dernière").
 N'invente jamais d'informations. Si les données ne sont pas disponibles pour répondre à une question, indique-le clairement à l'utilisateur.
 Utilise l'outil getSettings pour connaître la devise de l'entreprise et formate tous les montants monétaires en conséquence.`,
             tools: [getInvoicesTool, getExpensesTool, getProductsTool, getClientsTool, getSettingsTool],
         });
 
-        return text || '';
+        return text || "Je n'ai pas pu trouver de réponse à votre question. Veuillez réessayer.";
     }
 );
 

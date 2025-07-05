@@ -109,13 +109,13 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
 
         {/* Center: Desktop Navigation */}
         <nav className="hidden flex-1 items-center justify-center md:flex">
-          <div className="flex items-center gap-2 rounded-xl bg-muted p-1 shadow-inner">
+          <div className="flex items-center gap-1 rounded-xl bg-muted p-1 shadow-inner">
             {accessibleNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "rounded-lg px-4 py-1.5 text-base font-medium transition-colors",
+                  "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
                   pathname === item.href
                     ? "bg-primary text-primary-foreground shadow"
                     : "text-muted-foreground hover:bg-background/50"
