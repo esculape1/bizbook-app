@@ -7,7 +7,8 @@ import { revalidatePath } from 'next/cache';
 import { getSession } from '@/lib/session';
 import type { Settings } from '@/lib/types';
 
-export const settingsSchema = z.object({
+// This schema is for server-side validation only. It is NOT exported to the client.
+const settingsSchema = z.object({
   companyName: z.string().min(1, { message: "Le nom de l'entreprise est requis." }),
   legalName: z.string().min(1, { message: "La raison sociale est requise." }),
   managerName: z.string().min(1, { message: "Le nom du gérant est requis." }),
@@ -16,7 +17,7 @@ export const settingsSchema = z.object({
   companyIfu: z.string().min(1, { message: "L'IFU est requis." }),
   companyRccm: z.string().min(1, { message: "Le RCCM est requis." }),
   currency: z.enum(['EUR', 'USD', 'GBP', 'XOF']),
-  logoUrl: z.any().optional(),
+  logoUrl: z.string().optional(),
   invoiceNumberFormat: z.enum(['YEAR-NUM', 'PREFIX-YEAR-NUM', 'PREFIX-NUM']),
   invoiceTemplate: z.enum(['modern', 'classic', 'simple', 'detailed']),
 });

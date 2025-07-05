@@ -12,13 +12,25 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
-import { saveSettings, settingsSchema, type SettingsFormValues } from './actions';
+import { saveSettings, type SettingsFormValues } from './actions';
 import type { Settings, User } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { z } from 'zod';
 
-// Create a schema for the form validation, omitting the logo which is handled separately.
-const formSchema = settingsSchema.omit({ logoUrl: true });
+// Define the form schema directly in the client component to avoid server-code imports.
+const formSchema = z.object({
+  companyName: z.string().min(1, { message: "Le nom de l'entreprise est requis." }),
+  legalName: z.string().min(1, { message: "La raison sociale est requise." }),
+  managerName: z.string().min(1, { message: "Le nom du gérant est requis." }),
+  companyAddress: z.string().min(1, { message: "L'adresse est requise." }),
+  companyPhone: z.string().min(1, { message: "Le téléphone est requis." }),
+  companyIfu: z.string().min(1, { message: "L'IFU est requis." }),
+  companyRccm: z.string().min(1, { message: "Le RCCM est requis." }),
+  currency: z.enum(['EUR', 'USD', 'GBP', 'XOF']),
+  invoiceNumberFormat: z.enum(['YEAR-NUM', 'PREFIX-YEAR-NUM', 'PREFIX-NUM']),
+  invoiceTemplate: z.enum(['modern', 'classic', 'simple', 'detailed']),
+});
+
 type SettingsClientFormValues = z.infer<typeof formSchema>;
 
 export function SettingsForm({ initialSettings, userRole }: { initialSettings: Settings, userRole: User['role'] | undefined }) {
@@ -292,7 +304,7 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Choisir un modèle" />
-                              </SelectTrigger>
+                              </Triaigger>
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="modern">Moderne</SelectItem>
