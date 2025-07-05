@@ -18,6 +18,7 @@ import {
   FileClock,
   Briefcase,
   ShoppingCart,
+  BrainCircuit,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -44,6 +45,7 @@ const navItems = [
   { href: '/invoices', label: 'Factures', icon: FileText, roles: ['Admin', 'User'] },
   { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: ['Admin', 'User'] },
   { href: '/reports', label: 'Rapports', icon: BarChart3, roles: ['Admin', 'User'] },
+  { href: '/analysis', label: 'Analyse', icon: BrainCircuit, roles: ['Admin'] },
   { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['Admin', 'User'] },
 ];
 

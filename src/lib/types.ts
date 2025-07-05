@@ -1,4 +1,5 @@
 
+
 export type User = {
   id: string;
   name: string;
@@ -166,3 +167,8 @@ export type ReportData = {
   allInvoices: Invoice[];
   expenses: Expense[];
 } | null;
+
+export type ChatMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+};
