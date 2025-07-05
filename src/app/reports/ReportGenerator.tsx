@@ -49,7 +49,14 @@ export function ReportGenerator({ clients, settings }: ReportGeneratorProps) {
       const clientName = selectedClient?.name || 'Tous les clients';
       const result = await generateReport(dateRange, clientId, clientName);
       
-      if ('error' in result) {
+      if (!result) {
+        toast({
+            variant: "destructive",
+            title: "Erreur",
+            description: "Le rapport n'a pas pu être généré.",
+        });
+        setReportData(null);
+      } else if ('error' in result) {
         toast({
             variant: "destructive",
             title: "Erreur",
