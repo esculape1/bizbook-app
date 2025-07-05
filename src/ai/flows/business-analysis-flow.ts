@@ -145,6 +145,7 @@ const businessAnalysisFlow = ai.defineFlow(
     },
     async (query) => {
         const { text } = await ai.generate({
+            model: 'googleai/gemini-2.0-flash',
             prompt: query,
             system: `Tu es un assistant expert en analyse de données pour une entreprise qui utilise l'application BizBook.
 Ta mission est de répondre aux questions de l'utilisateur en te basant exclusivement sur les données fournies par les outils à ta disposition.
