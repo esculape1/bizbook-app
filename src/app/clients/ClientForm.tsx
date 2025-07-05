@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -30,11 +31,11 @@ import { useToast } from "@/hooks/use-toast";
 const clientSchema = z.object({
   name: z.string().min(1, { message: "Le nom est requis." }),
   email: z.string().email({ message: "Email invalide." }).or(z.literal('')),
-  phone: z.string().min(1, { message: "Le contact est requis." }),
-  address: z.string().min(1, { message: "L'adresse est requise." }),
-  ifu: z.string().min(1, { message: "L'IFU est requis." }),
-  rccm: z.string().min(1, { message: "Le RCCM est requis." }),
-  taxRegime: z.string().min(1, { message: "Le régime fiscal est requis." }),
+  phone: z.string(),
+  address: z.string(),
+  ifu: z.string(),
+  rccm: z.string(),
+  taxRegime: z.string(),
 });
 
 type ClientFormValues = z.infer<typeof clientSchema>;
