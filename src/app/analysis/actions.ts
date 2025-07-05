@@ -19,10 +19,12 @@ export async function askAI(query: string): Promise<{ status: 'success', respons
     return { status: 'success', response };
   } catch (e: any) {
     console.error("AI analysis failed:", e);
-    // Provide a more user-friendly error message
-    const errorMessage = e.message.includes('permission') 
-      ? "L'agent IA n'a pas la permission d'accéder aux ressources nécessaires. Veuillez vérifier la configuration."
-      : "L'analyse par IA a rencontré une erreur. Veuillez réessayer.";
-    return { status: 'error', error: errorMessage };
+    
+    const errorString = (e.message || '').toLowerCase();
+    if (errorString.includes('api key') || errorString.includes('permission denied') || errorString.includes('authentication')) {
+        return { status: 'error', error: "Erreur d'authentification de l'IA. Assurez-vous que la clé API Gemini est valide et correctement configurée dans le fichier .env." };
+    }
+    
+    return { status: 'error', error: "L'analyse par IA a rencontré une erreur. Veuillez réessayer." };
   }
 }
