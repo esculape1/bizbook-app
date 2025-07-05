@@ -1,7 +1,7 @@
 
 import { db } from './firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
-import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier } from './types';
+import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase } from './types';
 
 // Helper to convert Firestore docs to plain objects
 function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
@@ -269,6 +269,64 @@ export async function deleteInvoice(id: string): Promise<void> {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
   const invoiceDocRef = db.collection('invoices').doc(id);
   await invoiceDocRef.delete();
+}
+
+
+// PURCHASES
+export async function getPurchases(): Promise<Purchase[]> {
+    if (!db) return [];
+    try {
+      const purchasesCol = db.collection('purchases');
+      const q = purchasesCol.orderBy('date', 'desc');
+      const purchaseSnapshot = await q.get();
+      return purchaseSnapshot.docs.map(doc => docToObject<Purchase>(doc));
+    } catch (error) {
+      console.error("Impossible de récupérer les achats:", error);
+      return [];
+    }
+}
+
+export async function getPurchaseById(id: string): Promise<Purchase | null> {
+    if (!db) return null;
+    try {
+      const purchaseDocRef = db.collection('purchases').doc(id);
+      const purchaseDoc = await purchaseDocRef.get();
+      if (purchaseDoc.exists) {
+          return docToObject<Purchase>(purchaseDoc);
+      }
+      return null;
+    } catch (error) {
+      console.error(`Impossible de récupérer l'achat ${id}:`, error);
+      return null;
+    }
+}
+
+export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'purchaseNumber'>): Promise<Purchase> {
+    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+    const purchasesCol = db.collection('purchases');
+    const q = purchasesCol.orderBy('purchaseNumber', 'desc').limit(1);
+    const latestPurchaseSnap = await q.get();
+    
+    let latestPurchaseNumber = 0;
+    if (!latestPurchaseSnap.empty) {
+        const lastPurchase = latestPurchaseSnap.docs[0].data() as Purchase;
+        if (lastPurchase.purchaseNumber && lastPurchase.purchaseNumber.includes('-')) {
+            latestPurchaseNumber = parseInt(lastPurchase.purchaseNumber.split('-')[1], 10);
+        }
+    }
+
+    const newPurchaseData = {
+        ...purchaseData,
+        purchaseNumber: `ACH2024-${(latestPurchaseNumber + 1).toString().padStart(3, '0')}`,
+    };
+    const docRef = await purchasesCol.add(newPurchaseData);
+    return { id: docRef.id, ...newPurchaseData };
+}
+
+export async function updatePurchase(id: string, purchaseData: Partial<Omit<Purchase, 'id'>>): Promise<void> {
+  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+  const purchaseDocRef = db.collection('purchases').doc(id);
+  await purchaseDocRef.set(purchaseData, { merge: true });
 }
 
 

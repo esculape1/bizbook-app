@@ -59,6 +59,27 @@ export type QuoteItem = {
   total: number;
 };
 
+export type PurchaseItem = {
+  productId: string;
+  productName: string;
+  reference: string;
+  quantity: number;
+  purchasePrice: number;
+  total: number;
+};
+
+export type Purchase = {
+  id: string;
+  purchaseNumber: string;
+  supplierId: string;
+  supplierName: string;
+  date: string;
+  items: PurchaseItem[];
+  subTotal: number;
+  totalAmount: number;
+  status: 'Pending' | 'Received' | 'Cancelled';
+};
+
 export type Quote = {
   id: string;
   quoteNumber: string;
