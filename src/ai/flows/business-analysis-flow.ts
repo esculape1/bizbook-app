@@ -96,7 +96,7 @@ const SettingsSchema = z.object({
 const getInvoicesTool = ai.defineTool(
   {
     name: 'getInvoices',
-    description: 'Récupère la liste de toutes les factures de l\'entreprise.',
+    description: "Récupère la liste de toutes les factures de l'entreprise.",
     outputSchema: z.array(InvoiceSchema),
   },
   async () => {
@@ -117,7 +117,7 @@ const getInvoicesTool = ai.defineTool(
 const getExpensesTool = ai.defineTool(
   {
     name: 'getExpenses',
-    description: 'Récupère la liste de toutes les dépenses de l\'entreprise.',
+    description: "Récupère la liste de toutes les dépenses de l'entreprise.",
     outputSchema: z.array(ExpenseSchema),
   },
   async () => {
@@ -138,7 +138,7 @@ const getExpensesTool = ai.defineTool(
 const getProductsTool = ai.defineTool(
   {
     name: 'getProducts',
-    description: 'Récupère la liste de tous les produits en stock ou catalogués.',
+    description: "Récupère la liste de tous les produits en stock ou catalogués.",
     outputSchema: z.array(ProductSchema),
   },
   async () => {
@@ -159,7 +159,7 @@ const getProductsTool = ai.defineTool(
 const getClientsTool = ai.defineTool(
   {
     name: 'getClients',
-    description: 'Récupère la liste de tous les clients de l'entreprise.',
+    description: "Récupère la liste de tous les clients de l'entreprise.",
     outputSchema: z.array(ClientSchema),
   },
   async () => {
@@ -180,7 +180,7 @@ const getClientsTool = ai.defineTool(
 const getSettingsTool = ai.defineTool(
   {
     name: 'getSettings',
-    description: 'Récupère les paramètres de l\'entreprise, comme le nom ou la devise par défaut (currency).',
+    description: "Récupère les paramètres de l'entreprise, comme le nom ou la devise par défaut (currency).",
     outputSchema: SettingsSchema,
   },
   async () => await getSettings()
