@@ -11,12 +11,7 @@ const users = {
     email: 'admin@bizbook.com',
     password: 'password',
     user: { id: 'admin-01', name: 'Administrateur', email: 'admin@bizbook.com', role: 'Admin' } as User,
-  },
-  user: {
-    email: 'user@bizbook.com',
-    password: 'password',
-    user: { id: 'user-01', name: 'Utilisateur de démo', email: 'user@bizbook.com', role: 'User' } as User,
-  },
+  }
 };
 
 export async function signIn(prevState: { error: string } | undefined, formData: FormData) {
@@ -28,14 +23,11 @@ export async function signIn(prevState: { error: string } | undefined, formData:
   }
 
   const adminUser = users.admin;
-  const standardUser = users.user;
 
   let authenticatedUser: User | null = null;
 
   if (email.toLowerCase() === adminUser.email && password === adminUser.password) {
     authenticatedUser = adminUser.user;
-  } else if (email.toLowerCase() === standardUser.email && password === standardUser.password) {
-    authenticatedUser = standardUser.user;
   }
 
   if (authenticatedUser) {
