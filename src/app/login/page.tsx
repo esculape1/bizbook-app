@@ -1,13 +1,12 @@
-
 'use client';
 
 import { useFormState, useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, Info } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { signIn } from '../auth/actions';
 
 function LoginButton() {
@@ -24,12 +23,17 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Connexion</CardTitle>
-          <CardDescription>Entrez vos identifiants pour accéder à votre espace.</CardDescription>
+      <Card className="w-full max-w-md shadow-2xl">
+        <CardHeader className="text-center space-y-4 pt-8">
+            <div className="flex justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-primary"><path d="M2 9.5a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0Z"/><path d="M12.5 4H15a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5"/><path d="m14 6-2.5 2.5"/><path d="m18 10-6 6"/></svg>
+            </div>
+            <div>
+                <CardTitle className="text-2xl">Bienvenue sur BizBook</CardTitle>
+                <CardDescription>Connectez-vous pour piloter votre entreprise</CardDescription>
+            </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-8">
           <form action={formAction} className="space-y-6">
             {state?.error && (
               <Alert variant="destructive">
@@ -61,18 +65,6 @@ export default function LoginPage() {
             <LoginButton />
           </form>
         </CardContent>
-        <CardFooter className="flex flex-col items-start text-sm text-muted-foreground pt-4">
-            <div className="flex items-start gap-2 p-3 bg-blue-500/10 rounded-md border border-blue-500/20 mb-4">
-                <Info className="h-4 w-4 mt-0.5 text-blue-700 flex-shrink-0" />
-                <div>
-                    <p className="font-semibold text-blue-800">Comptes de démonstration</p>
-                    <p>Admin: <span className="font-mono">admin@bizbook.com</span></p>
-                    <p>Utilisateur: <span className="font-mono">user@bizbook.com</span></p>
-                    <p>Mot de passe (pour les deux): <span className="font-mono">password</span></p>
-                    <p className="text-xs mt-2 text-blue-900/80">AVERTISSEMENT: Ce système de connexion est uniquement pour la démonstration. Ne l'utilisez pas avec des données réelles avant de le sécuriser.</p>
-                </div>
-            </div>
-        </CardFooter>
       </Card>
       <footer className="text-center p-4 mt-6 text-xs text-muted-foreground">
         © {new Date().getFullYear()} BizBook. Conçu et développé par DLG Caverne Consortium.
