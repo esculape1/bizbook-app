@@ -257,7 +257,7 @@ export function EditPurchaseForm({ purchase, suppliers, products, settings }: Ed
             </div>
             
              <div className="flex flex-col md:flex-row justify-between items-start gap-8">
-              <div className="grid grid-cols-2 gap-x-4 gap-y-4 w-full md:w-auto flex-grow">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4 w-full md:w-auto flex-grow">
                 <FormField
                     control={form.control}
                     name="premierVersement"
