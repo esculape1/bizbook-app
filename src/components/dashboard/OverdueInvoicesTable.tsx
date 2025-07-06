@@ -18,7 +18,7 @@ export function OverdueInvoicesTable({ invoices }: { invoices: Invoice[] }) {
   );
 
   return (
-    <Card className="lg:col-span-2 bg-yellow-500/5">
+    <Card className="bg-yellow-500/5">
         <CardHeader className="text-center">
             <CardTitle>Factures Échues</CardTitle>
         </CardHeader>

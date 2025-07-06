@@ -172,14 +172,12 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
       <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
         {children}
       </main>
-      <footer className="flex items-center justify-center p-4 text-xs text-muted-foreground bg-background/90 backdrop-blur-sm">
-        <div className="text-center">
-            <p className="mb-2">© {new Date().getFullYear()} BizBook. Conçu et développé par DLG Caverne Consortium.</p>
-            <div className="flex flex-col items-center justify-center gap-y-1 sm:flex-row sm:gap-x-2">
-                <span>Email: dlgbiomed@gmail.com</span>
-                <span className="hidden sm:inline">|</span>
-                <span>Tél: +226 25 46 55 12 / +226 70 15 06 99</span>
-            </div>
+      <footer className="w-full p-4 text-center text-xs text-muted-foreground bg-background/90 backdrop-blur-sm">
+        <p className="mb-2">© {new Date().getFullYear()} BizBook. Conçu et développé par DLG Caverne Consortium.</p>
+        <div className="flex flex-col items-center justify-center gap-y-1 sm:flex-row sm:gap-x-2">
+            <span>Email: dlgbiomed@gmail.com</span>
+            <span className="hidden sm:inline">|</span>
+            <span>Tél: +226 25 46 55 12 / +226 70 15 06 99</span>
         </div>
     </footer>
     </div>

@@ -8,7 +8,7 @@ export function LowStockTable({ products }: { products: Product[] }) {
   const lowStockProducts = products.filter(p => p.quantityInStock <= p.reorderPoint);
 
   return (
-    <Card className="lg:col-span-2 bg-destructive/5">
+    <Card className="bg-destructive/5">
         <CardHeader className="text-center">
             <CardTitle>Alerte de Stock Faible</CardTitle>
         </CardHeader>

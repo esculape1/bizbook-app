@@ -28,7 +28,7 @@ export default async function DashboardPage() {
       <div className="text-center border rounded-lg p-4">
         <h1 className="text-3xl font-bold tracking-tight">Tableau de bord</h1>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <StatCard 
           title="Chiffre d'affaires" 
           value={formatCurrency(totalRevenue, settings.currency)} 
@@ -65,8 +65,8 @@ export default async function DashboardPage() {
           className="bg-yellow-500/10 text-yellow-700 border-yellow-500/20"
         />
       </div>
-      <div className="grid gap-6 lg:grid-cols-7">
-        <Card className="lg:col-span-3 bg-muted/30">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2 bg-muted/30">
           <CardHeader className="text-center">
             <CardTitle>Aperçu des Ventes</CardTitle>
           </CardHeader>
@@ -75,9 +75,10 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
         
-        <OverdueInvoicesTable invoices={invoices} />
-
-        <LowStockTable products={products} />
+        <div className="lg:col-span-1 space-y-6 flex flex-col">
+          <OverdueInvoicesTable invoices={invoices} />
+          <LowStockTable products={products} />
+        </div>
 
       </div>
     </div>
