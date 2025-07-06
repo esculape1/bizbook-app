@@ -20,7 +20,7 @@ export default async function DashboardPage() {
   ]);
 
   const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.amountPaid || 0), 0);
-  const totalDue = invoices.reduce((sum, inv) => sum + inv.totalAmount - (inv.amountPaid || 0), 0);
+  const totalDue = invoices.reduce((sum, inv) => inv.status !== 'Paid' && inv.status !== 'Cancelled' ? sum + inv.totalAmount - (inv.amountPaid || 0) : sum, 0);
   const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
 
   return (
@@ -61,25 +61,26 @@ export default async function DashboardPage() {
           title="Total Impayé" 
           value={formatCurrency(totalDue, settings.currency)} 
           icon={<Receipt />}
-          description={`${invoices.filter(i => i.status !== 'Paid').length} factures non soldées`}
+          description={`${invoices.filter(i => i.status === 'Unpaid' || i.status === 'Partially Paid').length} factures non soldées`}
           className="bg-yellow-500/10 text-yellow-700 border-yellow-500/20"
         />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 bg-muted/30">
-          <CardHeader className="text-center">
-            <CardTitle>Aperçu des Ventes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SalesChart invoices={invoices} products={products} currency={settings.currency} />
-          </CardContent>
-        </Card>
+        <div className="lg:col-span-2">
+            <Card className="bg-muted/30 h-full">
+                <CardHeader className="text-center">
+                    <CardTitle>Aperçu des Ventes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <SalesChart invoices={invoices} products={products} currency={settings.currency} />
+                </CardContent>
+            </Card>
+        </div>
         
         <div className="lg:col-span-1 space-y-6 flex flex-col">
           <OverdueInvoicesTable invoices={invoices} />
           <LowStockTable products={products} />
         </div>
-
       </div>
     </div>
   );
