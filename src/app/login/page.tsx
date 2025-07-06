@@ -68,8 +68,12 @@ export default function LoginPage() {
         </CardContent>
       </Card>
       <footer className="text-center p-4 mt-6 text-xs text-muted-foreground">
-        <p>© {new Date().getFullYear()} BizBook. Conçu et développé par DLG Caverne Consortium.</p>
-        <p>Email: dlgbiomed@gmail.com | Tél: +226 25 46 55 12 / +226 70 15 06 99</p>
+        <p className="mb-2">© {new Date().getFullYear()} BizBook. Conçu et développé par DLG Caverne Consortium.</p>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-x-2">
+            <span>Email: dlgbiomed@gmail.com</span>
+            <span className="hidden sm:inline">|</span>
+            <span>Tél: +226 25 46 55 12 / +226 70 15 06 99</span>
+        </div>
       </footer>
     </div>
   );
