@@ -173,9 +173,8 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
         {children}
       </main>
       <footer className="text-center p-4 text-xs text-muted-foreground bg-background/90 backdrop-blur-sm">
-        © {new Date().getFullYear()} BizBook. Conçu et développé par DLG Caverne Consortium.
-        <br />
-        Email: dlgbiomed@gmail.com | Tél: +226 25 46 55 12 / +226 70 15 06 99
+        <p>© {new Date().getFullYear()} BizBook. Conçu et développé par DLG Caverne Consortium.</p>
+        <p>Email: dlgbiomed@gmail.com | Tél: +226 25 46 55 12 / +226 70 15 06 99</p>
     </footer>
     </div>
   );
