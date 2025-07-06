@@ -67,7 +67,7 @@ export default function LoginPage() {
           </form>
         </CardContent>
       </Card>
-      <footer className="p-4 mt-6 text-xs text-muted-foreground">
+      <footer className="flex items-center justify-center p-4 mt-6 text-xs text-muted-foreground">
         <div className="text-center">
           <p className="mb-2">© {new Date().getFullYear()} BizBook. Conçu et développé par DLG Caverne Consortium.</p>
           <div className="flex flex-col items-center justify-center gap-y-1 sm:flex-row sm:gap-x-2">
