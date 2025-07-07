@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -39,13 +38,13 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'User'] },
   { href: '/clients', label: 'Clients', icon: Users, roles: ['Admin', 'User'] },
   { href: '/suppliers', label: 'Fournisseurs', icon: Briefcase, roles: ['Admin', 'User'] },
-  { href: '/purchases', label: 'Achats', icon: ShoppingCart, roles: ['Admin'] },
+  { href: '/purchases', label: 'Achats', icon: ShoppingCart, roles: ['Admin', 'User'] },
   { href: '/products', label: 'Produits', icon: Box, roles: ['Admin', 'User'] },
   { href: '/devis', label: 'Proforma', icon: FileClock, roles: ['Admin', 'User'] },
   { href: '/invoices', label: 'Factures', icon: FileText, roles: ['Admin', 'User'] },
   { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: ['Admin', 'User'] },
   { href: '/reports', label: 'Rapports', icon: BarChart3, roles: ['Admin', 'User'] },
-  { href: '/analysis', label: 'Analyse', icon: BrainCircuit, roles: ['Admin'] },
+  { href: '/analysis', label: 'Analyse', icon: BrainCircuit, roles: ['Admin', 'User'] },
   { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['Admin', 'User'] },
 ];
 
