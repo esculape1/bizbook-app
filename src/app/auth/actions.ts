@@ -7,8 +7,8 @@ import type { User, UserWithPassword } from '@/lib/types';
 import { getUserByEmail } from '@/lib/data';
 
 export async function signIn(prevState: { error: string } | undefined, formData: FormData) {
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
+  const email = (formData.get('email') as string || '').trim();
+  const password = (formData.get('password') as string || '').trim();
 
   if (!email || !password) {
     return { error: 'Email et mot de passe sont requis.' };
