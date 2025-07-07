@@ -26,11 +26,13 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex justify-between items-center border rounded-lg p-4">
+      <div className="relative flex justify-center items-center border rounded-lg p-4 bg-gradient-to-r from-primary/5 via-card to-primary/5 shadow-inner">
         <h1 className="text-3xl font-bold uppercase tracking-wider">Tableau de bord</h1>
-        <DateTimeDisplay />
+        <div className="absolute right-4 top-1/2 -translate-y-1/2">
+          <DateTimeDisplay />
+        </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <StatCard 
           title="Chiffre d'affaires" 
           value={formatCurrency(totalRevenue, settings.currency)} 
