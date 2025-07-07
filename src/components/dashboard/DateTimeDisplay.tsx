@@ -17,9 +17,9 @@ export function DateTimeDisplay() {
 
   if (!currentDateTime) {
     return (
-        <div className="text-right">
-            <div className="h-4 w-28 bg-gray-200 rounded animate-pulse" />
-            <div className="h-4 w-20 bg-gray-200 rounded animate-pulse mt-1" />
+        <div className="flex flex-col items-center md:items-end">
+            <div className="h-4 w-28 bg-muted rounded animate-pulse" />
+            <div className="h-4 w-20 bg-muted rounded animate-pulse mt-1" />
       </div>
     );
   }
@@ -43,7 +43,7 @@ export function DateTimeDisplay() {
   const formattedTime = `${currentDateTime.toLocaleTimeString('fr-FR', timeOptions)} (TU)`;
 
   return (
-    <div className="text-right">
+    <div className="text-center md:text-right">
       <p className="text-sm font-medium text-muted-foreground">{formattedDate}</p>
       <p className="text-lg font-semibold text-muted-foreground">{formattedTime}</p>
     </div>
