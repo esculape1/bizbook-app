@@ -26,9 +26,19 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4 border rounded-lg p-4 bg-gradient-to-r from-primary/5 via-card to-primary/5 shadow-inner">
-        <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wider">Tableau de bord</h1>
-        <DateTimeDisplay />
+      <div className="relative flex flex-col md:flex-row justify-between items-center gap-4 border rounded-lg p-4 bg-gradient-to-r from-primary/5 via-card to-primary/5 shadow-inner">
+          {/* Left spacer for desktop */}
+          <div className="hidden md:block md:flex-1"></div>
+
+          {/* Title (centered) */}
+          <div className="text-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2">
+              <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wider">Tableau de bord</h1>
+          </div>
+          
+          {/* Date/Time (right aligned on desktop) */}
+          <div className="md:flex-1 md:text-right">
+              <DateTimeDisplay />
+          </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <StatCard 
