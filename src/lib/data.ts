@@ -1,7 +1,7 @@
 
 import { db } from './firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
-import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase } from './types';
+import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User, UserWithPassword } from './types';
 
 // Helper to convert Firestore docs to plain objects
 function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
@@ -19,6 +19,26 @@ function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
 
 const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Veuillez vérifier la configuration de Firebase.";
 const DB_READ_ERROR = "Erreur de lecture dans la base de données. L'application peut être partiellement fonctionnelle.";
+
+// USERS
+export async function getUserByEmail(email: string): Promise<UserWithPassword | null> {
+    if (!db) return null;
+    try {
+        const usersCol = db.collection('users');
+        const q = usersCol.where('email', '==', email.toLowerCase()).limit(1);
+        const userSnapshot = await q.get();
+
+        if (userSnapshot.empty) {
+            return null;
+        }
+        
+        return docToObject<UserWithPassword>(userSnapshot.docs[0]);
+    } catch (error) {
+        console.error(`Impossible de récupérer l'utilisateur avec l'email ${email}:`, error);
+        return null;
+    }
+}
+
 
 // CLIENTS
 export async function getClients(): Promise<Client[]> {

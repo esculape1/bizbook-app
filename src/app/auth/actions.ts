@@ -3,16 +3,8 @@
 
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import type { User } from '@/lib/types';
-
-// Hardcoded user credentials
-const users = {
-  admin: {
-    email: 'admin@bizbook.com',
-    password: 'password',
-    user: { id: 'admin-01', name: 'Administrateur', email: 'admin@bizbook.com', role: 'Admin' } as User,
-  }
-};
+import type { User, UserWithPassword } from '@/lib/types';
+import { getUserByEmail } from '@/lib/data';
 
 export async function signIn(prevState: { error: string } | undefined, formData: FormData) {
   const email = formData.get('email') as string;
@@ -22,15 +14,19 @@ export async function signIn(prevState: { error: string } | undefined, formData:
     return { error: 'Email et mot de passe sont requis.' };
   }
 
-  const adminUser = users.admin;
+  // Find user in the database by email
+  const userRecord: UserWithPassword | null = await getUserByEmail(email);
 
-  let authenticatedUser: User | null = null;
+  // Check if user exists and password matches
+  if (userRecord && userRecord.password === password) {
+    // This is the user object we want to store in the session (without the password)
+    const authenticatedUser: User = {
+        id: userRecord.id,
+        name: userRecord.name,
+        email: userRecord.email,
+        role: userRecord.role,
+    };
 
-  if (email.toLowerCase() === adminUser.email && password === adminUser.password) {
-    authenticatedUser = adminUser.user;
-  }
-
-  if (authenticatedUser) {
     const sessionData = JSON.stringify(authenticatedUser);
     const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
 
