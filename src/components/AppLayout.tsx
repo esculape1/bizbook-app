@@ -51,7 +51,9 @@ const navItems = [
 
 export function AppLayout({ children, user, settings }: { children: ReactNode, user: User, settings: AppSettings }) {
   const pathname = usePathname();
-  const userRole = user?.role || 'User';
+  const rawUserRole = user?.role || 'User';
+  // Normalize the role to ensure the first letter is capitalized, making the check case-insensitive.
+  const userRole = rawUserRole.charAt(0).toUpperCase() + rawUserRole.slice(1).toLowerCase();
 
   const accessibleNavItems = navItems.filter(item => item.roles.includes(userRole));
 
