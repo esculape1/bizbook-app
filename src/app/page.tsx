@@ -9,6 +9,7 @@ import { DollarSign, Users, Box, Receipt, Wallet } from "lucide-react";
 import { getClients, getProducts, getInvoices, getExpenses, getSettings } from "@/lib/data";
 import { formatCurrency } from "@/lib/utils";
 import { OverdueInvoicesTable } from "@/components/dashboard/OverdueInvoicesTable";
+import { DateTimeDisplay } from "@/components/dashboard/DateTimeDisplay";
 
 export default async function DashboardPage() {
   const [clients, products, invoices, expenses, settings] = await Promise.all([
@@ -25,8 +26,9 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="text-center border rounded-lg p-4">
-        <h1 className="text-3xl font-bold tracking-tight">Tableau de bord</h1>
+      <div className="flex justify-between items-center border rounded-lg p-4">
+        <h1 className="text-3xl font-bold uppercase tracking-wider">Tableau de bord</h1>
+        <DateTimeDisplay />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <StatCard 
