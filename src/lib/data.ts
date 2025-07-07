@@ -22,7 +22,10 @@ const DB_READ_ERROR = "Erreur de lecture dans la base de données. L'application
 
 // USERS
 export async function getUserByEmail(email: string): Promise<UserWithPassword | null> {
-    if (!db) return null;
+    if (!db) {
+        console.error(DB_UNAVAILABLE_ERROR);
+        return null;
+    }
     try {
         const usersCol = db.collection('users');
         const q = usersCol.where('email', '==', email.toLowerCase()).limit(1);
