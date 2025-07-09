@@ -31,6 +31,8 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const currentYear = new Date().getFullYear();
+  const invoicePrefix = `FACT-${currentYear}-`;
 
   const invoiceItemSchema = z.object({
     productId: z.string().min(1, "Produit requis"),
@@ -41,7 +43,7 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
   });
   
   const invoiceSchema = z.object({
-    invoiceNumber: z.string().min(1, "Le numéro de facture est requis."),
+    invoiceNumberSuffix: z.string().min(1, "Le numéro de facture est requis."),
     clientId: z.string().min(1, "Client requis"),
     date: z.date({ required_error: "Date requise" }),
     dueDate: z.date({ required_error: "Date d'échéance requise" }),
@@ -66,7 +68,7 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
-      invoiceNumber: '',
+      invoiceNumberSuffix: '',
       clientId: '',
       date: new Date(),
       dueDate: new Date(new Date().setDate(new Date().getDate() + 30)),
@@ -145,13 +147,16 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <FormField
                 control={form.control}
-                name="invoiceNumber"
+                name="invoiceNumberSuffix"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Numéro de facture</FormLabel>
-                    <FormControl>
-                      <Input placeholder="FACT-2024-001" {...field} />
-                    </FormControl>
+                    <div className="flex items-center">
+                        <span className="bg-muted px-3 py-2 rounded-l-md border border-r-0 text-sm">{invoicePrefix}</span>
+                        <FormControl>
+                            <Input placeholder="001" {...field} className="rounded-l-none" />
+                        </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -372,5 +377,3 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
     </Dialog>
   );
 }
-
-    
