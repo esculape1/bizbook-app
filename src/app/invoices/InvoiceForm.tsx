@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -40,6 +41,7 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
   });
   
   const invoiceSchema = z.object({
+    invoiceNumber: z.string().min(1, "Le numéro de facture est requis."),
     clientId: z.string().min(1, "Client requis"),
     date: z.date({ required_error: "Date requise" }),
     dueDate: z.date({ required_error: "Date d'échéance requise" }),
@@ -55,7 +57,7 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
           }
         });
       }),
-    vat: z.coerce.number().min(0).default(20),
+    vat: z.coerce.number().min(0).default(0),
     discount: z.coerce.number().min(0).default(0),
   });
 
@@ -64,11 +66,12 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
+      invoiceNumber: '',
       clientId: '',
       date: new Date(),
       dueDate: new Date(new Date().setDate(new Date().getDate() + 30)),
       items: [],
-      vat: 20,
+      vat: 0,
       discount: 0,
     },
   });
@@ -139,7 +142,20 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <FormField
+                control={form.control}
+                name="invoiceNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Numéro de facture</FormLabel>
+                    <FormControl>
+                      <Input placeholder="FACT-2024-001" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="clientId"

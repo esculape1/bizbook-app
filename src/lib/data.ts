@@ -23,6 +23,7 @@ const DB_READ_ERROR = "Erreur de lecture dans la base de données. L'application
 // USERS
 export async function getUserByEmail(email: string): Promise<UserWithPassword | null> {
     if (!db) {
+        console.error("La connexion à la base de données a échoué. DB non disponible.");
         return null;
     }
     try {
@@ -31,9 +32,11 @@ export async function getUserByEmail(email: string): Promise<UserWithPassword | 
         const userSnapshot = await q.get();
 
         if (userSnapshot.empty) {
+            console.log(`Aucun utilisateur trouvé pour l'email: ${email}`);
             return null;
         }
         
+        console.log(`Utilisateur trouvé pour l'email: ${email}`);
         return docToObject<UserWithPassword>(userSnapshot.docs[0]);
     } catch (error) {
         console.error(`Impossible de récupérer l'utilisateur avec l'email ${email}:`, error);
@@ -259,26 +262,11 @@ export async function getInvoiceById(id: string): Promise<Invoice | null> {
     }
 }
 
-export async function addInvoice(invoiceData: Omit<Invoice, 'id' | 'invoiceNumber'>): Promise<Invoice> {
+export async function addInvoice(invoiceData: Omit<Invoice, 'id'>): Promise<Invoice> {
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
     const invoicesCol = db.collection('invoices');
-    const q = invoicesCol.orderBy('invoiceNumber', 'desc').limit(1);
-    const latestInvoiceSnap = await q.get();
-    
-    let latestInvoiceNumber = 0;
-    if (!latestInvoiceSnap.empty) {
-        const lastInv = latestInvoiceSnap.docs[0].data() as Invoice;
-        if (lastInv.invoiceNumber && lastInv.invoiceNumber.includes('-')) {
-            latestInvoiceNumber = parseInt(lastInv.invoiceNumber.split('-')[1], 10);
-        }
-    }
-
-    const newInvoiceData: Omit<Invoice, 'id'> = {
-        ...invoiceData,
-        invoiceNumber: `FACT2024-${(latestInvoiceNumber + 1).toString().padStart(3, '0')}`,
-    };
-    const docRef = await invoicesCol.add(newInvoiceData);
-    return { id: docRef.id, ...newInvoiceData };
+    const docRef = await invoicesCol.add(invoiceData);
+    return { id: docRef.id, ...invoiceData };
 }
 
 export async function updateInvoice(id: string, invoiceData: Partial<Omit<Invoice, 'id'>>): Promise<void> {

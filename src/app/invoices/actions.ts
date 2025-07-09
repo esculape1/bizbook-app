@@ -24,6 +24,7 @@ const invoiceItemSchema = z.object({
 });
 
 const invoiceSchema = z.object({
+  invoiceNumber: z.string().min(1, { message: "Le numéro de facture est requis." }),
   clientId: z.string(),
   date: z.date(),
   dueDate: z.date(),
@@ -65,7 +66,7 @@ export async function createInvoice(formData: unknown) {
   }
 
   try {
-    const { clientId, date, dueDate, items, vat, discount } = validatedFields.data;
+    const { invoiceNumber, clientId, date, dueDate, items, vat, discount } = validatedFields.data;
     
     const clients = await getClients();
     const products = await getProducts();
@@ -111,6 +112,7 @@ export async function createInvoice(formData: unknown) {
 
     // 1. Create invoice
     await addInvoice({
+      invoiceNumber: invoiceNumber, // Use provided invoice number
       clientId,
       clientName: client.name,
       date: date.toISOString(),
