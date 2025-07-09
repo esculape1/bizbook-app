@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Invoice, Client, Settings } from '@/lib/types';
@@ -52,11 +53,11 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
   }, [invoice.totalAmount, settings.currency]);
 
   // Adjust empty rows logic to fit on one page if 10 items or less
-  const emptyRowsCount = invoice.items.length <= 10 ? Math.max(0, 10 - invoice.items.length) : 0;
+  const emptyRowsCount = invoice.items.length <= 15 ? Math.max(0, 15 - invoice.items.length) : 0;
 
   return (
     // A4 sizing and margins simulation
-    <div className="bg-white p-6 font-serif text-sm text-gray-800 min-h-[29.7cm] flex flex-col printable-area" id="invoice-content">
+    <div className="bg-white p-4 font-serif text-[10pt] text-gray-800 min-h-[29.7cm] flex flex-col printable-area" id="invoice-content">
       {/* Header */}
       <div className="flex justify-between items-start mb-2">
         <div className="w-1/3">
@@ -64,26 +65,26 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
             <Image 
                 src={settings.logoUrl} 
                 alt={`${settings.companyName} logo`} 
-                width={40}
-                height={40} 
+                width={36}
+                height={36} 
                 className="object-contain"
                 data-ai-hint="logo"
             />
           )}
         </div>
         <div className="w-1/3 text-right">
-          <h1 className="text-xl font-bold text-gray-900">FACTURE</h1>
-          <p className="mt-1">{invoice.invoiceNumber}</p>
-          <p className="mt-0.5 text-gray-500">Date: {format(new Date(invoice.date), 'd MMMM yyyy', { locale: fr })}</p>
-          <p className="text-gray-500">Échéance: {format(new Date(invoice.dueDate), 'd MMMM yyyy', { locale: fr })}</p>
+          <h1 className="text-lg font-bold text-gray-900">FACTURE</h1>
+          <p className="mt-1 text-xs">{invoice.invoiceNumber}</p>
+          <p className="mt-0.5 text-xs text-gray-500">Date: {format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}</p>
+          <p className="text-xs text-gray-500">Échéance: {format(new Date(invoice.dueDate), 'd MMM yyyy', { locale: fr })}</p>
         </div>
       </div>
 
       {/* Company & Client Info */}
-      <div className="flex justify-between mb-4">
+      <div className="flex justify-between mb-3 text-[9pt]">
         <div className="w-2/5">
-          <h2 className="font-bold text-gray-600 border-b pb-1 mb-1">DE</h2>
-          <div className="space-y-0.5">
+          <h2 className="font-bold text-gray-600 border-b pb-0.5 mb-1 text-[10pt]">DE</h2>
+          <div className="space-y-px">
             <p className="font-bold">{settings.companyName}</p>
             <p>{settings.legalName}</p>
             <p>{settings.companyAddress}</p>
@@ -93,8 +94,8 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
           </div>
         </div>
         <div className="w-2/5">
-          <h2 className="font-bold text-gray-600 border-b pb-1 mb-1">À</h2>
-          <div className="space-y-0.5">
+          <h2 className="font-bold text-gray-600 border-b pb-0.5 mb-1 text-[10pt]">À</h2>
+          <div className="space-y-px">
             <p className="font-bold">{client.name}</p>
             <p>{client.address}</p>
             <p>Contact: {client.phone}</p>
@@ -109,32 +110,32 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
       {/* Items Table */}
       <div className="overflow-x-auto flex-grow">
         <table className="w-full border-collapse">
-          <thead className="bg-gray-100">
+          <thead className="bg-gray-100 text-[9pt]">
             <tr>
-              <th className="py-1 px-1.5 text-left font-bold text-gray-600 uppercase w-[15%] border border-gray-300">Référence</th>
-              <th className="py-1 px-1.5 text-left font-bold text-gray-600 uppercase w-[40%] border border-gray-300">Désignation</th>
-              <th className="py-1 px-1.5 text-right font-bold text-gray-600 uppercase w-[15%] border border-gray-300">Prix U.</th>
-              <th className="py-1 px-1.5 text-right font-bold text-gray-600 uppercase w-[10%] border border-gray-300">Quantité</th>
-              <th className="py-1 px-1.5 text-right font-bold text-gray-600 uppercase w-[15%] border border-gray-300">Total</th>
+              <th className="py-1 px-1 text-left font-bold text-gray-600 uppercase w-[15%] border border-gray-300">Référence</th>
+              <th className="py-1 px-1 text-left font-bold text-gray-600 uppercase w-[40%] border border-gray-300">Désignation</th>
+              <th className="py-1 px-1 text-right font-bold text-gray-600 uppercase w-[15%] border border-gray-300">Prix U.</th>
+              <th className="py-1 px-1 text-right font-bold text-gray-600 uppercase w-[10%] border border-gray-300">Quantité</th>
+              <th className="py-1 px-1 text-right font-bold text-gray-600 uppercase w-[15%] border border-gray-300">Total</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="text-[9pt]">
             {invoice.items.map((item, index) => (
               <tr key={index}>
-                <td className="py-1 px-1.5 border border-gray-300 h-6 font-bold text-center align-middle">{item.reference}</td>
-                <td className="py-1 px-1.5 border border-gray-300 h-6 font-bold text-center align-middle">{item.productName}</td>
-                <td className="py-1 px-1.5 border border-gray-300 h-6 font-bold text-center align-middle">{formatCurrency(item.unitPrice, settings.currency)}</td>
-                <td className="py-1 px-1.5 border border-gray-300 h-6 font-bold text-center align-middle">{item.quantity}</td>
-                <td className="py-1 px-1.5 border border-gray-300 h-6 font-bold text-center align-middle">{formatCurrency(item.total, settings.currency)}</td>
+                <td className="py-0.5 px-1 border border-gray-300 h-5 text-center align-middle">{item.reference}</td>
+                <td className="py-0.5 px-1 border border-gray-300 h-5 align-middle">{item.productName}</td>
+                <td className="py-0.5 px-1 border border-gray-300 h-5 text-right align-middle">{formatCurrency(item.unitPrice, settings.currency)}</td>
+                <td className="py-0.5 px-1 border border-gray-300 h-5 text-center align-middle">{item.quantity}</td>
+                <td className="py-0.5 px-1 border border-gray-300 h-5 text-right align-middle">{formatCurrency(item.total, settings.currency)}</td>
               </tr>
             ))}
             {Array.from({ length: emptyRowsCount }).map((_, index) => (
               <tr key={`empty-${index}`}>
-                <td className="py-1 px-1.5 h-6 border border-gray-300">&nbsp;</td>
-                <td className="py-1 px-1.5 h-6 border border-gray-300"></td>
-                <td className="py-1 px-1.5 h-6 border border-gray-300"></td>
-                <td className="py-1 px-1.5 h-6 border border-gray-300"></td>
-                <td className="py-1 px-1.5 h-6 border border-gray-300"></td>
+                <td className="py-0.5 px-1 h-5 border border-gray-300">&nbsp;</td>
+                <td className="py-0.5 px-1 h-5 border border-gray-300"></td>
+                <td className="py-0.5 px-1 h-5 border border-gray-300"></td>
+                <td className="py-0.5 px-1 h-5 border border-gray-300"></td>
+                <td className="py-0.5 px-1 h-5 border border-gray-300"></td>
               </tr>
             ))}
           </tbody>
@@ -142,13 +143,13 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
       </div>
 
       {/* Totals and Signature */}
-      <div className="flex justify-between items-start mt-4">
+      <div className="flex justify-between items-start mt-2 text-[9pt]">
         <div className="w-2/3 pt-1">
             <p className="font-bold text-gray-700">Arrêtée la présente facture à la somme de :</p>
             <p className="italic">{totalInWordsString}</p>
         </div>
-        <div className="w-full max-w-[250px]">
-          <table className="w-full">
+        <div className="w-full max-w-[240px]">
+          <table className="w-full text-[9pt]">
             <tbody>
               <tr>
                 <td className="py-0.5 pr-2 text-gray-600">Montant total:</td>
@@ -162,7 +163,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                 <td className="py-0.5 pr-2 text-gray-600">TVA ({invoice.vat}%):</td>
                 <td className="py-0.5 text-right font-medium">+{formatCurrency(invoice.vatAmount, settings.currency)}</td>
               </tr>
-              <tr className="border-t-2 border-gray-300">
+              <tr className="border-t-2 border-gray-300 text-[10pt]">
                 <td className="pt-1 pr-2 font-bold">Montant Total TTC:</td>
                 <td className="pt-1 text-right font-bold">{formatCurrency(invoice.totalAmount, settings.currency)}</td>
               </tr>
@@ -171,15 +172,15 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
         </div>
       </div>
       
-      <div className="flex justify-end items-end mt-8 pt-4">
+      <div className="flex justify-end items-end mt-2 pt-2">
         <div className="w-2/5 text-center">
-          <p className="font-bold text-gray-700">Signature et Cachet</p>
-          <div className="mt-4 border-b-2 border-gray-400 h-16 w-full mx-auto"></div>
-          <p className="text-gray-600 mt-1">{settings.managerName}</p>
+          <p className="font-bold text-gray-700 text-[10pt]">Signature et Cachet</p>
+          <div className="mt-10 border-b-2 border-gray-400 h-12 w-full mx-auto"></div>
+          <p className="text-gray-600 mt-1 text-[9pt]">{settings.managerName}</p>
         </div>
       </div>
 
-      <div className="text-center text-xs text-gray-500 border-t pt-2 mt-auto">
+      <div className="text-center text-[8pt] text-gray-500 border-t pt-1 mt-auto">
         <p>Merci de votre confiance.</p>
         <p>{settings.companyName} - {settings.legalName}</p>
       </div>
