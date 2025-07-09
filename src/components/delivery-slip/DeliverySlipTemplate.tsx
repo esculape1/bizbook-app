@@ -14,10 +14,10 @@ type DeliverySlipTemplateProps = {
 
 export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlipTemplateProps) {
   const deliverySlipNumber = `BL-${invoice.invoiceNumber}`;
-  const emptyRowsCount = invoice.items.length <= 15 ? Math.max(0, 15 - invoice.items.length) : 0;
+  const emptyRowsCount = invoice.items.length <= 20 ? Math.max(0, 20 - invoice.items.length) : 0;
 
   return (
-    <div className="bg-white p-4 font-serif text-[10pt] text-gray-800 min-h-[29.7cm] flex flex-col printable-area" id="delivery-slip-content">
+    <div className="bg-white p-4 font-serif text-[9pt] text-gray-800 min-h-[29.7cm] flex flex-col printable-area" id="delivery-slip-content">
       {/* Header section with reduced margins */}
       <div className="flex justify-between items-start mb-2">
         <div className="w-1/3">
@@ -40,9 +40,9 @@ export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlip
       </div>
 
       {/* Company and Client info */}
-      <div className="flex justify-between mb-3 text-[9pt]">
+      <div className="flex justify-between mb-2 text-[8pt]">
         <div className="w-2/5">
-          <h2 className="font-bold text-gray-600 border-b pb-0.5 mb-1 text-[10pt]">DE</h2>
+          <h2 className="font-bold text-gray-600 border-b pb-0.5 mb-1 text-[9pt]">DE</h2>
           <div className="space-y-px">
             <p className="font-bold">{settings.companyName}</p>
             <p>{settings.legalName}</p>
@@ -53,7 +53,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlip
           </div>
         </div>
         <div className="w-2/5">
-          <h2 className="font-bold text-gray-600 border-b pb-0.5 mb-1 text-[10pt]">À</h2>
+          <h2 className="font-bold text-gray-600 border-b pb-0.5 mb-1 text-[9pt]">À</h2>
           <div className="space-y-px">
             <p className="font-bold">{client.name}</p>
             <p>{client.address}</p>
@@ -69,29 +69,29 @@ export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlip
       {/* Items table */}
       <div className="overflow-x-auto flex-grow">
         <table className="w-full border-collapse">
-          <thead className="bg-gray-100 text-[9pt]">
+          <thead className="bg-gray-100 text-[8pt]">
             <tr>
-              <th className="py-1 px-1 text-left font-bold text-gray-600 uppercase w-[40%] border border-gray-300">Désignation</th>
-              <th className="py-1 px-1 text-center font-bold text-gray-600 uppercase w-[15%] border border-gray-300">Qté Commandée</th>
-              <th className="py-1 px-1 text-center font-bold text-gray-600 uppercase w-[15%] border border-gray-300">Qté Livrée</th>
-              <th className="py-1 px-1 text-center font-bold text-gray-600 uppercase w-[30%] border border-gray-300">Observations</th>
+              <th className="py-0.5 px-1 text-left font-bold text-gray-600 uppercase w-[40%] border border-gray-300">Désignation</th>
+              <th className="py-0.5 px-1 text-center font-bold text-gray-600 uppercase w-[15%] border border-gray-300">Qté Commandée</th>
+              <th className="py-0.5 px-1 text-center font-bold text-gray-600 uppercase w-[15%] border border-gray-300">Qté Livrée</th>
+              <th className="py-0.5 px-1 text-center font-bold text-gray-600 uppercase w-[30%] border border-gray-300">Observations</th>
             </tr>
           </thead>
           <tbody className="text-[9pt]">
             {invoice.items.map((item, index) => (
               <tr key={index}>
-                <td className="py-0.5 px-1 border border-gray-300 h-5 align-middle">{item.productName}</td>
-                <td className="py-0.5 px-1 border border-gray-300 h-5 text-center align-middle">{item.quantity}</td>
-                <td className="py-0.5 px-1 border border-gray-300 h-5 text-center align-middle"></td>
-                <td className="py-0.5 px-1 border border-gray-300 h-5 text-center align-middle"></td>
+                <td className="py-0.5 px-1 border border-gray-300 h-4 align-middle">{item.productName}</td>
+                <td className="py-0.5 px-1 border border-gray-300 h-4 text-center align-middle">{item.quantity}</td>
+                <td className="py-0.5 px-1 border border-gray-300 h-4 text-center align-middle"></td>
+                <td className="py-0.5 px-1 border border-gray-300 h-4 text-center align-middle"></td>
               </tr>
             ))}
             {Array.from({ length: emptyRowsCount }).map((_, index) => (
               <tr key={`empty-${index}`}>
-                <td className="py-0.5 px-1 h-5 border border-gray-300">&nbsp;</td>
-                <td className="py-0.5 px-1 h-5 border border-gray-300"></td>
-                <td className="py-0.5 px-1 h-5 border border-gray-300"></td>
-                <td className="py-0.5 px-1 h-5 border border-gray-300"></td>
+                <td className="py-0.5 px-1 h-4 border border-gray-300">&nbsp;</td>
+                <td className="py-0.5 px-1 h-4 border border-gray-300"></td>
+                <td className="py-0.5 px-1 h-4 border border-gray-300"></td>
+                <td className="py-0.5 px-1 h-4 border border-gray-300"></td>
               </tr>
             ))}
           </tbody>
@@ -99,16 +99,16 @@ export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlip
       </div>
       
       {/* Footer */}
-      <div className="flex justify-between items-start mt-4 pt-4 border-t-2 border-dashed">
+      <div className="flex justify-between items-start mt-3 pt-3 border-t-2 border-dashed">
         <div className="w-2/5 text-center">
             <p className="text-xs">Date de facturation : {format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}</p>
-            <div className="mt-4 border-2 border-dashed h-20 w-40 mx-auto flex items-center justify-center text-gray-400">
+            <div className="mt-3 border-2 border-dashed h-16 w-32 mx-auto flex items-center justify-center text-gray-400">
                 Cachet
             </div>
         </div>
         <div className="w-2/5 text-center">
             <p className="font-bold text-sm">Date de reception et visa du client</p>
-            <div className="mt-12 border-b-2 border-gray-400 h-8 w-48 mx-auto"></div>
+            <div className="mt-10 border-b-2 border-gray-400 h-8 w-40 mx-auto"></div>
             <p className="text-xs text-gray-500 mt-1">(Précédé de la mention "Reçu pour le compte de")</p>
         </div>
       </div>
