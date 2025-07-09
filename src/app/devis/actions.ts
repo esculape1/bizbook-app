@@ -12,6 +12,8 @@ const quoteItemSchema = z.object({
   productName: z.string(),
   quantity: z.coerce.number(),
   unitPrice: z.coerce.number(),
+  reference: z.string(),
+  total: z.coerce.number(),
 });
 
 const quoteSchema = z.object({
