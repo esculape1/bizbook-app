@@ -24,28 +24,45 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
   const handlePrint = () => {
     const printContent = document.getElementById('invoice-content');
     if (printContent) {
-      const printWindow = window.open('', '', 'height=800,width=800');
+      const printWindow = window.open('', '_blank');
       if (printWindow) {
-        printWindow.document.write('<html><head><title>Imprimer la facture</title>');
+        printWindow.document.write('<html><head><title>Facture</title>');
         
-        // It's important to include stylesheets for printing
+        // Transfer all stylesheets
         const styles = Array.from(document.styleSheets)
           .map(styleSheet => {
             try {
               return Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('');
             } catch (e) {
-              console.warn("Could not read stylesheet", e);
+              console.warn("Could not read stylesheet, linking instead", e);
               return `<link rel="stylesheet" href="${styleSheet.href}">`;
             }
           }).join('\n');
 
-        printWindow.document.write(`<style>${styles}</style></head><body>`);
+        // Add print-specific styles for margins and removing browser headers/footers
+        const printStyles = `
+          @page {
+            size: A4;
+            margin: 2.5cm !important;
+          }
+          @media print {
+            body { 
+              -webkit-print-color-adjust: exact; 
+              print-color-adjust: exact; 
+            }
+            .printable-area {
+               background-color: #ffffff !important;
+               color: #000000 !important;
+            }
+          }
+        `;
+
+        printWindow.document.write(`<style>${styles}${printStyles}</style></head><body>`);
         printWindow.document.write(printContent.innerHTML);
         printWindow.document.write('</body></html>');
         printWindow.document.close();
         printWindow.focus();
         
-        // Use timeout to ensure content is loaded before printing
         setTimeout(() => {
           printWindow.print();
           printWindow.close();

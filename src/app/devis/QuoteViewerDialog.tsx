@@ -19,9 +19,9 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
   const handlePrint = () => {
     const printContent = document.getElementById('quote-content');
     if (printContent) {
-      const printWindow = window.open('', '', 'height=800,width=800');
+      const printWindow = window.open('', '_blank');
       if (printWindow) {
-        printWindow.document.write('<html><head><title>Imprimer la Proforma</title>');
+        printWindow.document.write('<html><head><title>Facture Proforma</title>');
         
         const styles = Array.from(document.styleSheets)
           .map(styleSheet => {
@@ -31,8 +31,25 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
               return `<link rel="stylesheet" href="${styleSheet.href}">`;
             }
           }).join('\n');
+          
+        const printStyles = `
+          @page {
+            size: A4;
+            margin: 2.5cm !important;
+          }
+          @media print {
+            body { 
+              -webkit-print-color-adjust: exact; 
+              print-color-adjust: exact; 
+            }
+            .printable-area {
+               background-color: #ffffff !important;
+               color: #000000 !important;
+            }
+          }
+        `;
 
-        printWindow.document.write(`<style>${styles}</style></head><body>`);
+        printWindow.document.write(`<style>${styles}${printStyles}</style></head><body>`);
         printWindow.document.write(printContent.innerHTML);
         printWindow.document.write('</body></html>');
         printWindow.document.close();

@@ -54,7 +54,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
 
   return (
     // A4 sizing and margins simulation
-    <div className="bg-white p-6 font-serif text-sm text-gray-800 min-h-[29.7cm] flex flex-col" id="quote-content">
+    <div className="bg-white p-6 font-serif text-sm text-gray-800 min-h-[29.7cm] flex flex-col printable-area" id="quote-content">
       {/* Header */}
       <div className="flex justify-between items-start mb-2">
         <div className="w-1/3">

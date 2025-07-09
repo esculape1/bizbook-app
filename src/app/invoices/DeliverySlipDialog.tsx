@@ -19,9 +19,9 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
   const handlePrint = () => {
     const printContent = document.getElementById('delivery-slip-content');
     if (printContent) {
-      const printWindow = window.open('', '', 'height=800,width=800');
+      const printWindow = window.open('', '_blank');
       if (printWindow) {
-        printWindow.document.write('<html><head><title>Imprimer le Bordereau de Livraison</title>');
+        printWindow.document.write('<html><head><title>Bordereau de Livraison</title>');
         
         const styles = Array.from(document.styleSheets)
           .map(styleSheet => {
@@ -32,7 +32,24 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
             }
           }).join('\n');
 
-        printWindow.document.write(`<style>${styles}</style></head><body>`);
+        const printStyles = `
+          @page {
+            size: A4;
+            margin: 2.5cm !important;
+          }
+          @media print {
+            body { 
+              -webkit-print-color-adjust: exact; 
+              print-color-adjust: exact; 
+            }
+            .printable-area {
+               background-color: #ffffff !important;
+               color: #000000 !important;
+            }
+          }
+        `;
+
+        printWindow.document.write(`<style>${styles}${printStyles}</style></head><body>`);
         printWindow.document.write(printContent.innerHTML);
         printWindow.document.write('</body></html>');
         printWindow.document.close();

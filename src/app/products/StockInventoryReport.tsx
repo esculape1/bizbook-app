@@ -25,22 +25,24 @@ export function StockInventoryReport({ products, settings }: StockInventoryRepor
   const handlePrint = () => {
     const printContent = document.getElementById('stock-inventory-content');
     if (printContent) {
-      const printWindow = window.open('', '', 'height=800,width=800');
+      const printWindow = window.open('', '_blank');
       if (printWindow) {
-        printWindow.document.write('<html><head><title>Rapport d\'Inventaire de Stock</title>');
+        printWindow.document.write('<html><head><title>Rapport d\'Inventaire</title>');
         
         const styles = Array.from(document.styleSheets)
           .map(styleSheet => {
             try {
-              // For inline styles, read the rules
               return Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('');
             } catch (e) {
-              // For external stylesheets, link them
               return `<link rel="stylesheet" href="${styleSheet.href}">`;
             }
           }).join('\n');
 
         const printStyles = `
+          @page {
+            size: A4;
+            margin: 2.5cm !important;
+          }
           @media print {
             body { 
               -webkit-print-color-adjust: exact; 
