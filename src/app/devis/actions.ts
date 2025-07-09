@@ -181,6 +181,7 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
 
       // Create invoice
       await addInvoice({
+        invoiceNumber: `FACT-${quoteNumber}`,
         clientId,
         clientName: client.name,
         date: new Date().toISOString(),
