@@ -372,3 +372,5 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
     </Dialog>
   );
 }
+
+    
