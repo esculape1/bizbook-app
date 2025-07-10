@@ -63,7 +63,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
         const emptyRowsCount = isLastPage ? Math.max(0, ITEMS_PER_PAGE - pageItems.length) : 0;
         
         return (
-          <div key={pageIndex} className="p-4 flex flex-col min-h-[29.7cm]" style={{ fontSize: '12pt', pageBreakAfter: isLastPage ? 'auto' : 'always' }}>
+          <div key={pageIndex} className="p-4 flex flex-col min-h-[29.7cm]" style={{ fontSize: '14pt', pageBreakAfter: isLastPage ? 'auto' : 'always' }}>
             {/* Header */}
             <header className="flex justify-between items-start mb-2">
               <div className="w-1/3">
