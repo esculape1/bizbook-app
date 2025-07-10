@@ -28,7 +28,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlip
             const emptyRowsCount = isLastPage ? Math.max(0, ITEMS_PER_PAGE - pageItems.length) : 0;
 
             return (
-                <div key={pageIndex} className="p-4 flex flex-col min-h-[29.7cm]" style={{ fontSize: '12pt', pageBreakAfter: isLastPage ? 'auto' : 'always' }}>
+                <div key={pageIndex} className="p-4 flex flex-col min-h-[29.7cm]" style={{ fontSize: '14pt', pageBreakAfter: isLastPage ? 'auto' : 'always' }}>
                     {/* Header */}
                     <header className="flex justify-between items-start mb-4">
                         <div className="w-1/3">
@@ -36,8 +36,8 @@ export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlip
                                 <Image 
                                     src={settings.logoUrl} 
                                     alt={`${settings.companyName} logo`} 
-                                    width={64} 
-                                    height={64} 
+                                    width={128} 
+                                    height={128} 
                                     className="object-contain"
                                     data-ai-hint="logo"
                                 />
@@ -51,9 +51,9 @@ export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlip
                     </header>
                     
                     {/* Company and Client info */}
-                    <div className="flex justify-between mb-4" style={{ fontSize: '10pt' }}>
+                    <div className="flex justify-between mb-4" style={{ fontSize: '12pt' }}>
                         <div className="w-2/5">
-                            <h2 className="font-bold text-gray-600 border-b pb-1 mb-2" style={{ fontSize: '12pt' }}>DE</h2>
+                            <h2 className="font-bold text-gray-600 border-b pb-1 mb-2" style={{ fontSize: '14pt' }}>DE</h2>
                             <div className="space-y-0.5">
                                 <p className="font-bold">{settings.companyName}</p>
                                 <p>{settings.legalName}</p>
@@ -63,7 +63,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlip
                             </div>
                         </div>
                         <div className="w-2/5">
-                            <h2 className="font-bold text-gray-600 border-b pb-1 mb-2" style={{ fontSize: '12pt' }}>À</h2>
+                            <h2 className="font-bold text-gray-600 border-b pb-1 mb-2" style={{ fontSize: '14pt' }}>À</h2>
                             <div className="space-y-0.5">
                                 <p className="font-bold">{client.name}</p>
                                 <p>{client.address}</p>
@@ -113,7 +113,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlip
                         <footer className="mt-auto pt-4">
                             <div className="flex justify-between items-start mt-4 pt-4 border-t-2 border-dashed">
                                 <div className="w-2/5 text-center">
-                                    <p style={{ fontSize: '10pt' }}>Date de facturation : {format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}</p>
+                                    <p style={{ fontSize: '11pt' }}>Date de facturation : {format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}</p>
                                     <div className="mt-4 border-2 border-dashed h-20 w-32 mx-auto flex items-center justify-center text-gray-400">
                                         Cachet
                                     </div>

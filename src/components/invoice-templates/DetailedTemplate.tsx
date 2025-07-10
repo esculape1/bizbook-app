@@ -63,7 +63,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
         const emptyRowsCount = isLastPage ? Math.max(0, ITEMS_PER_PAGE - pageItems.length) : 0;
 
         return (
-          <div key={pageIndex} className="p-4 flex flex-col min-h-[29.7cm]" style={{ fontSize: '12pt', pageBreakAfter: isLastPage ? 'auto' : 'always' }}>
+          <div key={pageIndex} className="p-4 flex flex-col min-h-[29.7cm]" style={{ fontSize: '14pt', pageBreakAfter: isLastPage ? 'auto' : 'always' }}>
             {/* Header */}
             <header className="flex justify-between items-start mb-4">
               <div className="w-1/3">
@@ -71,8 +71,8 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                   <Image 
                       src={settings.logoUrl} 
                       alt={`${settings.companyName} logo`} 
-                      width={64}
-                      height={64} 
+                      width={128}
+                      height={128} 
                       className="object-contain"
                       data-ai-hint="logo"
                   />
@@ -87,9 +87,9 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
             </header>
 
             {/* Company & Client Info */}
-            <div className="flex justify-between mb-4" style={{ fontSize: '10pt' }}>
+            <div className="flex justify-between mb-4" style={{ fontSize: '12pt' }}>
               <div className="w-2/5">
-                <h2 className="font-bold text-gray-600 border-b pb-1 mb-2" style={{ fontSize: '12pt' }}>DE</h2>
+                <h2 className="font-bold text-gray-600 border-b pb-1 mb-2" style={{ fontSize: '14pt' }}>DE</h2>
                 <div className="space-y-0.5">
                   <p className="font-bold">{settings.companyName}</p>
                   <p>{settings.legalName}</p>
@@ -99,7 +99,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                 </div>
               </div>
               <div className="w-2/5">
-                <h2 className="font-bold text-gray-600 border-b pb-1 mb-2" style={{ fontSize: '12pt' }}>À</h2>
+                <h2 className="font-bold text-gray-600 border-b pb-1 mb-2" style={{ fontSize: '14pt' }}>À</h2>
                 <div className="space-y-0.5">
                   <p className="font-bold">{client.name}</p>
                   <p>{client.address}</p>
@@ -153,7 +153,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                 <div className="flex justify-between items-start mt-2">
                   <div className="w-2/3 pt-1">
                       <p className="font-bold text-gray-700">Arrêtée la présente facture à la somme de :</p>
-                      <p className="italic" style={{ fontSize: '11pt' }}>{totalInWordsString}</p>
+                      <p className="italic" style={{ fontSize: '12pt' }}>{totalInWordsString}</p>
                   </div>
                   <div className="w-full max-w-[280px]">
                     <table className="w-full">
@@ -170,7 +170,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                           <td className="py-0.5 pr-2 text-gray-600">TVA ({invoice.vat}%):</td>
                           <td className="py-0.5 text-right font-medium">+{formatCurrency(invoice.vatAmount, settings.currency)}</td>
                         </tr>
-                        <tr className="border-t-2 border-gray-300" style={{ fontSize: '13pt' }}>
+                        <tr className="border-t-2 border-gray-300" style={{ fontSize: '15pt' }}>
                           <td className="pt-1 pr-2 font-bold">Montant Total TTC:</td>
                           <td className="pt-1 text-right font-bold">{formatCurrency(invoice.totalAmount, settings.currency)}</td>
                         </tr>
@@ -183,11 +183,11 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                   <div className="w-2/5 text-center">
                     <p className="font-bold text-gray-700">Signature et Cachet</p>
                     <div className="mt-12 border-b-2 border-gray-400 h-8 w-full mx-auto"></div>
-                    <p className="text-gray-600 mt-1" style={{ fontSize: '10pt' }}>{settings.managerName}</p>
+                    <p className="text-gray-600 mt-1" style={{ fontSize: '11pt' }}>{settings.managerName}</p>
                   </div>
                 </div>
 
-                <div className="text-center text-gray-500 border-t pt-2 mt-4" style={{ fontSize: '9pt' }}>
+                <div className="text-center text-gray-500 border-t pt-2 mt-4" style={{ fontSize: '10pt' }}>
                   <p>Merci de votre confiance.</p>
                   <p>{settings.companyName} - {settings.legalName}</p>
                 </div>
