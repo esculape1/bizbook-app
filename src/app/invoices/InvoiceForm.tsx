@@ -138,13 +138,13 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
           Créer une facture
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent className="sm:max-w-4xl flex flex-col h-full max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Créer une nouvelle facture</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
-            <div className="max-h-[calc(80vh-10rem)] overflow-y-auto space-y-6 px-2">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
+            <div className="flex-1 overflow-y-auto space-y-6 px-2 pb-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <FormField
                   control={form.control}
@@ -366,7 +366,7 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
                   </div>
               </div>
             </div>
-            <DialogFooter className="sticky bottom-0 bg-background/95 pt-4">
+            <DialogFooter className="border-t pt-4 mt-auto">
               <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>Annuler</Button>
               <Button type="submit" disabled={isPending}>
                 {isPending ? 'Enregistrement...' : 'Enregistrer la facture'}
