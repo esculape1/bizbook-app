@@ -50,7 +50,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
     setTotalInWordsString(numberToWordsFr(quote.totalAmount, settings.currency));
   }, [quote.totalAmount, settings.currency]);
 
-  const ITEMS_PER_PAGE = 13;
+  const ITEMS_PER_PAGE = 11;
   const pages = [];
   for (let i = 0; i < quote.items.length; i += ITEMS_PER_PAGE) {
     pages.push(quote.items.slice(i, i + ITEMS_PER_PAGE));
@@ -128,7 +128,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                   {pageItems.map((item, index) => (
                     <tr key={index}>
                       <td className="py-1 px-2 border border-gray-300 h-6 text-center align-middle">{item.reference}</td>
-                      <td className="py-1 px-2 border border-gray-300 h-6 align-middle">{item.productName}</td>
+                      <td className="py-1 px-2 border border-gray-300 h-6 align-middle font-bold">{item.productName}</td>
                       <td className="py-1 px-2 border border-gray-300 h-6 text-right align-middle">{formatCurrency(item.unitPrice, settings.currency)}</td>
                       <td className="py-1 px-2 border border-gray-300 h-6 text-center align-middle">{item.quantity}</td>
                       <td className="py-1 px-2 border border-gray-300 h-6 text-right align-middle">{formatCurrency(item.total, settings.currency)}</td>
