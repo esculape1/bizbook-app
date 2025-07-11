@@ -114,35 +114,52 @@ async function seedProducts() {
         const productsCol = db.collection('products');
         
         const productsToAdd = [];
-        const uniqueProducts = new Map<string, typeof productsToSeed[0]>();
+        const uniqueProductsByRef = new Map<string, typeof productsToSeed[0]>();
 
         // Handle duplicates in the source list, keeping the first occurrence
         for (const product of productsToSeed) {
-            if (product.reference && !uniqueProducts.has(product.reference)) {
-                uniqueProducts.set(product.reference, product);
+            // Only consider products with a non-empty reference for this check
+            if (product.reference && !uniqueProductsByRef.has(product.reference)) {
+                uniqueProductsByRef.set(product.reference, product);
             } else if (!product.reference) {
-                // For products without reference, we can't check for duplicates easily, add them directly.
-                // A name-based check could be added if needed.
+                // For products without reference, we'll check by name later
                 productsToAdd.push(product);
             }
         }
         
-        // Check existing products in DB
-        if (uniqueProducts.size > 0) {
-            const existingRefsSnapshot = await productsCol.where('reference', 'in', Array.from(uniqueProducts.keys())).get();
-            const existingRefs = new Set(existingRefsSnapshot.docs.map(doc => doc.data().reference));
-            
-            for (const [ref, product] of uniqueProducts.entries()) {
-                if (!existingRefs.has(ref)) {
-                    productsToAdd.push(product);
-                }
+        // Get all existing products to check for both references and names
+        const allExistingProductsSnap = await productsCol.get();
+        const existingRefs = new Set<string>();
+        const existingNames = new Set<string>();
+        allExistingProductsSnap.forEach(doc => {
+            const data = doc.data();
+            if (data.reference) {
+                existingRefs.add(data.reference);
+            }
+            if (data.name) {
+                existingNames.add(data.name.toLowerCase());
+            }
+        });
+
+        // Add products with unique references
+        for (const [ref, product] of uniqueProductsByRef.entries()) {
+            if (!existingRefs.has(ref)) {
+                productsToAdd.push(product);
+                // Also add to existing names to avoid adding a non-ref product with same name
+                existingNames.add(product.name.toLowerCase());
             }
         }
 
-        if (productsToAdd.length > 0) {
-            console.log(`Ajout de ${productsToAdd.length} nouveaux produits...`);
+        // Add products without references if their name doesn't exist yet
+        const finalProductsToAdd = productsToAdd.filter(product => {
+            return !product.reference && !existingNames.has(product.name.toLowerCase());
+        });
+
+
+        if (finalProductsToAdd.length > 0) {
+            console.log(`Ajout de ${finalProductsToAdd.length} nouveaux produits...`);
             const batch = db.batch();
-            productsToAdd.forEach(product => {
+            finalProductsToAdd.forEach(product => {
                 const docRef = productsCol.doc();
                 batch.set(docRef, {
                     name: product.name,
@@ -156,7 +173,7 @@ async function seedProducts() {
                 });
             });
             await batch.commit();
-            console.log(`✅ ${productsToAdd.length} produits ont été ajoutés à la base de données.`);
+            console.log(`✅ ${finalProductsToAdd.length} produits ont été ajoutés à la base de données.`);
         } else {
             console.log("Aucun nouveau produit à ajouter. Le catalogue est à jour.");
         }
@@ -560,3 +577,5 @@ export async function updateSettings(settingsData: Partial<Settings>): Promise<S
   await settingsDocRef.set(newSettings, { merge: true });
   return newSettings;
 }
+
+    
