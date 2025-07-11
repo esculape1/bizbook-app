@@ -20,6 +20,132 @@ function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
 const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Veuillez vérifier la configuration de Firebase.";
 const DB_READ_ERROR = "Erreur de lecture dans la base de données. L'application peut être partiellement fonctionnelle.";
 
+// Seed products data
+const productsToSeed = [
+    { name: 'Balance analogique', reference: 'BLCA'},
+    { name: 'Balance électronique', reference: 'BLCE'},
+    { name: 'Baume de lèvres1', reference: 'BKL'},
+    { name: 'Baume de lèvres2', reference: 'BKL'},
+    { name: 'Beurre de Karité 120g', reference: 'BK120'},
+    { name: 'Beurre de karité 200g', reference: 'BK200'},
+    { name: 'Beurre de karité 250g', reference: 'BK250'},
+    { name: 'Beurre de Karité 300g', reference: 'BK300'},
+    { name: 'Beurre de Karité 400g', reference: 'BK400'},
+    { name: 'Beurre de Karité 500g', reference: 'BK500'},
+    { name: 'Carnets bleus', reference: 'CB'},
+    { name: 'Carnets jaunes', reference: 'CJ'},
+    { name: 'Compresse 40x40 bte 10', reference: 'CM10'},
+    { name: 'Compresse 40x40 bte 100', reference: 'CM100'},
+    { name: 'Consommables informatiques', reference: ''},
+    { name: 'ENCRE POUR IMPRIMANTE', reference: 'EPI'},
+    { name: 'Encre d\'imprimer', reference: ''},
+    { name: 'Fil NR 2/0 AR', reference: 'FNR20AR'},
+    { name: 'Fil NR 2/0 AT', reference: 'FNR20AT'},
+    { name: 'Fil NR 3/0 AR', reference: 'FNR30AR'},
+    { name: 'Fil NR 3/0 AT', reference: 'FNR30AT'},
+    { name: 'Fil NR N° 0 AR', reference: 'FNR0AR'},
+    { name: 'FIL NR N°1 AT', reference: 'FILNR1AT'},
+    { name: 'Fil NR N°2 AR', reference: 'FNR2AR'},
+    { name: 'Fil NR N°2 AT', reference: 'FNR2AT'},
+    { name: 'Fil R 2/0 AR', reference: 'FR20AR'},
+    { name: 'Fil R 2/0 AT', reference: 'FR20AT'},
+    { name: 'Fil R 3/0 AR', reference: 'FR30AR'},
+    { name: 'Fil R 3/0 AT', reference: 'FR30AT'},
+    { name: 'FIL R N°0 AR', reference: 'FR0AR'},
+    { name: 'Fil R N°1 AR', reference: 'FR1AR'},
+    { name: 'Fil R N°1 AT', reference: 'FR1AT'},
+    { name: 'Fil R N°2 AR', reference: 'FR2AR'},
+    { name: 'Fil R N°2 AT', reference: 'FR2AT'},
+    { name: 'FIL R N°4/0 AT', reference: 'FR40AT'},
+    { name: 'FRAIS D\'EXPEDITION', reference: 'FE'},
+    { name: 'Gants en Vrac L', reference: 'GV-L'},
+    { name: 'Gants en Vrac M', reference: 'GV-M'},
+    { name: 'Intranule G18', reference: 'INT18'},
+    { name: 'Intranule G20', reference: 'INT20'},
+    { name: 'Intranule G22', reference: 'INT22'},
+    { name: 'Intranule G24', reference: 'INT24'},
+    { name: 'MARQUEUR VERT CITRON', reference: 'MVC'},
+    { name: 'masque chrirurgical', reference: 'MC'},
+    { name: 'Matelas anti escarre', reference: 'MAE'},
+    { name: 'Moustiquaire Imprégnée 2 places', reference: 'M2P'},
+    { name: 'Moustiquaire Imprégnée 3 places', reference: 'M3P'},
+    { name: 'PAPIER MOUCHOIR', reference: 'PM'},
+    { name: 'Papier termique 80x80', reference: 'PR80'},
+    { name: 'Papier termique rouleau', reference: 'PAT'},
+    { name: 'Perfuseur', reference: 'PERF'},
+    { name: 'Pointeurs Pointech', reference: 'PPR'},
+    { name: 'Pots de prélèvement', reference: 'PPR'},
+    { name: 'Produits d\'entretien divers', reference: ''},
+    { name: 'RAME DE PAPIER', reference: 'RP'},
+    { name: 'SAVON LIQUIDE', reference: 'SL'},
+    { name: 'SERINGUE MOUCHE BEBE', reference: 'SMBB'},
+    { name: 'Seringues 05cc Luer lock', reference: 'S05'},
+    { name: 'Seringues 10cc Luer lock', reference: 'S10'},
+    { name: 'seringues 20 cc', reference: 'SR20'},
+    { name: 'Seringues mouche bébé', reference: 'SMB'},
+    { name: 'TDR PALU', reference: 'TDRPALU'},
+    { name: 'Tensiomètre Contec', reference: 'TM'},
+    { name: 'Amikacine 500mg', reference: 'AMI'},
+    { name: 'Aiguille a PL G25 avec introducteur', reference: 'APL'},
+    { name: 'Transfuseur', reference: 'TR'},
+    { name: 'savon liquide', reference: 'sl'},
+    { name: 'Moustiquaire Impregnees permanet 3.0 2places', reference: ''},
+    { name: 'papier etiquette', reference: 'PERF'},
+    { name: 'Gants chirurgicaux', reference: 'GCH'},
+    { name: 'Papier etiquettes vert citron', reference: 'PEVC'},
+    { name: 'gants chirurgicaux 7,5', reference: ''},
+    { name: 'clamp de baar', reference: 'cdb'},
+    { name: 'lame de bistouri', reference: 'ldb'},
+    { name: 'FIL R 1/0 AR', reference: ''},
+    { name: 'FIL NR 1/0 AR', reference: ''},
+    { name: 'SONDE URINAIRE Siliconé CH16', reference: 'SUCH16'},
+    { name: 'SONDE URINAIRE Siliconé CH18', reference: 'SUCH18'},
+    { name: 'lingettes nettoyantes lunettes', reference: 'LNLU'},
+    { name: 'Fil NR n1 AR', reference: 'FNR1AR'},
+    { name: 'Gant EN Nitrile L', reference: 'GEN'},
+    { name: 'poche urinaire', reference: 'PU'},
+    { name: 'lame de bistouri N 22', reference: 'LDBN22'},
+    // Adding some additional products for a richer initial state
+    { name: 'Paracetamol 500mg', reference: 'PARA500' },
+    { name: 'Ibuprofen 400mg', reference: 'IBU400' },
+    { name: 'Vitamine C 1000mg', reference: 'VITC1000' },
+    { name: 'Solution Hydro-alcoolique 100ml', reference: 'SHA100' },
+    { name: 'Bande adhésive 5cm', reference: 'BAND5' }
+];
+
+async function seedProducts() {
+    if (!db) return;
+    try {
+        const productsCol = db.collection('products');
+        const snapshot = await productsCol.limit(1).get();
+
+        if (snapshot.empty) {
+            console.log("La collection de produits est vide. Démarrage du remplissage...");
+            const batch = db.batch();
+            productsToSeed.forEach(product => {
+                const docRef = productsCol.doc(); 
+                batch.set(docRef, {
+                    name: product.name,
+                    reference: product.reference,
+                    category: 'Divers',
+                    purchasePrice: 1,
+                    unitPrice: 1.5,
+                    quantityInStock: 100,
+                    reorderPoint: 10,
+                    safetyStock: 5
+                });
+            });
+            await batch.commit();
+            console.log(`✅ ${productsToSeed.length} produits ont été ajoutés à la base de données.`);
+        } else {
+            console.log("La collection de produits contient déjà des données. Le remplissage est ignoré.");
+        }
+    } catch (error) {
+        console.error("Erreur lors du remplissage de la base de données avec les produits :", error);
+    }
+}
+
+
 // USERS
 export async function getUserByEmail(email: string): Promise<UserWithPassword | null> {
     if (!db) {
@@ -139,6 +265,8 @@ export async function deleteSupplier(id: string): Promise<void> {
 export async function getProducts(): Promise<Product[]> {
   if (!db) return [];
   try {
+    // Run the seeding function before fetching products
+    await seedProducts();
     const productsCol = db.collection('products');
     const q = productsCol.orderBy('name');
     const productSnapshot = await q.get();
