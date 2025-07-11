@@ -142,3 +142,5 @@ export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlip
     </div>
   );
 }
+
+    

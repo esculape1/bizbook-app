@@ -207,3 +207,5 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
     </div>
   );
 }
+
+    

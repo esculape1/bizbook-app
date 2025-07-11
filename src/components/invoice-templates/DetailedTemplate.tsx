@@ -207,3 +207,5 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
     </div>
   );
 }
+
+    
