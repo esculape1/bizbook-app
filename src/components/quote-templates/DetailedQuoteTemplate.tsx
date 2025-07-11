@@ -135,11 +135,11 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                 ))}
                 {Array.from({ length: emptyRowsCount }).map((_, index) => (
                   <tr key={`empty-${index}`}>
-                    <td className="py-0 px-2 h-6 border border-gray-300">&nbsp;</td>
-                    <td className="py-0 px-2 h-6 border border-gray-300"></td>
-                    <td className="py-0 px-2 h-6 border border-gray-300"></td>
-                    <td className="py-0 px-2 h-6 border border-gray-300"></td>
-                    <td className="py-0 px-2 h-6 border border-gray-300"></td>
+                    <td className="py-0 px-2 h-5 border border-gray-300">&nbsp;</td>
+                    <td className="py-0 px-2 h-5 border border-gray-300"></td>
+                    <td className="py-0 px-2 h-5 border border-gray-300"></td>
+                    <td className="py-0 px-2 h-5 border border-gray-300"></td>
+                    <td className="py-0 px-2 h-5 border border-gray-300"></td>
                   </tr>
                 ))}
               </tbody>
