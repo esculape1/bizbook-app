@@ -63,7 +63,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
         const emptyRowsCount = isLastPage ? Math.max(0, ITEMS_PER_PAGE - pageItems.length) : 0;
         
         return (
-          <div key={pageIndex} className="p-4" style={{ fontSize: '14pt', minHeight: isLastPage ? 'auto' : '29.7cm', pageBreakAfter: isLastPage ? 'auto' : 'always' }}>
+          <div key={pageIndex} className="p-4" style={{ fontSize: '14pt', pageBreakAfter: isLastPage ? 'auto' : 'always' }}>
             {/* Header */}
             <header className="flex justify-between items-start mb-2">
               <div className="w-1/3">
@@ -135,11 +135,11 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                 ))}
                 {Array.from({ length: emptyRowsCount }).map((_, index) => (
                   <tr key={`empty-${index}`}>
-                    <td className="py-1 px-2 h-6 border border-gray-300">&nbsp;</td>
-                    <td className="py-1 px-2 h-6 border border-gray-300"></td>
-                    <td className="py-1 px-2 h-6 border border-gray-300"></td>
-                    <td className="py-1 px-2 h-6 border border-gray-300"></td>
-                    <td className="py-1 px-2 h-6 border border-gray-300"></td>
+                    <td className="py-0 px-2 h-6 border border-gray-300">&nbsp;</td>
+                    <td className="py-0 px-2 h-6 border border-gray-300"></td>
+                    <td className="py-0 px-2 h-6 border border-gray-300"></td>
+                    <td className="py-0 px-2 h-6 border border-gray-300"></td>
+                    <td className="py-0 px-2 h-6 border border-gray-300"></td>
                   </tr>
                 ))}
               </tbody>
