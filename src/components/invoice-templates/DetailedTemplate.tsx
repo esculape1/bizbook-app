@@ -63,7 +63,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
         const emptyRowsCount = isLastPage ? Math.max(0, ITEMS_PER_PAGE - pageItems.length) : 0;
 
         return (
-          <div key={pageIndex} className="p-4 grid grid-rows-[auto_1fr_auto]" style={{ fontSize: '14pt', height: '29.7cm', pageBreakAfter: isLastPage ? 'auto' : 'always' }}>
+          <div key={pageIndex} className="p-4" style={{ fontSize: '14pt', height: '29.7cm', pageBreakAfter: isLastPage ? 'auto' : 'always' }}>
             {/* Header */}
             <header className="flex justify-between items-start mb-2">
               <div className="w-1/3">
