@@ -25,7 +25,7 @@ const productsToSeed = [
     { name: 'Balance analogique', reference: 'BLCA'},
     { name: 'Balance électronique', reference: 'BLCE'},
     { name: 'Baume de lèvres1', reference: 'BKL'},
-    { name: 'Baume de lèvres2', reference: 'BKL'},
+    { name: 'Baume de lèvres2', reference: 'BKL'}, // Note: Duplicate reference
     { name: 'Beurre de Karité 120g', reference: 'BK120'},
     { name: 'Beurre de karité 200g', reference: 'BK200'},
     { name: 'Beurre de karité 250g', reference: 'BK250'},
@@ -74,7 +74,7 @@ const productsToSeed = [
     { name: 'Papier termique rouleau', reference: 'PAT'},
     { name: 'Perfuseur', reference: 'PERF'},
     { name: 'Pointeurs Pointech', reference: 'PPR'},
-    { name: 'Pots de prélèvement', reference: 'PPR'},
+    { name: 'Pots de prélèvement', reference: 'PPR'}, // Note: Duplicate reference
     { name: 'Produits d\'entretien divers', reference: ''},
     { name: 'RAME DE PAPIER', reference: 'RP'},
     { name: 'SAVON LIQUIDE', reference: 'SL'},
@@ -90,7 +90,7 @@ const productsToSeed = [
     { name: 'Transfuseur', reference: 'TR'},
     { name: 'savon liquide', reference: 'sl'},
     { name: 'Moustiquaire Impregnees permanet 3.0 2places', reference: ''},
-    { name: 'papier etiquette', reference: 'PERF'},
+    { name: 'papier etiquette', reference: 'PERF'}, // Note: Duplicate reference
     { name: 'Gants chirurgicaux', reference: 'GCH'},
     { name: 'Papier etiquettes vert citron', reference: 'PEVC'},
     { name: 'gants chirurgicaux 7,5', reference: ''},
@@ -110,29 +110,55 @@ const productsToSeed = [
 async function seedProducts() {
     if (!db) return;
     try {
+        console.log("Vérification et remplissage du catalogue de produits...");
         const productsCol = db.collection('products');
-        const snapshot = await productsCol.limit(1).get();
+        
+        const productsToAdd = [];
+        const uniqueProducts = new Map<string, typeof productsToSeed[0]>();
 
-        if (snapshot.empty) {
-            console.log("La collection de produits est vide. Démarrage du remplissage...");
+        // Handle duplicates in the source list, keeping the first occurrence
+        for (const product of productsToSeed) {
+            if (product.reference && !uniqueProducts.has(product.reference)) {
+                uniqueProducts.set(product.reference, product);
+            } else if (!product.reference) {
+                // For products without reference, we can't check for duplicates easily, add them directly.
+                // A name-based check could be added if needed.
+                productsToAdd.push(product);
+            }
+        }
+        
+        // Check existing products in DB
+        if (uniqueProducts.size > 0) {
+            const existingRefsSnapshot = await productsCol.where('reference', 'in', Array.from(uniqueProducts.keys())).get();
+            const existingRefs = new Set(existingRefsSnapshot.docs.map(doc => doc.data().reference));
+            
+            for (const [ref, product] of uniqueProducts.entries()) {
+                if (!existingRefs.has(ref)) {
+                    productsToAdd.push(product);
+                }
+            }
+        }
+
+        if (productsToAdd.length > 0) {
+            console.log(`Ajout de ${productsToAdd.length} nouveaux produits...`);
             const batch = db.batch();
-            productsToSeed.forEach(product => {
-                const docRef = productsCol.doc(); 
+            productsToAdd.forEach(product => {
+                const docRef = productsCol.doc();
                 batch.set(docRef, {
                     name: product.name,
-                    reference: product.reference,
+                    reference: product.reference || '',
                     category: 'Divers',
-                    purchasePrice: 1,
-                    unitPrice: 1.5,
-                    quantityInStock: 100,
+                    purchasePrice: 0,
+                    unitPrice: 0,
+                    quantityInStock: 0,
                     reorderPoint: 10,
                     safetyStock: 5
                 });
             });
             await batch.commit();
-            console.log(`✅ ${productsToSeed.length} produits ont été ajoutés à la base de données.`);
+            console.log(`✅ ${productsToAdd.length} produits ont été ajoutés à la base de données.`);
         } else {
-            console.log("La collection de produits contient déjà des données. Le remplissage est ignoré.");
+            console.log("Aucun nouveau produit à ajouter. Le catalogue est à jour.");
         }
     } catch (error) {
         console.error("Erreur lors du remplissage de la base de données avec les produits :", error);
