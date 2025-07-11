@@ -63,7 +63,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
         const emptyRowsCount = isLastPage ? Math.max(0, ITEMS_PER_PAGE - pageItems.length) : 0;
 
         return (
-          <div key={pageIndex} className="p-4" style={{ fontSize: '14pt', height: '29.7cm', pageBreakAfter: isLastPage ? 'auto' : 'always' }}>
+          <div key={pageIndex} className="p-4" style={{ fontSize: '14pt', minHeight: isLastPage ? 'auto' : '29.7cm', pageBreakAfter: isLastPage ? 'auto' : 'always' }}>
             {/* Header */}
             <header className="flex justify-between items-start mb-2">
               <div className="w-1/3">
@@ -86,118 +86,115 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
               </div>
             </header>
 
-            {/* Items Table */}
-            <main>
-              {/* Company & Client Info */}
-              <div className="flex justify-between mb-4" style={{ fontSize: '11pt' }}>
-                <div className="w-2/5">
-                  <h2 className="font-bold text-gray-600 border-b pb-1 mb-1" style={{ fontSize: '12pt' }}>DE</h2>
-                  <div className="space-y-px text-xs">
-                    <p className="font-bold">{settings.companyName}</p>
-                    <p>{settings.legalName}</p>
-                    <p>{settings.companyAddress}</p>
-                    <p>Tél: {settings.companyPhone}</p>
-                    <p className="mt-1">IFU: {settings.companyIfu} / RCCM: {settings.companyRccm}</p>
-                  </div>
-                </div>
-                <div className="w-2/5">
-                  <h2 className="font-bold text-gray-600 border-b pb-1 mb-1" style={{ fontSize: '12pt' }}>À</h2>
-                  <div className="space-y-px text-xs">
-                    <p className="font-bold">{client.name}</p>
-                    <p>{client.address}</p>
-                    <p>Contact: {client.phone}</p>
-                    {client.email && <p>Email: {client.email}</p>}
-                    <p className="mt-1">N° IFU: {client.ifu}</p>
-                    <p>N° RCCM: {client.rccm}</p>
-                    <p>Régime Fiscal: {client.taxRegime}</p>
-                  </div>
+            {/* Company & Client Info */}
+            <div className="flex justify-between mb-4" style={{ fontSize: '11pt' }}>
+              <div className="w-2/5">
+                <h2 className="font-bold text-gray-600 border-b pb-1 mb-1" style={{ fontSize: '12pt' }}>DE</h2>
+                <div className="space-y-px text-xs">
+                  <p className="font-bold">{settings.companyName}</p>
+                  <p>{settings.legalName}</p>
+                  <p>{settings.companyAddress}</p>
+                  <p>Tél: {settings.companyPhone}</p>
+                  <p className="mt-1">IFU: {settings.companyIfu} / RCCM: {settings.companyRccm}</p>
                 </div>
               </div>
-              <table className="w-full border-collapse text-sm">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="py-1 px-2 text-left font-bold uppercase w-[15%] border border-gray-300">Référence</th>
-                    <th className="py-1 px-2 text-left font-bold uppercase w-[40%] border border-gray-300">Désignation</th>
-                    <th className="py-1 px-2 text-right font-bold uppercase w-[15%] border border-gray-300">Prix U.</th>
-                    <th className="py-1 px-2 text-right font-bold uppercase w-[10%] border border-gray-300">Quantité</th>
-                    <th className="py-1 px-2 text-right font-bold uppercase w-[15%] border border-gray-300">Total</th>
+              <div className="w-2/5">
+                <h2 className="font-bold text-gray-600 border-b pb-1 mb-1" style={{ fontSize: '12pt' }}>À</h2>
+                <div className="space-y-px text-xs">
+                  <p className="font-bold">{client.name}</p>
+                  <p>{client.address}</p>
+                  <p>Contact: {client.phone}</p>
+                  {client.email && <p>Email: {client.email}</p>}
+                  <p className="mt-1">N° IFU: {client.ifu}</p>
+                  <p>N° RCCM: {client.rccm}</p>
+                  <p>Régime Fiscal: {client.taxRegime}</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Items Table */}
+            <table className="w-full border-collapse text-sm">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="py-1 px-2 text-left font-bold uppercase w-[15%] border border-gray-300">Référence</th>
+                  <th className="py-1 px-2 text-left font-bold uppercase w-[40%] border border-gray-300">Désignation</th>
+                  <th className="py-1 px-2 text-right font-bold uppercase w-[15%] border border-gray-300">Prix U.</th>
+                  <th className="py-1 px-2 text-right font-bold uppercase w-[10%] border border-gray-300">Quantité</th>
+                  <th className="py-1 px-2 text-right font-bold uppercase w-[15%] border border-gray-300">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pageItems.map((item, index) => (
+                  <tr key={index}>
+                    <td className="py-1 px-2 border border-gray-300 h-6 text-center align-middle">{item.reference}</td>
+                    <td className="py-1 px-2 border border-gray-300 h-6 align-middle font-bold">{item.productName}</td>
+                    <td className="py-1 px-2 border border-gray-300 h-6 text-right align-middle">{formatCurrency(item.unitPrice, settings.currency)}</td>
+                    <td className="py-1 px-2 border border-gray-300 h-6 text-center align-middle">{item.quantity}</td>
+                    <td className="py-1 px-2 border border-gray-300 h-6 text-right align-middle">{formatCurrency(item.total, settings.currency)}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {pageItems.map((item, index) => (
-                    <tr key={index}>
-                      <td className="py-1 px-2 border border-gray-300 h-6 text-center align-middle">{item.reference}</td>
-                      <td className="py-1 px-2 border border-gray-300 h-6 align-middle font-bold">{item.productName}</td>
-                      <td className="py-1 px-2 border border-gray-300 h-6 text-right align-middle">{formatCurrency(item.unitPrice, settings.currency)}</td>
-                      <td className="py-1 px-2 border border-gray-300 h-6 text-center align-middle">{item.quantity}</td>
-                      <td className="py-1 px-2 border border-gray-300 h-6 text-right align-middle">{formatCurrency(item.total, settings.currency)}</td>
-                    </tr>
-                  ))}
-                  {Array.from({ length: emptyRowsCount }).map((_, index) => (
-                    <tr key={`empty-${index}`}>
-                      <td className="py-1 px-2 h-6 border border-gray-300">&nbsp;</td>
-                      <td className="py-1 px-2 h-6 border border-gray-300"></td>
-                      <td className="py-1 px-2 h-6 border border-gray-300"></td>
-                      <td className="py-1 px-2 h-6 border border-gray-300"></td>
-                      <td className="py-1 px-2 h-6 border border-gray-300"></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </main>
+                ))}
+                {Array.from({ length: emptyRowsCount }).map((_, index) => (
+                  <tr key={`empty-${index}`}>
+                    <td className="py-1 px-2 h-6 border border-gray-300">&nbsp;</td>
+                    <td className="py-1 px-2 h-6 border border-gray-300"></td>
+                    <td className="py-1 px-2 h-6 border border-gray-300"></td>
+                    <td className="py-1 px-2 h-6 border border-gray-300"></td>
+                    <td className="py-1 px-2 h-6 border border-gray-300"></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
             {/* Footer Section */}
-            <footer>
-              {isLastPage && (
-                <div className="pt-2">
-                  <div className="flex justify-between items-start mt-1">
-                    <div className="w-2/3 pt-1">
-                        <p className="font-bold text-gray-700 text-xs">Arrêtée la présente facture à la somme de :</p>
-                        <p className="italic" style={{ fontSize: '10pt' }}>{totalInWordsString}</p>
-                    </div>
-                    <div className="w-full max-w-[280px] text-xs">
-                      <table className="w-full">
-                        <tbody>
-                          <tr>
-                            <td className="py-0.5 pr-2 text-gray-600">Montant total:</td>
-                            <td className="py-0.5 text-right font-medium">{formatCurrency(invoice.subTotal, settings.currency)}</td>
-                          </tr>
-                          <tr>
-                            <td className="py-0.5 pr-2 text-gray-600">Remise ({invoice.discount}%):</td>
-                            <td className="py-0.5 text-right font-medium">-{formatCurrency(invoice.discountAmount, settings.currency)}</td>
-                          </tr>
-                          <tr>
-                            <td className="py-0.5 pr-2 text-gray-600">TVA ({invoice.vat}%):</td>
-                            <td className="py-0.5 text-right font-medium">+{formatCurrency(invoice.vatAmount, settings.currency)}</td>
-                          </tr>
-                          <tr className="border-t-2 border-gray-300" style={{ fontSize: '12pt' }}>
-                            <td className="pt-1 pr-2 font-bold">Montant Total TTC:</td>
-                            <td className="pt-1 text-right font-bold">{formatCurrency(invoice.totalAmount, settings.currency)}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+            {isLastPage && (
+              <div className="pt-2">
+                <div className="flex justify-between items-start mt-1">
+                  <div className="w-2/3 pt-1">
+                      <p className="font-bold text-gray-700 text-xs">Arrêtée la présente facture à la somme de :</p>
+                      <p className="italic" style={{ fontSize: '10pt' }}>{totalInWordsString}</p>
                   </div>
-                  
-                  <div className="flex justify-end items-end mt-2 pt-2">
-                    <div className="w-2/5 text-center">
-                      <p className="font-bold text-gray-700 text-sm">Signature et Cachet</p>
-                      <div className="mt-12 border-b-2 border-gray-400 h-8 w-full mx-auto"></div>
-                      <p className="text-gray-600 mt-1" style={{ fontSize: '10pt' }}>{settings.managerName}</p>
-                    </div>
-                  </div>
-
-                  <div className="text-center text-gray-500 border-t pt-1 mt-2" style={{ fontSize: '9pt' }}>
-                    <p>Merci de votre confiance.</p>
-                    <p>{settings.companyName} - {settings.legalName}</p>
+                  <div className="w-full max-w-[280px] text-xs">
+                    <table className="w-full">
+                      <tbody>
+                        <tr>
+                          <td className="py-0.5 pr-2 text-gray-600">Montant total:</td>
+                          <td className="py-0.5 text-right font-medium">{formatCurrency(invoice.subTotal, settings.currency)}</td>
+                        </tr>
+                        <tr>
+                          <td className="py-0.5 pr-2 text-gray-600">Remise ({invoice.discount}%):</td>
+                          <td className="py-0.5 text-right font-medium">-{formatCurrency(invoice.discountAmount, settings.currency)}</td>
+                        </tr>
+                        <tr>
+                          <td className="py-0.5 pr-2 text-gray-600">TVA ({invoice.vat}%):</td>
+                          <td className="py-0.5 text-right font-medium">+{formatCurrency(invoice.vatAmount, settings.currency)}</td>
+                        </tr>
+                        <tr className="border-t-2 border-gray-300" style={{ fontSize: '12pt' }}>
+                          <td className="pt-1 pr-2 font-bold">Montant Total TTC:</td>
+                          <td className="pt-1 text-right font-bold">{formatCurrency(invoice.totalAmount, settings.currency)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
-              )}
-              
-              <div className="text-center text-gray-400 text-xs mt-1">
-                  Page {pageIndex + 1} / {pages.length}
+                
+                <div className="flex justify-end items-end mt-2 pt-2">
+                  <div className="w-2/5 text-center">
+                    <p className="font-bold text-gray-700 text-sm">Signature et Cachet</p>
+                    <div className="mt-12 border-b-2 border-gray-400 h-8 w-full mx-auto"></div>
+                    <p className="text-gray-600 mt-1" style={{ fontSize: '10pt' }}>{settings.managerName}</p>
+                  </div>
+                </div>
+
+                <div className="text-center text-gray-500 border-t pt-1 mt-2" style={{ fontSize: '9pt' }}>
+                  <p>Merci de votre confiance.</p>
+                  <p>{settings.companyName} - {settings.legalName}</p>
+                </div>
               </div>
-            </footer>
+            )}
+            
+            <div className="text-center text-gray-400 text-xs mt-1">
+                Page {pageIndex + 1} / {pages.length}
+            </div>
           </div>
         );
       })}
