@@ -199,24 +199,36 @@ export async function getQuoteById(id: string): Promise<Quote | null> {
 export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>): Promise<Quote> {
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
     const quotesCol = db.collection('quotes');
-    const q = quotesCol.orderBy('quoteNumber', 'desc').limit(1);
+    
+    // Get the current year to filter quotes and generate the new number
+    const currentYear = new Date().getFullYear();
+    const prefix = `PRO${currentYear}`;
+
+    // Query for the last quote of the current year
+    const q = quotesCol
+        .where('quoteNumber', '>=', prefix)
+        .where('quoteNumber', '<', `PRO${currentYear + 1}`)
+        .orderBy('quoteNumber', 'desc')
+        .limit(1);
+
     const latestQuoteSnap = await q.get();
     
-    let latestQuoteNumber = 0;
+    let latestNumber = 0;
     if (!latestQuoteSnap.empty) {
         const lastQuote = latestQuoteSnap.docs[0].data() as Quote;
-        if (lastQuote.quoteNumber && lastQuote.quoteNumber.includes('-')) {
-            const numberPart = lastQuote.quoteNumber.split('-')[1];
-            if (numberPart) {
-                latestQuoteNumber = parseInt(numberPart, 10);
-            }
+        const numberPart = lastQuote.quoteNumber.split('-')[1];
+        if (numberPart) {
+            latestNumber = parseInt(numberPart, 10);
         }
     }
 
+    const newQuoteNumber = `${prefix}-${(latestNumber + 1).toString().padStart(3, '0')}`;
+
     const newQuoteData: Omit<Quote, 'id'> = {
         ...quoteData,
-        quoteNumber: `PRO2024-${(latestQuoteNumber + 1).toString().padStart(3, '0')}`,
+        quoteNumber: newQuoteNumber,
     };
+
     const docRef = await quotesCol.add(newQuoteData);
     return { id: docRef.id, ...newQuoteData };
 }
