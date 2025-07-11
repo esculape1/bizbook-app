@@ -105,12 +105,6 @@ const productsToSeed = [
     { name: 'Gant EN Nitrile L', reference: 'GEN'},
     { name: 'poche urinaire', reference: 'PU'},
     { name: 'lame de bistouri N 22', reference: 'LDBN22'},
-    // Adding some additional products for a richer initial state
-    { name: 'Paracetamol 500mg', reference: 'PARA500' },
-    { name: 'Ibuprofen 400mg', reference: 'IBU400' },
-    { name: 'Vitamine C 1000mg', reference: 'VITC1000' },
-    { name: 'Solution Hydro-alcoolique 100ml', reference: 'SHA100' },
-    { name: 'Bande adhésive 5cm', reference: 'BAND5' }
 ];
 
 async function seedProducts() {
