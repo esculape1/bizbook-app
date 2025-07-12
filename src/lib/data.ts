@@ -20,169 +20,6 @@ function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
 const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Veuillez vérifier la configuration de Firebase.";
 const DB_READ_ERROR = "Erreur de lecture dans la base de données. L'application peut être partiellement fonctionnelle.";
 
-// Seed products data
-const productsToSeed = [
-    { name: 'Balance analogique', reference: 'BLCA'},
-    { name: 'Balance électronique', reference: 'BLCE'},
-    { name: 'Baume de lèvres1', reference: 'BKL'},
-    { name: 'Baume de lèvres2', reference: 'BKL'}, // Note: Duplicate reference
-    { name: 'Beurre de Karité 120g', reference: 'BK120'},
-    { name: 'Beurre de karité 200g', reference: 'BK200'},
-    { name: 'Beurre de karité 250g', reference: 'BK250'},
-    { name: 'Beurre de Karité 300g', reference: 'BK300'},
-    { name: 'Beurre de Karité 400g', reference: 'BK400'},
-    { name: 'Beurre de Karité 500g', reference: 'BK500'},
-    { name: 'Carnets bleus', reference: 'CB'},
-    { name: 'Carnets jaunes', reference: 'CJ'},
-    { name: 'Compresse 40x40 bte 10', reference: 'CM10'},
-    { name: 'Compresse 40x40 bte 100', reference: 'CM100'},
-    { name: 'Consommables informatiques', reference: ''},
-    { name: 'ENCRE POUR IMPRIMANTE', reference: 'EPI'},
-    { name: 'Encre d\'imprimer', reference: ''},
-    { name: 'Fil NR 2/0 AR', reference: 'FNR20AR'},
-    { name: 'Fil NR 2/0 AT', reference: 'FNR20AT'},
-    { name: 'Fil NR 3/0 AR', reference: 'FNR30AR'},
-    { name: 'Fil NR 3/0 AT', reference: 'FNR30AT'},
-    { name: 'Fil NR N° 0 AR', reference: 'FNR0AR'},
-    { name: 'FIL NR N°1 AT', reference: 'FILNR1AT'},
-    { name: 'Fil NR N°2 AR', reference: 'FNR2AR'},
-    { name: 'Fil NR N°2 AT', reference: 'FNR2AT'},
-    { name: 'Fil R 2/0 AR', reference: 'FR20AR'},
-    { name: 'Fil R 2/0 AT', reference: 'FR20AT'},
-    { name: 'Fil R 3/0 AR', reference: 'FR30AR'},
-    { name: 'Fil R 3/0 AT', reference: 'FR30AT'},
-    { name: 'FIL R N°0 AR', reference: 'FR0AR'},
-    { name: 'Fil R N°1 AR', reference: 'FR1AR'},
-    { name: 'Fil R N°1 AT', reference: 'FR1AT'},
-    { name: 'Fil R N°2 AR', reference: 'FR2AR'},
-    { name: 'Fil R N°2 AT', reference: 'FR2AT'},
-    { name: 'FIL R N°4/0 AT', reference: 'FR40AT'},
-    { name: 'FRAIS D\'EXPEDITION', reference: 'FE'},
-    { name: 'Gants en Vrac L', reference: 'GV-L'},
-    { name: 'Gants en Vrac M', reference: 'GV-M'},
-    { name: 'Intranule G18', reference: 'INT18'},
-    { name: 'Intranule G20', reference: 'INT20'},
-    { name: 'Intranule G22', reference: 'INT22'},
-    { name: 'Intranule G24', reference: 'INT24'},
-    { name: 'MARQUEUR VERT CITRON', reference: 'MVC'},
-    { name: 'masque chrirurgical', reference: 'MC'},
-    { name: 'Matelas anti escarre', reference: 'MAE'},
-    { name: 'Moustiquaire Imprégnée 2 places', reference: 'M2P'},
-    { name: 'Moustiquaire Imprégnée 3 places', reference: 'M3P'},
-    { name: 'PAPIER MOUCHOIR', reference: 'PM'},
-    { name: 'Papier termique 80x80', reference: 'PR80'},
-    { name: 'Papier termique rouleau', reference: 'PAT'},
-    { name: 'Perfuseur', reference: 'PERF'},
-    { name: 'Pointeurs Pointech', reference: 'PPR'},
-    { name: 'Pots de prélèvement', reference: 'PPR'}, // Note: Duplicate reference
-    { name: 'Produits d\'entretien divers', reference: ''},
-    { name: 'RAME DE PAPIER', reference: 'RP'},
-    { name: 'SAVON LIQUIDE', reference: 'SL'},
-    { name: 'SERINGUE MOUCHE BEBE', reference: 'SMBB'},
-    { name: 'Seringues 05cc Luer lock', reference: 'S05'},
-    { name: 'Seringues 10cc Luer lock', reference: 'S10'},
-    { name: 'seringues 20 cc', reference: 'SR20'},
-    { name: 'Seringues mouche bébé', reference: 'SMB'},
-    { name: 'TDR PALU', reference: 'TDRPALU'},
-    { name: 'Tensiomètre Contec', reference: 'TM'},
-    { name: 'Amikacine 500mg', reference: 'AMI'},
-    { name: 'Aiguille a PL G25 avec introducteur', reference: 'APL'},
-    { name: 'Transfuseur', reference: 'TR'},
-    { name: 'savon liquide', reference: 'sl'},
-    { name: 'Moustiquaire Impregnees permanet 3.0 2places', reference: ''},
-    { name: 'papier etiquette', reference: 'PERF'}, // Note: Duplicate reference
-    { name: 'Gants chirurgicaux', reference: 'GCH'},
-    { name: 'Papier etiquettes vert citron', reference: 'PEVC'},
-    { name: 'gants chirurgicaux 7,5', reference: ''},
-    { name: 'clamp de baar', reference: 'cdb'},
-    { name: 'lame de bistouri', reference: 'ldb'},
-    { name: 'FIL R 1/0 AR', reference: ''},
-    { name: 'FIL NR 1/0 AR', reference: ''},
-    { name: 'SONDE URINAIRE Siliconé CH16', reference: 'SUCH16'},
-    { name: 'SONDE URINAIRE Siliconé CH18', reference: 'SUCH18'},
-    { name: 'lingettes nettoyantes lunettes', reference: 'LNLU'},
-    { name: 'Fil NR n1 AR', reference: 'FNR1AR'},
-    { name: 'Gant EN Nitrile L', reference: 'GEN'},
-    { name: 'poche urinaire', reference: 'PU'},
-    { name: 'lame de bistouri N 22', reference: 'LDBN22'},
-];
-
-async function seedProducts() {
-    if (!db) return;
-    try {
-        console.log("Vérification et remplissage du catalogue de produits...");
-        const productsCol = db.collection('products');
-        
-        const productsToAdd = [];
-        const uniqueProductsByRef = new Map<string, typeof productsToSeed[0]>();
-
-        // Handle duplicates in the source list, keeping the first occurrence
-        for (const product of productsToSeed) {
-            // Only consider products with a non-empty reference for this check
-            if (product.reference && !uniqueProductsByRef.has(product.reference)) {
-                uniqueProductsByRef.set(product.reference, product);
-            } else if (!product.reference) {
-                // For products without reference, we'll check by name later
-                productsToAdd.push(product);
-            }
-        }
-        
-        // Get all existing products to check for both references and names
-        const allExistingProductsSnap = await productsCol.get();
-        const existingRefs = new Set<string>();
-        const existingNames = new Set<string>();
-        allExistingProductsSnap.forEach(doc => {
-            const data = doc.data();
-            if (data.reference) {
-                existingRefs.add(data.reference);
-            }
-            if (data.name) {
-                existingNames.add(data.name.toLowerCase());
-            }
-        });
-
-        // Add products with unique references
-        for (const [ref, product] of uniqueProductsByRef.entries()) {
-            if (!existingRefs.has(ref)) {
-                productsToAdd.push(product);
-                // Also add to existing names to avoid adding a non-ref product with same name
-                existingNames.add(product.name.toLowerCase());
-            }
-        }
-
-        // Add products without references if their name doesn't exist yet
-        const finalProductsToAdd = productsToAdd.filter(product => {
-            return !product.reference && !existingNames.has(product.name.toLowerCase());
-        });
-
-
-        if (finalProductsToAdd.length > 0) {
-            console.log(`Ajout de ${finalProductsToAdd.length} nouveaux produits...`);
-            const batch = db.batch();
-            finalProductsToAdd.forEach(product => {
-                const docRef = productsCol.doc();
-                batch.set(docRef, {
-                    name: product.name,
-                    reference: product.reference || '',
-                    category: 'Divers',
-                    purchasePrice: 0,
-                    unitPrice: 0,
-                    quantityInStock: 0,
-                    reorderPoint: 10,
-                    safetyStock: 5
-                });
-            });
-            await batch.commit();
-            console.log(`✅ ${finalProductsToAdd.length} produits ont été ajoutés à la base de données.`);
-        } else {
-            console.log("Aucun nouveau produit à ajouter. Le catalogue est à jour.");
-        }
-    } catch (error) {
-        console.error("Erreur lors du remplissage de la base de données avec les produits :", error);
-    }
-}
-
-
 // USERS
 export async function getUserByEmail(email: string): Promise<UserWithPassword | null> {
     if (!db) {
@@ -302,8 +139,6 @@ export async function deleteSupplier(id: string): Promise<void> {
 export async function getProducts(): Promise<Product[]> {
   if (!db) return [];
   try {
-    // Run the seeding function before fetching products
-    await seedProducts();
     const productsCol = db.collection('products');
     const q = productsCol.orderBy('name');
     const productSnapshot = await q.get();
@@ -365,11 +200,9 @@ export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>): Pr
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
     const quotesCol = db.collection('quotes');
     
-    // Get the current year to filter quotes and generate the new number
     const currentYear = new Date().getFullYear();
     const prefix = `PRO${currentYear}`;
 
-    // Query for the last quote of the current year
     const q = quotesCol
         .where('quoteNumber', '>=', prefix)
         .where('quoteNumber', '<', `PRO${currentYear + 1}`)
@@ -537,6 +370,18 @@ export async function addExpense(expenseData: Omit<Expense, 'id'>): Promise<Expe
   return { id: docRef.id, ...expenseData };
 }
 
+export async function updateExpense(id: string, expenseData: Partial<Omit<Expense, 'id'>>): Promise<void> {
+  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+  const expenseDocRef = db.collection('expenses').doc(id);
+  await expenseDocRef.set(expenseData, { merge: true });
+}
+
+export async function deleteExpense(id: string): Promise<void> {
+  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+  const expenseDocRef = db.collection('expenses').doc(id);
+  await expenseDocRef.delete();
+}
+
 // SETTINGS
 const defaultSettings: Settings = {
   companyName: 'BizBook Inc.',
@@ -577,5 +422,3 @@ export async function updateSettings(settingsData: Partial<Settings>): Promise<S
   await settingsDocRef.set(newSettings, { merge: true });
   return newSettings;
 }
-
-    

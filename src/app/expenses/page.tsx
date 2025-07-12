@@ -6,6 +6,9 @@ import { getExpenses, getSettings } from "@/lib/data";
 import { formatCurrency } from "@/lib/utils";
 import { ExpenseForm } from "./ExpenseForm";
 import { getSession } from "@/lib/session";
+import { EditExpenseButton } from "./EditExpenseButton";
+import { DeleteExpenseButton } from "./DeleteExpenseButton";
+import type { User } from "@/lib/types";
 
 export default async function ExpensesPage() {
   const [expenses, settings, user] = await Promise.all([
@@ -31,6 +34,7 @@ export default async function ExpensesPage() {
                 <TableHead>Description</TableHead>
                 <TableHead>Catégorie</TableHead>
                 <TableHead className="text-right">Montant</TableHead>
+                {canEdit && <TableHead className="text-right">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -40,6 +44,14 @@ export default async function ExpensesPage() {
                   <TableCell className="font-medium">{expense.description}</TableCell>
                   <TableCell>{expense.category}</TableCell>
                   <TableCell className="text-right">{formatCurrency(expense.amount, settings.currency)}</TableCell>
+                  {canEdit && (
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end">
+                        <EditExpenseButton expense={expense} currency={settings.currency} />
+                        <DeleteExpenseButton id={expense.id} description={expense.description} />
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
