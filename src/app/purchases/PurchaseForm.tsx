@@ -118,7 +118,7 @@ export function PurchaseForm({ suppliers, products, settings }: PurchaseFormProp
           <DialogTitle>Créer un nouvel achat</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4 max-h-[80vh] overflow-y-auto px-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -310,7 +310,7 @@ export function PurchaseForm({ suppliers, products, settings }: PurchaseFormProp
               </div>
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="sticky bottom-0 bg-background/95 pt-4">
               <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>Annuler</Button>
               <Button type="submit" disabled={isPending}>
                 {isPending ? 'Enregistrement...' : 'Enregistrer l\'achat'}
