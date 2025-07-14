@@ -78,23 +78,24 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
         const ratio = canvasWidth / canvasHeight;
-        const width = pdfWidth;
+        let width = pdfWidth;
         let height = width / ratio;
         
         // Handle multi-page content
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        if (height > pageHeight) {
+        const pageHeightInPixels = height * (pdfHeight/width) * ratio;
+        if (canvasHeight > pageHeightInPixels) {
           let yPosition = 0;
           let remainingHeight = canvasHeight;
           const pageCanvas = document.createElement('canvas');
-          const pageCtx = pageCanvas.getContext('2d');
           pageCanvas.width = canvasWidth;
-          pageCanvas.height = canvas.height * (pageHeight / height);
+          pageCanvas.height = pageHeightInPixels;
+          const pageCtx = pageCanvas.getContext('2d');
+
 
           while (remainingHeight > 0) {
             pageCtx?.drawImage(canvas, 0, yPosition, canvasWidth, pageCanvas.height, 0, 0, pageCanvas.width, pageCanvas.height);
             const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.90);
-            pdf.addImage(pageImgData, 'JPEG', 0, 0, pdfWidth, pageHeight);
+            pdf.addImage(pageImgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
             
             yPosition += pageCanvas.height;
             remainingHeight -= pageCanvas.height;
