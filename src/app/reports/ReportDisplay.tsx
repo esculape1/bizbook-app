@@ -1,8 +1,9 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge, badgeVariants } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { ReportData, Settings, Invoice } from "@/lib/types";
@@ -187,9 +188,9 @@ export function ReportDisplay({ data, currency }: ReportDisplayProps) {
                     <TableBody>
                         {data.productSales.map(item => (
                             <TableRow key={item.productName}>
-                                <TableCell className="font-serif text-sm font-bold text-center align-middle">{item.productName}</TableCell>
-                                <TableCell className="font-serif text-sm font-bold text-center align-middle">{item.quantitySold}</TableCell>
-                                <TableCell className="font-serif text-sm font-bold text-center align-middle">{formatCurrency(item.totalValue, currency)}</TableCell>
+                                <TableCell>{item.productName}</TableCell>
+                                <TableCell className="text-right">{item.quantitySold}</TableCell>
+                                <TableCell className="text-right">{formatCurrency(item.totalValue, currency)}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -214,10 +215,10 @@ export function ReportDisplay({ data, currency }: ReportDisplayProps) {
                     <TableBody>
                         {data.expenses.map(exp => (
                             <TableRow key={exp.id}>
-                                <TableCell className="font-serif text-sm font-bold text-center align-middle">{format(new Date(exp.date), "dd/MM/yyyy")}</TableCell>
-                                <TableCell className="font-serif text-sm font-bold text-center align-middle">{exp.description}</TableCell>
-                                <TableCell className="font-serif text-sm font-bold text-center align-middle">{exp.category}</TableCell>
-                                <TableCell className="font-serif text-sm font-bold text-center align-middle">{formatCurrency(exp.amount, currency)}</TableCell>
+                                <TableCell>{format(new Date(exp.date), "dd/MM/yyyy")}</TableCell>
+                                <TableCell>{exp.description}</TableCell>
+                                <TableCell>{exp.category}</TableCell>
+                                <TableCell className="text-right">{formatCurrency(exp.amount, currency)}</TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
@@ -244,15 +245,15 @@ export function ReportDisplay({ data, currency }: ReportDisplayProps) {
             <TableBody>
               {data.allInvoices.map((invoice) => (
                 <TableRow key={invoice.id}>
-                  <TableCell className="font-serif text-sm font-bold text-center align-middle">{invoice.invoiceNumber}</TableCell>
-                  <TableCell className="font-serif text-sm font-bold text-center align-middle">{invoice.clientName}</TableCell>
-                  <TableCell className="font-serif text-sm font-bold text-center align-middle">{format(new Date(invoice.date), "dd/MM/yyyy")}</TableCell>
-                  <TableCell className="font-serif text-sm font-bold text-center align-middle">
+                  <TableCell>{invoice.invoiceNumber}</TableCell>
+                  <TableCell>{invoice.clientName}</TableCell>
+                  <TableCell>{format(new Date(invoice.date), "dd/MM/yyyy")}</TableCell>
+                  <TableCell>
                     <Badge variant={getStatusVariant(invoice.status)}>
                       {statusTranslations[invoice.status]}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-serif text-sm font-bold text-center align-middle">{formatCurrency(invoice.totalAmount, currency)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(invoice.totalAmount, currency)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
