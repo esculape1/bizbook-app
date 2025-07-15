@@ -1,6 +1,7 @@
+
 'use server';
 
-import { getInvoices, getExpenses } from '@/lib/data';
+import { getInvoices, getExpenses, getProducts } from '@/lib/data';
 import type { ReportData } from '@/lib/types';
 import { isWithinInterval } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
@@ -17,54 +18,70 @@ export async function generateReport(
     const { from: startDate, to: endDate } = dateRange;
 
     try {
-        const allInvoices = await getInvoices();
-        const allExpenses = await getExpenses();
+        const [allInvoices, allExpenses, allProducts] = await Promise.all([
+          getInvoices(),
+          getExpenses(),
+          getProducts(),
+        ]);
 
         const invoicesInPeriod = allInvoices.filter(inv => 
-        isWithinInterval(new Date(inv.date), { start: startDate, end: endDate }) &&
-        (clientId === 'all' || inv.clientId === clientId)
+          isWithinInterval(new Date(inv.date), { start: startDate, end: endDate }) &&
+          (clientId === 'all' || inv.clientId === clientId) &&
+          inv.status !== 'Cancelled'
         );
         
         const expensesInPeriod = allExpenses.filter(exp => 
-        isWithinInterval(new Date(exp.date), { start: startDate, end: endDate })
+          isWithinInterval(new Date(exp.date), { start: startDate, end: endDate })
         );
 
         // Calculate report metrics
         const totalRevenue = invoicesInPeriod
-            .filter(inv => inv.status === 'Paid')
-            .reduce((sum, inv) => sum + inv.totalAmount, 0);
+            .reduce((sum, inv) => sum + (inv.amountPaid || 0), 0);
 
         const totalUnpaid = invoicesInPeriod
-            .filter(inv => inv.status !== 'Paid')
-            .reduce((sum, inv) => sum + inv.totalAmount, 0);
+            .reduce((sum, inv) => sum + inv.totalAmount - inv.amountPaid, 0);
 
         const totalExpenses = expensesInPeriod.reduce((sum, exp) => sum + exp.amount, 0);
 
         const productSales: { [key: string]: { productName: string; quantitySold: number; totalValue: number; } } = {};
+        
+        // Calculate Cost of Goods Sold (COGS)
+        let costOfGoodsSold = 0;
+
         invoicesInPeriod.forEach(inv => {
             inv.items.forEach(item => {
+                // Aggregate product sales for the report
                 if (!productSales[item.productId]) {
                     productSales[item.productId] = { productName: item.productName, quantitySold: 0, totalValue: 0 };
                 }
                 productSales[item.productId].quantitySold += item.quantity;
                 productSales[item.productId].totalValue += item.total;
+                
+                // Find product to calculate COGS
+                const product = allProducts.find(p => p.id === item.productId);
+                if (product) {
+                    costOfGoodsSold += (product.purchasePrice || 0) * item.quantity;
+                }
             });
         });
+        
+        const grossProfit = invoicesInPeriod.reduce((sum, inv) => sum + inv.totalAmount, 0) - costOfGoodsSold;
+        const netProfit = grossProfit - totalExpenses;
 
         return {
-        startDate,
-        endDate,
-        clientName,
-        summary: {
-            totalRevenue,
-            totalExpenses,
-            netProfit: totalRevenue - totalExpenses,
-            totalUnpaid,
-        },
-        productSales: Object.values(productSales).sort((a, b) => b.quantitySold - a.quantitySold),
-        unpaidInvoices: invoicesInPeriod.filter(inv => inv.status !== 'Paid'),
-        allInvoices: invoicesInPeriod,
-        expenses: expensesInPeriod,
+          startDate,
+          endDate,
+          clientName,
+          summary: {
+              totalRevenue,
+              totalExpenses,
+              netProfit: netProfit,
+              totalUnpaid,
+          },
+          productSales: Object.values(productSales).sort((a, b) => b.quantitySold - a.quantitySold),
+          unpaidInvoices: invoicesInPeriod.filter(inv => inv.status !== 'Paid'),
+          allInvoices: invoicesInPeriod,
+          expenses: expensesInPeriod,
         };
     } catch(error) {
         console.error("Failed to generate report:", error);
