@@ -37,9 +37,12 @@ export async function generateReport(
         // Calculate report metrics
         const totalRevenue = invoicesInPeriod
             .reduce((sum, inv) => sum + (inv.amountPaid || 0), 0);
+        
+        const grossSales = invoicesInPeriod
+            .reduce((sum, inv) => sum + inv.totalAmount, 0);
 
         const totalUnpaid = invoicesInPeriod
-            .reduce((sum, inv) => sum + inv.totalAmount - inv.amountPaid, 0);
+            .reduce((sum, inv) => sum + inv.totalAmount - (inv.amountPaid || 0), 0);
 
         const totalExpenses = expensesInPeriod.reduce((sum, exp) => sum + exp.amount, 0);
 
@@ -65,8 +68,7 @@ export async function generateReport(
             });
         });
         
-        const grossProfit = invoicesInPeriod.reduce((sum, inv) => sum + inv.totalAmount, 0) - costOfGoodsSold;
-        const netProfit = grossProfit - totalExpenses;
+        const netProfit = grossSales - costOfGoodsSold - totalExpenses;
 
         return {
           startDate,
