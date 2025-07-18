@@ -27,7 +27,7 @@ const ProductSchema = z.object({
   name: z.string(),
   reference: z.string(),
   category: z.string(),
-  purchasePrice: z.number().nullable().optional(),
+  purchasePrice: z.coerce.number().nullable().optional().default(0),
   unitPrice: z.number(),
   quantityInStock: z.number(),
   reorderPoint: z.number(),
