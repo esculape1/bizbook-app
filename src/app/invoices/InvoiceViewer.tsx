@@ -7,9 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Printer, Download } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { DeliverySlipDialog } from './DeliverySlipDialog';
-import { formatCurrency } from '@/lib/utils';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 
 type InvoiceViewerProps = {
   invoice: Invoice;
@@ -77,111 +74,49 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
 
   const generatePdf = async () => {
     const { default: jsPDF } = await import('jspdf');
-    const { default: autoTable } = await import('jspdf-autotable');
-    type FontStyle = 'normal' | 'bold' | 'italic' | 'bolditalic';
-
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    let startY = 15;
-
-    const addCompanyInfo = () => {
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'bold');
-        doc.text(settings.companyName, pageWidth - 14, startY + 5, { align: 'right' });
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text(settings.companyAddress, pageWidth - 14, startY + 12, { align: 'right' });
-        doc.text(`Tél: ${settings.companyPhone}`, pageWidth - 14, startY + 17, { align: 'right' });
-        doc.text(`IFU: ${settings.companyIfu} / RCCM: ${settings.companyRccm}`, pageWidth - 14, startY + 22, { align: 'right' });
-    }
-
-    const generatePdfContent = () => {
-        addCompanyInfo();
-
-        startY += 40;
-
-        // --- Invoice Title & Client Info ---
-        doc.setFontSize(18);
-        doc.setFont('helvetica', 'bold');
-        doc.text(`FACTURE: ${invoice.invoiceNumber}`, 14, startY);
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Date: ${format(new Date(invoice.date), 'dd/MM/yyyy', { locale: fr })}`, 14, startY + 7);
-        doc.text(`Échéance: ${format(new Date(invoice.dueDate), 'dd/MM/yyyy', { locale: fr })}`, 14, startY + 12);
+    const { default: html2canvas } = await import('html2canvas');
+    const content = document.getElementById('invoice-content');
+    if(content){
+        // Reduced scale from 2 to 1 and changed image format to jpeg for better compression.
+        const canvas = await html2canvas(content, { scale: 1 });
+        const imgData = canvas.toDataURL('image/jpeg', 0.90); // 90% quality
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const ratio = canvasWidth / canvasHeight;
+        let width = pdfWidth;
+        let height = width / ratio;
         
-        doc.setFont('helvetica', 'bold');
-        doc.text('Client:', pageWidth - 14, startY, { align: 'right' });
-        doc.setFont('helvetica', 'normal');
-        doc.text(client.name, pageWidth - 14, startY + 7, { align: 'right' });
-        if(client.address) doc.text(client.address, pageWidth - 14, startY + 12, { align: 'right' });
-        if(client.phone) doc.text(client.phone, pageWidth - 14, startY + 17, { align: 'right' });
+        // Handle multi-page content
+        const pageHeightInPixels = height * (pdfHeight/width) * ratio;
+        if (canvasHeight > pageHeightInPixels) {
+          let yPosition = 0;
+          let remainingHeight = canvasHeight;
+          const pageCanvas = document.createElement('canvas');
+          pageCanvas.width = canvasWidth;
+          pageCanvas.height = pageHeightInPixels;
+          const pageCtx = pageCanvas.getContext('2d');
 
-        startY += 25;
 
-        // --- Items Table ---
-        const tableColumn = ["Référence", "Désignation", "Qté", "Prix U.", "Total"];
-        const tableRows = invoice.items.map(item => [
-            item.reference,
-            item.productName,
-            item.quantity,
-            formatCurrency(item.unitPrice, settings.currency),
-            formatCurrency(item.total, settings.currency)
-        ]);
+          while (remainingHeight > 0) {
+            pageCtx?.drawImage(canvas, 0, yPosition, canvasWidth, pageCanvas.height, 0, 0, pageCanvas.width, pageCanvas.height);
+            const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.90);
+            pdf.addImage(pageImgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+            
+            yPosition += pageCanvas.height;
+            remainingHeight -= pageCanvas.height;
 
-        autoTable(doc, {
-            head: [tableColumn],
-            body: tableRows,
-            startY: startY,
-            headStyles: { fillColor: [30, 30, 30] },
-        });
-
-        let finalY = (doc as any).lastAutoTable.finalY;
-
-        // --- Totals ---
-        const totals = [
-            ['Sous-total', formatCurrency(invoice.subTotal, settings.currency)],
-            [`Remise (${invoice.discount}%)`, `-${formatCurrency(invoice.discountAmount, settings.currency)}`],
-            [`TVA (${invoice.vat}%)`, `+${formatCurrency(invoice.vatAmount, settings.currency)}`],
-            [{ content: 'Total TTC', styles: { fontStyle: 'bold' as FontStyle, fontSize: 12 } }, { content: formatCurrency(invoice.totalAmount, settings.currency), styles: { fontStyle: 'bold' as FontStyle, fontSize: 12 } }]
-        ];
-        
-        autoTable(doc, {
-            body: totals,
-            startY: finalY + 5,
-            theme: 'plain',
-            tableWidth: 80,
-            margin: { left: pageWidth - 80 - 14 }, // Align to the right
-            styles: { cellPadding: 1 },
-            columnStyles: { 0: { halign: 'right' }, 1: { halign: 'right' } }
-        });
-        
-        finalY = (doc as any).lastAutoTable.finalY;
-
-        // --- Footer ---
-        doc.setFontSize(9);
-        doc.text(`Arrêtée la présente facture à la somme de : ${formatCurrency(invoice.totalAmount, settings.currency)}`, 14, finalY + 15);
-
-        // Save the PDF
-        doc.save(`Facture_${invoice.invoiceNumber}.pdf`);
-    };
-
-    if (settings.logoUrl) {
-        try {
-            const response = await fetch(settings.logoUrl);
-            const blob = await response.blob();
-            const reader = new FileReader();
-            reader.readAsDataURL(blob);
-            reader.onloadend = () => {
-                const base64data = reader.result as string;
-                doc.addImage(base64data, 'PNG', 14, startY, 30, 30);
-                generatePdfContent();
-            };
-        } catch (e) {
-            console.error("Error loading logo, proceeding without it.", e);
-            generatePdfContent();
+            if (remainingHeight > 0) {
+              pdf.addPage();
+            }
+          }
+        } else {
+           pdf.addImage(imgData, 'JPEG', 0, 0, width, height);
         }
-    } else {
-        generatePdfContent();
+
+        pdf.save(`Facture_${invoice.invoiceNumber}.pdf`);
     }
   }
 
