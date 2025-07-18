@@ -78,7 +78,7 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
     const deliverySlipNumber = `BL-${invoice.invoiceNumber}`;
 
     const addPageHeader = () => {
-        doc.setFillColor(37, 99, 235); // Using the primary color blue
+        doc.setFillColor(37, 99, 235);
         doc.rect(0, 0, 10, pageHeight, 'F');
         
         if (settings.logoUrl) {
@@ -155,9 +155,10 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
       headStyles: { fillColor: [243, 244, 246], textColor: [31, 41, 55], fontStyle: 'bold' },
       styles: { font: 'times', fontSize: 10, cellPadding: 2, valign: 'middle' },
       columnStyles: { 1: { halign: 'center' }, 2: { halign: 'center' } },
-      margin: { top: margin, right: margin, bottom: margin, left: margin }
+      margin: { top: margin, right: margin, bottom: margin + 50, left: margin } // Increase bottom margin to make space for fixed signatures
     });
-
+    
+    // --- Fixed Signature Block ---
     const signatureY = pageHeight - margin - 45; // Fixed position for the signature block
 
     doc.setFontSize(10);
@@ -176,6 +177,7 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
     doc.setFontSize(8);
     doc.setFont('times', 'italic');
     doc.text('(Précédé de la mention "Reçu pour le compte de")', pageWidth - margin, signatureY + 24, { align: 'right' });
+
 
     const pageCount = (doc as any).internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
