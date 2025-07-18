@@ -162,25 +162,33 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
       margin: { left: margin, right: margin }
     });
 
+    let finalY = (doc as any).lastAutoTable.finalY;
+    
+    // Ensure finalY doesn't go off page, adjust for signature section
+    if (finalY > pageHeight - margin - 40) {
+      finalY = pageHeight - margin - 40;
+    }
+
+
     // --- Signature and Footer Section ---
-    const finalY = pageHeight - margin - 40; // Position relative to bottom margin
+    const signatureY = pageHeight - margin - 40; // Position relative to bottom margin
     
     doc.setFontSize(10);
     doc.setFont('times', 'normal');
-    doc.text(`Date de facturation : ${format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}`, margin, finalY);
+    doc.text(`Date de facturation : ${format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}`, margin, signatureY);
 
     doc.setLineCap('butt');
-    doc.setDash([2, 2], 0); // Dashed line
-    doc.rect(margin + 5, finalY + 5, 40, 20); // Cachet box
-    doc.text('Cachet', margin + 25, finalY + 15, { align: 'center' });
-    doc.setDash([], 0); // Reset to solid line
+    doc.setLineDashPattern([2, 2], 0); // Dashed line
+    doc.rect(margin + 5, signatureY + 5, 40, 20); // Cachet box
+    doc.text('Cachet', margin + 25, signatureY + 15, { align: 'center' });
+    doc.setLineDashPattern([], 0); // Reset to solid line
 
     doc.setFont('times', 'bold');
-    doc.text('Date de reception et visa du client', pageWidth - margin, finalY, { align: 'right' });
-    doc.line(pageWidth - margin - 60, finalY + 20, pageWidth - margin, finalY + 20);
+    doc.text('Date de reception et visa du client', pageWidth - margin, signatureY, { align: 'right' });
+    doc.line(pageWidth - margin - 60, signatureY + 20, pageWidth - margin, signatureY + 20);
     doc.setFontSize(8);
     doc.setFont('times', 'italic');
-    doc.text('(Précédé de la mention "Reçu pour le compte de")', pageWidth - margin, finalY + 24, { align: 'right' });
+    doc.text('(Précédé de la mention "Reçu pour le compte de")', pageWidth - margin, signatureY + 24, { align: 'right' });
 
     doc.save(`Bordereau_${deliverySlipNumber}.pdf`);
   };
