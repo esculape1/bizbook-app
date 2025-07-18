@@ -1,18 +1,9 @@
 
-
 export type User = {
   id: string;
   name: string;
   email: string;
   role: 'Admin' | 'User';
-  companyId: string; // Chaque utilisateur appartient à une entreprise
-};
-
-// Ce type représente une entreprise cliente de votre service
-export type Company = {
-    id: string;
-    name: string;
-    // On pourrait ajouter ici des informations sur l'abonnement, etc.
 };
 
 // This type is used for database interactions where the password might be included.
