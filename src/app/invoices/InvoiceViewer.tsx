@@ -83,7 +83,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     const margin = 25;
 
     const addPageHeader = () => {
-      doc.setFillColor(37, 99, 235);
+      doc.setFillColor(37, 99, 235); // Blue color from primary
       doc.rect(0, 0, 10, pageHeight, 'F');
       
       if (settings.logoUrl) {
@@ -120,17 +120,17 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
         doc.text(footerTextLine1, pageWidth / 2, footerY + 7, { align: 'center' });
         doc.text(footerTextLine2, pageWidth / 2, footerY + 11, { align: 'center' });
         doc.text(pageNumText, pageWidth / 2, footerY + 15, { align: 'center' });
-        doc.line(margin, footerY, pageWidth - margin, footerY); // Draw line above the footer text
+        doc.line(margin, footerY, pageWidth - margin, footerY);
     };
 
     doc.setFontSize(11);
     doc.setFont('times', 'bold');
     doc.text("DE", margin, 60);
-    doc.text("À", pageWidth / 2, 60);
+    doc.text("À", pageWidth - margin, 60, { align: 'right' });
     
     doc.setLineWidth(0.2);
     doc.line(margin, 61, margin + 80, 61);
-    doc.line(pageWidth / 2, 61, pageWidth / 2 + 80, 61);
+    doc.line(pageWidth - margin, 61, pageWidth - margin - 80, 61);
 
     doc.setFont('times', 'normal');
     doc.setFontSize(9);
@@ -152,7 +152,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
       client.rccm ? `N° RCCM: ${client.rccm}`: '',
       client.taxRegime ? `Régime Fiscal: ${client.taxRegime}`: ''
     ].filter(Boolean);
-    doc.text(clientInfo, pageWidth / 2, 66);
+    doc.text(clientInfo, pageWidth - margin, 66, { align: 'right' });
 
     const head = [['Référence', 'Désignation', 'Prix U.', 'Qté', 'Total']];
     const body = invoice.items.map(item => [
@@ -178,17 +178,23 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
 
     let finalY = (doc as any).lastAutoTable.finalY;
 
-    if (finalY > pageHeight - margin - 50) {
+    // --- Fixed Signature & Footer Block ---
+    const signatureY = pageHeight - margin - 45; // Fixed position for the signature block
+    const totalsY = signatureY - 40; // Position totals table above signature
+    const wordsY = signatureY - 45; // Position words above totals
+
+    // This check is to push totals/signature to next page if they collide with the items table
+    if (finalY > wordsY - 10) { 
         doc.addPage();
-        finalY = margin;
+        finalY = 0; // Reset Y position for new page content
     }
 
     const totalInWords = numberToWordsFr(invoice.totalAmount, settings.currency);
     doc.setFontSize(9);
     doc.setFont('times', 'bold');
-    doc.text('Arrêtée la présente facture à la somme de :', margin, finalY + 10);
+    doc.text('Arrêtée la présente facture à la somme de :', margin, wordsY);
     doc.setFont('times', 'italic');
-    doc.text(totalInWords, margin, finalY + 15, { maxWidth: (pageWidth / 2) - (margin * 2) });
+    doc.text(totalInWords, margin, wordsY + 5, { maxWidth: (pageWidth / 2) - (margin * 2) });
 
     const totalsData = [
       ['Montant total:', formatCurrency(invoice.subTotal, settings.currency)],
@@ -198,7 +204,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     
     autoTable(doc, {
       body: totalsData,
-      startY: finalY + 10,
+      startY: totalsY,
       theme: 'plain',
       tableWidth: 80,
       margin: { left: pageWidth - margin - 80 },
@@ -213,13 +219,6 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     doc.text('Montant Total TTC:', pageWidth - margin - 80, grandTotalY + 7);
     doc.text(formatCurrency(invoice.totalAmount, settings.currency), pageWidth - margin, grandTotalY + 7, { align: 'right' });
 
-    let signatureY = grandTotalY + 20;
-
-    if (signatureY > pageHeight - margin - 30) {
-      doc.addPage();
-      signatureY = margin;
-    }
-    
     doc.setFontSize(10);
     doc.setFont('times', 'bold');
     doc.text('Signature et Cachet', pageWidth - margin - 70, signatureY);

@@ -78,7 +78,7 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
     const deliverySlipNumber = `BL-${invoice.invoiceNumber}`;
 
     const addPageHeader = () => {
-        doc.setFillColor(37, 99, 235);
+        doc.setFillColor(37, 99, 235); // Blue color from primary
         doc.rect(0, 0, 10, pageHeight, 'F');
         
         if (settings.logoUrl) {
@@ -105,7 +105,7 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
         doc.setFontSize(11);
         doc.setFont('times', 'bold');
         doc.text("DE", margin, startYAddresses);
-        doc.text("À", pageWidth / 2, startYAddresses);
+        doc.text("À", pageWidth - margin, startYAddresses, { align: 'right' });
 
         doc.setFontSize(9);
         doc.setFont('times', 'normal');
@@ -127,7 +127,7 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
             client.rccm ? `N° RCCM: ${client.rccm}` : '',
             client.taxRegime ? `Régime Fiscal: ${client.taxRegime}` : ''
         ].filter(Boolean);
-        doc.text(clientInfo, pageWidth / 2, startYAddresses + 6);
+        doc.text(clientInfo, pageWidth - margin, startYAddresses + 6, { align: 'right' });
     };
 
     const addPageFooter = (pageNumber: number, totalPages: number) => {
@@ -144,6 +144,7 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
       ''
     ]);
 
+    let finalY = 0;
     autoTable(doc, {
       head: head,
       body: body,
@@ -151,11 +152,13 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
       theme: 'grid',
       didDrawPage: (data) => {
           addPageHeader();
+          // Reset finalY for each new page
+          finalY = 0; 
       },
       headStyles: { fillColor: [243, 244, 246], textColor: [31, 41, 55], fontStyle: 'bold' },
       styles: { font: 'times', fontSize: 10, cellPadding: 2, valign: 'middle' },
       columnStyles: { 1: { halign: 'center' }, 2: { halign: 'center' } },
-      margin: { top: margin, right: margin, bottom: margin + 50, left: margin } // Increase bottom margin to make space for fixed signatures
+      margin: { top: margin, right: margin, bottom: margin + 50, left: margin }
     });
     
     // --- Fixed Signature Block ---
