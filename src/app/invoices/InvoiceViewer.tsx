@@ -101,7 +101,9 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
 
 
           while (remainingHeight > 0) {
-            pageCtx?.drawImage(canvas, 0, yPosition, canvasWidth, pageCanvas.height, 0, 0, pageCanvas.width, pageCanvas.height);
+            if (pageCtx) {
+                pageCtx.drawImage(canvas, 0, yPosition, canvasWidth, pageCanvas.height, 0, 0, pageCanvas.width, pageCanvas.height);
+            }
             const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.90);
             pdf.addImage(pageImgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
             
