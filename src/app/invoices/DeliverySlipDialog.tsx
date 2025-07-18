@@ -79,6 +79,11 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
 
     // --- Font Setup ---
     doc.setFont('times', 'normal');
+    
+    // --- Add decorative bar ---
+    doc.setFillColor(37, 99, 235); // Blue color for consistency with invoices
+    doc.rect(0, 0, 10, pageHeight, 'F');
+
 
     // --- Header Section ---
     if (settings.logoUrl) {
@@ -86,8 +91,6 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
         const img = new Image();
         img.crossOrigin = "Anonymous";
         img.src = settings.logoUrl;
-        // This is a simplified async handling. For robust solution, pre-loading or callbacks are better.
-        // await new Promise(resolve => img.onload = resolve);
         doc.addImage(img, 'PNG', margin, margin, 30, 30);
       } catch (e) {
         console.error("Could not add logo to PDF:", e);
@@ -164,14 +167,14 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
 
     let finalY = (doc as any).lastAutoTable.finalY;
     
-    // Ensure finalY doesn't go off page, adjust for signature section
-    if (finalY > pageHeight - margin - 40) {
-      finalY = pageHeight - margin - 40;
-    }
-
-
     // --- Signature and Footer Section ---
-    const signatureY = pageHeight - margin - 40; // Position relative to bottom margin
+    let signatureY = finalY + 20;
+
+    // Add a new page if the signature section doesn't fit
+    if (signatureY > pageHeight - 50) {
+        doc.addPage();
+        signatureY = margin; // Reset Y for the new page
+    }
     
     doc.setFontSize(10);
     doc.setFont('times', 'normal');
