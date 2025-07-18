@@ -168,7 +168,7 @@ const getExpensesTool = ai.defineTool(
 const getProductsTool = ai.defineTool(
   {
     name: 'getProducts',
-    description: "Récupère la liste de tous les produits en stock ou catalogués.",
+    description: "Récupère la liste de tous les produits, y compris leur prix d'achat, nécessaire pour calculer la rentabilité.",
     outputSchema: z.array(ProductSchema),
   },
   async () => {
@@ -252,6 +252,15 @@ Sois concis, précis et professionnel.
 Réponds toujours en français.
 La date d'aujourd'hui est le ${new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}. Utilise cette information pour interpréter les questions relatives au temps (ex: "ce mois-ci", "la semaine dernière").
 N'invente jamais d'informations. Si les données ne sont pas disponibles pour répondre à une question, indique-le clairement à l'utilisateur.
+
+IMPORTANT : Pour répondre aux questions, tu dois souvent croiser les données de plusieurs outils. Voici comment raisonner :
+- Chiffre d'affaires (CA) : Somme des 'totalAmount' des factures ('invoices') sur une période. N'utilise que les factures qui ne sont pas 'Cancelled'.
+- Bénéfice : C'est le (Chiffre d'affaires) - (Coût des marchandises vendues) - (Dépenses).
+- Coût des marchandises vendues (CMV) : Pour chaque article vendu dans une facture, trouve son prix d'achat ('purchasePrice') dans la liste des produits ('products') et multiplie-le par la quantité vendue. La somme de ces coûts est le CMV.
+- Produit le plus vendu : Utilise les factures ('invoices') pour compter la quantité ('quantity') de chaque 'productId' vendu sur la période, puis identifie celui avec le total le plus élevé.
+- Produit le plus rentable : Pour chaque produit, calcule sa marge (prix de vente - prix d'achat) et multiplie par la quantité vendue. Le prix de vente est dans l'article de la facture, le prix d'achat ('purchasePrice') est dans la liste des produits.
+- Client avec le plus grand CA : Regroupe les factures par 'clientName' ou 'clientId' et somme leurs 'totalAmount' sur la période.
+
 Utilise l'outil getSettings pour connaître la devise de l'entreprise et formate tous les montants monétaires en conséquence.`;
 
         const { text } = await ai.generate({
@@ -268,3 +277,5 @@ Utilise l'outil getSettings pour connaître la devise de l'entreprise et formate
 export async function analyzeBusinessData(query: string): Promise<string> {
     return businessAnalysisFlow(query);
 }
+
+    
