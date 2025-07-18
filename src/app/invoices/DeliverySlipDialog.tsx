@@ -67,7 +67,7 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
   };
 
   const generatePdf = async () => {
-    const { jsPDF } = await import('jspdf');
+    const { default: jsPDF } = await import('jspdf');
     const { default: autoTable } = await import('jspdf-autotable');
 
     const doc = new jsPDF('p', 'mm', 'a4');
@@ -77,121 +77,123 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
 
     const deliverySlipNumber = `BL-${invoice.invoiceNumber}`;
 
-    // --- Font Setup ---
-    doc.setFont('times', 'normal');
-    
-    // --- Add decorative bar ---
-    doc.setFillColor(37, 99, 235); // Blue color for consistency with invoices
-    doc.rect(0, 0, 10, pageHeight, 'F');
-
-
     // --- Header Section ---
-    if (settings.logoUrl) {
-      try {
-        const img = new Image();
-        img.crossOrigin = "Anonymous";
-        img.src = settings.logoUrl;
-        doc.addImage(img, 'PNG', margin, margin, 30, 30);
-      } catch (e) {
-        console.error("Could not add logo to PDF:", e);
-      }
-    }
-    doc.setFontSize(18);
-    doc.setFont('times', 'bold');
-    doc.text("BORDEREAU DE LIVRAISON", pageWidth - margin, margin + 10, { align: 'right' });
-    doc.setFontSize(10);
-    doc.setFont('times', 'normal');
-    doc.text(deliverySlipNumber, pageWidth - margin, margin + 18, { align: 'right' });
-    doc.text(`Date: ${format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}`, pageWidth - margin, margin + 23, { align: 'right' });
+    const addPageHeader = () => {
+        doc.setFillColor(37, 99, 235); // Blue color for consistency with invoices
+        doc.rect(0, 0, 10, pageHeight, 'F');
+        
+        if (settings.logoUrl) {
+            try {
+                const img = new Image();
+                img.crossOrigin = "Anonymous";
+                img.src = settings.logoUrl;
+                doc.addImage(img, 'PNG', margin, margin, 30, 30);
+            } catch (e) {
+                console.error("Could not add logo to PDF:", e);
+            }
+        }
+        
+        doc.setFont('times', 'bold');
+        doc.setFontSize(18);
+        doc.text("BORDEREAU DE LIVRAISON", pageWidth - margin, margin + 10, { align: 'right' });
+        
+        doc.setFont('times', 'normal');
+        doc.setFontSize(10);
+        doc.text(deliverySlipNumber, pageWidth - margin, margin + 18, { align: 'right' });
+        doc.text(`Date: ${format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}`, pageWidth - margin, margin + 23, { align: 'right' });
+        
+        const startYAddresses = margin + 40;
+        doc.setFontSize(11);
+        doc.setFont('times', 'bold');
+        doc.text("DE", margin, startYAddresses);
+        doc.text("À", pageWidth / 2, startYAddresses);
 
-    // --- Company and Client Info ---
-    const startYAddresses = margin + 40;
-    doc.setFontSize(11);
-    doc.setFont('times', 'bold');
-    doc.text("DE", margin, startYAddresses);
-    doc.text("À", pageWidth / 2, startYAddresses);
+        doc.setFontSize(9);
+        doc.setFont('times', 'normal');
+        const companyInfo = [
+            settings.companyName,
+            settings.legalName,
+            settings.companyAddress,
+            `Tél: ${settings.companyPhone}`,
+            `IFU: ${settings.companyIfu} / RCCM: ${settings.companyRccm}`
+        ];
+        doc.text(companyInfo, margin, startYAddresses + 6);
 
-    doc.setFontSize(9);
-    doc.setFont('times', 'normal');
-    const companyInfo = [
-        settings.companyName,
-        settings.legalName,
-        settings.companyAddress,
-        `Tél: ${settings.companyPhone}`,
-        `IFU: ${settings.companyIfu} / RCCM: ${settings.companyRccm}`
-    ];
-    doc.text(companyInfo, margin, startYAddresses + 6);
+        const clientInfo = [
+            client.name,
+            client.address ?? '',
+            `Contact: ${client.phone ?? ''}`,
+            client.email ? `Email: ${client.email}` : '',
+            client.ifu ? `N° IFU: ${client.ifu}` : '',
+            client.rccm ? `N° RCCM: ${client.rccm}` : '',
+            client.taxRegime ? `Régime Fiscal: ${client.taxRegime}` : ''
+        ].filter(Boolean);
+        doc.text(clientInfo, pageWidth / 2, startYAddresses + 6);
+    };
 
-    const clientInfo = [
-        client.name,
-        client.address ?? '',
-        `Contact: ${client.phone ?? ''}`,
-        client.email ? `Email: ${client.email}` : '',
-        client.ifu ? `N° IFU: ${client.ifu}` : '',
-        client.rccm ? `N° RCCM: ${client.rccm}` : '',
-        client.taxRegime ? `Régime Fiscal: ${client.taxRegime}` : ''
-    ].filter(Boolean);
-    doc.text(clientInfo, pageWidth / 2, startYAddresses + 6);
+    const addPageFooter = (pageNumber: number, totalPages: number) => {
+        const footerY = pageHeight - margin;
+        doc.setFontSize(8);
+        doc.text(`Page ${pageNumber} sur ${totalPages}`, pageWidth / 2, footerY, { align: 'center' });
+    };
 
     // --- Table Data ---
     const head = [['Désignation', 'Qté Commandée', 'Qté Livrée', 'Observations']];
     const body = invoice.items.map(item => [
       item.productName,
       item.quantity.toString(),
-      '', // Empty cell for "Qté Livrée"
-      ''  // Empty cell for "Observations"
+      '',
+      ''
     ]);
 
     autoTable(doc, {
       head: head,
       body: body,
-      startY: startYAddresses + 35,
+      startY: margin + 80,
       theme: 'grid',
-      headStyles: {
-        fillColor: [243, 244, 246],
-        textColor: [31, 41, 55],
-        fontStyle: 'bold',
+      didDrawPage: (data) => {
+          addPageHeader(); // Add header to each page
+          const pageCount = (doc as any).internal.getNumberOfPages();
+          addPageFooter(data.pageNumber, pageCount);
       },
-      styles: {
-        font: 'times',
-        fontSize: 10,
-        cellPadding: 2,
-        valign: 'middle',
-      },
-      columnStyles: {
-        1: { halign: 'center' },
-        2: { halign: 'center' },
-      },
-      margin: { left: margin, right: margin }
+      headStyles: { fillColor: [243, 244, 246], textColor: [31, 41, 55], fontStyle: 'bold' },
+      styles: { font: 'times', fontSize: 10, cellPadding: 2, valign: 'middle' },
+      columnStyles: { 1: { halign: 'center' }, 2: { halign: 'center' } },
+      margin: { top: margin, right: margin, bottom: margin, left: margin }
     });
 
     let finalY = (doc as any).lastAutoTable.finalY;
-    
-    // --- Signature and Footer Section ---
-    let signatureY = finalY + 20;
 
-    // Add a new page if the signature section doesn't fit
-    if (signatureY > pageHeight - 50) {
+    // --- Signature and Footer Section ---
+    const signatureY = finalY + 20;
+
+    if (signatureY > pageHeight - (margin + 30)) {
         doc.addPage();
-        signatureY = margin; // Reset Y for the new page
+        finalY = margin;
     }
     
     doc.setFontSize(10);
     doc.setFont('times', 'normal');
-    doc.text(`Date de facturation : ${format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}`, margin, signatureY);
+    doc.text(`Date de facturation : ${format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}`, margin, finalY + 15);
 
     doc.setLineCap('butt');
-    doc.setLineDashPattern([2, 2], 0); // Dashed line
-    doc.rect(margin + 5, signatureY + 5, 40, 20); // Cachet box
-    doc.text('Cachet', margin + 25, signatureY + 15, { align: 'center' });
-    doc.setLineDashPattern([], 0); // Reset to solid line
+    doc.setLineDashPattern([2, 2], 0);
+    doc.rect(margin + 5, finalY + 20, 40, 20); // Cachet box
+    doc.text('Cachet', margin + 25, finalY + 30, { align: 'center' });
+    doc.setLineDashPattern([], 0);
 
     doc.setFont('times', 'bold');
-    doc.text('Date de reception et visa du client', pageWidth - margin, signatureY, { align: 'right' });
-    doc.line(pageWidth - margin - 60, signatureY + 20, pageWidth - margin, signatureY + 20);
+    doc.text('Date de reception et visa du client', pageWidth - margin, finalY + 15, { align: 'right' });
+    doc.line(pageWidth - margin - 60, finalY + 35, pageWidth - margin, finalY + 35);
     doc.setFontSize(8);
     doc.setFont('times', 'italic');
-    doc.text('(Précédé de la mention "Reçu pour le compte de")', pageWidth - margin, signatureY + 24, { align: 'right' });
+    doc.text('(Précédé de la mention "Reçu pour le compte de")', pageWidth - margin, finalY + 39, { align: 'right' });
+
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        addPageFooter(i, pageCount);
+    }
 
     doc.save(`Bordereau_${deliverySlipNumber}.pdf`);
   };
