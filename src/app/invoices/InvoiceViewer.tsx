@@ -241,8 +241,14 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     doc.setFontSize(9);
     doc.text(settings.managerName, pageWidth - margin - 70, signatureY + 20);
     
-    // Bottom footer (placed at the very bottom of the page)
-    const bottomFooterY = pageHeight - 20;
+    // Bottom footer (placed dynamically after content)
+    let bottomFooterY = signatureY + 30;
+    if (bottomFooterY > pageHeight - 30) {
+      doc.addPage();
+      addHeader();
+      bottomFooterY = 60;
+    }
+    
     doc.setLineWidth(0.2);
     doc.line(margin, bottomFooterY, pageWidth - margin, bottomFooterY);
     doc.setFontSize(8);
@@ -254,7 +260,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
         doc.setFontSize(8);
-        doc.text(`Page ${i} sur ${pageCount}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
+        doc.text(`Page ${i} sur ${pageCount}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
     }
 
     doc.save(`Facture_${invoice.invoiceNumber}.pdf`);
