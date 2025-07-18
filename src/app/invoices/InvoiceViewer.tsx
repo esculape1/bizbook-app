@@ -32,7 +32,6 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
       if (printWindow) {
         printWindow.document.write('<html><head><title>Facture</title>');
         
-        // Transfer all stylesheets
         const styles = Array.from(document.styleSheets)
           .map(styleSheet => {
             try {
@@ -43,7 +42,6 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
             }
           }).join('\n');
 
-        // Add print-specific styles for margins and removing browser headers/footers
         const printStyles = `
           @page {
             size: A4;
@@ -82,11 +80,10 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     const doc = new jsPDF('p', 'mm', 'a4');
     const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
     const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
-    const margin = 14;
-    let finalY = 0;
+    const margin = 25;
 
     const addPageHeader = () => {
-      doc.setFillColor(37, 99, 235); // Blue color: #2563eb
+      doc.setFillColor(37, 99, 235);
       doc.rect(0, 0, 10, pageHeight, 'F');
       
       if (settings.logoUrl) {
@@ -112,16 +109,19 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     };
 
     const addPageFooter = (pageNumber: number, totalPages: number) => {
-      const footerY = pageHeight - 25; // Fixed position 2.5cm from bottom
-      doc.setFontSize(8);
-      doc.setLineWidth(0.2);
-      doc.line(margin, footerY, pageWidth - margin, footerY);
-      doc.text('Merci de votre confiance.', pageWidth / 2, footerY + 7, { align: 'center' });
-      doc.text(`${settings.companyName} - ${settings.legalName} - Tél: ${settings.companyPhone}`, pageWidth / 2, footerY + 11, { align: 'center' });
-      doc.text(`Page ${pageNumber} sur ${totalPages}`, pageWidth / 2, footerY + 15, { align: 'center' });
-    };
+        const footerY = pageHeight - margin;
+        doc.setFontSize(8);
+        doc.setLineWidth(0.2);
+        
+        const footerTextLine1 = 'Merci de votre confiance.';
+        const footerTextLine2 = `${settings.companyName} - ${settings.legalName} - Tél: ${settings.companyPhone}`;
+        const pageNumText = `Page ${pageNumber} sur ${totalPages}`;
 
-    addPageHeader();
+        doc.text(footerTextLine1, pageWidth / 2, footerY + 7, { align: 'center' });
+        doc.text(footerTextLine2, pageWidth / 2, footerY + 11, { align: 'center' });
+        doc.text(pageNumText, pageWidth / 2, footerY + 15, { align: 'center' });
+        doc.line(margin, footerY, pageWidth - margin, footerY); // Draw line above the footer text
+    };
 
     doc.setFontSize(11);
     doc.setFont('times', 'bold');
@@ -172,13 +172,13 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
       styles: { font: 'times', fontSize: 9 },
       columnStyles: { 2: { halign: 'right' }, 3: { halign: 'center' }, 4: { halign: 'right' } },
       didDrawPage: (data) => {
-        finalY = data.cursor?.y || 0;
+        addPageHeader();
       }
     });
 
-    finalY = (doc as any).lastAutoTable.finalY;
+    let finalY = (doc as any).lastAutoTable.finalY;
 
-    if (finalY > pageHeight - 80) {
+    if (finalY > pageHeight - margin - 50) {
         doc.addPage();
         finalY = margin;
     }
@@ -215,7 +215,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
 
     let signatureY = grandTotalY + 20;
 
-    if (signatureY > pageHeight - 50) {
+    if (signatureY > pageHeight - margin - 30) {
       doc.addPage();
       signatureY = margin;
     }
@@ -231,7 +231,6 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     const pageCount = (doc as any).internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
-        if (i > 1) addPageHeader(); // Add header to new pages
         addPageFooter(i, pageCount);
     }
 

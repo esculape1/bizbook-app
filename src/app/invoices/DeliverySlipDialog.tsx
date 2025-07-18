@@ -77,9 +77,8 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
 
     const deliverySlipNumber = `BL-${invoice.invoiceNumber}`;
 
-    // --- Header Section ---
     const addPageHeader = () => {
-        doc.setFillColor(37, 99, 235); // Blue color for consistency with invoices
+        doc.setFillColor(37, 99, 235);
         doc.rect(0, 0, 10, pageHeight, 'F');
         
         if (settings.logoUrl) {
@@ -137,7 +136,6 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
         doc.text(`Page ${pageNumber} sur ${totalPages}`, pageWidth / 2, footerY, { align: 'center' });
     };
 
-    // --- Table Data ---
     const head = [['Désignation', 'Qté Commandée', 'Qté Livrée', 'Observations']];
     const body = invoice.items.map(item => [
       item.productName,
@@ -152,9 +150,7 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
       startY: margin + 80,
       theme: 'grid',
       didDrawPage: (data) => {
-          addPageHeader(); // Add header to each page
-          const pageCount = (doc as any).internal.getNumberOfPages();
-          addPageFooter(data.pageNumber, pageCount);
+          addPageHeader();
       },
       headStyles: { fillColor: [243, 244, 246], textColor: [31, 41, 55], fontStyle: 'bold' },
       styles: { font: 'times', fontSize: 10, cellPadding: 2, valign: 'middle' },
@@ -164,10 +160,7 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
 
     let finalY = (doc as any).lastAutoTable.finalY;
 
-    // --- Signature and Footer Section ---
-    const signatureY = finalY + 20;
-
-    if (signatureY > pageHeight - (margin + 30)) {
+    if (finalY > pageHeight - margin - 30) {
         doc.addPage();
         finalY = margin;
     }
