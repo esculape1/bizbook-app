@@ -78,7 +78,7 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
     const deliverySlipNumber = `BL-${invoice.invoiceNumber}`;
 
     const addPageHeader = () => {
-        doc.setFillColor(37, 99, 235);
+        doc.setFillColor(37, 99, 235); // Using the primary color blue
         doc.rect(0, 0, 10, pageHeight, 'F');
         
         if (settings.logoUrl) {
@@ -158,29 +158,24 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
       margin: { top: margin, right: margin, bottom: margin, left: margin }
     });
 
-    let finalY = (doc as any).lastAutoTable.finalY;
+    const signatureY = pageHeight - margin - 45; // Fixed position for the signature block
 
-    if (finalY > pageHeight - margin - 30) {
-        doc.addPage();
-        finalY = margin;
-    }
-    
     doc.setFontSize(10);
     doc.setFont('times', 'normal');
-    doc.text(`Date de facturation : ${format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}`, margin, finalY + 15);
+    doc.text(`Date de facturation : ${format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}`, margin, signatureY);
 
     doc.setLineCap('butt');
     doc.setLineDashPattern([2, 2], 0);
-    doc.rect(margin + 5, finalY + 20, 40, 20); // Cachet box
-    doc.text('Cachet', margin + 25, finalY + 30, { align: 'center' });
+    doc.rect(margin + 5, signatureY + 5, 40, 20); // Cachet box
+    doc.text('Cachet', margin + 25, signatureY + 15, { align: 'center' });
     doc.setLineDashPattern([], 0);
 
     doc.setFont('times', 'bold');
-    doc.text('Date de reception et visa du client', pageWidth - margin, finalY + 15, { align: 'right' });
-    doc.line(pageWidth - margin - 60, finalY + 35, pageWidth - margin, finalY + 35);
+    doc.text('Date de reception et visa du client', pageWidth - margin, signatureY, { align: 'right' });
+    doc.line(pageWidth - margin - 60, signatureY + 20, pageWidth - margin, signatureY + 20);
     doc.setFontSize(8);
     doc.setFont('times', 'italic');
-    doc.text('(Précédé de la mention "Reçu pour le compte de")', pageWidth - margin, finalY + 39, { align: 'right' });
+    doc.text('(Précédé de la mention "Reçu pour le compte de")', pageWidth - margin, signatureY + 24, { align: 'right' });
 
     const pageCount = (doc as any).internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
