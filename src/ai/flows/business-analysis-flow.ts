@@ -19,7 +19,7 @@ const ClientSchema = z.object({
   ifu: z.string().nullable().optional(),
   rccm: z.string().nullable().optional(),
   taxRegime: z.string().nullable().optional(),
-  registrationDate: z.string().describe("ISO date string"),
+  registrationDate: z.string().describe("Date de création du client au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ)."),
   status: z.enum(['Active', 'Inactive']),
 });
 
@@ -46,7 +46,7 @@ const InvoiceItemSchema = z.object({
 
 const PaymentSchema = z.object({
   id: z.string(),
-  date: z.string().describe("ISO date string"),
+  date: z.string().describe("Date au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ)."),
   amount: z.number(),
   method: z.enum(['Espèces', 'Virement bancaire', 'Chèque', 'Autre']),
   notes: z.string().nullable().optional(),
@@ -57,8 +57,8 @@ const InvoiceSchema = z.object({
   invoiceNumber: z.string(),
   clientId: z.string(),
   clientName: z.string(),
-  date: z.string().describe("ISO date string"),
-  dueDate: z.string().describe("ISO date string"),
+  date: z.string().describe("Date de facturation au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ)."),
+  dueDate: z.string().describe("Date d'échéance au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ)."),
   items: z.array(InvoiceItemSchema),
   subTotal: z.number(),
   vat: z.number(),
@@ -73,7 +73,7 @@ const InvoiceSchema = z.object({
 
 const ExpenseSchema = z.object({
   id: z.string(),
-  date: z.string().describe("ISO date string"),
+  date: z.string().describe("Date de la dépense au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ)."),
   description: z.string(),
   amount: z.number(),
   category: z.string(),
@@ -132,13 +132,27 @@ const getInvoicesTool = ai.defineTool(
 const getExpensesTool = ai.defineTool(
   {
     name: 'getExpenses',
-    description: "Récupère la liste de toutes les dépenses de l'entreprise.",
+    description: "Récupère la liste des dépenses de l'entreprise. Peut filtrer par période (startDate, endDate).",
+    inputSchema: z.object({
+      startDate: z.string().optional().describe("Date de début au format AAAA-MM-JJ. Si non fournie, pas de limite de début."),
+      endDate: z.string().optional().describe("Date de fin au format AAAA-MM-JJ. Si non fournie, pas de limite de fin.")
+    }),
     outputSchema: z.array(ExpenseSchema),
   },
-  async () => {
+  async ({ startDate, endDate }) => {
     const rawData = await getExpenses();
+
+    let filteredData = rawData;
+    if (startDate || endDate) {
+        const interval = {
+            start: startDate ? new Date(startDate) : new Date(0),
+            end: endDate ? new Date(endDate) : new Date()
+        };
+        filteredData = rawData.filter(exp => isWithinInterval(new Date(exp.date), interval));
+    }
+
     const validData: z.infer<typeof ExpenseSchema>[] = [];
-    for (const item of rawData) {
+    for (const item of filteredData) {
         const parsed = ExpenseSchema.safeParse(item);
         if (parsed.success) {
             validData.push(parsed.data);
