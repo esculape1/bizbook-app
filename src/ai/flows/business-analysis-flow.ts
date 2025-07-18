@@ -8,6 +8,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 import { getClients, getInvoices, getProducts, getExpenses, getSettings } from '@/lib/data';
+import { isWithinInterval } from 'date-fns';
 
 const ClientSchema = z.object({
   id: z.string(),
@@ -95,13 +96,27 @@ const SettingsSchema = z.object({
 const getInvoicesTool = ai.defineTool(
   {
     name: 'getInvoices',
-    description: "Récupère la liste de toutes les factures de l'entreprise.",
+    description: "Récupère la liste des factures de l'entreprise. Peut filtrer par période (startDate, endDate).",
+    inputSchema: z.object({
+        startDate: z.string().optional().describe("Date de début au format AAAA-MM-JJ. Si non fournie, pas de limite de début."),
+        endDate: z.string().optional().describe("Date de fin au format AAAA-MM-JJ. Si non fournie, pas de limite de fin.")
+    }),
     outputSchema: z.array(InvoiceSchema),
   },
-  async () => {
+  async ({ startDate, endDate }) => {
     const rawData = await getInvoices();
+    
+    let filteredData = rawData;
+    if (startDate || endDate) {
+        const interval = {
+            start: startDate ? new Date(startDate) : new Date(0),
+            end: endDate ? new Date(endDate) : new Date()
+        };
+        filteredData = rawData.filter(inv => isWithinInterval(new Date(inv.date), interval));
+    }
+
     const validData: z.infer<typeof InvoiceSchema>[] = [];
-    for (const item of rawData) {
+    for (const item of filteredData) {
         const parsed = InvoiceSchema.safeParse(item);
         if (parsed.success) {
             validData.push(parsed.data);
