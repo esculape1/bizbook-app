@@ -226,7 +226,7 @@ N'invente jamais d'informations. Si les données ne sont pas disponibles pour r�
 Utilise l'outil getSettings pour connaître la devise de l'entreprise et formate tous les montants monétaires en conséquence.`;
 
         const { text } = await ai.generate({
-            model: 'googleai/gemini-1.5-pro',
+            model: 'googleai/gemini-1.5-flash',
             prompt: query,
             system: systemPrompt,
             tools: [getInvoicesTool, getExpensesTool, getProductsTool, getClientsTool, getSettingsTool],
