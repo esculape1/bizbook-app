@@ -7,9 +7,8 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(amount: number, currency: Settings['currency'] = 'EUR') {
-  // Use fr-FR as a base for consistent number formatting (e.g., spaces for thousands separators)
-  // and override the currency symbol.
-  const locale = 'fr-FR'; 
+  // Use a specific locale for West African CFA franc to ensure correct formatting
+  const locale = currency === 'XOF' ? 'fr-CI' : 'fr-FR'; 
   
   // Use Intl.NumberFormat for robust currency formatting
   return new Intl.NumberFormat(locale, {

@@ -18,9 +18,9 @@ type InvoiceViewerProps = {
 };
 
 // Placeholder for other templates
-const ModernTemplate = ({ invoice }: { invoice: Invoice }) => <div id="invoice-content" className="p-8 border rounded-lg">Modèle "Moderne" pour la facture {invoice.invoiceNumber}. À implémenter.</div>;
-const ClassicTemplate = ({ invoice }: { invoice: Invoice }) => <div id="invoice-content" className="p-8 border rounded-lg">Modèle "Classique" pour la facture {invoice.invoiceNumber}. À implémenter.</div>;
-const SimpleTemplate = ({ invoice }: { invoice: Invoice }) => <div id="invoice-content" className="p-8 border rounded-lg">Modèle "Simple" pour la facture {invoice.invoiceNumber}. À implémenter.</div>;
+const ModernTemplate = ({ invoice, client, settings }: { invoice: Invoice, client: Client, settings: Settings }) => <DetailedTemplate invoice={invoice} client={client} settings={settings} />;
+const ClassicTemplate = ({ invoice, client, settings }: { invoice: Invoice, client: Client, settings: Settings }) => <DetailedTemplate invoice={invoice} client={client} settings={settings} />;
+const SimpleTemplate = ({ invoice, client, settings }: { invoice: Invoice, client: Client, settings: Settings }) => <DetailedTemplate invoice={invoice} client={client} settings={settings} />;
 
 
 export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps) {
@@ -47,7 +47,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
         const printStyles = `
           @page {
             size: A4;
-            margin: 2.5cm !important;
+            margin: 0 !important;
           }
           @media print {
             body { 
@@ -83,54 +83,37 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     const pageWidth = doc.internal.pageSize.getWidth();
     let startY = 15;
 
-    // Header
-    if (settings.logoUrl) {
-        try {
-            const response = await fetch(settings.logoUrl);
-            const blob = await response.blob();
-            const reader = new FileReader();
-            reader.readAsDataURL(blob);
-            reader.onloadend = () => {
-                const base64data = reader.result as string;
-                doc.addImage(base64data, 'PNG', 14, startY, 30, 30);
-                generatePdfContent(doc); // Continue generation inside callback
-            };
-        } catch (e) {
-            console.error("Error loading logo, proceeding without it.", e);
-            generatePdfContent(doc); // Proceed without logo on error
-        }
-    } else {
-        generatePdfContent(doc); // Proceed if no logo
+    const addCompanyInfo = () => {
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text(settings.companyName, pageWidth - 14, startY + 5, { align: 'right' });
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(settings.companyAddress, pageWidth - 14, startY + 12, { align: 'right' });
+        doc.text(`Tél: ${settings.companyPhone}`, pageWidth - 14, startY + 17, { align: 'right' });
+        doc.text(`IFU: ${settings.companyIfu} / RCCM: ${settings.companyRccm}`, pageWidth - 14, startY + 22, { align: 'right' });
     }
 
-    const generatePdfContent = (docInstance: jsPDF) => {
-        // --- Company Info ---
-        docInstance.setFontSize(16);
-        docInstance.setFont('helvetica', 'bold');
-        docInstance.text(settings.companyName, pageWidth - 14, startY + 5, { align: 'right' });
-        docInstance.setFontSize(10);
-        docInstance.setFont('helvetica', 'normal');
-        docInstance.text(settings.companyAddress, pageWidth - 14, startY + 12, { align: 'right' });
-        docInstance.text(`Tél: ${settings.companyPhone}`, pageWidth - 14, startY + 17, { align: 'right' });
-        docInstance.text(`IFU: ${settings.companyIfu} / RCCM: ${settings.companyRccm}`, pageWidth - 14, startY + 22, { align: 'right' });
+    const generatePdfContent = () => {
+        addCompanyInfo();
 
         startY += 40;
 
         // --- Invoice Title & Client Info ---
-        docInstance.setFontSize(18);
-        docInstance.setFont('helvetica', 'bold');
-        docInstance.text(`FACTURE: ${invoice.invoiceNumber}`, 14, startY);
-        docInstance.setFontSize(10);
-        docInstance.setFont('helvetica', 'normal');
-        docInstance.text(`Date: ${format(new Date(invoice.date), 'dd/MM/yyyy', { locale: fr })}`, 14, startY + 7);
-        docInstance.text(`Échéance: ${format(new Date(invoice.dueDate), 'dd/MM/yyyy', { locale: fr })}`, 14, startY + 12);
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`FACTURE: ${invoice.invoiceNumber}`, 14, startY);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Date: ${format(new Date(invoice.date), 'dd/MM/yyyy', { locale: fr })}`, 14, startY + 7);
+        doc.text(`Échéance: ${format(new Date(invoice.dueDate), 'dd/MM/yyyy', { locale: fr })}`, 14, startY + 12);
         
-        docInstance.setFont('helvetica', 'bold');
-        docInstance.text('Client:', pageWidth - 14, startY, { align: 'right' });
-        docInstance.setFont('helvetica', 'normal');
-        docInstance.text(client.name, pageWidth - 14, startY + 7, { align: 'right' });
-        docInstance.text(client.address || '', pageWidth - 14, startY + 12, { align: 'right' });
-        docInstance.text(client.phone || '', pageWidth - 14, startY + 17, { align: 'right' });
+        doc.setFont('helvetica', 'bold');
+        doc.text('Client:', pageWidth - 14, startY, { align: 'right' });
+        doc.setFont('helvetica', 'normal');
+        doc.text(client.name, pageWidth - 14, startY + 7, { align: 'right' });
+        if(client.address) doc.text(client.address, pageWidth - 14, startY + 12, { align: 'right' });
+        if(client.phone) doc.text(client.phone, pageWidth - 14, startY + 17, { align: 'right' });
 
         startY += 25;
 
@@ -144,17 +127,14 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
             formatCurrency(item.total, settings.currency)
         ]);
 
-        autoTable(docInstance, {
+        autoTable(doc, {
             head: [tableColumn],
             body: tableRows,
             startY: startY,
             headStyles: { fillColor: [30, 30, 30] },
-            didDrawPage: (data) => {
-                // We'll use the finalY for subsequent elements
-            }
         });
 
-        let finalY = (docInstance as any).lastAutoTable.finalY;
+        let finalY = (doc as any).lastAutoTable.finalY;
 
         // --- Totals ---
         const totals = [
@@ -164,7 +144,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
             [{ content: 'Total TTC', styles: { fontStyle: 'bold', fontSize: 12 } }, { content: formatCurrency(invoice.totalAmount, settings.currency), styles: { fontStyle: 'bold', fontSize: 12 } }]
         ];
         
-        autoTable(docInstance, {
+        autoTable(doc, {
             body: totals,
             startY: finalY + 5,
             theme: 'plain',
@@ -174,15 +154,34 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
             columnStyles: { 0: { halign: 'right' }, 1: { halign: 'right' } }
         });
         
-        finalY = (docInstance as any).lastAutoTable.finalY;
+        finalY = (doc as any).lastAutoTable.finalY;
 
         // --- Footer ---
-        docInstance.setFontSize(9);
-        docInstance.text(`Arrêtée la présente facture à la somme de : ${formatCurrency(invoice.totalAmount, settings.currency)}`, 14, finalY + 15);
+        doc.setFontSize(9);
+        doc.text(`Arrêtée la présente facture à la somme de : ${formatCurrency(invoice.totalAmount, settings.currency)}`, 14, finalY + 15);
 
         // Save the PDF
-        docInstance.save(`Facture_${invoice.invoiceNumber}.pdf`);
+        doc.save(`Facture_${invoice.invoiceNumber}.pdf`);
     };
+
+    if (settings.logoUrl) {
+        try {
+            const response = await fetch(settings.logoUrl);
+            const blob = await response.blob();
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = () => {
+                const base64data = reader.result as string;
+                doc.addImage(base64data, 'PNG', 14, startY, 30, 30);
+                generatePdfContent();
+            };
+        } catch (e) {
+            console.error("Error loading logo, proceeding without it.", e);
+            generatePdfContent();
+        }
+    } else {
+        generatePdfContent();
+    }
   }
 
 
@@ -191,11 +190,11 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
       case 'detailed':
         return <DetailedTemplate invoice={invoice} client={client} settings={settings} />;
       case 'modern':
-        return <ModernTemplate invoice={invoice} />;
+        return <ModernTemplate invoice={invoice} client={client} settings={settings} />;
       case 'classic':
-        return <ClassicTemplate invoice={invoice} />;
+        return <ClassicTemplate invoice={invoice} client={client} settings={settings} />;
       case 'simple':
-        return <SimpleTemplate invoice={invoice} />;
+        return <SimpleTemplate invoice={invoice} client={client} settings={settings} />;
       default:
         return <DetailedTemplate invoice={invoice} client={client} settings={settings} />;
     }
