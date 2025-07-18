@@ -79,33 +79,31 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     const { jsPDF } = await import('jspdf');
     const { default: autoTable } = await import('jspdf-autotable');
     
-    const doc = new jsPDF();
+    const doc = new jsPDF('p', 'mm', 'a4');
     const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
     const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
     const margin = 14;
 
-    // Font setup
-    // Note: jsPDF has limited built-in fonts. For "Times New Roman", we may need to embed it.
-    // For now, we'll use the built-in "times" font which is a close approximation.
+    // --- Font Setup ---
+    // Note: jsPDF has limited built-in fonts. We'll use a standard serif font.
     doc.setFont('times', 'normal');
 
-    // -- Header Section --
+    // --- Header Section ---
     const addHeader = () => {
-      // Decorative bar - this is tricky, let's skip for now to keep PDF standard
+      // Decorative bar
+      doc.setFillColor(37, 99, 235, 0.8); // Equivalent to bg-primary/80
+      doc.rect(0, 0, 10, pageHeight, 'F');
       
-      // Logo
+      // Logo (with error handling for cross-origin issues)
       if (settings.logoUrl) {
           try {
-              const response = await fetch(settings.logoUrl);
-              const blob = await response.blob();
-              const reader = new FileReader();
-              reader.readAsDataURL(blob);
-              reader.onloadend = () => {
-                  const base64data = reader.result as string;
-                  doc.addImage(base64data, 'PNG', margin, 15, 40, 40);
-              };
+              const img = new Image();
+              img.crossOrigin = "Anonymous";
+              img.src = settings.logoUrl;
+              // We won't wait for it to load to prevent blocking, but this is a best-effort approach
+              doc.addImage(img, 'PNG', margin, 15, 30, 30);
           } catch(e) {
-              console.error("Could not fetch logo for PDF", e);
+              console.error("Could not add logo to PDF:", e);
           }
       }
 
@@ -122,7 +120,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
       doc.text(`Échéance: ${format(new Date(invoice.dueDate), 'd MMM yyyy', { locale: fr })}`, pageWidth - margin, 42, { align: 'right' });
     };
 
-    // -- Company and Client Info --
+    // --- Company and Client Info ---
     const addAddresses = () => {
         doc.setFontSize(11);
         doc.setFont('times', 'bold');
@@ -156,7 +154,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
         doc.text(clientInfo, pageWidth / 2, 66);
     };
 
-    // -- Table Data --
+    // --- Table Data ---
     const head = [['Référence', 'Désignation', 'Prix U.', 'Qté', 'Total']];
     const body = invoice.items.map(item => [
       item.reference,
@@ -165,18 +163,8 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
       item.quantity.toString(),
       formatCurrency(item.total, settings.currency),
     ]);
-
-    // -- Footer Logic --
-    const addFooter = () => {
-        const pageCount = (doc as any).internal.getNumberOfPages();
-        for (let i = 1; i <= pageCount; i++) {
-            doc.setPage(i);
-            doc.setFontSize(8);
-            doc.text(`Page ${i} sur ${pageCount}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
-        }
-    };
     
-    // -- PDF Generation --
+    // --- PDF Generation ---
     addHeader();
     addAddresses();
 
@@ -186,8 +174,8 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
       startY: 100,
       theme: 'grid',
       headStyles: {
-        fillColor: [243, 244, 246], // equivalent to bg-gray-100
-        textColor: [31, 41, 55], // equivalent to text-gray-800
+        fillColor: [243, 244, 246], // bg-gray-100
+        textColor: [31, 41, 55],   // text-gray-800
         fontStyle: 'bold',
       },
       styles: {
@@ -201,15 +189,15 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
       }
     });
 
-    const finalY = (doc as any).lastAutoTable.finalY;
+    let finalY = (doc as any).lastAutoTable.finalY;
 
-    // Totals Section
+    // --- Totals Section ---
     const totalInWords = numberToWordsFr(invoice.totalAmount, settings.currency);
     doc.setFontSize(9);
     doc.setFont('times', 'bold');
     doc.text('Arrêtée la présente facture à la somme de :', margin, finalY + 10);
     doc.setFont('times', 'italic');
-    doc.text(totalInWords, margin, finalY + 15, { maxWidth: pageWidth / 2 });
+    doc.text(totalInWords, margin, finalY + 15, { maxWidth: (pageWidth / 2) - margin });
 
     const totalsData = [
         ['Montant total:', formatCurrency(invoice.subTotal, settings.currency)],
@@ -217,6 +205,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
         [`TVA (${invoice.vat}%):`, `+${formatCurrency(invoice.vatAmount, settings.currency)}`],
     ];
     
+    // Draw totals table on the right side
     autoTable(doc, {
         body: totalsData,
         startY: finalY + 10,
@@ -226,8 +215,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
         styles: { font: 'times', fontSize: 9 },
     });
 
-    // Grand Total
-    const grandTotalY = (doc as any).lastAutoTable.finalY;
+    let grandTotalY = (doc as any).lastAutoTable.finalY;
     doc.setFontSize(10);
     doc.setFont('times', 'bold');
     doc.setLineWidth(0.5);
@@ -236,25 +224,38 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     doc.text(formatCurrency(invoice.totalAmount, settings.currency), pageWidth - margin, grandTotalY + 7, { align: 'right' });
 
 
-    // Signature section with less vertical space
-    const signatureY = Math.max(grandTotalY + 25, pageHeight - 60); // Position it relative to content or page bottom
+    // --- Signature and Footer Section ---
+    let signatureY = grandTotalY + 25;
+    // If there's not enough space for the signature and footer, add a new page
+    if (signatureY > pageHeight - 40) {
+      doc.addPage();
+      addHeader(); // Redraw header on new page
+      signatureY = 60; // Reset Y position on new page
+    }
+
     doc.setFontSize(10);
     doc.setFont('times', 'bold');
-    doc.text('Signature et Cachet', pageWidth - margin - 80, signatureY);
-    doc.line(pageWidth - margin - 80, signatureY + 15, pageWidth - margin, signatureY + 15);
+    doc.text('Signature et Cachet', pageWidth - margin - 70, signatureY);
+    doc.line(pageWidth - margin - 70, signatureY + 15, pageWidth - margin, signatureY + 15);
     doc.setFont('times', 'normal');
     doc.setFontSize(9);
-    doc.text(settings.managerName, pageWidth - margin - 80, signatureY + 20);
+    doc.text(settings.managerName, pageWidth - margin - 70, signatureY + 20);
     
-    // Bottom footer
+    // Bottom footer (placed at the very bottom of the page)
     const bottomFooterY = pageHeight - 20;
     doc.setLineWidth(0.2);
     doc.line(margin, bottomFooterY, pageWidth - margin, bottomFooterY);
     doc.setFontSize(8);
     doc.text('Merci de votre confiance.', pageWidth / 2, bottomFooterY + 7, { align: 'center' });
-    doc.text(`${settings.companyName} - ${settings.legalName} - Tél: 25465512 / 76778393 / 70150699`, pageWidth / 2, bottomFooterY + 11, { align: 'center' });
+    doc.text(`${settings.companyName} - ${settings.legalName} - Tél: ${settings.companyPhone}`, pageWidth / 2, bottomFooterY + 11, { align: 'center' });
 
-    addFooter();
+    // Page number
+    const pageCount = (doc as any).internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.text(`Page ${i} sur ${pageCount}`, pageWidth / 2, pageHeight - 5, { align: 'center' });
+    }
 
     doc.save(`Facture_${invoice.invoiceNumber}.pdf`);
   }
