@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Printer, Download } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { DeliverySlipDialog } from './DeliverySlipDialog';
+import { formatCurrency, numberToWordsFr } from '@/lib/utils';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 type InvoiceViewerProps = {
   invoice: Invoice;
@@ -73,53 +76,187 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
   };
 
   const generatePdf = async () => {
-    const { default: jsPDF } = await import('jspdf');
-    const { default: html2canvas } = await import('html2canvas');
-    const content = document.getElementById('invoice-content');
-    if(content){
-        // Reduced scale from 2 to 1 and changed image format to jpeg for better compression.
-        const canvas = await html2canvas(content, { scale: 1 });
-        const imgData = canvas.toDataURL('image/jpeg', 0.90); // 90% quality
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
-        const ratio = canvasWidth / canvasHeight;
-        let width = pdfWidth;
-        let height = width / ratio;
-        
-        // Handle multi-page content
-        const pageHeightInPixels = height * (pdfHeight/width) * ratio;
-        if (canvasHeight > pageHeightInPixels) {
-          let yPosition = 0;
-          let remainingHeight = canvasHeight;
-          const pageCanvas = document.createElement('canvas');
-          pageCanvas.width = canvasWidth;
-          pageCanvas.height = pageHeightInPixels;
-          const pageCtx = pageCanvas.getContext('2d');
+    const { jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
+    
+    const doc = new jsPDF();
+    const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+    const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
+    const margin = 14;
 
+    // Font setup
+    // Note: jsPDF has limited built-in fonts. For "Times New Roman", we may need to embed it.
+    // For now, we'll use the built-in "times" font which is a close approximation.
+    doc.setFont('times', 'normal');
 
-          while (remainingHeight > 0) {
-            if (pageCtx) {
-                pageCtx.drawImage(canvas, 0, yPosition, canvasWidth, pageCanvas.height, 0, 0, pageCanvas.width, pageCanvas.height);
-            }
-            const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.90);
-            pdf.addImage(pageImgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-            
-            yPosition += pageCanvas.height;
-            remainingHeight -= pageCanvas.height;
-
-            if (remainingHeight > 0) {
-              pdf.addPage();
-            }
+    // -- Header Section --
+    const addHeader = () => {
+      // Decorative bar - this is tricky, let's skip for now to keep PDF standard
+      
+      // Logo
+      if (settings.logoUrl) {
+          try {
+              const response = await fetch(settings.logoUrl);
+              const blob = await response.blob();
+              const reader = new FileReader();
+              reader.readAsDataURL(blob);
+              reader.onloadend = () => {
+                  const base64data = reader.result as string;
+                  doc.addImage(base64data, 'PNG', margin, 15, 40, 40);
+              };
+          } catch(e) {
+              console.error("Could not fetch logo for PDF", e);
           }
-        } else {
-           pdf.addImage(imgData, 'JPEG', 0, 0, width, height);
-        }
+      }
 
-        pdf.save(`Facture_${invoice.invoiceNumber}.pdf`);
-    }
+      // Title
+      doc.setFontSize(22);
+      doc.setFont('times', 'bold');
+      doc.text("FACTURE", pageWidth - margin, 25, { align: 'right' });
+
+      // Invoice Info
+      doc.setFontSize(10);
+      doc.setFont('times', 'normal');
+      doc.text(invoice.invoiceNumber, pageWidth - margin, 32, { align: 'right' });
+      doc.text(`Date: ${format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}`, pageWidth - margin, 37, { align: 'right' });
+      doc.text(`Échéance: ${format(new Date(invoice.dueDate), 'd MMM yyyy', { locale: fr })}`, pageWidth - margin, 42, { align: 'right' });
+    };
+
+    // -- Company and Client Info --
+    const addAddresses = () => {
+        doc.setFontSize(11);
+        doc.setFont('times', 'bold');
+        doc.text("DE", margin, 60);
+        doc.text("À", pageWidth / 2, 60);
+        
+        doc.setLineWidth(0.2);
+        doc.line(margin, 61, margin + 80, 61);
+        doc.line(pageWidth / 2, 61, pageWidth / 2 + 80, 61);
+
+        doc.setFont('times', 'normal');
+        doc.setFontSize(9);
+        const companyInfo = [
+            settings.companyName,
+            settings.legalName,
+            settings.companyAddress,
+            `Tél: ${settings.companyPhone}`,
+            `IFU: ${settings.companyIfu} / RCCM: ${settings.companyRccm}`
+        ];
+        doc.text(companyInfo, margin, 66);
+
+        const clientInfo = [
+            client.name,
+            client.address ?? '',
+            `Contact: ${client.phone ?? ''}`,
+            client.email ? `Email: ${client.email}` : '',
+            client.ifu ? `N° IFU: ${client.ifu}`: '',
+            client.rccm ? `N° RCCM: ${client.rccm}`: '',
+            client.taxRegime ? `Régime Fiscal: ${client.taxRegime}`: ''
+        ].filter(Boolean); // Remove empty lines
+        doc.text(clientInfo, pageWidth / 2, 66);
+    };
+
+    // -- Table Data --
+    const head = [['Référence', 'Désignation', 'Prix U.', 'Qté', 'Total']];
+    const body = invoice.items.map(item => [
+      item.reference,
+      item.productName,
+      formatCurrency(item.unitPrice, settings.currency),
+      item.quantity.toString(),
+      formatCurrency(item.total, settings.currency),
+    ]);
+
+    // -- Footer Logic --
+    const addFooter = () => {
+        const pageCount = (doc as any).internal.getNumberOfPages();
+        for (let i = 1; i <= pageCount; i++) {
+            doc.setPage(i);
+            doc.setFontSize(8);
+            doc.text(`Page ${i} sur ${pageCount}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+        }
+    };
+    
+    // -- PDF Generation --
+    addHeader();
+    addAddresses();
+
+    autoTable(doc, {
+      head: head,
+      body: body,
+      startY: 100,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [243, 244, 246], // equivalent to bg-gray-100
+        textColor: [31, 41, 55], // equivalent to text-gray-800
+        fontStyle: 'bold',
+      },
+      styles: {
+          font: 'times',
+          fontSize: 9,
+      },
+      columnStyles: {
+        2: { halign: 'right' },
+        3: { halign: 'center' },
+        4: { halign: 'right' }
+      }
+    });
+
+    const finalY = (doc as any).lastAutoTable.finalY;
+
+    // Totals Section
+    const totalInWords = numberToWordsFr(invoice.totalAmount, settings.currency);
+    doc.setFontSize(9);
+    doc.setFont('times', 'bold');
+    doc.text('Arrêtée la présente facture à la somme de :', margin, finalY + 10);
+    doc.setFont('times', 'italic');
+    doc.text(totalInWords, margin, finalY + 15, { maxWidth: pageWidth / 2 });
+
+    const totalsData = [
+        ['Montant total:', formatCurrency(invoice.subTotal, settings.currency)],
+        [`Remise (${invoice.discount}%):`, `-${formatCurrency(invoice.discountAmount, settings.currency)}`],
+        [`TVA (${invoice.vat}%):`, `+${formatCurrency(invoice.vatAmount, settings.currency)}`],
+    ];
+    
+    autoTable(doc, {
+        body: totalsData,
+        startY: finalY + 10,
+        theme: 'plain',
+        tableWidth: 80,
+        margin: { left: pageWidth - margin - 80 },
+        styles: { font: 'times', fontSize: 9 },
+    });
+
+    // Grand Total
+    const grandTotalY = (doc as any).lastAutoTable.finalY;
+    doc.setFontSize(10);
+    doc.setFont('times', 'bold');
+    doc.setLineWidth(0.5);
+    doc.line(pageWidth - margin - 80, grandTotalY + 2, pageWidth - margin, grandTotalY + 2);
+    doc.text('Montant Total TTC:', pageWidth - margin - 80, grandTotalY + 7);
+    doc.text(formatCurrency(invoice.totalAmount, settings.currency), pageWidth - margin, grandTotalY + 7, { align: 'right' });
+
+
+    // Signature section with less vertical space
+    const signatureY = Math.max(grandTotalY + 25, pageHeight - 60); // Position it relative to content or page bottom
+    doc.setFontSize(10);
+    doc.setFont('times', 'bold');
+    doc.text('Signature et Cachet', pageWidth - margin - 80, signatureY);
+    doc.line(pageWidth - margin - 80, signatureY + 15, pageWidth - margin, signatureY + 15);
+    doc.setFont('times', 'normal');
+    doc.setFontSize(9);
+    doc.text(settings.managerName, pageWidth - margin - 80, signatureY + 20);
+    
+    // Bottom footer
+    const bottomFooterY = pageHeight - 20;
+    doc.setLineWidth(0.2);
+    doc.line(margin, bottomFooterY, pageWidth - margin, bottomFooterY);
+    doc.setFontSize(8);
+    doc.text('Merci de votre confiance.', pageWidth / 2, bottomFooterY + 7, { align: 'center' });
+    doc.text(`${settings.companyName} - ${settings.legalName} - Tél: 25465512 / 76778393 / 70150699`, pageWidth / 2, bottomFooterY + 11, { align: 'center' });
+
+    addFooter();
+
+    doc.save(`Facture_${invoice.invoiceNumber}.pdf`);
   }
 
 
