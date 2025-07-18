@@ -96,23 +96,31 @@ const SettingsSchema = z.object({
 const getInvoicesTool = ai.defineTool(
   {
     name: 'getInvoices',
-    description: "Récupère la liste des factures de l'entreprise. Peut filtrer par période (startDate, endDate).",
+    description: "Récupère la liste des factures. Peut filtrer par client, par période, ou les deux.",
     inputSchema: z.object({
         startDate: z.string().optional().describe("Date de début au format AAAA-MM-JJ. Si non fournie, pas de limite de début."),
-        endDate: z.string().optional().describe("Date de fin au format AAAA-MM-JJ. Si non fournie, pas de limite de fin.")
+        endDate: z.string().optional().describe("Date de fin au format AAAA-MM-JJ. Si non fournie, pas de limite de fin."),
+        clientId: z.string().optional().describe("ID du client pour filtrer les factures d'un client spécifique."),
     }),
     outputSchema: z.array(InvoiceSchema),
   },
-  async ({ startDate, endDate }) => {
+  async ({ startDate, endDate, clientId }) => {
     const rawData = await getInvoices();
     
     let filteredData = rawData;
+    
+    // Filter by client ID if provided
+    if (clientId) {
+      filteredData = filteredData.filter(inv => inv.clientId === clientId);
+    }
+    
+    // Filter by date range if provided
     if (startDate || endDate) {
         const interval = {
             start: startDate ? new Date(startDate) : new Date(0),
             end: endDate ? new Date(endDate) : new Date()
         };
-        filteredData = rawData.filter(inv => isWithinInterval(new Date(inv.date), interval));
+        filteredData = filteredData.filter(inv => isWithinInterval(new Date(inv.date), interval));
     }
 
     const validData: z.infer<typeof InvoiceSchema>[] = [];
@@ -190,7 +198,7 @@ const getProductsTool = ai.defineTool(
 const getClientsTool = ai.defineTool(
   {
     name: 'getClients',
-    description: "Récupère la liste de tous les clients de l'entreprise.",
+    description: "Récupère la liste de tous les clients de l'entreprise. Permet de trouver un client par son nom pour obtenir son ID.",
     outputSchema: z.array(ClientSchema),
   },
   async () => {
@@ -259,7 +267,7 @@ IMPORTANT : Pour répondre aux questions, tu dois souvent croiser les données d
 - Coût des marchandises vendues (CMV) : Pour chaque article vendu dans une facture, trouve son prix d'achat ('purchasePrice') dans la liste des produits ('products') et multiplie-le par la quantité vendue. La somme de ces coûts est le CMV.
 - Produit le plus vendu : Utilise les factures ('invoices') pour compter la quantité ('quantity') de chaque 'productId' vendu sur la période, puis identifie celui avec le total le plus élevé.
 - Produit le plus rentable : Pour chaque produit, calcule sa marge (prix de vente - prix d'achat) et multiplie par la quantité vendue. Le prix de vente est dans l'article de la facture, le prix d'achat ('purchasePrice') est dans la liste des produits.
-- Client avec le plus grand CA : Regroupe les factures par 'clientName' ou 'clientId' et somme leurs 'totalAmount' sur la période.
+- Client avec le plus grand CA : Pour trouver le CA d'un client, utilise getClientsTool pour trouver son ID, puis utilise cet ID pour filtrer avec getInvoicesTool. Ensuite, somme leurs 'totalAmount' sur la période.
 
 Utilise l'outil getSettings pour connaître la devise de l'entreprise et formate tous les montants monétaires en conséquence.`;
 
@@ -277,5 +285,3 @@ Utilise l'outil getSettings pour connaître la devise de l'entreprise et formate
 export async function analyzeBusinessData(query: string): Promise<string> {
     return businessAnalysisFlow(query);
 }
-
-    
