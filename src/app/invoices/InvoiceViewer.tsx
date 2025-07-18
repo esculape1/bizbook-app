@@ -78,6 +78,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
   const generatePdf = async () => {
     const { default: jsPDF } = await import('jspdf');
     const { default: autoTable } = await import('jspdf-autotable');
+    type FontStyle = 'normal' | 'bold' | 'italic' | 'bolditalic';
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -141,7 +142,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
             ['Sous-total', formatCurrency(invoice.subTotal, settings.currency)],
             [`Remise (${invoice.discount}%)`, `-${formatCurrency(invoice.discountAmount, settings.currency)}`],
             [`TVA (${invoice.vat}%)`, `+${formatCurrency(invoice.vatAmount, settings.currency)}`],
-            [{ content: 'Total TTC', styles: { fontStyle: 'bold', fontSize: 12 } }, { content: formatCurrency(invoice.totalAmount, settings.currency), styles: { fontStyle: 'bold', fontSize: 12 } }]
+            [{ content: 'Total TTC', styles: { fontStyle: 'bold' as FontStyle, fontSize: 12 } }, { content: formatCurrency(invoice.totalAmount, settings.currency), styles: { fontStyle: 'bold' as FontStyle, fontSize: 12 } }]
         ];
         
         autoTable(doc, {
