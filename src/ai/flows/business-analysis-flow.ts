@@ -319,9 +319,11 @@ const businessAnalysisFlow = ai.defineFlow(
     },
     async (query) => {
         const response = await analysisPrompt(query);
-        // Use response.text as a fallback if response.output is undefined
-        const result = response.output ?? response.text;
-        return result || "Je n'ai pas pu trouver de réponse à votre question. Veuillez réessayer.";
+        // Robust check for response and output
+        if (!response || !response.output) {
+            return "Je n'ai pas pu générer de réponse complète. Veuillez vérifier les données et réessayer.";
+        }
+        return response.output;
     }
 );
 
