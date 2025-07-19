@@ -318,13 +318,13 @@ const businessAnalysisFlow = ai.defineFlow(
         outputSchema: z.string().describe("La réponse de l'assistant IA"),
     },
     async (query) => {
-        const { output } = await analysisPrompt(query);
-        return output || "Je n'ai pas pu trouver de réponse à votre question. Veuillez réessayer.";
+        const response = await analysisPrompt(query);
+        // Use response.text as a fallback if response.output is undefined
+        const result = response.output ?? response.text;
+        return result || "Je n'ai pas pu trouver de réponse à votre question. Veuillez réessayer.";
     }
 );
 
 export async function analyzeBusinessData(query: string): Promise<string> {
     return businessAnalysisFlow(query);
 }
-
-    
