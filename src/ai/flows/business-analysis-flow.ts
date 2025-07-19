@@ -11,7 +11,7 @@ import { getClients, getInvoices, getProducts, getExpenses, getSettings } from '
 import { isWithinInterval } from 'date-fns';
 
 const ClientSchema = z.object({
-  id: z.string(),
+  id: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   email: z.string().email().nullable().optional(),
   phone: z.string().nullable().optional(),
@@ -24,7 +24,7 @@ const ClientSchema = z.object({
 });
 
 const ProductSchema = z.object({
-  id: z.string(),
+  id: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   reference: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
@@ -36,7 +36,7 @@ const ProductSchema = z.object({
 });
 
 const InvoiceItemSchema = z.object({
-  productId: z.string(),
+  productId: z.string().nullable().optional(),
   productName: z.string().nullable().optional(),
   reference: z.string().nullable().optional(),
   quantity: z.number().nullable().optional(),
@@ -45,7 +45,7 @@ const InvoiceItemSchema = z.object({
 });
 
 const PaymentSchema = z.object({
-  id: z.string(),
+  id: z.string().nullable().optional(),
   date: z.string().describe("Date au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ).").nullable().optional(),
   amount: z.number().nullable().optional(),
   method: z.enum(['Espèces', 'Virement bancaire', 'Chèque', 'Autre']).nullable().optional(),
@@ -53,11 +53,11 @@ const PaymentSchema = z.object({
 });
 
 const InvoiceSchema = z.object({
-  id: z.string(),
+  id: z.string().nullable().optional(),
   invoiceNumber: z.string().nullable().optional(),
-  clientId: z.string(),
+  clientId: z.string().nullable().optional(),
   clientName: z.string().nullable().optional(),
-  date: z.string().describe("Date de facturation au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ)."),
+  date: z.string().describe("Date de facturation au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ).").nullable().optional(),
   dueDate: z.string().describe("Date d'échéance au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ).").nullable().optional(),
   items: z.array(InvoiceItemSchema).nullable().optional(),
   subTotal: z.number().nullable().optional(),
@@ -72,8 +72,8 @@ const InvoiceSchema = z.object({
 });
 
 const ExpenseSchema = z.object({
-  id: z.string(),
-  date: z.string().describe("Date de la dépense au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ)."),
+  id: z.string().nullable().optional(),
+  date: z.string().describe("Date de la dépense au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ).").nullable().optional(),
   description: z.string().nullable().optional(),
   amount: z.number().nullable().optional(),
   category: z.string().nullable().optional(),
@@ -319,9 +319,8 @@ const businessAnalysisFlow = ai.defineFlow(
     },
     async (query) => {
         const response = await analysisPrompt(query);
-        // Robust check for response and output
         if (!response || !response.output) {
-            return "Je n'ai pas pu générer de réponse complète. Veuillez vérifier les données et réessayer.";
+            return "Je n'ai pas pu générer de réponse. Le modèle n'a fourni aucune sortie. Veuillez reformuler votre question ou vérifier les données.";
         }
         return response.output;
     }
