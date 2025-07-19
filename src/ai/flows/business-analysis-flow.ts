@@ -13,26 +13,26 @@ import { isWithinInterval } from 'date-fns';
 const ClientSchema = z.object({
   id: z.string(),
   name: z.string(),
-  email: z.string().email().or(z.literal('')).nullable().optional(),
+  email: z.string().email().nullable().optional(),
   phone: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
   ifu: z.string().nullable().optional(),
   rccm: z.string().nullable().optional(),
   taxRegime: z.string().nullable().optional(),
-  registrationDate: z.string().describe("Date de création du client au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ)."),
-  status: z.enum(['Active', 'Inactive']),
+  registrationDate: z.string().describe("Date de création du client au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ).").nullable().optional(),
+  status: z.enum(['Active', 'Inactive']).nullable().optional(),
 });
 
 const ProductSchema = z.object({
   id: z.string(),
   name: z.string(),
-  reference: z.string(),
-  category: z.string(),
+  reference: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
   purchasePrice: z.coerce.number().nullable().optional().default(0),
-  unitPrice: z.number(),
-  quantityInStock: z.number(),
-  reorderPoint: z.number(),
-  safetyStock: z.number(),
+  unitPrice: z.number().nullable().optional(),
+  quantityInStock: z.number().nullable().optional(),
+  reorderPoint: z.number().nullable().optional(),
+  safetyStock: z.number().nullable().optional(),
 });
 
 const InvoiceItemSchema = z.object({
@@ -58,13 +58,13 @@ const InvoiceSchema = z.object({
   clientId: z.string(),
   clientName: z.string(),
   date: z.string().describe("Date de facturation au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ)."),
-  dueDate: z.string().describe("Date d'échéance au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ)."),
+  dueDate: z.string().describe("Date d'échéance au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ).").nullable().optional(),
   items: z.array(InvoiceItemSchema),
   subTotal: z.number(),
-  vat: z.number(),
-  vatAmount: z.number(),
-  discount: z.number(),
-  discountAmount: z.number(),
+  vat: z.number().nullable().optional(),
+  vatAmount: z.number().nullable().optional(),
+  discount: z.number().nullable().optional(),
+  discountAmount: z.number().nullable().optional(),
   totalAmount: z.number(),
   status: z.enum(['Paid', 'Unpaid', 'Partially Paid', 'Cancelled']),
   amountPaid: z.number(),
@@ -80,17 +80,17 @@ const ExpenseSchema = z.object({
 });
 
 const SettingsSchema = z.object({
-  companyName: z.string(),
-  legalName: z.string(),
-  managerName: z.string(),
-  companyAddress: z.string(),
-  companyPhone: z.string(),
-  companyIfu: z.string(),
-  companyRccm: z.string(),
-  currency: z.enum(['EUR', 'USD', 'GBP', 'XOF']),
+  companyName: z.string().nullable().optional(),
+  legalName: z.string().nullable().optional(),
+  managerName: z.string().nullable().optional(),
+  companyAddress: z.string().nullable().optional(),
+  companyPhone: z.string().nullable().optional(),
+  companyIfu: z.string().nullable().optional(),
+  companyRccm: z.string().nullable().optional(),
+  currency: z.enum(['EUR', 'USD', 'GBP', 'XOF']).nullable().optional(),
   logoUrl: z.string().nullable().optional(),
-  invoiceNumberFormat: z.enum(['PREFIX-YEAR-NUM', 'YEAR-NUM', 'PREFIX-NUM']),
-  invoiceTemplate: z.enum(['modern', 'classic', 'simple', 'detailed']),
+  invoiceNumberFormat: z.enum(['PREFIX-YEAR-NUM', 'YEAR-NUM', 'PREFIX-NUM']).nullable().optional(),
+  invoiceTemplate: z.enum(['modern', 'classic', 'simple', 'detailed']).nullable().optional(),
 });
 
 const getInvoicesTool = ai.defineTool(
@@ -305,9 +305,7 @@ IMPORTANT : Pour répondre, tu dois IMPÉRATIVEMENT croiser les données de plus
 
 Utilise l'outil \`getSettings\` pour connaître la devise de l'entreprise et formate tous les montants monétaires en conséquence dans ta réponse finale.`,
         config: {
-            toolRequest: {
-                mode: 'parallel',
-            },
+            toolRequest: 'parallel',
         },
     },
 );
