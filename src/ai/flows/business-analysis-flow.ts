@@ -309,8 +309,10 @@ Utilise l'outil \`getSettings\` pour connaître la devise de l'entreprise et for
             prompt: query,
             system: systemPrompt,
             tools: [getInvoicesTool, getExpensesTool, getProductsTool, getClientsTool, getSettingsTool],
-            toolConfig: {
-              mode: 'parallel',
+            config: {
+              toolConfig: {
+                mode: 'parallel',
+              },
             },
         });
 
