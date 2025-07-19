@@ -264,7 +264,6 @@ const analysisPrompt = ai.definePrompt(
         outputSchema: z.string(),
         model: 'googleai/gemini-1.5-pro',
         tools: [getInvoicesTool, getExpensesTool, getProductsTool, getClientsTool, getSettingsTool],
-        prompt: `{{prompt}}`,
         system: `Tu es un assistant expert en analyse de données pour l'application BizBook.
 Ta mission est de répondre aux questions de l'utilisateur en utilisant les outils à ta disposition.
 Tu DOIS utiliser les outils pour obtenir les données. Ne demande jamais à l'utilisateur de te fournir les données.
