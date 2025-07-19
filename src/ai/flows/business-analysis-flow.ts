@@ -308,10 +308,13 @@ IMPORTANT : Pour répondre, tu dois IMPÉRATIVEMENT croiser les données de plus
 Utilise l'outil \`getSettings\` pour connaître la devise de l'entreprise et formate tous les montants monétaires en conséquence dans ta réponse finale.`;
 
         const { text } = await ai.generate({
-            model: 'googleai/gemini-1.5-flash',
+            model: 'googleai/gemini-1.5-pro',
             prompt: query,
             system: systemPrompt,
             tools: [getInvoicesTool, getExpensesTool, getProductsTool, getClientsTool, getSettingsTool],
+            toolConfig: {
+              mode: 'parallel',
+            },
         });
 
         return text || "Je n'ai pas pu trouver de réponse à votre question. Veuillez réessayer.";
