@@ -319,6 +319,7 @@ const businessAnalysisFlow = ai.defineFlow(
     },
     async (query) => {
         const response = await analysisPrompt(query);
+        // Robust check for the response and its output.
         if (!response || !response.output) {
             return "Je n'ai pas pu générer de réponse. Le modèle n'a fourni aucune sortie. Veuillez reformuler votre question ou vérifier les données.";
         }
