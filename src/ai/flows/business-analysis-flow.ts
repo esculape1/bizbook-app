@@ -109,12 +109,10 @@ const getInvoicesTool = ai.defineTool(
     
     let filteredData = rawData;
     
-    // Filter by client ID if provided
     if (clientId) {
       filteredData = filteredData.filter(inv => inv.clientId === clientId);
     }
     
-    // Filter by date range if provided
     if (startDate || endDate) {
         const interval = {
             start: startDate ? new Date(startDate) : new Date(0),
@@ -241,7 +239,6 @@ const getSettingsTool = ai.defineTool(
     if (parsed.success) {
         return parsed.data;
     }
-    // This should ideally not fail, but as a fallback, return a default-like structure.
     console.error("Failed to parse settings, returning a fallback. Please check your settings data.", parsed.error.flatten());
     return {
         companyName: 'Erreur Paramètres',
