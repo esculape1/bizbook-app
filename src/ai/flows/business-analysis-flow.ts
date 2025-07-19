@@ -256,16 +256,16 @@ const getSettingsTool = ai.defineTool(
   }
 );
 
-const businessAnalysisFlow = ai.defineFlow(
+
+const analysisPrompt = ai.definePrompt(
     {
-        name: 'businessAnalysisFlow',
-        inputSchema: z.string().describe("La question de l'utilisateur"),
-        outputSchema: z.string().describe("La réponse de l'assistant IA"),
-        
-    },
-    async (query) => {
-        const model = 'googleai/gemini-1.5-pro';
-        const systemPrompt = `Tu es un assistant expert en analyse de données pour l'application BizBook.
+        name: 'businessAnalysisPrompt',
+        inputSchema: z.string(),
+        outputSchema: z.string(),
+        model: 'googleai/gemini-1.5-pro',
+        tools: [getInvoicesTool, getExpensesTool, getProductsTool, getClientsTool, getSettingsTool],
+        prompt: `{{prompt}}`,
+        system: `Tu es un assistant expert en analyse de données pour l'application BizBook.
 Ta mission est de répondre aux questions de l'utilisateur en utilisant les outils à ta disposition.
 Tu DOIS utiliser les outils pour obtenir les données. Ne demande jamais à l'utilisateur de te fournir les données.
 Sois concis, précis et professionnel. Réponds toujours en français.
@@ -304,21 +304,25 @@ IMPORTANT : Pour répondre, tu dois IMPÉRATIVEMENT croiser les données de plus
     c. Pour chaque article vendu : calcule la marge (\`unitPrice\` de la facture - \`purchasePrice\` du produit) et multiplie par la quantité vendue.
     d. Le produit avec la plus grande marge totale est le plus rentable.
 
-Utilise l'outil \`getSettings\` pour connaître la devise de l'entreprise et formate tous les montants monétaires en conséquence dans ta réponse finale.`;
-
-        const { text } = await ai.generate({
-            model,
-            prompt: query,
-            system: systemPrompt,
-            tools: [getInvoicesTool, getExpensesTool, getProductsTool, getClientsTool, getSettingsTool],
-            config: {
-                toolRequest: {
-                    mode: 'parallel',
-                },
+Utilise l'outil \`getSettings\` pour connaître la devise de l'entreprise et formate tous les montants monétaires en conséquence dans ta réponse finale.`,
+        config: {
+            toolRequest: {
+                mode: 'parallel',
             },
-        });
+        },
+    },
+);
 
-        return text || "Je n'ai pas pu trouver de réponse à votre question. Veuillez réessayer.";
+
+const businessAnalysisFlow = ai.defineFlow(
+    {
+        name: 'businessAnalysisFlow',
+        inputSchema: z.string().describe("La question de l'utilisateur"),
+        outputSchema: z.string().describe("La réponse de l'assistant IA"),
+    },
+    async (query) => {
+        const { output } = await analysisPrompt(query);
+        return output || "Je n'ai pas pu trouver de réponse à votre question. Veuillez réessayer.";
     }
 );
 
