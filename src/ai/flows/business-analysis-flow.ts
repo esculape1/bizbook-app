@@ -12,7 +12,7 @@ import { isWithinInterval } from 'date-fns';
 
 const ClientSchema = z.object({
   id: z.string(),
-  name: z.string(),
+  name: z.string().nullable().optional(),
   email: z.string().email().nullable().optional(),
   phone: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
@@ -25,7 +25,7 @@ const ClientSchema = z.object({
 
 const ProductSchema = z.object({
   id: z.string(),
-  name: z.string(),
+  name: z.string().nullable().optional(),
   reference: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
   purchasePrice: z.coerce.number().nullable().optional().default(0),
@@ -37,46 +37,46 @@ const ProductSchema = z.object({
 
 const InvoiceItemSchema = z.object({
   productId: z.string(),
-  productName: z.string(),
-  reference: z.string(),
-  quantity: z.number(),
-  unitPrice: z.number(),
-  total: z.number(),
+  productName: z.string().nullable().optional(),
+  reference: z.string().nullable().optional(),
+  quantity: z.number().nullable().optional(),
+  unitPrice: z.number().nullable().optional(),
+  total: z.number().nullable().optional(),
 });
 
 const PaymentSchema = z.object({
   id: z.string(),
-  date: z.string().describe("Date au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ)."),
-  amount: z.number(),
-  method: z.enum(['Espèces', 'Virement bancaire', 'Chèque', 'Autre']),
+  date: z.string().describe("Date au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ).").nullable().optional(),
+  amount: z.number().nullable().optional(),
+  method: z.enum(['Espèces', 'Virement bancaire', 'Chèque', 'Autre']).nullable().optional(),
   notes: z.string().nullable().optional(),
 });
 
 const InvoiceSchema = z.object({
   id: z.string(),
-  invoiceNumber: z.string(),
+  invoiceNumber: z.string().nullable().optional(),
   clientId: z.string(),
-  clientName: z.string(),
+  clientName: z.string().nullable().optional(),
   date: z.string().describe("Date de facturation au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ)."),
   dueDate: z.string().describe("Date d'échéance au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ).").nullable().optional(),
-  items: z.array(InvoiceItemSchema),
-  subTotal: z.number(),
+  items: z.array(InvoiceItemSchema).nullable().optional(),
+  subTotal: z.number().nullable().optional(),
   vat: z.number().nullable().optional(),
   vatAmount: z.number().nullable().optional(),
   discount: z.number().nullable().optional(),
   discountAmount: z.number().nullable().optional(),
-  totalAmount: z.number(),
-  status: z.enum(['Paid', 'Unpaid', 'Partially Paid', 'Cancelled']),
-  amountPaid: z.number(),
+  totalAmount: z.number().nullable().optional(),
+  status: z.enum(['Paid', 'Unpaid', 'Partially Paid', 'Cancelled']).nullable().optional(),
+  amountPaid: z.number().nullable().optional(),
   payments: z.array(PaymentSchema).nullable().optional(),
 });
 
 const ExpenseSchema = z.object({
   id: z.string(),
   date: z.string().describe("Date de la dépense au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ)."),
-  description: z.string(),
-  amount: z.number(),
-  category: z.string(),
+  description: z.string().nullable().optional(),
+  amount: z.number().nullable().optional(),
+  category: z.string().nullable().optional(),
 });
 
 const SettingsSchema = z.object({
@@ -326,3 +326,5 @@ const businessAnalysisFlow = ai.defineFlow(
 export async function analyzeBusinessData(query: string): Promise<string> {
     return businessAnalysisFlow(query);
 }
+
+    
