@@ -260,8 +260,8 @@ const getSettingsTool = ai.defineTool(
 const analysisPrompt = ai.definePrompt(
     {
         name: 'businessAnalysisPrompt',
-        inputSchema: z.string(),
-        outputSchema: z.string(),
+        input: { schema: z.string() },
+        output: { schema: z.string() },
         model: 'googleai/gemini-1.5-pro',
         tools: [getInvoicesTool, getExpensesTool, getProductsTool, getClientsTool, getSettingsTool],
         system: `Tu es un assistant expert en analyse de données pour l'application BizBook.
