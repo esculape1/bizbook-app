@@ -120,7 +120,13 @@ const getInvoicesTool = ai.defineTool(
             start: startDate ? new Date(startDate) : new Date(0),
             end: endDate ? new Date(endDate) : new Date()
         };
-        filteredData = filteredData.filter(inv => isWithinInterval(new Date(inv.date), interval));
+        filteredData = filteredData.filter(inv => {
+            try {
+                return isWithinInterval(new Date(inv.date), interval);
+            } catch (e) {
+                return false;
+            }
+        });
     }
 
     const validData: z.infer<typeof InvoiceSchema>[] = [];
@@ -156,7 +162,13 @@ const getExpensesTool = ai.defineTool(
             start: startDate ? new Date(startDate) : new Date(0),
             end: endDate ? new Date(endDate) : new Date()
         };
-        filteredData = rawData.filter(exp => isWithinInterval(new Date(exp.date), interval));
+        filteredData = rawData.filter(exp => {
+            try {
+                return isWithinInterval(new Date(exp.date), interval);
+            } catch(e) {
+                return false;
+            }
+        });
     }
 
     const validData: z.infer<typeof ExpenseSchema>[] = [];
