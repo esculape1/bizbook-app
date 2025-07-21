@@ -63,11 +63,8 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
         const emptyRowsCount = isLastPage ? Math.max(0, ITEMS_PER_PAGE - pageItems.length) : 0;
 
         return (
-          <div key={pageIndex} className="relative p-4" style={{ fontSize: '14pt', pageBreakAfter: isLastPage ? 'auto' : 'always', minHeight: '29.7cm', display: 'flex', flexDirection: 'column' }}>
-            {/* Decorative Bar */}
-            <div className="absolute top-0 left-0 h-full w-[1cm] bg-primary/80"></div>
-            
-            <div className="pl-[1cm] flex flex-col flex-grow">
+          <div key={pageIndex} className="relative p-0" style={{ fontSize: '14pt', pageBreakAfter: isLastPage ? 'auto' : 'always', minHeight: '29.7cm', display: 'flex', flexDirection: 'column' }}>
+            <div className="flex flex-col flex-grow">
               {/* Header */}
               <header className="flex justify-between items-start mb-2">
                 <div className="w-1/3">

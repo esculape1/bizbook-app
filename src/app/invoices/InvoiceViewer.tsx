@@ -45,7 +45,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
         const printStyles = `
           @page {
             size: A4;
-            margin: 0 !important;
+            margin: 2cm !important;
           }
           @media print {
             body { 
@@ -80,12 +80,9 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     const doc = new jsPDF('p', 'mm', 'a4');
     const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
     const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
-    const margin = 25;
+    const margin = 20; // 2cm margin
 
     const addPageHeader = () => {
-      doc.setFillColor(37, 99, 235); // Blue color from primary
-      doc.rect(0, 0, 10, pageHeight, 'F');
-      
       if (settings.logoUrl) {
         try {
           const img = new Image();

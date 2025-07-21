@@ -28,11 +28,11 @@ export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlip
             const emptyRowsCount = isLastPage ? Math.max(0, ITEMS_PER_PAGE - pageItems.length) : 0;
 
             return (
-                <div key={pageIndex} className="relative p-4" style={{ fontSize: '14pt', pageBreakAfter: isLastPage ? 'auto' : 'always' }}>
+                <div key={pageIndex} className="relative p-0" style={{ fontSize: '14pt', pageBreakAfter: isLastPage ? 'auto' : 'always', minHeight: '29.7cm', display: 'flex', flexDirection: 'column' }}>
                     {/* Decorative Bar */}
                     <div className="absolute top-0 left-0 h-full w-[1cm] bg-primary/80"></div>
 
-                    <div className="pl-[1cm]">
+                    <div className="pl-[calc(1cm+20px)] pr-[20px] pt-[20px] pb-[20px] flex flex-col flex-grow">
                         {/* Header */}
                         <header className="flex justify-between items-start mb-2">
                             <div className="w-1/3">
@@ -55,7 +55,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlip
                         </header>
                         
                         {/* Items table */}
-                        <main>
+                        <main className="flex-grow">
                             {/* Company and Client info */}
                             <div className="flex justify-between mb-4" style={{ fontSize: '11pt' }}>
                                 <div className="w-2/5">
@@ -112,7 +112,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlip
                         </main>
                         
                         {/* Footer */}
-                        <footer>
+                        <footer className="mt-auto">
                         {isLastPage && (
                             <div className="pt-2">
                                 <div className="flex justify-between items-start mt-2 pt-2 border-t-2 border-dashed">
@@ -142,5 +142,3 @@ export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlip
     </div>
   );
 }
-
-    
