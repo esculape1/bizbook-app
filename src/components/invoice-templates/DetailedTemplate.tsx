@@ -50,7 +50,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
     setTotalInWordsString(numberToWordsFr(invoice.totalAmount, settings.currency));
   }, [invoice.totalAmount, settings.currency]);
 
-  const ITEMS_PER_PAGE = 11;
+  const ITEMS_PER_PAGE = 10; // Reduced to make space for footer
   const pages = [];
   for (let i = 0; i < invoice.items.length; i += ITEMS_PER_PAGE) {
     pages.push(invoice.items.slice(i, i + ITEMS_PER_PAGE));
@@ -67,7 +67,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
             {/* Decorative Bar */}
             <div className="absolute top-0 left-0 h-full w-[1cm] bg-primary/80"></div>
             
-            <div className="pl-[1cm]">
+            <div className="pl-[1cm] min-h-[25cm]">
               {/* Header */}
               <header className="flex justify-between items-start mb-2">
                 <div className="w-1/3">
@@ -149,7 +149,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                 </tbody>
               </table>
 
-              {/* Footer Section */}
+              {/* Totals Section */}
               {isLastPage && (
                 <div className="pt-2">
                   <div className="flex justify-between items-start mt-1">
@@ -188,17 +188,18 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                       <p className="text-gray-600 mt-1" style={{ fontSize: '10pt' }}>{settings.managerName}</p>
                     </div>
                   </div>
-
-                  <div className="text-center text-gray-500 border-t pt-1 mt-2" style={{ fontSize: '9pt' }}>
-                    <p>Merci de votre confiance.</p>
-                    <p>{settings.companyName} - {settings.legalName}</p>
-                    <p>Tel: 25465512 / 76778393 / 70150699</p>
-                  </div>
                 </div>
               )}
-              
-              <div className="text-center text-gray-400 text-xs mt-1">
-                  Page {pageIndex + 1} / {pages.length}
+            </div>
+
+            {/* Page Footer */}
+            <div className="absolute bottom-4 left-0 right-0 pl-[1cm]">
+              <div className="text-center text-gray-500 border-t pt-1" style={{ fontSize: '9pt' }}>
+                <p>Merci de votre confiance.</p>
+                <p>{settings.companyName} - {settings.legalName} - Tél: {settings.companyPhone}</p>
+                <p className="text-gray-400 text-xs mt-1">
+                    Page {pageIndex + 1} / {pages.length}
+                </p>
               </div>
             </div>
           </div>
@@ -207,5 +208,3 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
     </div>
   );
 }
-
-    
