@@ -64,7 +64,10 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
 
         return (
           <div key={pageIndex} className="relative p-0" style={{ fontSize: '14pt', pageBreakAfter: isLastPage ? 'auto' : 'always', minHeight: '29.7cm', display: 'flex', flexDirection: 'column' }}>
-            <div className="flex flex-col flex-grow">
+            {/* Decorative Bar */}
+            <div className="absolute top-0 left-0 h-full w-[1cm] bg-primary/80"></div>
+
+            <div className="pl-[calc(1cm+20px)] pr-[20px] pt-[20px] pb-[20px] flex flex-col flex-grow">
               {/* Header */}
               <header className="flex justify-between items-start mb-2">
                 <div className="w-1/3">
@@ -113,7 +116,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                 </div>
               </div>
               
-              <div className="flex-grow">
+              <main className="flex-grow">
                 {/* Items Table */}
                 <table className="w-full border-collapse text-sm">
                   <thead className="bg-gray-100">
@@ -146,59 +149,59 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                     ))}
                   </tbody>
                 </table>
-              </div>
 
-              {/* Totals Section */}
-              {isLastPage && (
-                <div className="pt-2">
-                  <div className="flex justify-between items-start mt-1">
-                    <div className="w-2/3 pt-1">
-                        <p className="font-bold text-gray-700 text-xs">Arrêtée la présente facture à la somme de :</p>
-                        <p className="italic" style={{ fontSize: '10pt' }}>{totalInWordsString}</p>
+                {/* Totals Section, only on last page */}
+                {isLastPage && (
+                    <div className="flex justify-between items-start mt-4">
+                        <div className="w-2/3 pt-1">
+                            <p className="font-bold text-gray-700 text-xs">Arrêtée la présente facture à la somme de :</p>
+                            <p className="italic" style={{ fontSize: '10pt' }}>{totalInWordsString}</p>
+                        </div>
+                        <div className="w-full max-w-[280px] text-xs">
+                        <table className="w-full">
+                            <tbody>
+                            <tr>
+                                <td className="py-0.5 pr-2 text-gray-600">Montant total:</td>
+                                <td className="py-0.5 text-right font-medium">{formatCurrency(invoice.subTotal, settings.currency)}</td>
+                            </tr>
+                            <tr>
+                                <td className="py-0.5 pr-2 text-gray-600">Remise ({invoice.discount}%):</td>
+                                <td className="py-0.5 text-right font-medium">-{formatCurrency(invoice.discountAmount, settings.currency)}</td>
+                            </tr>
+                            <tr>
+                                <td className="py-0.5 pr-2 text-gray-600">TVA ({invoice.vat}%):</td>
+                                <td className="py-0.5 text-right font-medium">+{formatCurrency(invoice.vatAmount, settings.currency)}</td>
+                            </tr>
+                            <tr className="border-t-2 border-gray-300" style={{ fontSize: '12pt' }}>
+                                <td className="pt-1 pr-2 font-bold">Montant Total TTC:</td>
+                                <td className="pt-1 text-right font-bold">{formatCurrency(invoice.totalAmount, settings.currency)}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        </div>
                     </div>
-                    <div className="w-full max-w-[280px] text-xs">
-                      <table className="w-full">
-                        <tbody>
-                          <tr>
-                            <td className="py-0.5 pr-2 text-gray-600">Montant total:</td>
-                            <td className="py-0.5 text-right font-medium">{formatCurrency(invoice.subTotal, settings.currency)}</td>
-                          </tr>
-                          <tr>
-                            <td className="py-0.5 pr-2 text-gray-600">Remise ({invoice.discount}%):</td>
-                            <td className="py-0.5 text-right font-medium">-{formatCurrency(invoice.discountAmount, settings.currency)}</td>
-                          </tr>
-                          <tr>
-                            <td className="py-0.5 pr-2 text-gray-600">TVA ({invoice.vat}%):</td>
-                            <td className="py-0.5 text-right font-medium">+{formatCurrency(invoice.vatAmount, settings.currency)}</td>
-                          </tr>
-                          <tr className="border-t-2 border-gray-300" style={{ fontSize: '12pt' }}>
-                            <td className="pt-1 pr-2 font-bold">Montant Total TTC:</td>
-                            <td className="pt-1 text-right font-bold">{formatCurrency(invoice.totalAmount, settings.currency)}</td>
-                          </tr>
-                        </tbody>
-                      </table>
+                )}
+              </main>
+
+              {/* Page Footer */}
+              <footer className="mt-auto">
+                 {isLastPage && (
+                    <div className="flex justify-end items-end mt-4 pt-4">
+                        <div className="w-2/5 text-center">
+                        <p className="font-bold text-gray-700 text-sm">Signature et Cachet</p>
+                        <div className="mt-12 border-b-2 border-gray-400 h-8 w-full mx-auto"></div>
+                        <p className="text-gray-600 mt-1" style={{ fontSize: '10pt' }}>{settings.managerName}</p>
+                        </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex justify-end items-end mt-2 pt-2">
-                    <div className="w-2/5 text-center">
-                      <p className="font-bold text-gray-700 text-sm">Signature et Cachet</p>
-                      <div className="mt-12 border-b-2 border-gray-400 h-8 w-full mx-auto"></div>
-                      <p className="text-gray-600 mt-1" style={{ fontSize: '10pt' }}>{settings.managerName}</p>
-                    </div>
-                  </div>
+                 )}
+                <div className="text-center text-gray-500 border-t pt-2 mt-4" style={{ fontSize: '9pt' }}>
+                    <p>Merci de votre confiance.</p>
+                    <p>{settings.companyName} - {settings.legalName} - Tél: {settings.companyPhone}</p>
+                    <p className="text-gray-400 text-xs mt-1">
+                        Page {pageIndex + 1} / {pages.length}
+                    </p>
                 </div>
-              )}
-                 {/* Page Footer */}
-                 <div className="mt-auto pt-4">
-                    <div className="text-center text-gray-500 border-t pt-1" style={{ fontSize: '9pt' }}>
-                        <p>Merci de votre confiance.</p>
-                        <p>{settings.companyName} - {settings.legalName} - Tél: {settings.companyPhone}</p>
-                        <p className="text-gray-400 text-xs mt-1">
-                            Page {pageIndex + 1} / {pages.length}
-                        </p>
-                    </div>
-                </div>
+              </footer>
             </div>
           </div>
         );
