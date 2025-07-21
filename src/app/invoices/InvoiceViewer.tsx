@@ -7,9 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Printer, Download } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { DeliverySlipDialog } from './DeliverySlipDialog';
-import { formatCurrency, numberToWordsFr } from '@/lib/utils';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 
 type InvoiceViewerProps = {
   invoice: Invoice;
@@ -75,169 +72,40 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
 
   const generatePdf = async () => {
     const { default: jsPDF } = await import('jspdf');
-    const { default: autoTable } = await import('jspdf-autotable');
+    const { default: html2canvas } = await import('html2canvas');
     
-    const doc = new jsPDF('p', 'mm', 'a4');
-    const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
-    const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
-    const margin = 20; // 2cm margin for right, top, bottom
-    const leftMargin = 10; // 1cm for the blue bar
-
-    const addPageHeader = () => {
-        // The blue bar will be part of the page drawing logic now
-        doc.setFillColor(37, 99, 235); // Blue color from primary
-        doc.rect(0, 0, leftMargin, pageHeight, 'F');
+    const content = document.getElementById('invoice-content');
+    if (content) {
+      const canvas = await html2canvas(content, { scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
       
-        if (settings.logoUrl) {
-            try {
-                const img = new Image();
-                img.crossOrigin = "Anonymous";
-                img.src = settings.logoUrl;
-                doc.addImage(img, 'PNG', leftMargin + 10, 15, 30, 30);
-            } catch(e) {
-                console.error("Could not add logo to PDF:", e);
-            }
-        }
-
-        doc.setFontSize(22);
-        doc.setFont('times', 'bold');
-        doc.text("FACTURE", pageWidth - margin, 25, { align: 'right' });
-
-        doc.setFontSize(10);
-        doc.setFont('times', 'normal');
-        doc.text(invoice.invoiceNumber, pageWidth - margin, 32, { align: 'right' });
-        doc.text(`Date: ${format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}`, pageWidth - margin, 37, { align: 'right' });
-        doc.text(`Échéance: ${format(new Date(invoice.dueDate), 'd MMM yyyy', { locale: fr })}`, pageWidth - margin, 42, { align: 'right' });
-    };
-
-    const addPageFooter = (pageNumber: number, totalPages: number) => {
-        const footerY = pageHeight - margin + 10;
-        doc.setFontSize(8);
-        doc.setLineWidth(0.2);
-        
-        const footerTextLine1 = 'Merci de votre confiance.';
-        const footerTextLine2 = `${settings.companyName} - ${settings.legalName} - Tél: ${settings.companyPhone}`;
-        const pageNumText = `Page ${pageNumber} sur ${totalPages}`;
-
-        doc.text(footerTextLine1, (pageWidth + leftMargin) / 2, footerY, { align: 'center' });
-        doc.text(footerTextLine2, (pageWidth + leftMargin) / 2, footerY + 4, { align: 'center' });
-        doc.text(pageNumText, (pageWidth + leftMargin) / 2, footerY + 8, { align: 'center' });
-        doc.line(leftMargin, footerY - 5, pageWidth - margin, footerY - 5);
-    };
-
-    doc.setFontSize(11);
-    doc.setFont('times', 'bold');
-    doc.text("DE", leftMargin + 10, 60);
-    doc.text("À", pageWidth - margin, 60, { align: 'right' });
-    
-    doc.setLineWidth(0.2);
-    doc.line(leftMargin + 10, 61, leftMargin + 90, 61);
-    doc.line(pageWidth - margin, 61, pageWidth - margin - 80, 61);
-
-    doc.setFont('times', 'normal');
-    doc.setFontSize(9);
-    const companyInfo = [
-      settings.companyName,
-      settings.legalName,
-      settings.companyAddress,
-      `Tél: ${settings.companyPhone}`,
-      `IFU: ${settings.companyIfu} / RCCM: ${settings.companyRccm}`
-    ];
-    doc.text(companyInfo, leftMargin + 10, 66);
-
-    const clientInfo = [
-      client.name,
-      client.address ?? '',
-      `Contact: ${client.phone ?? ''}`,
-      client.email ? `Email: ${client.email}` : '',
-      client.ifu ? `N° IFU: ${client.ifu}`: '',
-      client.rccm ? `N° RCCM: ${client.rccm}`: '',
-      client.taxRegime ? `Régime Fiscal: ${client.taxRegime}`: ''
-    ].filter(Boolean);
-    doc.text(clientInfo, pageWidth - margin, 66, { align: 'right' });
-
-    const head = [['Référence', 'Désignation', 'Prix U.', 'Qté', 'Total']];
-    const body = invoice.items.map(item => [
-      item.reference,
-      item.productName,
-      formatCurrency(item.unitPrice, settings.currency),
-      item.quantity.toString(),
-      formatCurrency(item.total, settings.currency),
-    ]);
-    
-    autoTable(doc, {
-      head: head,
-      body: body,
-      startY: 100,
-      theme: 'grid',
-      headStyles: { fillColor: [243, 244, 246], textColor: [31, 41, 55], fontStyle: 'bold' },
-      styles: { font: 'times', fontSize: 9 },
-      columnStyles: { 2: { halign: 'right' }, 3: { halign: 'center' }, 4: { halign: 'right' } },
-      didDrawPage: (data) => {
-        addPageHeader();
-      },
-      margin: { top: margin, right: margin, bottom: margin, left: leftMargin + 10 },
-    });
-
-    let finalY = (doc as any).lastAutoTable.finalY;
-
-    // --- Fixed Signature & Footer Block ---
-    const signatureY = pageHeight - margin - 25;
-    const totalsY = signatureY - 40;
-    const wordsY = signatureY - 45;
-
-    if (finalY > wordsY - 10) { 
-        doc.addPage();
-        finalY = margin;
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+      const ratio = canvasWidth / canvasHeight;
+      
+      const imgWidth = pdfWidth;
+      const imgHeight = imgWidth / ratio;
+      
+      let heightLeft = imgHeight;
+      let position = 0;
+      
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+      
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+      
+      pdf.save(`Facture_${invoice.invoiceNumber}.pdf`);
     }
-
-    const totalInWords = numberToWordsFr(invoice.totalAmount, settings.currency);
-    doc.setFontSize(9);
-    doc.setFont('times', 'bold');
-    doc.text('Arrêtée la présente facture à la somme de :', leftMargin + 10, wordsY);
-    doc.setFont('times', 'italic');
-    doc.text(totalInWords, leftMargin + 10, wordsY + 5, { maxWidth: (pageWidth / 2) - (margin) });
-
-    const totalsData = [
-      ['Montant total:', formatCurrency(invoice.subTotal, settings.currency)],
-      [`Remise (${invoice.discount}%):`, `-${formatCurrency(invoice.discountAmount, settings.currency)}`],
-      [`TVA (${invoice.vat}%):`, `+${formatCurrency(invoice.vatAmount, settings.currency)}`],
-    ];
-    
-    autoTable(doc, {
-      body: totalsData,
-      startY: totalsY,
-      theme: 'plain',
-      tableWidth: 80,
-      margin: { left: pageWidth - margin - 80 },
-      styles: { font: 'times', fontSize: 9 },
-    });
-
-    let grandTotalY = (doc as any).lastAutoTable.finalY;
-    doc.setFontSize(10);
-    doc.setFont('times', 'bold');
-    doc.setLineWidth(0.5);
-    doc.line(pageWidth - margin - 80, grandTotalY + 2, pageWidth - margin, grandTotalY + 2);
-    doc.text('Montant Total TTC:', pageWidth - margin - 80, grandTotalY + 7);
-    doc.text(formatCurrency(invoice.totalAmount, settings.currency), pageWidth - margin, grandTotalY + 7, { align: 'right' });
-
-    doc.setFontSize(10);
-    doc.setFont('times', 'bold');
-    doc.text('Signature et Cachet', pageWidth - margin - 70, signatureY);
-    doc.line(pageWidth - margin - 70, signatureY + 15, pageWidth - margin, signatureY + 15);
-    doc.setFont('times', 'normal');
-    doc.setFontSize(9);
-    doc.text(settings.managerName, pageWidth - margin - 70, signatureY + 20);
-    
-    const pageCount = (doc as any).internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        addPageFooter(i, pageCount);
-    }
-
-    doc.save(`Facture_${invoice.invoiceNumber}.pdf`);
   }
-
 
   const renderTemplate = () => {
     switch (settings.invoiceTemplate) {
