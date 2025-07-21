@@ -63,11 +63,11 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
         const emptyRowsCount = isLastPage ? Math.max(0, ITEMS_PER_PAGE - pageItems.length) : 0;
 
         return (
-          <div key={pageIndex} className="relative p-4" style={{ fontSize: '14pt', pageBreakAfter: isLastPage ? 'auto' : 'always' }}>
+          <div key={pageIndex} className="relative p-4" style={{ fontSize: '14pt', pageBreakAfter: isLastPage ? 'auto' : 'always', minHeight: '29.7cm' }}>
             {/* Decorative Bar */}
             <div className="absolute top-0 left-0 h-full w-[1cm] bg-primary/80"></div>
             
-            <div className="pl-[1cm] min-h-[25cm]">
+            <div className="pl-[1cm] flex flex-col h-full">
               {/* Header */}
               <header className="flex justify-between items-start mb-2">
                 <div className="w-1/3">
@@ -116,38 +116,40 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                 </div>
               </div>
               
-              {/* Items Table */}
-              <table className="w-full border-collapse text-sm">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="py-1 px-2 text-left font-bold uppercase w-[15%] border border-gray-300">Référence</th>
-                    <th className="py-1 px-2 text-left font-bold uppercase w-[40%] border border-gray-300">Désignation</th>
-                    <th className="py-1 px-2 text-right font-bold uppercase w-[15%] border border-gray-300">Prix U.</th>
-                    <th className="py-1 px-2 text-right font-bold uppercase w-[10%] border border-gray-300">Quantité</th>
-                    <th className="py-1 px-2 text-right font-bold uppercase w-[15%] border border-gray-300">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pageItems.map((item, index) => (
-                    <tr key={index}>
-                      <td className="py-1 px-2 border border-gray-300 h-6 text-center align-middle">{item.reference}</td>
-                      <td className="py-1 px-2 border border-gray-300 h-6 align-middle font-bold">{item.productName}</td>
-                      <td className="py-1 px-2 border border-gray-300 h-6 text-right align-middle">{formatCurrency(item.unitPrice, settings.currency)}</td>
-                      <td className="py-1 px-2 border border-gray-300 h-6 text-center align-middle">{item.quantity}</td>
-                      <td className="py-1 px-2 border border-gray-300 h-6 text-right align-middle">{formatCurrency(item.total, settings.currency)}</td>
+              <div className="flex-grow">
+                {/* Items Table */}
+                <table className="w-full border-collapse text-sm">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="py-1 px-2 text-left font-bold uppercase w-[15%] border border-gray-300">Référence</th>
+                      <th className="py-1 px-2 text-left font-bold uppercase w-[40%] border border-gray-300">Désignation</th>
+                      <th className="py-1 px-2 text-right font-bold uppercase w-[15%] border border-gray-300">Prix U.</th>
+                      <th className="py-1 px-2 text-right font-bold uppercase w-[10%] border border-gray-300">Quantité</th>
+                      <th className="py-1 px-2 text-right font-bold uppercase w-[15%] border border-gray-300">Total</th>
                     </tr>
-                  ))}
-                  {Array.from({ length: emptyRowsCount }).map((_, index) => (
-                    <tr key={`empty-${index}`}>
-                      <td className="py-0 px-2 h-5 border border-gray-300">&nbsp;</td>
-                      <td className="py-0 px-2 h-5 border border-gray-300"></td>
-                      <td className="py-0 px-2 h-5 border border-gray-300"></td>
-                      <td className="py-0 px-2 h-5 border border-gray-300"></td>
-                      <td className="py-0 px-2 h-5 border border-gray-300"></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {pageItems.map((item, index) => (
+                      <tr key={index}>
+                        <td className="py-1 px-2 border border-gray-300 h-6 text-center align-middle">{item.reference}</td>
+                        <td className="py-1 px-2 border border-gray-300 h-6 align-middle font-bold">{item.productName}</td>
+                        <td className="py-1 px-2 border border-gray-300 h-6 text-right align-middle">{formatCurrency(item.unitPrice, settings.currency)}</td>
+                        <td className="py-1 px-2 border border-gray-300 h-6 text-center align-middle">{item.quantity}</td>
+                        <td className="py-1 px-2 border border-gray-300 h-6 text-right align-middle">{formatCurrency(item.total, settings.currency)}</td>
+                      </tr>
+                    ))}
+                    {Array.from({ length: emptyRowsCount }).map((_, index) => (
+                      <tr key={`empty-${index}`}>
+                        <td className="py-0 px-2 h-5 border border-gray-300">&nbsp;</td>
+                        <td className="py-0 px-2 h-5 border border-gray-300"></td>
+                        <td className="py-0 px-2 h-5 border border-gray-300"></td>
+                        <td className="py-0 px-2 h-5 border border-gray-300"></td>
+                        <td className="py-0 px-2 h-5 border border-gray-300"></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
               {/* Totals Section */}
               {isLastPage && (
