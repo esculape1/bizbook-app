@@ -10,6 +10,7 @@ import { EditPurchaseForm } from "./EditPurchaseForm";
 import { CancelPurchaseButton } from "./CancelPurchaseButton";
 import { getSession } from "@/lib/session";
 import type { Purchase } from "@/lib/types";
+import { PackageSearch } from "lucide-react";
 
 export default async function PurchasesPage() {
   const [purchases, suppliers, products, settings, user] = await Promise.all([
@@ -21,6 +22,10 @@ export default async function PurchasesPage() {
   ]);
 
   const canEdit = user?.role === 'Admin';
+
+  const totalPendingAmount = purchases
+    .filter(p => p.status === 'Pending')
+    .reduce((sum, p) => sum + p.totalAmount, 0);
 
   const getStatusVariant = (status: Purchase['status']): "success" | "warning" | "destructive" | "outline" => {
     switch (status) {
@@ -42,10 +47,23 @@ export default async function PurchasesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Achats"
-        actions={canEdit ? <PurchaseForm suppliers={suppliers} products={products} settings={settings} /> : undefined}
-      />
+      <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+        <div className="flex-1">
+            <PageHeader title="Achats" />
+        </div>
+        <div className="flex items-center gap-2 w-full md:w-auto">
+            {totalPendingAmount > 0 && (
+                <div className="flex-1 md:flex-none p-3 rounded-lg bg-gradient-to-r from-lime-200 via-lime-300 to-lime-400 text-lime-900 shadow-md flex items-center gap-3">
+                    <PackageSearch className="h-6 w-6" />
+                    <div className="text-right">
+                        <div className="text-sm font-medium">Achats en attente</div>
+                        <div className="text-lg font-bold">{formatCurrency(totalPendingAmount, settings.currency)}</div>
+                    </div>
+                </div>
+            )}
+            {canEdit && <PurchaseForm suppliers={suppliers} products={products} settings={settings} />}
+        </div>
+      </div>
       <Card>
         <CardContent className="pt-6">
           <Table>
