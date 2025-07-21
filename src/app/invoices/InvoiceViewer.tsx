@@ -170,7 +170,8 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
       columnStyles: { 2: { halign: 'right' }, 3: { halign: 'center' }, 4: { halign: 'right' } },
       didDrawPage: (data) => {
         addPageHeader();
-      }
+      },
+      margin: { top: 0, right: margin, bottom: margin, left: margin }, // Apply margins
     });
 
     let finalY = (doc as any).lastAutoTable.finalY;
