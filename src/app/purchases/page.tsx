@@ -54,6 +54,7 @@ export default async function PurchasesPage() {
                 <TableHead>N° Achat</TableHead>
                 <TableHead>Fournisseur</TableHead>
                 <TableHead>Date</TableHead>
+                <TableHead>Articles</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead className="text-right">Montant Total</TableHead>
                 {canEdit && <TableHead className="text-right">Actions</TableHead>}
@@ -62,6 +63,7 @@ export default async function PurchasesPage() {
             <TableBody>
               {purchases.map((purchase) => {
                 const isCancelled = purchase.status === 'Cancelled';
+                const itemNames = purchase.items.map(item => item.productName).join(', ');
                 return (
                 <TableRow key={purchase.id} className={cn(isCancelled && 'bg-muted/50 text-muted-foreground')}>
                   <TableCell className="font-medium">
@@ -69,6 +71,7 @@ export default async function PurchasesPage() {
                   </TableCell>
                   <TableCell>{purchase.supplierName}</TableCell>
                   <TableCell>{new Date(purchase.date).toLocaleDateString('fr-FR')}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground truncate max-w-xs">{itemNames}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusVariant(purchase.status)}>
                       {statusTranslations[purchase.status]}

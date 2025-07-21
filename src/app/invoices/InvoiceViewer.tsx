@@ -106,7 +106,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
         doc.setFontSize(10);
         doc.setFont('times', 'normal');
         // Pass invoice number as an array to prevent jsPDF from misinterpreting the slash
-        doc.text([invoice.invoiceNumber], pageWidth - margin, 32, { align: 'right' });
+        doc.text(invoice.invoiceNumber, pageWidth - margin, 32, { align: 'right' });
         doc.text(`Date: ${format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}`, pageWidth - margin, 37, { align: 'right' });
         doc.text(`Échéance: ${format(new Date(invoice.dueDate), 'd MMM yyyy', { locale: fr })}`, pageWidth - margin, 42, { align: 'right' });
     };

@@ -102,7 +102,7 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
         doc.setFont('times', 'normal');
         doc.setFontSize(10);
         // Pass the number as an array to avoid misinterpretation of slashes
-        doc.text([deliverySlipNumber], pageWidth - contentMargin, contentMargin + 18, { align: 'right' });
+        doc.text(deliverySlipNumber, pageWidth - contentMargin, contentMargin + 18, { align: 'right' });
         doc.text(`Date: ${format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}`, pageWidth - contentMargin, contentMargin + 23, { align: 'right' });
         
         const startYAddresses = contentMargin + 40;
