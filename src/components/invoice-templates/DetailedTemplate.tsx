@@ -63,11 +63,11 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
         const emptyRowsCount = isLastPage ? Math.max(0, ITEMS_PER_PAGE - pageItems.length) : 0;
 
         return (
-          <div key={pageIndex} className="relative p-4" style={{ fontSize: '14pt', pageBreakAfter: isLastPage ? 'auto' : 'always', minHeight: '29.7cm' }}>
+          <div key={pageIndex} className="relative p-4" style={{ fontSize: '14pt', pageBreakAfter: isLastPage ? 'auto' : 'always', minHeight: '29.7cm', display: 'flex', flexDirection: 'column' }}>
             {/* Decorative Bar */}
             <div className="absolute top-0 left-0 h-full w-[1cm] bg-primary/80"></div>
             
-            <div className="pl-[1cm] flex flex-col h-full">
+            <div className="pl-[1cm] flex flex-col flex-grow">
               {/* Header */}
               <header className="flex justify-between items-start mb-2">
                 <div className="w-1/3">
@@ -192,17 +192,16 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                   </div>
                 </div>
               )}
-            </div>
-
-            {/* Page Footer */}
-            <div className="absolute bottom-4 left-0 right-0 pl-[1cm]">
-              <div className="text-center text-gray-500 border-t pt-1" style={{ fontSize: '9pt' }}>
-                <p>Merci de votre confiance.</p>
-                <p>{settings.companyName} - {settings.legalName} - Tél: {settings.companyPhone}</p>
-                <p className="text-gray-400 text-xs mt-1">
-                    Page {pageIndex + 1} / {pages.length}
-                </p>
-              </div>
+                 {/* Page Footer */}
+                 <div className="mt-auto pt-4">
+                    <div className="text-center text-gray-500 border-t pt-1" style={{ fontSize: '9pt' }}>
+                        <p>Merci de votre confiance.</p>
+                        <p>{settings.companyName} - {settings.legalName} - Tél: {settings.companyPhone}</p>
+                        <p className="text-gray-400 text-xs mt-1">
+                            Page {pageIndex + 1} / {pages.length}
+                        </p>
+                    </div>
+                </div>
             </div>
           </div>
         );
