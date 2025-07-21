@@ -74,23 +74,22 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
     const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
     const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
     
-    // Using 0 margin because the template itself will provide the visual padding.
-    const margin = 0; 
-    const contentMargin = 20; // 2cm inner padding for content
+    const leftMargin = 10; // 1cm for blue bar
+    const contentMargin = 20; // 2cm inner padding for content (from edges)
 
     const deliverySlipNumber = `BL-${invoice.invoiceNumber}`;
 
     const addPageHeader = () => {
         // The blue bar will be part of the page drawing logic now
         doc.setFillColor(37, 99, 235); // Blue color from primary
-        doc.rect(0, 0, 10, pageHeight, 'F');
+        doc.rect(0, 0, leftMargin, pageHeight, 'F');
         
         if (settings.logoUrl) {
             try {
                 const img = new Image();
                 img.crossOrigin = "Anonymous";
                 img.src = settings.logoUrl;
-                doc.addImage(img, 'PNG', contentMargin, contentMargin, 30, 30);
+                doc.addImage(img, 'PNG', leftMargin + 10, contentMargin, 30, 30);
             } catch (e) {
                 console.error("Could not add logo to PDF:", e);
             }
@@ -102,13 +101,14 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
         
         doc.setFont('times', 'normal');
         doc.setFontSize(10);
-        doc.text(deliverySlipNumber, pageWidth - contentMargin, contentMargin + 18, { align: 'right' });
+        // Pass the number as an array to avoid misinterpretation of slashes
+        doc.text([deliverySlipNumber], pageWidth - contentMargin, contentMargin + 18, { align: 'right' });
         doc.text(`Date: ${format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}`, pageWidth - contentMargin, contentMargin + 23, { align: 'right' });
         
         const startYAddresses = contentMargin + 40;
         doc.setFontSize(11);
         doc.setFont('times', 'bold');
-        doc.text("DE", contentMargin, startYAddresses);
+        doc.text("DE", leftMargin + 10, startYAddresses);
         doc.text("À", pageWidth - contentMargin, startYAddresses, { align: 'right' });
 
         doc.setFontSize(9);
@@ -120,7 +120,7 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
             `Tél: ${settings.companyPhone}`,
             `IFU: ${settings.companyIfu} / RCCM: ${settings.companyRccm}`
         ];
-        doc.text(companyInfo, contentMargin, startYAddresses + 6);
+        doc.text(companyInfo, leftMargin + 10, startYAddresses + 6);
 
         const clientInfo = [
             client.name,
@@ -135,9 +135,9 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
     };
 
     const addPageFooter = (pageNumber: number, totalPages: number) => {
-        const footerY = pageHeight - contentMargin;
+        const footerY = pageHeight - contentMargin + 10;
         doc.setFontSize(8);
-        doc.text(`Page ${pageNumber} sur ${totalPages}`, pageWidth / 2, footerY, { align: 'center' });
+        doc.text(`Page ${pageNumber} sur ${totalPages}`, (pageWidth + leftMargin) / 2, footerY, { align: 'center' });
     };
 
     const head = [['Désignation', 'Qté Commandée', 'Qté Livrée', 'Observations']];
@@ -159,20 +159,20 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
       headStyles: { fillColor: [243, 244, 246], textColor: [31, 41, 55], fontStyle: 'bold' },
       styles: { font: 'times', fontSize: 10, cellPadding: 2, valign: 'middle' },
       columnStyles: { 1: { halign: 'center' }, 2: { halign: 'center' } },
-      margin: { top: contentMargin, right: contentMargin, bottom: contentMargin + 50, left: contentMargin }
+      margin: { top: contentMargin, right: contentMargin, bottom: contentMargin + 50, left: leftMargin + 10 }
     });
     
     // --- Fixed Signature Block ---
-    const signatureY = pageHeight - contentMargin - 45; // Fixed position for the signature block
+    const signatureY = pageHeight - contentMargin - 45;
 
     doc.setFontSize(10);
     doc.setFont('times', 'normal');
-    doc.text(`Date de facturation : ${format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}`, contentMargin, signatureY);
+    doc.text(`Date de facturation : ${format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}`, leftMargin + 10, signatureY);
 
     doc.setLineCap('butt');
     doc.setLineDashPattern([2, 2], 0);
-    doc.rect(contentMargin + 5, signatureY + 5, 40, 20); // Cachet box
-    doc.text('Cachet', contentMargin + 25, signatureY + 15, { align: 'center' });
+    doc.rect(leftMargin + 15, signatureY + 5, 40, 20); // Cachet box
+    doc.text('Cachet', leftMargin + 35, signatureY + 15, { align: 'center' });
     doc.setLineDashPattern([], 0);
 
     doc.setFont('times', 'bold');

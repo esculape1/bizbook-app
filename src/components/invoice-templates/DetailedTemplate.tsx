@@ -50,7 +50,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
     setTotalInWordsString(numberToWordsFr(invoice.totalAmount, settings.currency));
   }, [invoice.totalAmount, settings.currency]);
 
-  const ITEMS_PER_PAGE = 10; // Reduced to make space for footer
+  const ITEMS_PER_PAGE = 10;
   const pages = [];
   for (let i = 0; i < invoice.items.length; i += ITEMS_PER_PAGE) {
     pages.push(invoice.items.slice(i, i + ITEMS_PER_PAGE));

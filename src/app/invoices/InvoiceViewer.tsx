@@ -45,7 +45,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
         const printStyles = `
           @page {
             size: A4;
-            margin: 2cm !important;
+            margin: 0 !important;
           }
           @media print {
             body { 
@@ -80,33 +80,39 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     const doc = new jsPDF('p', 'mm', 'a4');
     const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
     const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
-    const margin = 20; // 2cm margin
+    const margin = 20; // 2cm margin for right, top, bottom
+    const leftMargin = 10; // 1cm for the blue bar
 
     const addPageHeader = () => {
-      if (settings.logoUrl) {
-        try {
-          const img = new Image();
-          img.crossOrigin = "Anonymous";
-          img.src = settings.logoUrl;
-          doc.addImage(img, 'PNG', margin, 15, 30, 30);
-        } catch(e) {
-          console.error("Could not add logo to PDF:", e);
+        // The blue bar will be part of the page drawing logic now
+        doc.setFillColor(37, 99, 235); // Blue color from primary
+        doc.rect(0, 0, leftMargin, pageHeight, 'F');
+      
+        if (settings.logoUrl) {
+            try {
+                const img = new Image();
+                img.crossOrigin = "Anonymous";
+                img.src = settings.logoUrl;
+                doc.addImage(img, 'PNG', leftMargin + 10, 15, 30, 30);
+            } catch(e) {
+                console.error("Could not add logo to PDF:", e);
+            }
         }
-      }
 
-      doc.setFontSize(22);
-      doc.setFont('times', 'bold');
-      doc.text("FACTURE", pageWidth - margin, 25, { align: 'right' });
+        doc.setFontSize(22);
+        doc.setFont('times', 'bold');
+        doc.text("FACTURE", pageWidth - margin, 25, { align: 'right' });
 
-      doc.setFontSize(10);
-      doc.setFont('times', 'normal');
-      doc.text(invoice.invoiceNumber, pageWidth - margin, 32, { align: 'right' });
-      doc.text(`Date: ${format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}`, pageWidth - margin, 37, { align: 'right' });
-      doc.text(`Échéance: ${format(new Date(invoice.dueDate), 'd MMM yyyy', { locale: fr })}`, pageWidth - margin, 42, { align: 'right' });
+        doc.setFontSize(10);
+        doc.setFont('times', 'normal');
+        // Pass invoice number as an array to prevent jsPDF from misinterpreting the slash
+        doc.text([invoice.invoiceNumber], pageWidth - margin, 32, { align: 'right' });
+        doc.text(`Date: ${format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}`, pageWidth - margin, 37, { align: 'right' });
+        doc.text(`Échéance: ${format(new Date(invoice.dueDate), 'd MMM yyyy', { locale: fr })}`, pageWidth - margin, 42, { align: 'right' });
     };
 
     const addPageFooter = (pageNumber: number, totalPages: number) => {
-        const footerY = pageHeight - margin;
+        const footerY = pageHeight - margin + 10;
         doc.setFontSize(8);
         doc.setLineWidth(0.2);
         
@@ -114,19 +120,19 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
         const footerTextLine2 = `${settings.companyName} - ${settings.legalName} - Tél: ${settings.companyPhone}`;
         const pageNumText = `Page ${pageNumber} sur ${totalPages}`;
 
-        doc.text(footerTextLine1, pageWidth / 2, footerY + 7, { align: 'center' });
-        doc.text(footerTextLine2, pageWidth / 2, footerY + 11, { align: 'center' });
-        doc.text(pageNumText, pageWidth / 2, footerY + 15, { align: 'center' });
-        doc.line(margin, footerY, pageWidth - margin, footerY);
+        doc.text(footerTextLine1, (pageWidth + leftMargin) / 2, footerY, { align: 'center' });
+        doc.text(footerTextLine2, (pageWidth + leftMargin) / 2, footerY + 4, { align: 'center' });
+        doc.text(pageNumText, (pageWidth + leftMargin) / 2, footerY + 8, { align: 'center' });
+        doc.line(leftMargin, footerY - 5, pageWidth - margin, footerY - 5);
     };
 
     doc.setFontSize(11);
     doc.setFont('times', 'bold');
-    doc.text("DE", margin, 60);
+    doc.text("DE", leftMargin + 10, 60);
     doc.text("À", pageWidth - margin, 60, { align: 'right' });
     
     doc.setLineWidth(0.2);
-    doc.line(margin, 61, margin + 80, 61);
+    doc.line(leftMargin + 10, 61, leftMargin + 90, 61);
     doc.line(pageWidth - margin, 61, pageWidth - margin - 80, 61);
 
     doc.setFont('times', 'normal');
@@ -138,7 +144,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
       `Tél: ${settings.companyPhone}`,
       `IFU: ${settings.companyIfu} / RCCM: ${settings.companyRccm}`
     ];
-    doc.text(companyInfo, margin, 66);
+    doc.text(companyInfo, leftMargin + 10, 66);
 
     const clientInfo = [
       client.name,
@@ -171,28 +177,27 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
       didDrawPage: (data) => {
         addPageHeader();
       },
-      margin: { top: 0, right: margin, bottom: margin, left: margin }, // Apply margins
+      margin: { top: margin, right: margin, bottom: margin, left: leftMargin + 10 },
     });
 
     let finalY = (doc as any).lastAutoTable.finalY;
 
     // --- Fixed Signature & Footer Block ---
-    const signatureY = pageHeight - margin - 45; // Fixed position for the signature block
-    const totalsY = signatureY - 40; // Position totals table above signature
-    const wordsY = signatureY - 45; // Position words above totals
+    const signatureY = pageHeight - margin - 25;
+    const totalsY = signatureY - 40;
+    const wordsY = signatureY - 45;
 
-    // This check is to push totals/signature to next page if they collide with the items table
     if (finalY > wordsY - 10) { 
         doc.addPage();
-        finalY = 0; // Reset Y position for new page content
+        finalY = margin;
     }
 
     const totalInWords = numberToWordsFr(invoice.totalAmount, settings.currency);
     doc.setFontSize(9);
     doc.setFont('times', 'bold');
-    doc.text('Arrêtée la présente facture à la somme de :', margin, wordsY);
+    doc.text('Arrêtée la présente facture à la somme de :', leftMargin + 10, wordsY);
     doc.setFont('times', 'italic');
-    doc.text(totalInWords, margin, wordsY + 5, { maxWidth: (pageWidth / 2) - (margin * 2) });
+    doc.text(totalInWords, leftMargin + 10, wordsY + 5, { maxWidth: (pageWidth / 2) - (margin) });
 
     const totalsData = [
       ['Montant total:', formatCurrency(invoice.subTotal, settings.currency)],
