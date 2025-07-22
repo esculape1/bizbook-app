@@ -76,6 +76,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     
     const content = document.getElementById('invoice-content');
     if (content) {
+      // Increase scale for better resolution
       const canvas = await html2canvas(content, { scale: 2 });
       const imgData = canvas.toDataURL('image/png');
       
