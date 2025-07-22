@@ -22,7 +22,7 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
     if (printContent) {
       const printWindow = window.open('', '_blank');
       if (printWindow) {
-        const title = `Bordereau - ${invoice.invoiceNumber}`;
+        const title = `Bordereau_de_Livraison_${invoice.invoiceNumber.replace(/[\/\s]/g, '-')}`;
         printWindow.document.write(`<html><head><title>${title}</title>`);
         
         const styles = Array.from(document.styleSheets)

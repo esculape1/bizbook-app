@@ -27,7 +27,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     if (printContent) {
       const printWindow = window.open('', '_blank');
       if (printWindow) {
-        const title = `Facture - ${invoice.invoiceNumber}`;
+        const title = `Facture_${invoice.invoiceNumber.replace(/[\/\s]/g, '-')}`;
         printWindow.document.write(`<html><head><title>${title}</title>`);
         
         const styles = Array.from(document.styleSheets)
@@ -45,7 +45,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
         const printStyles = `
           @page {
             size: A4;
-            margin: 2cm;
+            margin: 0 !important;
           }
           @media print {
             body { 

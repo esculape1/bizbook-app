@@ -22,7 +22,7 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
     if (printContent) {
       const printWindow = window.open('', '_blank');
       if (printWindow) {
-        const title = `Proforma - ${quote.quoteNumber}`;
+        const title = `Proforma_${quote.quoteNumber.replace(/[\/\s]/g, '-')}`;
         printWindow.document.write(`<html><head><title>${title}</title>`);
         
         const styles = Array.from(document.styleSheets)
@@ -87,7 +87,7 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
             <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>Fermer</Button>
             <Button onClick={handlePrint} variant="outline">
                 <Download className="mr-2 h-4 w-4" />
-                PDF
+                Télécharger en PDF
             </Button>
             <Button onClick={handlePrint}>
                 <Printer className="mr-2 h-4 w-4" />
