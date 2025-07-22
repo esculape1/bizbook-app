@@ -70,44 +70,6 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     }
   };
 
-  const generatePdf = async () => {
-    const { default: jsPDF } = await import('jspdf');
-    const { default: html2canvas } = await import('html2canvas');
-    
-    const content = document.getElementById('invoice-content');
-    if (content) {
-      // Increase scale for better resolution
-      const canvas = await html2canvas(content, { scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
-      
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      
-      const canvasWidth = canvas.width;
-      const canvasHeight = canvas.height;
-      const ratio = canvasWidth / canvasHeight;
-      
-      const imgWidth = pdfWidth;
-      const imgHeight = imgWidth / ratio;
-      
-      let heightLeft = imgHeight;
-      let position = 0;
-      
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
-      
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
-      }
-      
-      pdf.save(`Facture_${invoice.invoiceNumber}.pdf`);
-    }
-  }
-
   const renderTemplate = () => {
     switch (settings.invoiceTemplate) {
       case 'detailed':
@@ -127,7 +89,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     <div className="space-y-4">
         <div className="flex justify-end gap-2">
             <DeliverySlipDialog invoice={invoice} client={client} settings={settings} />
-            <Button onClick={generatePdf} variant="outline">
+            <Button onClick={handlePrint} variant="outline">
                 <Download className="mr-2 h-4 w-4" />
                 Télécharger en PDF
             </Button>

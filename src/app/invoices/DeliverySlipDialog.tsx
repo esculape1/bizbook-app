@@ -64,43 +64,6 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
     }
   };
 
-  const generatePdf = async () => {
-    const { default: jsPDF } = await import('jspdf');
-    const { default: html2canvas } = await import('html2canvas');
-    
-    const content = document.getElementById('delivery-slip-content');
-    if (content) {
-      const canvas = await html2canvas(content, { scale: 2 });
-      const imgData = canvas.toDataURL('image/png');
-      
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      
-      const canvasWidth = canvas.width;
-      const canvasHeight = canvas.height;
-      const ratio = canvasWidth / canvasHeight;
-      
-      const imgWidth = pdfWidth;
-      const imgHeight = imgWidth / ratio;
-      
-      let heightLeft = imgHeight;
-      let position = 0;
-      
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
-      
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
-      }
-      
-      pdf.save(`Bordereau_BL-${invoice.invoiceNumber}.pdf`);
-    }
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -120,7 +83,7 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
         </div>
         <DialogFooter className="p-6 bg-white border-t">
             <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>Fermer</Button>
-             <Button onClick={generatePdf} variant="outline">
+             <Button onClick={handlePrint} variant="outline">
                 <Download className="mr-2 h-4 w-4" />
                 Télécharger en PDF
             </Button>

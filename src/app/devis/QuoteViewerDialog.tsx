@@ -36,7 +36,7 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
         const printStyles = `
           @page {
             size: A4;
-            margin: 2.5cm !important;
+            margin: 0 !important;
           }
           @media print {
             body { 
@@ -63,54 +63,6 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
       }
     }
   };
-  
-  const generatePdf = async () => {
-    const { default: jsPDF } = await import('jspdf');
-    const { default: html2canvas } = await import('html2canvas');
-    const content = document.getElementById('quote-content');
-    if(content){
-        // Reduced scale from 2 to 1 and changed image format to jpeg for better compression.
-        const canvas = await html2canvas(content, { scale: 1 });
-        const imgData = canvas.toDataURL('image/jpeg', 0.90); // 90% quality
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
-        const ratio = canvasWidth / canvasHeight;
-        let width = pdfWidth;
-        let height = width / ratio;
-        
-        // Handle multi-page content
-        const pageHeightInPixels = height * (pdfHeight/width) * ratio;
-        if (canvasHeight > pageHeightInPixels) {
-          let yPosition = 0;
-          let remainingHeight = canvasHeight;
-          const pageCanvas = document.createElement('canvas');
-          pageCanvas.width = canvasWidth;
-          pageCanvas.height = pageHeightInPixels;
-          const pageCtx = pageCanvas.getContext('2d');
-
-
-          while (remainingHeight > 0) {
-            pageCtx?.drawImage(canvas, 0, yPosition, canvasWidth, pageCanvas.height, 0, 0, pageCanvas.width, pageCanvas.height);
-            const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.90);
-            pdf.addImage(pageImgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-            
-            yPosition += pageCanvas.height;
-            remainingHeight -= pageCanvas.height;
-
-            if (remainingHeight > 0) {
-              pdf.addPage();
-            }
-          }
-        } else {
-           pdf.addImage(imgData, 'JPEG', 0, 0, width, height);
-        }
-
-        pdf.save(`Proforma_${quote.quoteNumber}.pdf`);
-    }
-  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -130,7 +82,7 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
         </div>
         <DialogFooter className="p-6 bg-white border-t">
             <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>Fermer</Button>
-            <Button onClick={generatePdf} variant="outline">
+            <Button onClick={handlePrint} variant="outline">
                 <Download className="mr-2 h-4 w-4" />
                 PDF
             </Button>
