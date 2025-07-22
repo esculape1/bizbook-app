@@ -27,14 +27,17 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     if (printContent) {
       const printWindow = window.open('', '_blank');
       if (printWindow) {
-        printWindow.document.write('<html><head><title>Facture</title>');
+        const title = `Facture - ${invoice.invoiceNumber}`;
+        printWindow.document.write(`<html><head><title>${title}</title>`);
         
         const styles = Array.from(document.styleSheets)
           .map(styleSheet => {
             try {
+              // @ts-ignore
               return Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('');
             } catch (e) {
               console.warn("Could not read stylesheet, linking instead", e);
+              // @ts-ignore
               return `<link rel="stylesheet" href="${styleSheet.href}">`;
             }
           }).join('\n');
@@ -42,7 +45,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
         const printStyles = `
           @page {
             size: A4;
-            margin: 0 !important;
+            margin: 2cm;
           }
           @media print {
             body { 

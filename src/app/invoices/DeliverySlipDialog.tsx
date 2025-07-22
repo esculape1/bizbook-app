@@ -22,13 +22,16 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
     if (printContent) {
       const printWindow = window.open('', '_blank');
       if (printWindow) {
-        printWindow.document.write('<html><head><title>Bordereau de Livraison</title>');
+        const title = `Bordereau - ${invoice.invoiceNumber}`;
+        printWindow.document.write(`<html><head><title>${title}</title>`);
         
         const styles = Array.from(document.styleSheets)
           .map(styleSheet => {
             try {
+              // @ts-ignore
               return Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('');
             } catch (e) {
+              // @ts-ignore
               return `<link rel="stylesheet" href="${styleSheet.href}">`;
             }
           }).join('\n');

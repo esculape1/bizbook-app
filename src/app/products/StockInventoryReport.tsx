@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -27,13 +28,16 @@ export function StockInventoryReport({ products, settings }: StockInventoryRepor
     if (printContent) {
       const printWindow = window.open('', '_blank');
       if (printWindow) {
-        printWindow.document.write('<html><head><title>Rapport d\'Inventaire</title>');
+        const title = `Inventaire_du_Stock_${format(reportDate, "yyyy-MM-dd")}`;
+        printWindow.document.write(`<html><head><title>${title}</title>`);
         
         const styles = Array.from(document.styleSheets)
           .map(styleSheet => {
             try {
+              // @ts-ignore
               return Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('');
             } catch (e) {
+              // @ts-ignore
               return `<link rel="stylesheet" href="${styleSheet.href}">`;
             }
           }).join('\n');
