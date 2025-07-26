@@ -15,7 +15,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
     setTotalInWordsString(numberToWordsFr(quote.totalAmount, settings.currency));
   }, [quote.totalAmount, settings.currency]);
 
-  const ITEMS_PER_PAGE = 15;
+  const ITEMS_PER_PAGE = 10;
   const pages = [];
   for (let i = 0; i < quote.items.length; i += ITEMS_PER_PAGE) {
     pages.push(quote.items.slice(i, i + ITEMS_PER_PAGE));
@@ -95,6 +95,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                       <p className="font-bold text-sm text-[#1f4e78]">{settings.legalName || settings.companyName}</p>
                       <p>{settings.companyAddress}</p>
                       <p>Tel: {settings.companyPhone}</p>
+                      <p>IFU: {settings.companyIfu} / RCCM: {settings.companyRccm}</p>
                       <p>Régime fiscal: CME DGI Ouaga II</p>
                     </div>
 
@@ -152,8 +153,8 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                 {/* Page Footer */}
                 <footer className="pt-2 mt-auto">
                     {isLastPage && (
-                      <div className="flex justify-end items-start text-xs">
-                          <div className="w-2/5">
+                      <div className="flex justify-between items-start text-xs">
+                         <div className="w-3/5">
                             <table className="w-full border-collapse">
                                 <tbody>
                                   <tr className="border border-gray-400">
@@ -178,16 +179,16 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                                 <p className="font-semibold">Arrêtée la présente proforma à la somme de :</p>
                                 <p className="italic">{totalInWordsString}</p>
                             </div>
-                            <div className="mt-8 text-center">
+                          </div>
+                          <div className="w-2/5 text-center pt-8">
                                 <p className="font-bold">{settings.managerName}</p>
-                            </div>
                           </div>
                       </div>
                     )}
                   
                     <div className="text-center text-gray-700 text-[8pt] border-t-2 border-[#002060] pt-1 mt-4">
-                      <p>{settings.companyAddress} RCCM: {settings.companyRccm} IFU: {settings.companyIfu}</p>
-                      <p>CMF N° {settings.companyName} Tel: {settings.companyPhone} E-mail: {client.email}</p>
+                       <p>{settings.companyAddress} RCCM: {settings.companyRccm} IFU: {settings.companyIfu}</p>
+                       <p>CMF N° 10001-010614200107 Tel: {settings.companyPhone} E-mail: dlgbiomed@gmail.com</p>
                   </div>
                 </footer>
               </div>
