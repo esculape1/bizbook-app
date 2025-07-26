@@ -187,7 +187,7 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
       const yearPrefix = `FACT-${currentYear}-`;
 
       const latestInvoiceForYear = allInvoices
-        .filter(inv => inv.invoiceNumber.startsWith(yearPrefix))
+        .filter(inv => inv.invoiceNumber && inv.invoiceNumber.startsWith(yearPrefix))
         .sort((a, b) => {
             const numA = parseInt(a.invoiceNumber.replace(yearPrefix, ''), 10);
             const numB = parseInt(b.invoiceNumber.replace(yearPrefix, ''), 10);
@@ -196,7 +196,10 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
         
       let newInvoiceSuffix = 1;
       if (latestInvoiceForYear) {
-          newInvoiceSuffix = parseInt(latestInvoiceForYear.invoiceNumber.replace(yearPrefix, ''), 10) + 1;
+          const lastSuffix = parseInt(latestInvoiceForYear.invoiceNumber.replace(yearPrefix, ''), 10);
+          if (!isNaN(lastSuffix)) {
+              newInvoiceSuffix = lastSuffix + 1;
+          }
       }
       
       const newInvoiceNumber = `${yearPrefix}${newInvoiceSuffix.toString().padStart(3, '0')}`;
