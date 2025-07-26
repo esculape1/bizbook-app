@@ -9,7 +9,7 @@ import Image from 'next/image';
 export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: Invoice, client: Client, settings: Settings }) {
   const deliverySlipNumber = `BL-${invoice.invoiceNumber}`;
   
-  const ITEMS_PER_PAGE = 16;
+  const ITEMS_PER_PAGE = 15;
   const pages = [];
   for (let i = 0; i < invoice.items.length; i += ITEMS_PER_PAGE) {
     pages.push(invoice.items.slice(i, i + ITEMS_PER_PAGE));
@@ -88,7 +88,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
                     <div className="w-1/2">
                       <p className="font-bold text-sm text-[#1f4e78]">{settings.legalName || settings.companyName}</p>
                       <p>{settings.companyAddress}</p>
-                      <p>Tel: {settings.companyPhone}</p>
+                      <p>Tél: {settings.companyPhone}</p>
                       <p>IFU: {settings.companyIfu} / RCCM: {settings.companyRccm}</p>
                       <p>Régime fiscal: CME DGI Ouaga II</p>
                     </div>
