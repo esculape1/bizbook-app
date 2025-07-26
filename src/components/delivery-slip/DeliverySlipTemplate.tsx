@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Image from 'next/image';
 
-export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlipTemplateProps) {
+export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: Invoice, client: Client, settings: Settings }) {
   const deliverySlipNumber = `BL-${invoice.invoiceNumber}`;
   
   const ITEMS_PER_PAGE = 20;
@@ -21,7 +21,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlip
         @media print {
           @page {
             size: A4;
-            margin: 20mm 10mm 20mm 0; /* No left margin because of the blue bar */
+            margin: 0; 
           }
           body {
             -webkit-print-color-adjust: exact;
@@ -44,7 +44,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlip
                       pageBreakAfter: isLastPage ? 'auto' : 'always',
                   }}>
                       {/* Decorative Bar */}
-                      <div className="absolute top-0 left-0 h-full w-[1cm] bg-primary/80"></div>
+                      <div className="absolute top-0 left-0 h-full w-[10mm] bg-primary/80"></div>
 
                       <div style={{
                           display: 'flex',
@@ -52,8 +52,8 @@ export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlip
                           flexGrow: 1,
                           boxSizing: 'border-box',
                           padding: '20mm 10mm 20mm 10mm',
-                          marginLeft: '1cm',
-                          width: 'calc(210mm - 1cm)',
+                          marginLeft: '10mm',
+                          width: 'calc(210mm - 10mm)',
                       }}>
                           {/* Header */}
                           <header className="flex justify-between items-start mb-8">
@@ -129,7 +129,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlip
                           </main>
                           
                           {/* Footer */}
-                          <footer className="mt-4">
+                          <footer className="mt-auto pt-4">
                           {isLastPage && (
                               <div className="flex justify-between items-start mt-8 pt-4 border-t-2 border-dashed">
                                   <div className="w-2/5 text-center">

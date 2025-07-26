@@ -164,7 +164,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
               </main>
 
               {/* Page Footer */}
-              <footer className="mt-4">
+              <footer className="mt-auto pt-4">
                  {isLastPage && (
                     <div className="flex justify-between items-start">
                         <div className="w-2/3 pt-2">
