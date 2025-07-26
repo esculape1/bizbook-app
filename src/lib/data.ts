@@ -392,7 +392,7 @@ const defaultSettings: Settings = {
   companyIfu: 'Votre numéro IFU',
   companyRccm: 'Votre numéro RCCM',
   currency: 'XOF',
-  logoUrl: 'https://placehold.co/80x80.png',
+  logoUrl: null,
   invoiceNumberFormat: 'PREFIX-YEAR-NUM',
   invoiceTemplate: 'detailed',
 };

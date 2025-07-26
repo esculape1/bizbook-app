@@ -17,7 +17,7 @@ const settingsSchema = z.object({
   companyIfu: z.string().min(1, { message: "L'IFU est requis." }),
   companyRccm: z.string().min(1, { message: "Le RCCM est requis." }),
   currency: z.enum(['EUR', 'USD', 'GBP', 'XOF']),
-  logoUrl: z.string().optional(),
+  logoUrl: z.string().optional().nullable(),
   invoiceNumberFormat: z.enum(['YEAR-NUM', 'PREFIX-YEAR-NUM', 'PREFIX-NUM']),
   invoiceTemplate: z.enum(['modern', 'classic', 'simple', 'detailed']),
 });

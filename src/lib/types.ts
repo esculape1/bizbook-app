@@ -148,7 +148,7 @@ export type Settings = {
   companyIfu: string;
   companyRccm: string;
   currency: 'EUR' | 'USD' | 'GBP' | 'XOF';
-  logoUrl?: string;
+  logoUrl?: string | null;
   invoiceNumberFormat: 'PREFIX-YEAR-NUM' | 'YEAR-NUM' | 'PREFIX-NUM';
   invoiceTemplate: 'modern' | 'classic' | 'simple' | 'detailed';
 };

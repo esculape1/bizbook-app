@@ -2,46 +2,11 @@
 'use client';
 
 import type { Invoice, Client, Settings } from '@/lib/types';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, numberToWordsFr } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Image from 'next/image';
-import { ToWords } from 'to-words';
 import { useState, useEffect } from 'react';
-
-// Helper function to convert number to French words for currency
-const numberToWordsFr = (amount: number, currency: Settings['currency']): string => {
-    const currencyInfo = {
-        EUR: { name: 'Euro', plural: 'Euros', fractionalUnit: { name: 'Centime', plural: 'Centimes' } },
-        USD: { name: 'Dollar', plural: 'Dollars', fractionalUnit: { name: 'Centime', plural: 'Centimes' } },
-        GBP: { name: 'Livre Sterling', plural: 'Livres Sterling', fractionalUnit: { name: 'Penny', plural: 'Pence' } },
-        XOF: { name: 'Franc CFA', plural: 'Francs CFA', fractionalUnit: { name: '', plural: '' } }, // No fractional part for XOF
-    };
-    
-    const selectedCurrency = currencyInfo[currency];
-
-    const toWordsInstance = new ToWords({
-        localeCode: 'fr-FR',
-        converterOptions: {
-            currency: true,
-            ignoreDecimal: !selectedCurrency.fractionalUnit.name,
-            currencyOptions: {
-                name: selectedCurrency.name,
-                plural: selectedCurrency.plural,
-                symbol: '', // We don't need the symbol in the words
-                fractionalUnit: {
-                    name: selectedCurrency.fractionalUnit.name,
-                    plural: selectedCurrency.fractionalUnit.plural,
-                    symbol: '',
-                },
-            }
-        }
-    });
-    
-    let words = toWordsInstance.convert(amount);
-    words = words.replace(/ et zéro centimes?/i, '').replace(/ seulement/i, '');
-    return words.charAt(0).toUpperCase() + words.slice(1);
-};
 
 export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoice, client: Client, settings: Settings }) {
   const [totalInWordsString, setTotalInWordsString] = useState('Chargement...');
@@ -49,11 +14,14 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
   useEffect(() => {
     setTotalInWordsString(numberToWordsFr(invoice.totalAmount, settings.currency));
   }, [invoice.totalAmount, settings.currency]);
-  
-  const ITEMS_PER_PAGE = 10;
+
+  const ITEMS_PER_PAGE = 15;
   const pages = [];
   for (let i = 0; i < invoice.items.length; i += ITEMS_PER_PAGE) {
     pages.push(invoice.items.slice(i, i + ITEMS_PER_PAGE));
+  }
+   if (pages.length === 0) {
+    pages.push([]);
   }
 
   return (
@@ -73,7 +41,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
           }
         }
       `}</style>
-      <div id="invoice-content" className="printable-area bg-gray-50 text-gray-800 font-sans">
+      <div id="invoice-content" className="printable-area bg-gray-50 text-black font-sans text-[10pt]">
         {pages.map((pageItems, pageIndex) => {
           const isLastPage = pageIndex === pages.length - 1;
           const emptyRowsCount = ITEMS_PER_PAGE - pageItems.length;
@@ -85,86 +53,95 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
               display: 'flex',
               flexDirection: 'column',
               boxSizing: 'border-box',
-              padding: '20mm 10mm 20mm 10mm',
             }}>
-              {/* Decorative Bar */}
-              <div className="absolute top-0 left-0 h-full w-[10mm] bg-primary/80"></div>
+              {/* Blue sidebar */}
+              <div className="absolute top-0 left-0 h-full w-[8mm] bg-[#002060]"></div>
               
               <div style={{
                   display: 'flex',
                   flexDirection: 'column',
                   flexGrow: 1,
-                  paddingLeft: '10mm',
+                  padding: '10mm 10mm 10mm 15mm',
               }}>
                 {/* Header */}
-                <header className="flex justify-between items-start mb-8 text-sm">
-                    <div className="w-1/2 space-y-2">
-                        <p className="font-semibold text-gray-500">DE</p>
-                        {settings.logoUrl && (
-                            <Image 
-                                src={settings.logoUrl} 
-                                alt={`${settings.companyName} logo`} 
-                                width={80}
-                                height={40} 
-                                className="object-contain"
-                                data-ai-hint="logo"
-                            />
-                        )}
-                        <div className="space-y-px text-xs leading-snug">
-                            <p className="font-bold text-base">{settings.companyName}</p>
-                            <p>{settings.legalName}</p>
-                            <p>{settings.companyAddress}</p>
-                            <p>Tél: {settings.companyPhone}</p>
-                            <p>IFU: {settings.companyIfu} / RCCM: {settings.companyRccm}</p>
-                        </div>
-                    </div>
-                    <div className="w-1/2 text-right">
-                        <h1 className="text-4xl font-bold text-gray-900">FACTURE</h1>
-                        <p className="text-base font-semibold mt-1">{invoice.invoiceNumber}</p>
-                        <p className="text-xs text-gray-600 mt-2">Date: {format(new Date(invoice.date), 'd MMMM yyyy', { locale: fr })}</p>
-                        <p className="text-xs text-gray-600">Échéance: {format(new Date(invoice.dueDate), 'd MMMM yyyy', { locale: fr })}</p>
+                <header className="mb-4">
+                  <div className="flex justify-between items-start">
+                      {/* Left Part: Logo & Title */}
+                      <div className="w-2/3">
+                          {settings.logoUrl && (
+                              <Image 
+                                  src={settings.logoUrl} 
+                                  alt={`${settings.companyName} logo`} 
+                                  width={80}
+                                  height={40} 
+                                  className="object-contain"
+                                  data-ai-hint="logo"
+                              />
+                          )}
+                           <h1 className="text-2xl font-bold text-[#1f4e78] mt-2">FACTURE DEFINITIVE</h1>
+                      </div>
 
-                        <div className="mt-6 text-left">
-                            <p className="font-semibold text-gray-500">À</p>
-                            <div className="space-y-px text-xs leading-snug">
-                                <p className="font-bold text-base">{client.name}</p>
-                                <p>{client.address}</p>
-                                <p>Contact: {client.phone}</p>
-                                {client.ifu && <p>N° IFU: {client.ifu}</p>}
-                            </div>
-                        </div>
+                      {/* Right Part: Date & Invoice Number */}
+                      <div className="w-1/3 text-right text-xs">
+                          <p><strong>DATE:</strong> {format(new Date(invoice.date), 'dd/MM/yyyy', { locale: fr })}</p>
+                          <p><strong>N°:</strong> {invoice.invoiceNumber}</p>
+                      </div>
+                  </div>
+
+                  <div className="flex justify-between items-start mt-4 text-xs">
+                    {/* Company Info */}
+                    <div className="w-1/2">
+                      <p className="font-bold text-sm text-[#1f4e78]">{settings.legalName || settings.companyName}</p>
+                      <p>{settings.companyAddress}</p>
+                      <p>Tel: {settings.companyPhone}</p>
+                      <p>Régime fiscal: CME DGI Ouaga II</p>
                     </div>
+
+                    {/* Client Info */}
+                    <div className="w-1/2 pl-4">
+                      <p className="font-bold underline">Client:</p>
+                      <p className="font-bold">{client.name}</p>
+                      <p>{client.address}</p>
+                      <p>Tel: {client.phone}</p>
+                      <p>IFU: {client.ifu}</p>
+                      <p>RCCM: {client.rccm}</p>
+                    </div>
+                  </div>
+
+                   <div className="text-xs mt-2">
+                        <p><strong>Libellé:</strong> Vente de matériel médical</p>
+                   </div>
                 </header>
                 
                 <main className="flex-grow">
                   {/* Items Table */}
                   <table className="w-full border-collapse text-xs">
-                    <thead className="bg-gray-100">
+                    <thead className="bg-[#002060] text-white">
                       <tr>
-                        <th className="py-2 px-2 text-left font-semibold uppercase w-[15%] border border-gray-300">Référence</th>
-                        <th className="py-2 px-2 text-left font-semibold uppercase w-[40%] border border-gray-300">Désignation</th>
-                        <th className="py-2 px-2 text-right font-semibold uppercase w-[15%] border border-gray-300">Prix U.</th>
-                        <th className="py-2 px-2 text-right font-semibold uppercase w-[10%] border border-gray-300">Quantité</th>
-                        <th className="py-2 px-2 text-right font-semibold uppercase w-[20%] border border-gray-300">Total</th>
+                        <th className="py-1 px-2 text-left font-bold w-[15%] border-r border-white">REFERENCE</th>
+                        <th className="py-1 px-2 text-left font-bold w-[45%] border-r border-white">DESIGNATION</th>
+                        <th className="py-1 px-2 text-right font-bold w-[15%] border-r border-white">PRIX</th>
+                        <th className="py-1 px-2 text-center font-bold w-[10%] border-r border-white">Qté</th>
+                        <th className="py-1 px-2 text-right font-bold w-[15%]">TOTAL</th>
                       </tr>
                     </thead>
                     <tbody>
                       {pageItems.map((item, index) => (
-                        <tr key={index}>
-                          <td className="py-1 px-2 border border-gray-300 h-8 align-middle">{item.reference}</td>
-                          <td className="py-1 px-2 border border-gray-300 align-middle font-semibold">{item.productName}</td>
-                          <td className="py-1 px-2 border border-gray-300 text-right align-middle">{formatCurrency(item.unitPrice, settings.currency)}</td>
-                          <td className="py-1 px-2 border border-gray-300 text-center align-middle">{item.quantity}</td>
-                          <td className="py-1 px-2 border border-gray-300 text-right align-middle font-semibold">{formatCurrency(item.total, settings.currency)}</td>
+                        <tr key={index} className="border-b border-gray-400">
+                          <td className="py-1 px-2 border-l border-r border-gray-400 align-middle">{item.reference}</td>
+                          <td className="py-1 px-2 border-r border-gray-400 align-middle font-bold">{item.productName}</td>
+                          <td className="py-1 px-2 border-r border-gray-400 text-right align-middle">{formatCurrency(item.unitPrice, settings.currency)}</td>
+                          <td className="py-1 px-2 border-r border-gray-400 text-center align-middle">{item.quantity}</td>
+                          <td className="py-1 px-2 border-r border-gray-400 text-right align-middle font-semibold">{formatCurrency(item.total, settings.currency)}</td>
                         </tr>
                       ))}
                       {isLastPage && Array.from({ length: emptyRowsCount }).map((_, index) => (
-                        <tr key={`empty-${index}`}>
-                          <td className="py-1 px-2 border border-gray-300 h-8">&nbsp;</td>
-                          <td className="py-1 px-2 border border-gray-300"></td>
-                          <td className="py-1 px-2 border border-gray-300"></td>
-                          <td className="py-1 px-2 border border-gray-300"></td>
-                          <td className="py-1 px-2 border border-gray-300"></td>
+                        <tr key={`empty-${index}`} className="border-b border-gray-400 h-[24px]">
+                          <td className="border-l border-r border-gray-400">&nbsp;</td>
+                          <td className="border-r border-gray-400"></td>
+                          <td className="border-r border-gray-400"></td>
+                          <td className="border-r border-gray-400"></td>
+                          <td className="border-r border-gray-400"></td>
                         </tr>
                       ))}
                     </tbody>
@@ -172,51 +149,44 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                 </main>
 
                 {/* Page Footer */}
-                <footer className="pt-4 mt-auto">
+                <footer className="pt-2 mt-auto">
                     {isLastPage && (
-                      <div className="flex justify-between items-start text-xs mb-8">
-                          <div className="w-1/2 pt-2">
-                              <p className="font-semibold text-gray-700">Arrêtée la présente facture à la somme de :</p>
-                              <p className="italic text-gray-600">{totalInWordsString}</p>
-                          </div>
+                      <div className="flex justify-end items-start text-xs">
                           <div className="w-2/5">
-                            <table className="w-full">
+                            <table className="w-full border-collapse">
                                 <tbody>
-                                  <tr>
-                                      <td className="py-1 pr-4 text-gray-600">Montant total:</td>
-                                      <td className="py-1 text-right font-semibold">{formatCurrency(invoice.subTotal, settings.currency)}</td>
+                                  <tr className="border border-gray-400">
+                                      <td className="p-1 pr-4 font-bold">MONTANT TOTAL HORS TAXE:</td>
+                                      <td className="p-1 text-right font-semibold">{formatCurrency(invoice.subTotal, settings.currency)}</td>
                                   </tr>
-                                  <tr>
-                                      <td className="py-1 pr-4 text-gray-600">Remise ({invoice.discount}%):</td>
-                                      <td className="py-1 text-right font-semibold">-{formatCurrency(invoice.discountAmount, settings.currency)}</td>
+                                   <tr className="border border-gray-400">
+                                      <td className="p-1 pr-4 font-bold">REMISE {invoice.discount}%:</td>
+                                      <td className="p-1 text-right font-semibold">{formatCurrency(invoice.discountAmount, settings.currency)}</td>
                                   </tr>
-                                  <tr>
-                                      <td className="py-1 pr-4 text-gray-600">TVA ({invoice.vat}%):</td>
-                                      <td className="py-1 text-right font-semibold">+{formatCurrency(invoice.vatAmount, settings.currency)}</td>
+                                  <tr className="border border-gray-400">
+                                      <td className="p-1 pr-4 font-bold">TVA {invoice.vat}%:</td>
+                                      <td className="p-1 text-right font-semibold">{formatCurrency(invoice.vatAmount, settings.currency)}</td>
                                   </tr>
-                                  <tr className="border-t-2 border-gray-400 font-bold text-sm">
-                                      <td className="pt-1 pr-4">Montant Total TTC:</td>
-                                      <td className="pt-1 text-right">{formatCurrency(invoice.totalAmount, settings.currency)}</td>
+                                  <tr className="border border-gray-400 bg-gray-200 font-bold">
+                                      <td className="p-1 pr-4">MONTANT TOTAL TTC:</td>
+                                      <td className="p-1 text-right">{formatCurrency(invoice.totalAmount, settings.currency)}</td>
                                   </tr>
                                 </tbody>
                             </table>
+                            <div className="mt-2">
+                                <p className="font-semibold">Arrêtée la présente facture définitive à la somme de :</p>
+                                <p className="italic">{totalInWordsString}</p>
+                            </div>
+                            <div className="mt-8 text-center">
+                                <p className="font-bold">{settings.managerName}</p>
+                            </div>
                           </div>
                       </div>
                     )}
-                    {isLastPage && (
-                        <div className="flex justify-end text-xs mb-4">
-                            <div className="w-2/5 text-center">
-                                <p className="font-semibold">Signature et Cachet</p>
-                                <div className="mt-16 border-b border-gray-400"></div>
-                                <p className="mt-1">{settings.managerName}</p>
-                            </div>
-                        </div>
-                    )}
                   
-                    <div className="text-center text-gray-500 text-xs border-t pt-2">
-                      <p>Merci de votre confiance.</p>
-                      <p>{settings.companyName} - {settings.legalName} - Tél: {settings.companyPhone}</p>
-                      <p className="mt-2">Page {pageIndex + 1} / {pages.length}</p>
+                    <div className="text-center text-gray-700 text-[8pt] border-t-2 border-[#002060] pt-1 mt-4">
+                      <p>{settings.companyAddress} RCCM: {settings.companyRccm} IFU: {settings.companyIfu}</p>
+                      <p>CMF N° {settings.companyName} Tel: {settings.companyPhone} E-mail: {client.email}</p>
                   </div>
                 </footer>
               </div>

@@ -54,7 +54,7 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
       // Combine the form data with the logo from state before saving.
       const finalData: SettingsFormValues = {
         ...data,
-        logoUrl: logoPreview || "",
+        logoUrl: logoPreview || null,
       };
 
       const result = await saveSettings(finalData);
