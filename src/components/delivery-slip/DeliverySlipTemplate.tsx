@@ -9,7 +9,7 @@ import Image from 'next/image';
 export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: Invoice, client: Client, settings: Settings }) {
   const deliverySlipNumber = `BL-${invoice.invoiceNumber}`;
   
-  const ITEMS_PER_PAGE = 20;
+  const ITEMS_PER_PAGE = 10;
   const pages = [];
   for (let i = 0; i < invoice.items.length; i += ITEMS_PER_PAGE) {
     pages.push(invoice.items.slice(i, i + ITEMS_PER_PAGE));
@@ -21,42 +21,46 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
         @media print {
           @page {
             size: A4;
-            margin: 0; 
+            margin: 20mm 10mm 20mm 10mm;
           }
           body {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+          }
+          .no-break-inside {
+            page-break-inside: avoid;
+          }
+          .page-container {
+             page-break-after: always;
           }
         }
       `}</style>
       <div id="delivery-slip-content" className="printable-area bg-gray-50 text-gray-800 font-serif" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
           {pages.map((pageItems, pageIndex) => {
               const isLastPage = pageIndex === pages.length - 1;
-              const emptyRowsCount = isLastPage ? Math.max(0, ITEMS_PER_PAGE - pageItems.length - 5) : ITEMS_PER_PAGE - pageItems.length;
+              const emptyRowsCount = isLastPage ? Math.max(0, ITEMS_PER_PAGE - pageItems.length - 5) : Math.max(0, ITEMS_PER_PAGE - pageItems.length);
 
               return (
-                  <div key={pageIndex} className="bg-white" style={{
+                  <div key={pageIndex} className="page-container bg-white" style={{
                       width: '210mm',
                       height: '297mm',
                       display: 'flex',
                       flexDirection: 'column',
                       position: 'relative',
-                      pageBreakAfter: isLastPage ? 'auto' : 'always',
+                      boxSizing: 'border-box',
                   }}>
                       {/* Decorative Bar */}
                       <div className="absolute top-0 left-0 h-full w-[10mm] bg-primary/80"></div>
-
+                      
                       <div style={{
                           display: 'flex',
                           flexDirection: 'column',
                           flexGrow: 1,
-                          boxSizing: 'border-box',
                           padding: '20mm 10mm 20mm 10mm',
-                          marginLeft: '10mm',
-                          width: 'calc(210mm - 10mm)',
+                          boxSizing: 'border-box',
                       }}>
                           {/* Header */}
-                          <header className="flex justify-between items-start mb-8">
+                          <header className="flex justify-between items-start mb-8 pl-[10mm]">
                               <div className="w-1/2">
                                   {settings.logoUrl && (
                                       <Image 
@@ -77,7 +81,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
                           </header>
                           
                           {/* Company and Client info */}
-                          <div className="flex justify-between mb-8 text-sm">
+                          <div className="flex justify-between mb-8 text-sm pl-[10mm]">
                               <div className="w-2/5">
                                   <h2 className="font-bold text-gray-600 border-b pb-1 mb-2 text-base">DE</h2>
                                   <div className="space-y-px">
@@ -97,7 +101,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
                               </div>
                           </div>
                           
-                          <main className="flex-grow">
+                          <main className="flex-grow pl-[10mm]">
                               <table className="w-full border-collapse text-sm">
                                   <thead className="bg-gray-100">
                                       <tr>
@@ -129,9 +133,9 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
                           </main>
                           
                           {/* Footer */}
-                          <footer className="mt-auto pt-4">
+                          <footer className="mt-auto pt-4 pl-[10mm]">
                           {isLastPage && (
-                              <div className="flex justify-between items-start mt-8 pt-4 border-t-2 border-dashed">
+                              <div className="flex justify-between items-start mt-8 pt-4 border-t-2 border-dashed no-break-inside">
                                   <div className="w-2/5 text-center">
                                       <p className="font-bold text-sm">Cachet de l'Entreprise</p>
                                       <div className="mt-16 border-b-2 border-gray-400"></div>
