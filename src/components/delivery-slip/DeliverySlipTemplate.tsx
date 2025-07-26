@@ -9,7 +9,7 @@ import Image from 'next/image';
 export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: Invoice, client: Client, settings: Settings }) {
   const deliverySlipNumber = `BL-${invoice.invoiceNumber}`;
   
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 16;
   const pages = [];
   for (let i = 0; i < invoice.items.length; i += ITEMS_PER_PAGE) {
     pages.push(invoice.items.slice(i, i + ITEMS_PER_PAGE));
@@ -24,7 +24,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
         @media print {
           @page {
             size: A4;
-            margin: 0;
+            margin: 20mm 10mm 20mm 10mm;
           }
           body {
             -webkit-print-color-adjust: exact;
@@ -38,7 +38,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
       <div id="delivery-slip-content" className="printable-area bg-gray-50 text-black font-sans text-[10pt]">
         {pages.map((pageItems, pageIndex) => {
           const isLastPage = pageIndex === pages.length - 1;
-          const emptyRowsCount = ITEMS_PER_PAGE - pageItems.length;
+          const emptyRowsCount = isLastPage ? ITEMS_PER_PAGE - pageItems.length : 0;
 
           return (
             <div key={pageIndex} className="page-container bg-white relative" style={{
@@ -47,6 +47,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
               display: 'flex',
               flexDirection: 'column',
               boxSizing: 'border-box',
+              padding: '20mm 10mm 20mm 10mm',
             }}>
               {/* Blue sidebar */}
               <div className="absolute top-0 left-0 h-full w-[8mm] bg-[#002060]"></div>
@@ -55,7 +56,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
                   display: 'flex',
                   flexDirection: 'column',
                   flexGrow: 1,
-                  padding: '10mm 10mm 10mm 15mm',
+                  paddingLeft: '5mm', // Space for the blue bar
               }}>
                 {/* Header */}
                 <header className="mb-4">
