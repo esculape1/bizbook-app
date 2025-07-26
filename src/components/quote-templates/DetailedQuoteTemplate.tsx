@@ -15,7 +15,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
     setTotalInWordsString(numberToWordsFr(quote.totalAmount, settings.currency));
   }, [quote.totalAmount, settings.currency]);
 
-  const ITEMS_PER_PAGE = 10;
+  const ITEMS_PER_PAGE = 16;
   const pages = [];
   for (let i = 0; i < quote.items.length; i += ITEMS_PER_PAGE) {
     pages.push(quote.items.slice(i, i + ITEMS_PER_PAGE));
@@ -115,7 +115,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                    </div>
                 </header>
                 
-                <main className="flex-grow">
+                <main className="flex-grow flex flex-col">
                   {/* Items Table */}
                   <table className="w-full border-collapse text-xs">
                     <thead className="bg-[#002060] text-white">
@@ -148,44 +148,44 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                       ))}
                     </tbody>
                   </table>
-                </main>
-
-                {/* Page Footer */}
-                <footer className="pt-2 mt-auto">
-                    {isLastPage && (
-                      <div className="flex justify-between items-start text-xs">
-                         <div className="w-3/5">
-                            <table className="w-full border-collapse">
-                                <tbody>
-                                  <tr className="border border-gray-400">
-                                      <td className="p-1 pr-4 font-bold">MONTANT TOTAL HORS TAXE:</td>
-                                      <td className="p-1 text-right font-semibold">{formatCurrency(quote.subTotal, settings.currency)}</td>
-                                  </tr>
-                                   <tr className="border border-gray-400">
-                                      <td className="p-1 pr-4 font-bold">REMISE {quote.discount}%:</td>
-                                      <td className="p-1 text-right font-semibold">{formatCurrency(quote.discountAmount, settings.currency)}</td>
-                                  </tr>
-                                  <tr className="border border-gray-400">
-                                      <td className="p-1 pr-4 font-bold">TVA {quote.vat}%:</td>
-                                      <td className="p-1 text-right font-semibold">{formatCurrency(quote.vatAmount, settings.currency)}</td>
-                                  </tr>
-                                  <tr className="border border-gray-400 bg-gray-200 font-bold">
-                                      <td className="p-1 pr-4">MONTANT TOTAL TTC:</td>
-                                      <td className="p-1 text-right">{formatCurrency(quote.totalAmount, settings.currency)}</td>
-                                  </tr>
-                                </tbody>
-                            </table>
-                            <div className="mt-2">
-                                <p className="font-semibold">Arrêtée la présente proforma à la somme de :</p>
-                                <p className="italic">{totalInWordsString}</p>
-                            </div>
+                  
+                   {isLastPage && (
+                      <div className="flex justify-between items-start text-xs mt-auto pt-2">
+                          <div className="w-3/5">
+                              <table className="w-full border-collapse mb-2">
+                                  <tbody>
+                                    <tr className="border border-gray-400">
+                                        <td className="p-1 pr-4 font-bold">MONTANT TOTAL HORS TAXE:</td>
+                                        <td className="p-1 text-right font-semibold">{formatCurrency(quote.subTotal, settings.currency)}</td>
+                                    </tr>
+                                     <tr className="border border-gray-400">
+                                        <td className="p-1 pr-4 font-bold">REMISE {quote.discount}%:</td>
+                                        <td className="p-1 text-right font-semibold">{formatCurrency(quote.discountAmount, settings.currency)}</td>
+                                    </tr>
+                                    <tr className="border border-gray-400">
+                                        <td className="p-1 pr-4 font-bold">TVA {quote.vat}%:</td>
+                                        <td className="p-1 text-right font-semibold">{formatCurrency(quote.vatAmount, settings.currency)}</td>
+                                    </tr>
+                                    <tr className="border border-gray-400 bg-gray-200 font-bold">
+                                        <td className="p-1 pr-4">MONTANT TOTAL TTC:</td>
+                                        <td className="p-1 text-right">{formatCurrency(quote.totalAmount, settings.currency)}</td>
+                                    </tr>
+                                  </tbody>
+                              </table>
+                              <div className="mt-2">
+                                  <p className="font-semibold">Arrêtée la présente proforma à la somme de :</p>
+                                  <p className="italic">{totalInWordsString}</p>
+                              </div>
                           </div>
                           <div className="w-2/5 text-center pt-8">
                                 <p className="font-bold">{settings.managerName}</p>
                           </div>
                       </div>
                     )}
-                  
+                </main>
+
+                {/* Page Footer */}
+                <footer className="pt-2 mt-auto">
                     <div className="text-center text-gray-700 text-[8pt] border-t-2 border-[#002060] pt-1 mt-4">
                        <p>{settings.companyAddress} RCCM: {settings.companyRccm} IFU: {settings.companyIfu}</p>
                        <p>CMF N° 10001-010614200107 Tel: {settings.companyPhone} E-mail: dlgbiomed@gmail.com</p>
