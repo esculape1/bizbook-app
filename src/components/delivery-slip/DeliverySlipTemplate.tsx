@@ -116,14 +116,14 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
                     <tbody>
                         {pageItems.map((item, index) => (
                           <tr key={index} className="border-b border-gray-400">
-                              <td className="py-2 px-2 border-l border-r border-gray-400 align-middle font-bold">{item.productName}</td>
-                              <td className="py-2 px-2 border-r border-gray-400 text-center align-middle">{item.quantity}</td>
-                              <td className="py-2 px-2 border-r border-gray-400 text-center align-middle"></td>
-                              <td className="py-2 px-2 border-r border-gray-400 text-center align-middle"></td>
+                              <td className="py-1 px-2 border-l border-r border-gray-400 align-middle font-bold">{item.productName}</td>
+                              <td className="py-1 px-2 border-r border-gray-400 text-center align-middle">{item.quantity}</td>
+                              <td className="py-1 px-2 border-r border-gray-400 text-center align-middle"></td>
+                              <td className="py-1 px-2 border-r border-gray-400 text-center align-middle"></td>
                           </tr>
                         ))}
                         {Array.from({ length: emptyRowsCount }).map((_, index) => (
-                        <tr key={`empty-${index}`} className="border-b border-gray-400 h-[36px]">
+                        <tr key={`empty-${index}`} className="border-b border-gray-400 h-[24px]">
                             <td className="border-l border-r border-gray-400">&nbsp;</td>
                             <td className="border-r border-gray-400"></td>
                             <td className="border-r border-gray-400"></td>
