@@ -6,139 +6,153 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Image from 'next/image';
 
-type DeliverySlipTemplateProps = {
-  invoice: Invoice;
-  client: Client;
-  settings: Settings;
-};
-
 export function DeliverySlipTemplate({ invoice, client, settings }: DeliverySlipTemplateProps) {
   const deliverySlipNumber = `BL-${invoice.invoiceNumber}`;
   
-  const ITEMS_PER_PAGE = 11;
+  const ITEMS_PER_PAGE = 20;
   const pages = [];
   for (let i = 0; i < invoice.items.length; i += ITEMS_PER_PAGE) {
     pages.push(invoice.items.slice(i, i + ITEMS_PER_PAGE));
   }
 
   return (
-    <div id="delivery-slip-content" className="printable-area bg-white text-gray-800 font-serif" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
-        {pages.map((pageItems, pageIndex) => {
-            const isLastPage = pageIndex === pages.length - 1;
-            const emptyRowsCount = isLastPage ? Math.max(0, ITEMS_PER_PAGE - pageItems.length) : 0;
+    <>
+      <style>{`
+        @media print {
+          @page {
+            size: A4;
+            margin: 20mm 10mm 20mm 0; /* No left margin because of the blue bar */
+          }
+          body {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+        }
+      `}</style>
+      <div id="delivery-slip-content" className="printable-area bg-gray-50 text-gray-800 font-serif" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
+          {pages.map((pageItems, pageIndex) => {
+              const isLastPage = pageIndex === pages.length - 1;
+              const emptyRowsCount = isLastPage ? Math.max(0, ITEMS_PER_PAGE - pageItems.length - 5) : ITEMS_PER_PAGE - pageItems.length;
 
-            return (
-                <div key={pageIndex} className="relative p-0" style={{ fontSize: '14pt', pageBreakAfter: isLastPage ? 'auto' : 'always', minHeight: '29.7cm', display: 'flex', flexDirection: 'column' }}>
-                    {/* Decorative Bar */}
-                    <div className="absolute top-0 left-0 h-full w-[1cm] bg-primary/80"></div>
+              return (
+                  <div key={pageIndex} className="bg-white" style={{
+                      width: '210mm',
+                      height: '297mm',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      position: 'relative',
+                      pageBreakAfter: isLastPage ? 'auto' : 'always',
+                  }}>
+                      {/* Decorative Bar */}
+                      <div className="absolute top-0 left-0 h-full w-[1cm] bg-primary/80"></div>
 
-                    <div className="pl-[calc(1cm+20px)] pr-[20px] pt-[20px] pb-[20px] flex flex-col flex-grow">
-                        {/* Header */}
-                        <header className="flex justify-between items-start mb-2">
-                            <div className="w-1/3">
-                                {settings.logoUrl && (
-                                    <Image 
-                                        src={settings.logoUrl} 
-                                        alt={`${settings.companyName} logo`} 
-                                        width={128} 
-                                        height={128} 
-                                        className="object-contain"
-                                        data-ai-hint="logo"
-                                    />
-                                )}
-                            </div>
-                            <div className="w-1/2 text-right">
-                                <h1 className="text-lg font-bold text-gray-900" style={{ fontSize: '16pt' }}>BORDEREAU DE LIVRAISON</h1>
-                                <p className="mt-1 text-sm">{deliverySlipNumber}</p>
-                                <p className="mt-0.5 text-xs text-gray-500">Date: {format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}</p>
-                            </div>
-                        </header>
-                        
-                        {/* Items table */}
-                        <main className="flex-grow">
-                            {/* Company and Client info */}
-                            <div className="flex justify-between mb-4" style={{ fontSize: '11pt' }}>
-                                <div className="w-2/5">
-                                    <h2 className="font-bold text-gray-600 border-b pb-1 mb-1" style={{ fontSize: '12pt' }}>DE</h2>
-                                    <div className="space-y-px text-xs">
-                                        <p className="font-bold">{settings.companyName}</p>
-                                        <p>{settings.legalName}</p>
-                                        <p>{settings.companyAddress}</p>
-                                        <p>Tél: {settings.companyPhone}</p>
-                                        <p className="mt-1">IFU: {settings.companyIfu} / RCCM: {settings.companyRccm}</p>
-                                    </div>
-                                </div>
-                                <div className="w-2/5">
-                                    <h2 className="font-bold text-gray-600 border-b pb-1 mb-1" style={{ fontSize: '12pt' }}>À</h2>
-                                    <div className="space-y-px text-xs">
-                                        <p className="font-bold">{client.name}</p>
-                                        <p>{client.address}</p>
-                                        <p>Contact: {client.phone}</p>
-                                        {client.email && <p>Email: {client.email}</p>}
-                                        <p className="mt-1">N° IFU: {client.ifu}</p>
-                                        <p>N° RCCM: {client.rccm}</p>
-                                        <p>Régime Fiscal: {client.taxRegime}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <table className="w-full border-collapse text-sm">
-                                <thead className="bg-gray-100">
-                                    <tr>
-                                        <th className="py-1 px-2 text-left font-bold uppercase w-[40%] border border-gray-300">Désignation</th>
-                                        <th className="py-1 px-2 text-center font-bold uppercase w-[15%] border border-gray-300">Qté Commandée</th>
-                                        <th className="py-1 px-2 text-center font-bold uppercase w-[15%] border border-gray-300">Qté Livrée</th>
-                                        <th className="py-1 px-2 text-center font-bold uppercase w-[30%] border border-gray-300">Observations</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {pageItems.map((item, index) => (
-                                    <tr key={index}>
-                                        <td className="py-1 px-2 border border-gray-300 h-6 align-middle font-bold">{item.productName}</td>
-                                        <td className="py-1 px-2 border border-gray-300 h-6 text-center align-middle">{item.quantity}</td>
-                                        <td className="py-1 px-2 border border-gray-300 h-6 text-center align-middle"></td>
-                                        <td className="py-1 px-2 border border-gray-300 h-6 text-center align-middle"></td>
-                                    </tr>
-                                    ))}
-                                    {Array.from({ length: emptyRowsCount }).map((_, index) => (
-                                    <tr key={`empty-${index}`}>
-                                        <td className="py-1 px-2 h-6 border border-gray-300">&nbsp;</td>
-                                        <td className="py-1 px-2 h-6 border border-gray-300"></td>
-                                        <td className="py-1 px-2 h-6 border border-gray-300"></td>
-                                        <td className="py-1 px-2 h-6 border border-gray-300"></td>
-                                    </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </main>
-                        
-                        {/* Footer */}
-                        <footer className="mt-auto">
-                        {isLastPage && (
-                            <div className="pt-2">
-                                <div className="flex justify-between items-start mt-2 pt-2 border-t-2 border-dashed">
-                                    <div className="w-2/5 text-center">
-                                        <p style={{ fontSize: '10pt' }}>Date de facturation : {format(new Date(invoice.date), 'd MMM yyyy', { locale: fr })}</p>
-                                        <div className="mt-2 border-2 border-dashed h-16 w-28 mx-auto flex items-center justify-center text-gray-400 text-xs">
-                                            Cachet
-                                        </div>
-                                    </div>
-                                    <div className="w-2/5 text-center">
-                                        <p className="font-bold text-sm">Date de reception et visa du client</p>
-                                        <div className="mt-12 border-b-2 border-gray-400 h-8 w-40 mx-auto"></div>
-                                        <p style={{ fontSize: '9pt' }} className="text-gray-500 mt-1">(Précédé de la mention "Reçu pour le compte de")</p>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                        
-                        <div className="text-center text-gray-400 text-xs mt-1">
-                            Page {pageIndex + 1} / {pages.length}
-                        </div>
-                        </footer>
-                    </div>
-                </div>
-            );
-        })}
-    </div>
+                      <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          flexGrow: 1,
+                          boxSizing: 'border-box',
+                          padding: '20mm 10mm 20mm 10mm',
+                          marginLeft: '1cm',
+                          width: 'calc(210mm - 1cm)',
+                      }}>
+                          {/* Header */}
+                          <header className="flex justify-between items-start mb-8">
+                              <div className="w-1/2">
+                                  {settings.logoUrl && (
+                                      <Image 
+                                          src={settings.logoUrl} 
+                                          alt={`${settings.companyName} logo`} 
+                                          width={120} 
+                                          height={60} 
+                                          className="object-contain"
+                                          data-ai-hint="logo"
+                                      />
+                                  )}
+                              </div>
+                              <div className="w-1/2 text-right">
+                                  <h1 className="text-2xl font-bold text-gray-900">BORDEREAU DE LIVRAISON</h1>
+                                  <p className="mt-1 text-base font-semibold">{deliverySlipNumber}</p>
+                                  <p className="mt-2 text-sm text-gray-600">Date: {format(new Date(invoice.date), 'd MMMM yyyy', { locale: fr })}</p>
+                              </div>
+                          </header>
+                          
+                          {/* Company and Client info */}
+                          <div className="flex justify-between mb-8 text-sm">
+                              <div className="w-2/5">
+                                  <h2 className="font-bold text-gray-600 border-b pb-1 mb-2 text-base">DE</h2>
+                                  <div className="space-y-px">
+                                      <p className="font-bold text-base">{settings.companyName}</p>
+                                      <p>{settings.companyAddress}</p>
+                                      <p>Tél: {settings.companyPhone}</p>
+                                      <p className="mt-1">IFU: {settings.companyIfu} / RCCM: {settings.companyRccm}</p>
+                                  </div>
+                              </div>
+                              <div className="w-2/5">
+                                  <h2 className="font-bold text-gray-600 border-b pb-1 mb-2 text-base">À</h2>
+                                  <div className="space-y-px">
+                                      <p className="font-bold text-base">{client.name}</p>
+                                      <p>{client.address}</p>
+                                      <p>Contact: {client.phone}</p>
+                                  </div>
+                              </div>
+                          </div>
+                          
+                          <main className="flex-grow">
+                              <table className="w-full border-collapse text-sm">
+                                  <thead className="bg-gray-100">
+                                      <tr>
+                                          <th className="py-2 px-2 text-left font-bold uppercase w-[40%] border border-gray-300">Désignation</th>
+                                          <th className="py-2 px-2 text-center font-bold uppercase w-[15%] border border-gray-300">Qté Commandée</th>
+                                          <th className="py-2 px-2 text-center font-bold uppercase w-[15%] border border-gray-300">Qté Livrée</th>
+                                          <th className="py-2 px-2 text-center font-bold uppercase w-[30%] border border-gray-300">Observations</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      {pageItems.map((item, index) => (
+                                      <tr key={index} style={{ height: '36px' }}>
+                                          <td className="py-2 px-2 border border-gray-300 align-middle font-bold">{item.productName}</td>
+                                          <td className="py-2 px-2 border border-gray-300 text-center align-middle">{item.quantity}</td>
+                                          <td className="py-2 px-2 border border-gray-300 text-center align-middle"></td>
+                                          <td className="py-2 px-2 border border-gray-300 text-center align-middle"></td>
+                                      </tr>
+                                      ))}
+                                      {Array.from({ length: emptyRowsCount }).map((_, index) => (
+                                      <tr key={`empty-${index}`} style={{ height: '36px' }}>
+                                          <td className="py-2 px-2 border border-gray-300">&nbsp;</td>
+                                          <td className="py-2 px-2 border border-gray-300"></td>
+                                          <td className="py-2 px-2 border border-gray-300"></td>
+                                          <td className="py-2 px-2 border border-gray-300"></td>
+                                      </tr>
+                                      ))}
+                                  </tbody>
+                              </table>
+                          </main>
+                          
+                          {/* Footer */}
+                          <footer className="mt-4">
+                          {isLastPage && (
+                              <div className="flex justify-between items-start mt-8 pt-4 border-t-2 border-dashed">
+                                  <div className="w-2/5 text-center">
+                                      <p className="font-bold text-sm">Cachet de l'Entreprise</p>
+                                      <div className="mt-16 border-b-2 border-gray-400"></div>
+                                  </div>
+                                  <div className="w-2/5 text-center">
+                                      <p className="font-bold text-sm">Visa du Client</p>
+                                      <div className="mt-16 border-b-2 border-gray-400"></div>
+                                      <p className="text-xs text-gray-500 mt-1">(Précédé de la mention "Reçu pour le compte de")</p>
+                                  </div>
+                              </div>
+                          )}
+                          
+                          <div className="text-center text-gray-400 text-xs mt-8">
+                              Page {pageIndex + 1} / {pages.length}
+                          </div>
+                          </footer>
+                      </div>
+                  </div>
+              );
+          })}
+      </div>
+    </>
   );
 }
