@@ -2,7 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { addQuote, getClients, getProducts, updateQuote as updateQuoteInDB, deleteQuote as deleteQuoteFromDB, getQuoteById, addInvoice, updateProduct } from '@/lib/data';
+import { addQuote, getClients, getProducts, updateQuote as updateQuoteInDB, deleteQuote as deleteQuoteFromDB, getQuoteById, addInvoice, updateProduct, getInvoices } from '@/lib/data';
 import { revalidatePath } from 'next/cache';
 import type { Quote, QuoteItem, InvoiceItem } from '@/lib/types';
 import { getSession } from '@/lib/session';
@@ -180,10 +180,30 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
     // Create invoice if status changed to 'Accepted'
     if (status === 'Accepted' && originalQuote.status !== 'Accepted') {
       const invoiceItems: InvoiceItem[] = quoteItems.map(item => ({ ...item }));
+      
+      // Get the next sequential invoice number
+      const allInvoices = await getInvoices();
+      const currentYear = new Date().getFullYear().toString();
+      const yearPrefix = `FACT-${currentYear}-`;
+
+      const latestInvoiceForYear = allInvoices
+        .filter(inv => inv.invoiceNumber.startsWith(yearPrefix))
+        .sort((a, b) => {
+            const numA = parseInt(a.invoiceNumber.replace(yearPrefix, ''), 10);
+            const numB = parseInt(b.invoiceNumber.replace(yearPrefix, ''), 10);
+            return numB - numA;
+        })[0];
+        
+      let newInvoiceSuffix = 1;
+      if (latestInvoiceForYear) {
+          newInvoiceSuffix = parseInt(latestInvoiceForYear.invoiceNumber.replace(yearPrefix, ''), 10) + 1;
+      }
+      
+      const newInvoiceNumber = `${yearPrefix}${newInvoiceSuffix.toString().padStart(3, '0')}`;
 
       // Create invoice
       await addInvoice({
-        invoiceNumber: `FACT-${quoteNumber}`,
+        invoiceNumber: newInvoiceNumber,
         clientId,
         clientName: client.name,
         date: new Date().toISOString(),
