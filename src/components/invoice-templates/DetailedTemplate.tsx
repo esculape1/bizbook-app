@@ -62,33 +62,30 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
         @media print {
           @page {
             size: A4;
-            margin: 20mm 10mm 20mm 10mm; 
+            margin: 0;
           }
           body {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
-          .no-break-inside {
-            page-break-inside: avoid;
-          }
-          .page-container {
+          .page-container:not(:last-child) {
              page-break-after: always;
           }
         }
       `}</style>
-      <div id="invoice-content" className="printable-area bg-gray-50 text-gray-800 font-serif" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
+      <div id="invoice-content" className="printable-area bg-gray-50 text-gray-800 font-sans">
         {pages.map((pageItems, pageIndex) => {
           const isLastPage = pageIndex === pages.length - 1;
-          const emptyRowsCount = isLastPage ? Math.max(0, ITEMS_PER_PAGE - pageItems.length - 5) : Math.max(0, ITEMS_PER_PAGE - pageItems.length);
+          const emptyRowsCount = ITEMS_PER_PAGE - pageItems.length;
 
           return (
-            <div key={pageIndex} className="page-container bg-white" style={{
+            <div key={pageIndex} className="page-container bg-white relative" style={{
               width: '210mm',
-              height: '297mm',
+              minHeight: '297mm',
               display: 'flex',
               flexDirection: 'column',
-              position: 'relative',
               boxSizing: 'border-box',
+              padding: '20mm 10mm 20mm 10mm',
             }}>
               {/* Decorative Bar */}
               <div className="absolute top-0 left-0 h-full w-[10mm] bg-primary/80"></div>
@@ -97,79 +94,77 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                   display: 'flex',
                   flexDirection: 'column',
                   flexGrow: 1,
-                  padding: '20mm 10mm 20mm 10mm',
-                  boxSizing: 'border-box',
+                  paddingLeft: '10mm',
               }}>
                 {/* Header */}
-                <header className="flex justify-between items-start mb-8 pl-[10mm]">
-                  <div className="w-1/2">
-                    <h2 className="font-bold text-gray-600 pb-1 mb-2 text-base">DE</h2>
-                    {settings.logoUrl && (
-                      <Image 
-                          src={settings.logoUrl} 
-                          alt={`${settings.companyName} logo`} 
-                          width={120}
-                          height={60} 
-                          className="object-contain mb-2"
-                          data-ai-hint="logo"
-                      />
-                    )}
-                    <div className="space-y-px text-sm">
-                      <p className="font-bold text-base">{settings.companyName}</p>
-                      <p>{settings.legalName}</p>
-                      <p>{settings.companyAddress}</p>
-                      <p>Tél: {settings.companyPhone}</p>
-                      <p className="mt-1">IFU: {settings.companyIfu} / RCCM: {settings.companyRccm}</p>
+                <header className="flex justify-between items-start mb-8 text-sm">
+                    <div className="w-1/2 space-y-2">
+                        <p className="font-semibold text-gray-500">DE</p>
+                        {settings.logoUrl && (
+                            <Image 
+                                src={settings.logoUrl} 
+                                alt={`${settings.companyName} logo`} 
+                                width={80}
+                                height={40} 
+                                className="object-contain"
+                                data-ai-hint="logo"
+                            />
+                        )}
+                        <div className="space-y-px text-xs leading-snug">
+                            <p className="font-bold text-base">{settings.companyName}</p>
+                            <p>{settings.legalName}</p>
+                            <p>{settings.companyAddress}</p>
+                            <p>Tél: {settings.companyPhone}</p>
+                            <p>IFU: {settings.companyIfu} / RCCM: {settings.companyRccm}</p>
+                        </div>
                     </div>
-                  </div>
-                  <div className="w-1/2 text-right">
-                      <h1 className="text-3xl font-bold text-gray-900 mb-2">FACTURE</h1>
-                      <p className="text-base font-semibold">{invoice.invoiceNumber}</p>
-                      <p className="mt-2 text-sm text-gray-600">Date: {format(new Date(invoice.date), 'd MMMM yyyy', { locale: fr })}</p>
-                      <p className="text-sm text-gray-600">Échéance: {format(new Date(invoice.dueDate), 'd MMMM yyyy', { locale: fr })}</p>
+                    <div className="w-1/2 text-right">
+                        <h1 className="text-4xl font-bold text-gray-900">FACTURE</h1>
+                        <p className="text-base font-semibold mt-1">{invoice.invoiceNumber}</p>
+                        <p className="text-xs text-gray-600 mt-2">Date: {format(new Date(invoice.date), 'd MMMM yyyy', { locale: fr })}</p>
+                        <p className="text-xs text-gray-600">Échéance: {format(new Date(invoice.dueDate), 'd MMMM yyyy', { locale: fr })}</p>
 
-                      <div className="mt-8">
-                          <h2 className="font-bold text-gray-600 pb-1 mb-2 text-base">À</h2>
-                          <div className="space-y-px text-sm">
-                              <p className="font-bold text-base">{client.name}</p>
-                              <p>{client.address}</p>
-                              <p>Contact: {client.phone}</p>
-                              {client.email && <p>Email: {client.email}</p>}
-                              <p className="mt-1">N° IFU: {client.ifu}</p>
-                          </div>
-                      </div>
-                  </div>
+                        <div className="mt-6 text-left">
+                            <p className="font-semibold text-gray-500">À</p>
+                            <div className="space-y-px text-xs leading-snug">
+                                <p className="font-bold text-base">{client.name}</p>
+                                <p>{client.address}</p>
+                                <p>Contact: {client.phone}</p>
+                                {client.ifu && <p>N° IFU: {client.ifu}</p>}
+                            </div>
+                        </div>
+                    </div>
                 </header>
                 
-                <main className="flex-grow pl-[10mm]">
+                <main className="flex-grow">
                   {/* Items Table */}
-                  <table className="w-full border-collapse text-sm">
+                  <table className="w-full border-collapse text-xs">
                     <thead className="bg-gray-100">
                       <tr>
-                        <th className="py-2 px-2 text-left font-bold uppercase w-[15%] border border-gray-300">Référence</th>
-                        <th className="py-2 px-2 text-left font-bold uppercase w-[40%] border border-gray-300">Désignation</th>
-                        <th className="py-2 px-2 text-right font-bold uppercase w-[15%] border border-gray-300">Prix U.</th>
-                        <th className="py-2 px-2 text-right font-bold uppercase w-[10%] border border-gray-300">Quantité</th>
-                        <th className="py-2 px-2 text-right font-bold uppercase w-[15%] border border-gray-300">Total</th>
+                        <th className="py-2 px-2 text-left font-semibold uppercase w-[15%] border border-gray-300">Référence</th>
+                        <th className="py-2 px-2 text-left font-semibold uppercase w-[40%] border border-gray-300">Désignation</th>
+                        <th className="py-2 px-2 text-right font-semibold uppercase w-[15%] border border-gray-300">Prix U.</th>
+                        <th className="py-2 px-2 text-right font-semibold uppercase w-[10%] border border-gray-300">Quantité</th>
+                        <th className="py-2 px-2 text-right font-semibold uppercase w-[20%] border border-gray-300">Total</th>
                       </tr>
                     </thead>
                     <tbody>
                       {pageItems.map((item, index) => (
                         <tr key={index}>
-                          <td className="py-2 px-2 border border-gray-300 text-center align-middle">{item.reference}</td>
-                          <td className="py-2 px-2 border border-gray-300 align-middle font-bold">{item.productName}</td>
-                          <td className="py-2 px-2 border border-gray-300 text-right align-middle">{formatCurrency(item.unitPrice, settings.currency)}</td>
-                          <td className="py-2 px-2 border border-gray-300 text-center align-middle">{item.quantity}</td>
-                          <td className="py-2 px-2 border border-gray-300 text-right align-middle">{formatCurrency(item.total, settings.currency)}</td>
+                          <td className="py-1 px-2 border border-gray-300 h-8 align-middle">{item.reference}</td>
+                          <td className="py-1 px-2 border border-gray-300 align-middle font-semibold">{item.productName}</td>
+                          <td className="py-1 px-2 border border-gray-300 text-right align-middle">{formatCurrency(item.unitPrice, settings.currency)}</td>
+                          <td className="py-1 px-2 border border-gray-300 text-center align-middle">{item.quantity}</td>
+                          <td className="py-1 px-2 border border-gray-300 text-right align-middle font-semibold">{formatCurrency(item.total, settings.currency)}</td>
                         </tr>
                       ))}
-                      {Array.from({ length: emptyRowsCount }).map((_, index) => (
-                        <tr key={`empty-${index}`} style={{ height: '38px' }}>
-                          <td className="py-2 px-2 border border-gray-300">&nbsp;</td>
-                          <td className="py-2 px-2 border border-gray-300"></td>
-                          <td className="py-2 px-2 border border-gray-300"></td>
-                          <td className="py-2 px-2 border border-gray-300"></td>
-                          <td className="py-2 px-2 border border-gray-300"></td>
+                      {isLastPage && Array.from({ length: emptyRowsCount }).map((_, index) => (
+                        <tr key={`empty-${index}`}>
+                          <td className="py-1 px-2 border border-gray-300 h-8">&nbsp;</td>
+                          <td className="py-1 px-2 border border-gray-300"></td>
+                          <td className="py-1 px-2 border border-gray-300"></td>
+                          <td className="py-1 px-2 border border-gray-300"></td>
+                          <td className="py-1 px-2 border border-gray-300"></td>
                         </tr>
                       ))}
                     </tbody>
@@ -177,52 +172,51 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                 </main>
 
                 {/* Page Footer */}
-                <footer className="mt-auto pt-4 pl-[10mm]">
-                  {isLastPage && (
-                      <div className="flex justify-between items-start no-break-inside">
-                          <div className="w-2/3 pt-2">
-                              <p className="font-bold text-gray-700 text-sm">Arrêtée la présente facture à la somme de :</p>
-                              <p className="italic text-sm">{totalInWordsString}</p>
+                <footer className="pt-4 mt-auto">
+                    {isLastPage && (
+                      <div className="flex justify-between items-start text-xs mb-8">
+                          <div className="w-1/2 pt-2">
+                              <p className="font-semibold text-gray-700">Arrêtée la présente facture à la somme de :</p>
+                              <p className="italic text-gray-600">{totalInWordsString}</p>
                           </div>
-                          <div className="w-full max-w-xs text-sm">
-                          <table className="w-full">
-                              <tbody>
-                              <tr>
-                                  <td className="py-1 pr-2 text-gray-600">Montant total:</td>
-                                  <td className="py-1 text-right font-medium">{formatCurrency(invoice.subTotal, settings.currency)}</td>
-                              </tr>
-                              <tr>
-                                  <td className="py-1 pr-2 text-gray-600">Remise ({invoice.discount}%):</td>
-                                  <td className="py-1 text-right font-medium">-{formatCurrency(invoice.discountAmount, settings.currency)}</td>
-                              </tr>
-                              <tr>
-                                  <td className="py-1 pr-2 text-gray-600">TVA ({invoice.vat}%):</td>
-                                  <td className="py-1 text-right font-medium">+{formatCurrency(invoice.vatAmount, settings.currency)}</td>
-                              </tr>
-                              <tr className="border-t-2 border-gray-400 font-bold text-base">
-                                  <td className="pt-1 pr-2">Montant Total TTC:</td>
-                                  <td className="pt-1 text-right">{formatCurrency(invoice.totalAmount, settings.currency)}</td>
-                              </tr>
-                              </tbody>
-                          </table>
+                          <div className="w-2/5">
+                            <table className="w-full">
+                                <tbody>
+                                  <tr>
+                                      <td className="py-1 pr-4 text-gray-600">Montant total:</td>
+                                      <td className="py-1 text-right font-semibold">{formatCurrency(invoice.subTotal, settings.currency)}</td>
+                                  </tr>
+                                  <tr>
+                                      <td className="py-1 pr-4 text-gray-600">Remise ({invoice.discount}%):</td>
+                                      <td className="py-1 text-right font-semibold">-{formatCurrency(invoice.discountAmount, settings.currency)}</td>
+                                  </tr>
+                                  <tr>
+                                      <td className="py-1 pr-4 text-gray-600">TVA ({invoice.vat}%):</td>
+                                      <td className="py-1 text-right font-semibold">+{formatCurrency(invoice.vatAmount, settings.currency)}</td>
+                                  </tr>
+                                  <tr className="border-t-2 border-gray-400 font-bold text-sm">
+                                      <td className="pt-1 pr-4">Montant Total TTC:</td>
+                                      <td className="pt-1 text-right">{formatCurrency(invoice.totalAmount, settings.currency)}</td>
+                                  </tr>
+                                </tbody>
+                            </table>
                           </div>
                       </div>
-                  )}
-                  <div className="flex justify-between items-end mt-12 no-break-inside">
-                      <div className="text-center text-gray-600 text-xs">
-                          <p>Merci de votre confiance.</p>
-                          <p>{settings.companyName} - {settings.legalName} - Tél: {settings.companyPhone}</p>
-                      </div>
-                      {isLastPage && (
-                          <div className="w-2/5 text-center">
-                              <p className="font-bold text-gray-700 text-sm">Signature et Cachet</p>
-                              <div className="mt-16 border-b-2 border-gray-400 h-8 w-full mx-auto"></div>
-                              <p className="text-gray-600 mt-1 text-sm">{settings.managerName}</p>
-                          </div>
-                      )}
-                  </div>
-                  <div className="text-center text-gray-400 text-xs mt-4">
-                      Page {pageIndex + 1} / {pages.length}
+                    )}
+                    {isLastPage && (
+                        <div className="flex justify-end text-xs mb-4">
+                            <div className="w-2/5 text-center">
+                                <p className="font-semibold">Signature et Cachet</p>
+                                <div className="mt-16 border-b border-gray-400"></div>
+                                <p className="mt-1">{settings.managerName}</p>
+                            </div>
+                        </div>
+                    )}
+                  
+                    <div className="text-center text-gray-500 text-xs border-t pt-2">
+                      <p>Merci de votre confiance.</p>
+                      <p>{settings.companyName} - {settings.legalName} - Tél: {settings.companyPhone}</p>
+                      <p className="mt-2">Page {pageIndex + 1} / {pages.length}</p>
                   </div>
                 </footer>
               </div>
