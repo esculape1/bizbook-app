@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -6,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
-import type { ReportData, Client, Settings } from '@/lib/types';
+import type { ReportData, Client, Settings, Invoice } from '@/lib/types';
 import { addDays } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import { generateReport } from './actions';
@@ -38,6 +39,7 @@ export function ReportGenerator({ clients, settings }: ReportGeneratorProps) {
     to: new Date(),
   });
   const [clientId, setClientId] = useState<string>('all');
+  const [invoiceStatus, setInvoiceStatus] = useState<'all' | 'paid' | 'unpaid' | 'cancelled'>('all');
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -47,7 +49,7 @@ export function ReportGenerator({ clients, settings }: ReportGeneratorProps) {
       setReportData(null); // Clear previous report
       const selectedClient = clients.find(c => c.id === clientId);
       const clientName = selectedClient?.name || 'Tous les clients';
-      const result = await generateReport(dateRange, clientId, clientName);
+      const result = await generateReport(dateRange, clientId, clientName, invoiceStatus);
       
       if (!result) {
         toast({
@@ -93,6 +95,20 @@ export function ReportGenerator({ clients, settings }: ReportGeneratorProps) {
                 </SelectContent>
               </Select>
             </div>
+             <div className="flex-1 w-full">
+              <label className="text-sm font-medium mb-1 block">Statut Facture</label>
+              <Select value={invoiceStatus} onValueChange={setInvoiceStatus as (value: string) => void}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Sélectionner un statut" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes</SelectItem>
+                  <SelectItem value="paid">Payées</SelectItem>
+                  <SelectItem value="unpaid">Impayées (partiel inclus)</SelectItem>
+                  <SelectItem value="cancelled">Annulées</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="pt-5">
               <Button onClick={handleGenerateReport} className="w-full md:w-auto" disabled={isPending}>
                 {isPending ? 'Génération...' : 'Générer le rapport'}
@@ -109,7 +125,7 @@ export function ReportGenerator({ clients, settings }: ReportGeneratorProps) {
                 </div>
             </div>
           )}
-          {reportData && !isPending && <ReportDisplay data={reportData} currency={settings.currency} />}
+          {reportData && !isPending && <ReportDisplay data={reportData} currency={settings.currency} settings={settings} />}
 
         </CardContent>
       </Card>

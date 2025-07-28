@@ -2,7 +2,7 @@
 'use server';
 
 import { getInvoices, getExpenses, getProducts } from '@/lib/data';
-import type { ReportData } from '@/lib/types';
+import type { ReportData, Invoice } from '@/lib/types';
 import { isWithinInterval } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 
@@ -10,6 +10,7 @@ export async function generateReport(
     dateRange: DateRange | undefined, 
     clientId: string,
     clientName: string,
+    invoiceStatus: 'all' | 'paid' | 'unpaid' | 'cancelled'
 ): Promise<ReportData | { error: string }> {
     if (!dateRange?.from || !dateRange?.to) {
       return { error: "La période est requise." };
@@ -24,24 +25,38 @@ export async function generateReport(
           getProducts(),
         ]);
 
-        const invoicesInPeriod = allInvoices.filter(inv => 
-          isWithinInterval(new Date(inv.date), { start: startDate, end: endDate }) &&
-          (clientId === 'all' || inv.clientId === clientId) &&
-          inv.status !== 'Cancelled'
-        );
+        const invoicesInPeriod = allInvoices.filter(inv => {
+            const inDate = isWithinInterval(new Date(inv.date), { start: startDate, end: endDate });
+            const clientMatch = clientId === 'all' || inv.clientId === clientId;
+            
+            let statusMatch = true;
+            if (invoiceStatus !== 'all') {
+                if (invoiceStatus === 'unpaid') {
+                    statusMatch = inv.status === 'Unpaid' || inv.status === 'Partially Paid';
+                } else if (invoiceStatus === 'paid') {
+                    statusMatch = inv.status === 'Paid';
+                } else if (invoiceStatus === 'cancelled') {
+                    statusMatch = inv.status === 'Cancelled';
+                }
+            }
+            
+            return inDate && clientMatch && statusMatch;
+        });
         
         const expensesInPeriod = allExpenses.filter(exp => 
           isWithinInterval(new Date(exp.date), { start: startDate, end: endDate })
         );
 
+        const activeInvoices = invoicesInPeriod.filter(inv => inv.status !== 'Cancelled');
+        
         // Calculate report metrics
-        const totalRevenue = invoicesInPeriod
+        const totalRevenue = activeInvoices
             .reduce((sum, inv) => sum + (inv.amountPaid || 0), 0);
         
-        const grossSales = invoicesInPeriod
+        const grossSales = activeInvoices
             .reduce((sum, inv) => sum + inv.totalAmount, 0);
 
-        const totalUnpaid = invoicesInPeriod
+        const totalUnpaid = activeInvoices
             .reduce((sum, inv) => sum + inv.totalAmount - (inv.amountPaid || 0), 0);
 
         const totalExpenses = expensesInPeriod.reduce((sum, exp) => sum + exp.amount, 0);
@@ -51,7 +66,7 @@ export async function generateReport(
         // Calculate Cost of Goods Sold (COGS)
         let costOfGoodsSold = 0;
 
-        invoicesInPeriod.forEach(inv => {
+        activeInvoices.forEach(inv => {
             inv.items.forEach(item => {
                 // Aggregate product sales for the report
                 if (!productSales[item.productId]) {
@@ -81,7 +96,7 @@ export async function generateReport(
               totalUnpaid,
           },
           productSales: Object.values(productSales).sort((a, b) => b.quantitySold - a.quantitySold),
-          unpaidInvoices: invoicesInPeriod.filter(inv => inv.status !== 'Paid'),
+          unpaidInvoices: invoicesInPeriod.filter(inv => inv.status === 'Unpaid' || inv.status === 'Partially Paid'),
           allInvoices: invoicesInPeriod,
           expenses: expensesInPeriod,
         };

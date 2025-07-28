@@ -2,17 +2,18 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { ReportData, Settings, Invoice } from "@/lib/types";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Download } from "lucide-react";
+import { Download, FileDown } from "lucide-react";
 
 type ReportDisplayProps = {
   data: ReportData;
+  settings: Settings;
   currency: Settings['currency'];
 };
 
@@ -48,10 +49,10 @@ const StatCard = ({ title, value, className }: { title: string, value: string, c
     </Card>
 )
 
-export function ReportDisplay({ data, currency }: ReportDisplayProps) {
+export function ReportDisplay({ data, settings, currency }: ReportDisplayProps) {
   if (!data) return null;
 
-  const generatePdf = async () => {
+  const generateFullPdf = async () => {
     if (!data) return;
 
     const { default: jsPDF } = await import('jspdf');
@@ -77,7 +78,7 @@ export function ReportDisplay({ data, currency }: ReportDisplayProps) {
     autoTable(doc, {
         startY: startY + 5,
         body: [
-            ['Chiffre d\'Affaires', formatCurrency(data.summary.totalRevenue, currency)],
+            ['Chiffre d\'Affaires (Encaissé)', formatCurrency(data.summary.totalRevenue, currency)],
             ['Dépenses', formatCurrency(data.summary.totalExpenses, currency)],
             ['Bénéfice Net', formatCurrency(data.summary.netProfit, currency)],
             ['Total Impayé', formatCurrency(data.summary.totalUnpaid, currency)],
@@ -127,7 +128,7 @@ export function ReportDisplay({ data, currency }: ReportDisplayProps) {
         autoTable(doc, {
             startY: startY + 5,
             head: [['N° Facture', 'Client', 'Date', 'Statut', 'Montant']],
-            body: data.allInvoices.map(i => [i.invoiceNumber, i.clientName, format(new Date(i.date), "dd/MM/yyyy"), statusTranslations[i.status], formatCurrency(i.totalAmount, currency)]),
+            body: data.allInvoices.map(i => [i.invoiceNumber, i.clientName, format(new Date(i.date), "dd/MM/yyyy"), statusTranslations[i.status] || i.status, formatCurrency(i.totalAmount, currency)]),
             theme: 'grid',
             headStyles: { fillColor: [80, 80, 80] },
             styles: { fontSize: 10 },
@@ -142,7 +143,49 @@ export function ReportDisplay({ data, currency }: ReportDisplayProps) {
         doc.text(`Page ${i} sur ${pageCount}`, pageWidth - 20, pageHeight - 10);
     }
 
-    const fileName = `Rapport_${data.clientName.replace(/ /g, '_')}_${format(data.startDate, "yyyy-MM-dd")}_au_${format(data.endDate, "yyyy-MM-dd")}.pdf`;
+    const fileName = `Rapport_Complet_${data.clientName.replace(/ /g, '_')}_${format(data.startDate, "yyyy-MM-dd")}_au_${format(data.endDate, "yyyy-MM-dd")}.pdf`;
+    doc.save(fileName);
+  };
+
+  const generateUnpaidPdf = async () => {
+    if (!data?.unpaidInvoices || data.unpaidInvoices.length === 0) return;
+
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
+
+    // Header
+    doc.setFontSize(20);
+    doc.text("Rapport des Factures Impayées", pageWidth / 2, 20, { align: 'center' });
+    doc.setFontSize(12);
+    const reportPeriod = `Période du ${format(data.startDate, "d MMMM yyyy", { locale: fr })} au ${format(data.endDate, "d MMMM yyyy", { locale: fr })}`;
+    doc.text(reportPeriod, pageWidth / 2, 28, { align: 'center' });
+    doc.text(`Client: ${data.clientName}`, pageWidth / 2, 36, { align: 'center' });
+    
+    // Table
+    autoTable(doc, {
+        startY: 50,
+        head: [['N° Facture', 'Date Facture', 'Date Échéance', 'Montant Dû']],
+        body: data.unpaidInvoices.map(i => {
+            const amountDue = i.totalAmount - (i.amountPaid || 0);
+            return [
+                i.invoiceNumber,
+                format(new Date(i.date), "dd/MM/yyyy"),
+                format(new Date(i.dueDate), "dd/MM/yyyy"),
+                formatCurrency(amountDue, currency)
+            ];
+        }),
+        foot: [
+            [{ content: 'Total Impayé', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold' } }, 
+             { content: formatCurrency(data.summary.totalUnpaid, currency), styles: { halign: 'right', fontStyle: 'bold' } }]
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [200, 0, 0] }, // Red
+    });
+
+    const fileName = `Rapport_Impayes_${data.clientName.replace(/ /g, '_')}_${format(data.startDate, "yyyy-MM-dd")}_au_${format(data.endDate, "yyyy-MM-dd")}.pdf`;
     doc.save(fileName);
   };
 
@@ -150,20 +193,28 @@ export function ReportDisplay({ data, currency }: ReportDisplayProps) {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
             <div>
               <CardTitle>Rapport du {format(data.startDate, "d MMMM yyyy", { locale: fr })} au {format(data.endDate, "d MMMM yyyy", { locale: fr })}</CardTitle>
               <CardDescription>Client: {data.clientName}</CardDescription>
             </div>
-            <Button onClick={generatePdf} size="sm">
-              <Download className="mr-2 h-4 w-4" />
-              Télécharger en PDF
-            </Button>
+            <div className="flex gap-2">
+                {data.unpaidInvoices.length > 0 && (
+                    <Button onClick={generateUnpaidPdf} size="sm" variant="destructive">
+                      <FileDown className="mr-2 h-4 w-4" />
+                      PDF Impayés
+                    </Button>
+                )}
+                <Button onClick={generateFullPdf} size="sm" variant="outline">
+                  <Download className="mr-2 h-4 w-4" />
+                  PDF Complet
+                </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <StatCard title="Chiffre d'Affaires" value={formatCurrency(data.summary.totalRevenue, currency)} className="bg-green-500/10 text-green-800" />
+                <StatCard title="Chiffre d'Affaires (Encaissé)" value={formatCurrency(data.summary.totalRevenue, currency)} className="bg-green-500/10 text-green-800" />
                 <StatCard title="Dépenses" value={formatCurrency(data.summary.totalExpenses, currency)} className="bg-orange-500/10 text-orange-800" />
                 <StatCard title="Bénéfice Net" value={formatCurrency(data.summary.netProfit, currency)} className="bg-blue-500/10 text-blue-800" />
                 <StatCard title="Total Impayé" value={formatCurrency(data.summary.totalUnpaid, currency)} className="bg-red-500/10 text-red-800" />
@@ -171,95 +222,118 @@ export function ReportDisplay({ data, currency }: ReportDisplayProps) {
         </CardContent>
       </Card>
       
+      {data.allInvoices.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Détail des Factures</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>N° Facture</TableHead>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Statut</TableHead>
+                    <TableHead className="text-right">Montant</TableHead>
+                    <TableHead className="text-right">Payé</TableHead>
+                    <TableHead className="text-right">Dû</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.allInvoices.map((invoice) => (
+                    <TableRow key={invoice.id}>
+                      <TableCell>{invoice.invoiceNumber}</TableCell>
+                      <TableCell>{invoice.clientName}</TableCell>
+                      <TableCell>{format(new Date(invoice.date), "dd/MM/yyyy")}</TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusVariant(invoice.status)}>
+                          {statusTranslations[invoice.status]}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">{formatCurrency(invoice.totalAmount, currency)}</TableCell>
+                      <TableCell className="text-right text-green-600">{formatCurrency(invoice.amountPaid, currency)}</TableCell>
+                      <TableCell className="text-right text-red-600 font-medium">{formatCurrency(invoice.totalAmount - invoice.amountPaid, currency)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+                 <TableFooter>
+                    <TableRow>
+                        <TableCell colSpan={6} className="text-right font-bold">Total Impayé sur la période</TableCell>
+                        <TableCell className="text-right font-bold text-red-600">{formatCurrency(data.summary.totalUnpaid, currency)}</TableCell>
+                    </TableRow>
+                </TableFooter>
+              </Table>
+            </CardContent>
+          </Card>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-            <CardHeader>
-                <CardTitle>Ventes par Produit</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Produit</TableHead>
-                            <TableHead className="text-right">Quantité Vendue</TableHead>
-                            <TableHead className="text-right">Valeur Totale</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {data.productSales.map(item => (
-                            <TableRow key={item.productName}>
-                                <TableCell>{item.productName}</TableCell>
-                                <TableCell className="text-right">{item.quantitySold}</TableCell>
-                                <TableCell className="text-right">{formatCurrency(item.totalValue, currency)}</TableCell>
+        {data.productSales.length > 0 && (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Ventes par Produit</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Produit</TableHead>
+                                <TableHead className="text-right">Quantité Vendue</TableHead>
+                                <TableHead className="text-right">Valeur Totale</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
+                        </TableHeader>
+                        <TableBody>
+                            {data.productSales.map(item => (
+                                <TableRow key={item.productName}>
+                                    <TableCell>{item.productName}</TableCell>
+                                    <TableCell className="text-right">{item.quantitySold}</TableCell>
+                                    <TableCell className="text-right">{formatCurrency(item.totalValue, currency)}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        )}
         
-        <Card>
-            <CardHeader>
-                <CardTitle>Dépenses</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead>Catégorie</TableHead>
-                            <TableHead className="text-right">Montant</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {data.expenses.map(exp => (
-                            <TableRow key={exp.id}>
-                                <TableCell>{format(new Date(exp.date), "dd/MM/yyyy")}</TableCell>
-                                <TableCell>{exp.description}</TableCell>
-                                <TableCell>{exp.category}</TableCell>
-                                <TableCell className="text-right">{formatCurrency(exp.amount, currency)}</TableCell>
+        {data.expenses.length > 0 && (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Dépenses</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Description</TableHead>
+                                <TableHead>Catégorie</TableHead>
+                                <TableHead className="text-right">Montant</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </CardContent>
-        </Card>
+                        </TableHeader>
+                        <TableBody>
+                            {data.expenses.map(exp => (
+                                <TableRow key={exp.id}>
+                                    <TableCell>{format(new Date(exp.date), "dd/MM/yyyy")}</TableCell>
+                                    <TableCell>{exp.description}</TableCell>
+                                    <TableCell>{exp.category}</TableCell>
+                                    <TableCell className="text-right">{formatCurrency(exp.amount, currency)}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                         <TableFooter>
+                            <TableRow>
+                                <TableCell colSpan={3} className="text-right font-bold">Total Dépenses</TableCell>
+                                <TableCell className="text-right font-bold">{formatCurrency(data.summary.totalExpenses, currency)}</TableCell>
+                            </TableRow>
+                        </TableFooter>
+                    </Table>
+                </CardContent>
+            </Card>
+        )}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Détail des Factures</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>N° Facture</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="text-right">Montant</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.allInvoices.map((invoice) => (
-                <TableRow key={invoice.id}>
-                  <TableCell>{invoice.invoiceNumber}</TableCell>
-                  <TableCell>{invoice.clientName}</TableCell>
-                  <TableCell>{format(new Date(invoice.date), "dd/MM/yyyy")}</TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusVariant(invoice.status)}>
-                      {statusTranslations[invoice.status]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">{formatCurrency(invoice.totalAmount, currency)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
     </div>
   );
 }
