@@ -71,6 +71,8 @@ export function ReportGenerator({ clients, settings }: ReportGeneratorProps) {
     });
   };
 
+  const selectedClientObject = clients.find(c => c.id === clientId) || null;
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="Rapports" />
@@ -125,7 +127,7 @@ export function ReportGenerator({ clients, settings }: ReportGeneratorProps) {
                 </div>
             </div>
           )}
-          {reportData && !isPending && <ReportDisplay data={reportData} currency={settings.currency} settings={settings} />}
+          {reportData && !isPending && <ReportDisplay data={reportData} currency={settings.currency} settings={settings} client={selectedClientObject} />}
 
         </CardContent>
       </Card>
