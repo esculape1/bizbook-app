@@ -188,7 +188,7 @@ export function ReportDisplay({ data, settings, currency, client }: ReportDispla
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(31, 78, 120); // #1f4e78
-    doc.text("RELEVÉ DES IMPAYÉS", contentStartX, 45);
+    doc.text("RELEVÉ DES IMPAYÉS", pageWidth / 2, 45, { align: 'center' });
 
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
