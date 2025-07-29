@@ -1,24 +1,45 @@
 
 import { PageHeader } from "@/components/PageHeader";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { getExpenses, getSettings } from "@/lib/data";
 import { formatCurrency } from "@/lib/utils";
 import { ExpenseForm } from "./ExpenseForm";
 import { getSession } from "@/lib/session";
-import { EditExpenseButton } from "./EditExpenseButton";
-import { DeleteExpenseButton } from "./DeleteExpenseButton";
-import type { User, Expense } from "@/lib/types";
-import { format } from 'date-fns';
+import type { Expense } from "@/lib/types";
+import { format, subMonths, getDate } from 'date-fns';
 import { fr } from 'date-fns/locale';
+
+type CategoryExpense = {
+  category: string;
+  total: number;
+};
 
 type GroupedExpenses = {
   [key: string]: {
-    expenses: Expense[];
+    expensesByCategory: CategoryExpense[];
     total: number;
-    date: Date;
+    displayMonth: string;
   };
 };
+
+/**
+ * Determines the fiscal month key for a given date.
+ * A fiscal month runs from the 25th of the previous month to the 24th of the current month.
+ * @param date The date of the expense.
+ * @returns A string key like "2024-01" for the fiscal month of January.
+ */
+const getFiscalMonthKey = (date: Date): string => {
+  if (getDate(date) >= 25) {
+    // If date is on or after the 25th, it belongs to the *next* month's fiscal period.
+    const nextMonth = new Date(date);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    return format(nextMonth, 'yyyy-MM');
+  }
+  // Otherwise, it belongs to the current month's fiscal period.
+  return format(date, 'yyyy-MM');
+};
+
 
 export default async function ExpensesPage() {
   const [expenses, settings, user] = await Promise.all([
@@ -31,24 +52,32 @@ export default async function ExpensesPage() {
 
   const groupedExpenses = expenses.reduce((acc, expense) => {
     const expenseDate = new Date(expense.date);
-    const monthKey = format(expenseDate, 'yyyy-MM');
+    const monthKey = getFiscalMonthKey(expenseDate);
     
     if (!acc[monthKey]) {
+      const displayDate = new Date(monthKey + '-01'); // Use the 1st of the month for display
       acc[monthKey] = {
-        expenses: [],
+        expensesByCategory: [],
         total: 0,
-        date: expenseDate,
+        displayMonth: format(displayDate, 'MMMM yyyy', { locale: fr }),
       };
     }
     
-    acc[monthKey].expenses.push(expense);
+    // Find or create category entry
+    let categoryEntry = acc[monthKey].expensesByCategory.find(e => e.category === expense.category);
+    if (!categoryEntry) {
+      categoryEntry = { category: expense.category, total: 0 };
+      acc[monthKey].expensesByCategory.push(categoryEntry);
+    }
+    
+    categoryEntry.total += expense.amount;
     acc[monthKey].total += expense.amount;
     
     return acc;
   }, {} as GroupedExpenses);
 
   // Sort groups by date descending
-  const sortedGroupKeys = Object.keys(groupedExpenses).sort().reverse();
+  const sortedGroupKeys = Object.keys(groupedExpenses).sort((a, b) => b.localeCompare(a));
 
   return (
     <div className="flex flex-col gap-6">
@@ -64,54 +93,38 @@ export default async function ExpensesPage() {
             </CardContent>
         </Card>
       ) : (
-        <div className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sortedGroupKeys.map(monthKey => {
                 const group = groupedExpenses[monthKey];
-                const monthName = format(group.date, 'MMMM yyyy', { locale: fr });
+                const fromDate = format(subMonths(new Date(monthKey + '-25'), 1), 'd MMM', { locale: fr });
+                const toDate = format(new Date(monthKey + '-24'), 'd MMM yyyy', { locale: fr });
 
                 return (
-                    <Card key={monthKey}>
+                    <Card key={monthKey} className="flex flex-col">
                         <CardHeader>
-                            <CardTitle className="capitalize">{monthName}</CardTitle>
+                            <CardTitle className="capitalize">{group.displayMonth}</CardTitle>
+                            <CardDescription>Période du {fromDate} au {toDate}</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                        <Table>
-                            <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-1/6">Date</TableHead>
-                                <TableHead className="w-2/5">Description</TableHead>
-                                <TableHead className="w-1/5">Catégorie</TableHead>
-                                <TableHead className="text-right w-1/6">Montant</TableHead>
-                                {canEdit && <TableHead className="text-right">Actions</TableHead>}
-                            </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                            {group.expenses.map((expense) => (
-                                <TableRow key={expense.id}>
-                                <TableCell>{new Date(expense.date).toLocaleDateString('fr-FR')}</TableCell>
-                                <TableCell className="font-medium">{expense.description}</TableCell>
-                                <TableCell>{expense.category}</TableCell>
-                                <TableCell className="text-right">{formatCurrency(expense.amount, settings.currency)}</TableCell>
-                                {canEdit && (
-                                    <TableCell className="text-right">
-                                    <div className="flex items-center justify-end">
-                                        <EditExpenseButton expense={expense} currency={settings.currency} />
-                                        <DeleteExpenseButton id={expense.id} description={expense.description} />
-                                    </div>
-                                    </TableCell>
-                                )}
-                                </TableRow>
-                            ))}
-                            </TableBody>
-                            <TableFooter>
-                                <TableRow>
-                                    <TableCell colSpan={canEdit ? 4 : 3} className="text-right font-bold text-lg">Total du mois</TableCell>
-                                    <TableCell className="text-right font-bold text-lg">{formatCurrency(group.total, settings.currency)}</TableCell>
-                                    {canEdit && <TableCell></TableCell>}
-                                </TableRow>
-                            </TableFooter>
-                        </Table>
+                        <CardContent className="flex-grow">
+                            <Table>
+                                <TableBody>
+                                {group.expensesByCategory
+                                    .sort((a,b) => b.total - a.total)
+                                    .map((expCat) => (
+                                    <TableRow key={expCat.category}>
+                                        <TableCell className="font-medium">{expCat.category}</TableCell>
+                                        <TableCell className="text-right">{formatCurrency(expCat.total, settings.currency)}</TableCell>
+                                    </TableRow>
+                                ))}
+                                </TableBody>
+                            </Table>
                         </CardContent>
+                        <CardFooter className="mt-auto border-t pt-4">
+                           <div className="w-full flex justify-between items-center text-lg font-bold">
+                                <span>Total du mois</span>
+                                <span>{formatCurrency(group.total, settings.currency)}</span>
+                           </div>
+                        </CardFooter>
                     </Card>
                 );
             })}
