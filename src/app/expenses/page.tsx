@@ -2,7 +2,8 @@
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { getExpenses, getSettings, getSession } from "@/lib/data";
+import { getExpenses, getSettings } from "@/lib/data";
+import { getSession } from "@/lib/session";
 import { formatCurrency, cn } from "@/lib/utils";
 import { ExpenseForm } from "./ExpenseForm";
 import type { Expense } from "@/lib/types";
