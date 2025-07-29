@@ -5,10 +5,10 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
 import type { Expense, Settings } from '@/lib/types';
 import { EditExpenseButton } from './EditExpenseButton';
+import { DeleteExpenseButton } from './DeleteExpenseButton';
 import { MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -48,7 +48,7 @@ export function ExpenseCategoryDetailsDialog({ expenses, category, displayMonth,
                         <TableHead>Date</TableHead>
                         <TableHead>Description</TableHead>
                         <TableHead className="text-right">Montant</TableHead>
-                        <TableHead className="w-[50px]"></TableHead>
+                        <TableHead className="text-right w-[100px]">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -58,7 +58,10 @@ export function ExpenseCategoryDetailsDialog({ expenses, category, displayMonth,
                     <TableCell className="font-medium">{expense.description}</TableCell>
                     <TableCell className="text-right">{formatCurrency(expense.amount, settings.currency)}</TableCell>
                     <TableCell>
-                        <EditExpenseButton expense={expense} currency={settings.currency} />
+                        <div className="flex items-center justify-end">
+                            <EditExpenseButton expense={expense} currency={settings.currency} />
+                            <DeleteExpenseButton id={expense.id} description={expense.description} />
+                        </div>
                     </TableCell>
                     </TableRow>
                 ))}
