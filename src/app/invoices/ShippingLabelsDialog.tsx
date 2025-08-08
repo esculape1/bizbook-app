@@ -20,26 +20,37 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
   const [isOpen, setIsOpen] = useState(false);
   const barcodeRefs = useRef<(HTMLCanvasElement | null)[]>([]);
 
+  // Reset the refs array whenever the dialog is opened for a new invoice
   useEffect(() => {
     if (isOpen) {
-      barcodeRefs.current.forEach((canvas) => {
-        if (canvas) {
-          try {
-            JsBarcode(canvas, invoice.invoiceNumber, {
-              format: 'CODE128',
-              displayValue: true,
-              fontSize: 14,
-              height: 40,
-              width: 1.5,
-              margin: 0,
-            });
-          } catch (e) {
-            console.error(`Failed to generate barcode:`, e);
-          }
-        }
-      });
+      barcodeRefs.current = [];
     }
-  }, [isOpen, invoice.invoiceNumber]);
+  }, [isOpen, invoice.id]);
+  
+  // This effect runs after the component renders and the dialog is open.
+  useEffect(() => {
+    if (isOpen) {
+      // Small delay to ensure the DOM is ready
+      setTimeout(() => {
+        barcodeRefs.current.forEach((canvas) => {
+          if (canvas) {
+            try {
+              JsBarcode(canvas, invoice.invoiceNumber, {
+                format: 'CODE128',
+                displayValue: true,
+                fontSize: 14,
+                height: 40,
+                width: 1.5,
+                margin: 0,
+              });
+            } catch (e) {
+              console.error(`Failed to generate barcode:`, e);
+            }
+          }
+        });
+      }, 100);
+    }
+  }, [isOpen, invoice.id, invoice.invoiceNumber]);
 
   const handlePrint = () => {
     const printContent = document.getElementById(`shipping-labels-content-printable-${invoice.id}`);
@@ -67,39 +78,34 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
               margin: 0;
             }
             body { 
-              -webkit-print-color-adjust: exact; 
-              print-color-adjust: exact;
-              margin: 0;
-              padding: 0;
+              -webkit-print-color-adjust: exact !important; 
+              print-color-adjust: exact !important;
+              margin: 10mm !important; /* Margins for the page */
+              padding: 0 !important;
             }
             .labels-container-printable {
               display: grid !important;
               grid-template-columns: repeat(2, 1fr) !important;
-              grid-auto-rows: 70mm !important; /* Fixed row height */
-              gap: 0 !important;
-              width: 210mm;
-              height: 297mm;
-              page-break-inside: avoid;
+              grid-template-rows: repeat(3, 1fr) !important;
+              gap: 5mm !important;
+              width: 190mm !important; /* 210mm - 2*10mm margin */
+              height: 277mm !important; /* 297mm - 2*10mm margin */
+              page-break-inside: avoid !important;
             }
             .label-item-printable {
-              width: 105mm !important; /* Fixed width */
-              height: 70mm !important; /* Fixed height */
               border: 1px solid #000 !important;
-              padding: 4mm;
-              box-sizing: border-box;
-              display: flex;
-              flex-direction: column;
-              justify-content: space-between;
-              overflow: hidden;
-            }
-            .info-box {
-                border: 1px solid #ddd;
-                padding: 4px;
-                border-radius: 4px;
+              padding: 4mm !important;
+              box-sizing: border-box !important;
+              display: flex !important;
+              flex-direction: column !important;
+              justify-content: space-between !important;
+              overflow: hidden !important;
+              height: 100% !important;
+              width: 100% !important;
             }
             canvas {
-                width: 100%;
-                height: auto;
+                width: 100% !important;
+                height: auto !important;
             }
           }
         `;
@@ -119,7 +125,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
   };
 
   const LabelContent = ({ index }: { index: number }) => (
-    <div className="label-item-printable flex flex-col justify-between p-2 font-sans border border-solid border-black" style={{width: '70mm', height: '70mm'}}>
+    <div className="label-item-printable flex flex-col justify-between p-2 font-sans border border-solid border-black">
       {/* Top Section */}
       <div className="space-y-2">
         {/* Supplier Info Box */}
@@ -151,7 +157,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
 
       {/* Bottom Section: Barcode */}
       <div className="w-full pt-2">
-        <canvas ref={el => { if (el) barcodeRefs.current[index] = el; }}></canvas>
+         <canvas ref={el => barcodeRefs.current[index] = el}></canvas>
       </div>
     </div>
   );
@@ -177,9 +183,11 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
           <DialogTitle>Aperçu des Étiquettes d'Expédition</DialogTitle>
         </DialogHeader>
         <div className="max-h-[70vh] overflow-y-auto bg-gray-100 p-8">
-            <div id={`shipping-labels-content-printable-${invoice.id}`} className="bg-white shadow-lg mx-auto labels-container-printable grid grid-cols-2" style={{width: '210mm', minHeight: '297mm'}}>
+            <div id={`shipping-labels-content-printable-${invoice.id}`} className="bg-white shadow-lg mx-auto labels-container-printable grid grid-cols-2 gap-4" style={{width: '190mm', minHeight: '277mm'}}>
                 {Array.from({ length: 6 }).map((_, i) => (
-                    <LabelContent key={i} index={i} />
+                    <div key={i} style={{width: '7cm', height: '7cm'}}>
+                        <LabelContent index={i} />
+                    </div>
                 ))}
             </div>
         </div>
