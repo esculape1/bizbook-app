@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import JsBarcode from 'jsbarcode';
 import type { Invoice, Client, Settings } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Printer, Download, Ticket } from 'lucide-react';
+import { Printer, Ticket } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { format } from 'date-fns';
 
@@ -21,19 +21,26 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
 
   useEffect(() => {
     if (isOpen) {
-      try {
-        // We need to generate 3 separate barcodes with unique IDs
-        JsBarcode("#barcode-1", invoice.invoiceNumber, { format: "CODE128", lineColor: "#000", width: 2, height: 50, displayValue: true, fontSize: 14 });
-        JsBarcode("#barcode-2", invoice.invoiceNumber, { format: "CODE128", lineColor: "#000", width: 2, height: 50, displayValue: true, fontSize: 14 });
-        JsBarcode("#barcode-3", invoice.invoiceNumber, { format: "CODE128", lineColor: "#000", width: 2, height: 50, displayValue: true, fontSize: 14 });
-      } catch (e) {
-        console.error("Erreur lors de la génération du code-barres:", e);
+      // Generate 6 barcodes with unique IDs
+      for (let i = 1; i <= 6; i++) {
+        try {
+          JsBarcode(`#barcode-${i}`, invoice.invoiceNumber, {
+            format: "CODE128",
+            lineColor: "#000",
+            width: 1.5,
+            height: 40,
+            displayValue: true,
+            fontSize: 12
+          });
+        } catch (e) {
+          console.error(`Erreur lors de la génération du code-barres #${i}:`, e);
+        }
       }
     }
   }, [isOpen, invoice.invoiceNumber]);
 
   const handlePrint = () => {
-    const printContent = document.getElementById('shipping-labels-content');
+    const printContent = document.getElementById('shipping-labels-content-printable');
     if (printContent) {
       const printWindow = window.open('', '_blank');
       if (printWindow) {
@@ -52,24 +59,23 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
               margin: 0;
               padding: 0;
             }
-            .no-print {
-                display: none;
+            .labels-container-printable {
+              display: grid !important;
+              grid-template-columns: 1fr 1fr !important;
+              grid-template-rows: repeat(3, 1fr) !important;
+              gap: 5mm !important;
+              width: 190mm; /* 210mm - 2*10mm margins */
+              height: 277mm; /* 297mm - 2*10mm margins */
+              page-break-inside: avoid;
             }
-            .labels-container {
-                width: 100%;
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-around;
-            }
-            .label-item {
-                border: 1px dashed #ccc !important;
-                padding: 10px;
-                height: 30%; /* Approximately 1/3 of the page height */
-                box-sizing: border-box;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
+            .label-item-printable {
+              border: 1px dashed #999 !important;
+              padding: 10px;
+              box-sizing: border-box;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              overflow: hidden;
             }
           }
         `;
@@ -89,22 +95,22 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
   };
 
   const LabelContent = ({ barcodeId }: { barcodeId: string }) => (
-    <div className="label-item flex flex-col justify-between p-4 font-sans text-sm border border-dashed border-gray-400">
-      <div className="flex justify-between">
+    <div className="label-item-printable flex flex-col justify-between p-2 font-sans text-sm border border-dashed border-gray-400">
+      <div className="flex justify-between items-start text-xs">
         <div>
-          <p className="font-bold text-lg">{client.name}</p>
-          <p className="text-xs text-gray-600">Client</p>
+          <p className="font-bold text-base">{client.name}</p>
+          <p className="text-gray-600">Client</p>
         </div>
         <div className="text-right">
           <p className="font-bold">{settings.companyName}</p>
-          <p className="text-xs text-gray-600">Fournisseur</p>
+          <p className="text-gray-600">Fournisseur</p>
         </div>
       </div>
-      <div className="text-center my-4">
+      <div className="text-center my-2 flex justify-center">
         <svg id={barcodeId}></svg>
       </div>
       <div className="text-center text-xs text-gray-500">
-        Date de commande: {format(new Date(invoice.date), 'dd/MM/yyyy')}
+        Date: {format(new Date(invoice.date), 'dd/MM/yyyy')}
       </div>
     </div>
   );
@@ -129,20 +135,18 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
         <DialogHeader className="p-6 pb-2">
           <DialogTitle>Aperçu des Étiquettes d'Expédition</DialogTitle>
         </DialogHeader>
-        <div className="bg-gray-100 p-8">
-            <div id="shipping-labels-content" className="bg-white shadow-lg mx-auto" style={{width: '210mm', height: '297mm'}}>
-                <div className="labels-container h-full flex flex-col justify-around gap-4 p-4">
-                    <LabelContent barcodeId="barcode-1" />
-                    <LabelContent barcodeId="barcode-2" />
-                    <LabelContent barcodeId="barcode-3" />
-                </div>
+        <div className="max-h-[70vh] overflow-y-auto bg-gray-100 p-8">
+            <div id="shipping-labels-content-printable" className="bg-white shadow-lg mx-auto labels-container-printable" style={{width: '210mm', height: '297mm'}}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                    <LabelContent key={i} barcodeId={`barcode-${i + 1}`} />
+                ))}
             </div>
         </div>
-        <DialogFooter className="p-6 bg-white border-t no-print">
+        <DialogFooter className="p-6 bg-white border-t">
             <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>Fermer</Button>
             <Button onClick={handlePrint}>
                 <Printer className="mr-2 h-4 w-4" />
-                Imprimer
+                Imprimer les 6 étiquettes
             </Button>
         </DialogFooter>
       </DialogContent>
