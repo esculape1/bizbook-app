@@ -22,18 +22,20 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
 
   useEffect(() => {
     if (isOpen) {
-      // Use a timeout to ensure the DOM is ready for barcode generation
       setTimeout(() => {
         for (let i = 1; i <= 6; i++) {
           try {
-            JsBarcode(`#barcode-${invoice.id}-${i}`, invoice.invoiceNumber, {
-              format: "CODE128",
-              lineColor: "#000",
-              width: 1.5,
-              height: 40,
-              displayValue: true,
-              fontSize: 12
-            });
+            const element = document.getElementById(`barcode-${invoice.id}-${i}`);
+            if (element) {
+              JsBarcode(element, invoice.invoiceNumber, {
+                format: "CODE128",
+                lineColor: "#000",
+                width: 1.5,
+                height: 30,
+                displayValue: true,
+                fontSize: 12
+              });
+            }
           } catch (e) {
             console.error(`Erreur lors de la génération du code-barres #${i}:`, e);
           }
@@ -50,7 +52,6 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
         const title = `Etiquettes_${invoice.invoiceNumber.replace(/[\/\s]/g, '-')}`;
         printWindow.document.write(`<html><head><title>${title}</title>`);
         
-        // This style block ensures the layout is correct for printing
         const printStyles = `
           @page {
             size: A4;
@@ -81,22 +82,29 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
               justify-content: space-between;
               overflow: hidden;
               font-size: 8pt;
+              line-height: 1.2;
             }
              .label-item-printable .top-section {
                 display: flex;
                 justify-content: space-between;
                 gap: 8px;
+                height: 60%;
              }
              .label-item-printable .left-info {
                  width: 50%;
+                 display: flex;
+                 flex-direction: column;
              }
-             .label-item-printable .right-info {
+              .label-item-printable .right-info {
                  width: 50%;
                  text-align: right;
+                 font-size: 7pt;
              }
             .label-item-printable hr {
                 border-color: #000;
                 border-top-width: 1px;
+                margin-top: 4px;
+                margin-bottom: 4px;
             }
           }
         `;
@@ -117,39 +125,34 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
 
   const LabelContent = ({ barcodeId }: { barcodeId: string }) => (
     <div className="label-item-printable flex flex-col justify-between p-1 font-sans text-xs border border-solid border-black">
-      {/* Top section */}
       <div className="top-section flex justify-between items-start gap-2">
-        {/* Left-side: Client, Supplier, Logo */}
         <div className="left-info flex flex-col items-start w-1/2">
           <p className="font-bold text-sm truncate">{client.name}</p>
           <p className="text-xs text-gray-700">{settings.companyName}</p>
           {settings.logoUrl && (
-            <Image src={settings.logoUrl} alt="Logo" width={40} height={40} className="object-contain mt-1" data-ai-hint="logo" />
+            <Image src={settings.logoUrl} alt="Logo" width={40} height={40} className="object-contain mt-auto" data-ai-hint="logo" />
           )}
         </div>
-        {/* Right-side: Items List */}
+        
         <div className="right-info w-1/2 text-right">
             <ul className="list-none p-0 m-0 text-gray-800" style={{ fontSize: '7pt', lineHeight: '1.2' }}>
-                {invoice.items.slice(0, 4).map(item => (
+                {invoice.items.slice(0, 5).map(item => (
                     <li key={item.productId} className="truncate"> - {item.productName}</li>
                 ))}
-                {invoice.items.length > 4 && <li className="truncate">...et autres</li>}
+                {invoice.items.length > 5 && <li className="truncate">...et autres</li>}
             </ul>
         </div>
       </div>
 
-      {/* Bottom section: Bars and Barcode */}
       <div className="mt-auto">
-        <div className="my-1 text-xs">
-          <hr className="border-t border-black" />
-          <div className="flex justify-between items-center py-0.5">
-            <span>Quantité: ________</span>
-            <span>Date: {format(new Date(invoice.date), 'dd/MM/yy')}</span>
-          </div>
-          <hr className="border-t border-black" />
+        <hr className="border-t border-black" />
+        <div className="flex justify-between items-center text-xs py-0.5">
+          <span>Quantité: ________</span>
+          <span>Date: {format(new Date(invoice.date), 'dd/MM/yy')}</span>
         </div>
+        <hr className="border-t border-black" />
 
-        <div className="text-center flex justify-center">
+        <div className="text-center flex justify-center mt-1">
           <svg id={barcodeId}></svg>
         </div>
       </div>
