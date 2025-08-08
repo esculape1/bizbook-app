@@ -75,22 +75,22 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
             .labels-container-printable {
               display: grid !important;
               grid-template-columns: repeat(2, 1fr) !important;
-              grid-template-rows: repeat(3, 1fr) !important;
+              grid-auto-rows: 70mm !important; /* Fixed row height */
               gap: 0 !important;
               width: 210mm;
               height: 297mm;
               page-break-inside: avoid;
             }
             .label-item-printable {
+              width: 105mm !important; /* Fixed width */
+              height: 70mm !important; /* Fixed height */
               border: 1px solid #000 !important;
-              padding: 4px;
+              padding: 4mm;
               box-sizing: border-box;
               display: flex;
               flex-direction: column;
               justify-content: space-between;
               overflow: hidden;
-              width: 105mm !important;
-              height: 99mm !important;
             }
             .info-box {
                 border: 1px solid #ddd;
@@ -119,29 +119,35 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
   };
 
   const LabelContent = ({ index }: { index: number }) => (
-    <div className="label-item-printable flex flex-col justify-between p-2 font-sans border border-solid border-black" style={{width: '105mm', height: '99mm'}}>
-        {/* Top Section: Info */}
-        <div className="flex justify-between items-start gap-2">
-            {/* Left: Supplier */}
-            <div className="w-1/2 space-y-1">
+    <div className="label-item-printable flex flex-col justify-between p-2 font-sans border border-solid border-black" style={{width: '70mm', height: '70mm'}}>
+      {/* Top Section */}
+      <div className="space-y-2">
+        {/* Supplier Info Box */}
+        <div className="border border-gray-300 rounded p-2">
+            <p className="text-xs font-bold uppercase text-gray-500">Fournisseur</p>
+            <div className="flex items-center gap-2 mt-1">
                 {settings.logoUrl && (
                     <Image 
                         src={settings.logoUrl} 
                         alt="Logo" 
-                        width={40} 
-                        height={40} 
+                        width={24} 
+                        height={24} 
                         className="object-contain" 
                         data-ai-hint="logo"
                     />
                 )}
-                <p className="font-bold text-xs truncate">{settings.companyName}</p>
-            </div>
-            {/* Right: Client */}
-            <div className="w-1/2 text-right">
-                <p className="font-bold text-sm truncate">{client.name}</p>
-                {client.phone && <p className="text-xs text-muted-foreground truncate">{client.phone}</p>}
+                <p className="font-semibold text-sm truncate">{settings.companyName}</p>
             </div>
         </div>
+        {/* Client Info Box */}
+         <div className="border border-gray-300 rounded p-2">
+            <p className="text-xs font-bold uppercase text-gray-500">Client</p>
+            <div className="mt-1">
+                 <p className="font-bold text-base truncate">{client.name}</p>
+                {client.phone && <p className="text-sm text-muted-foreground truncate">{client.phone}</p>}
+            </div>
+        </div>
+      </div>
 
       {/* Bottom Section: Barcode */}
       <div className="w-full pt-2">
