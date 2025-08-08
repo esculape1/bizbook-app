@@ -1,4 +1,4 @@
-
+ 
 d# **BizBook : Pilotez votre entreprise avec une simplicité déconcertante**
 
 Oubliez la complexité des feuilles de calcul et les logiciels de gestion archaïques. BizBook est la solution tout-en-un conçue pour les entrepreneurs, artisans et PME qui veulent se concentrer sur leur métier, pas sur la paperasse. Notre mission : vous offrir des outils puissants, centralisés dans une interface intuitive et agréable à utiliser.
