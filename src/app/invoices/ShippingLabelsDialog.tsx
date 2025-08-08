@@ -63,21 +63,22 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
             }
             .labels-container-printable {
               display: grid !important;
-              grid-template-columns: 1fr 1fr !important;
+              grid-template-columns: repeat(2, 1fr) !important;
               grid-template-rows: repeat(3, 1fr) !important;
               gap: 5mm !important;
-              width: 190mm; /* 210mm - 2*10mm margins */
-              height: 277mm; /* 297mm - 2*10mm margins */
+              width: 190mm;
+              height: 277mm;
               page-break-inside: avoid;
             }
             .label-item-printable {
               border: 1px solid #000 !important;
-              padding: 10px;
+              padding: 4px;
               box-sizing: border-box;
               display: flex;
               flex-direction: column;
               justify-content: space-between;
               overflow: hidden;
+              font-size: 8pt;
             }
           }
         `;
@@ -97,36 +98,44 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
   };
 
   const LabelContent = ({ barcodeId }: { barcodeId: string }) => (
-    <div className="label-item-printable flex flex-col justify-between p-2 font-sans text-sm border border-solid border-gray-600">
+    <div className="label-item-printable flex flex-col justify-between p-1 font-sans text-xs border border-solid border-black">
       {/* Top section */}
-      <div className="flex justify-between items-start">
-        {/* Top-left: Logo and Company Name */}
+      <div className="flex justify-between items-start gap-2">
+        {/* Top-left: Client, Supplier, Logo */}
         <div className="flex flex-col items-start w-1/2">
+          <p className="font-bold text-sm truncate">{client.name}</p>
+          <p className="text-xs text-gray-700">{settings.companyName}</p>
           {settings.logoUrl && (
-            <Image src={settings.logoUrl} alt="Logo" width={40} height={40} className="object-contain" data-ai-hint="logo company" />
+            <Image src={settings.logoUrl} alt="Logo" width={40} height={40} className="object-contain mt-1" data-ai-hint="logo company" />
           )}
-          <p className="text-xs font-bold mt-1">{settings.companyName}</p>
         </div>
-        {/* Top-right: Client Info */}
-        <div className="text-right w-1/2">
-          <p className="font-bold text-base truncate">{client.name}</p>
-          <p className="text-xs text-gray-600">{client.phone}</p>
+        {/* Top-right: Items List */}
+        <div className="w-1/2 text-right">
+            <ul className="list-none p-0 m-0 text-gray-800" style={{ fontSize: '7pt', lineHeight: '1.2' }}>
+                {invoice.items.slice(0, 4).map(item => ( // Limit to 4 items to avoid overflow
+                    <li key={item.productId} className="truncate"> - {item.productName}</li>
+                ))}
+                {invoice.items.length > 4 && <li className="truncate">...et autres</li>}
+            </ul>
         </div>
       </div>
 
-      {/* Middle section with horizontal rules */}
-      <div className="my-2 text-xs">
-        <hr className="border-t border-gray-400" />
-        <div className="flex justify-between items-center py-1">
-          <span>Quantité: ________</span>
-          <span>Date: {format(new Date(invoice.date), 'dd/MM/yyyy')}</span>
+      {/* Bottom section: Bars and Barcode */}
+      <div className="mt-auto">
+        {/* Middle section with horizontal rules */}
+        <div className="my-1 text-xs">
+          <hr className="border-t border-black" />
+          <div className="flex justify-between items-center py-0.5">
+            <span>Quantité: ________</span>
+            <span>Date: {format(new Date(invoice.date), 'dd/MM/yy')}</span>
+          </div>
+          <hr className="border-t border-black" />
         </div>
-        <hr className="border-t border-gray-400" />
-      </div>
 
-      {/* Bottom section: Barcode */}
-      <div className="text-center flex justify-center">
-        <svg id={barcodeId}></svg>
+        {/* Barcode */}
+        <div className="text-center flex justify-center">
+          <svg id={barcodeId}></svg>
+        </div>
       </div>
     </div>
   );
@@ -169,3 +178,4 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
     </Dialog>
   );
 }
+
