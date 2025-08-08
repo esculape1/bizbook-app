@@ -8,6 +8,8 @@ import { Printer, Ticket } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import Image from 'next/image';
 import JsBarcode from 'jsbarcode';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 type ShippingLabelsDialogProps = {
   invoice: Invoice;
@@ -18,15 +20,11 @@ type ShippingLabelsDialogProps = {
 
 export function ShippingLabelsDialog({ invoice, client, settings, asTextButton = false }: ShippingLabelsDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
-  // Create a ref for each barcode canvas
   const barcodeRefs = useRef<(HTMLCanvasElement | null)[]>([]);
-  barcodeRefs.current = Array.from({ length: 6 }).map(
-    (_, i) => barcodeRefs.current[i] ?? null
-  );
 
   useEffect(() => {
     if (isOpen) {
-      barcodeRefs.current.forEach((canvas, index) => {
+      barcodeRefs.current.forEach((canvas) => {
         if (canvas) {
           try {
             JsBarcode(canvas, invoice.invoiceNumber, {
@@ -38,13 +36,12 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
               margin: 0,
             });
           } catch (e) {
-            console.error(`Failed to generate barcode for label ${index}:`, e);
+            console.error(`Failed to generate barcode:`, e);
           }
         }
       });
     }
   }, [isOpen, invoice.invoiceNumber]);
-
 
   const handlePrint = () => {
     const printContent = document.getElementById(`shipping-labels-content-printable-${invoice.id}`);
@@ -57,7 +54,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
         const printStyles = `
           @page {
             size: A4;
-            margin: 1cm;
+            margin: 0;
           }
           @media print {
             body { 
@@ -70,9 +67,9 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
               display: grid !important;
               grid-template-columns: repeat(2, 1fr) !important;
               grid-template-rows: repeat(3, 1fr) !important;
-              gap: 5mm !important;
-              width: 190mm; /* A4 width - 2*margin */
-              height: 277mm; /* A4 height - 2*margin */
+              gap: 0 !important;
+              width: 210mm;
+              height: 297mm;
               page-break-inside: avoid;
             }
             .label-item-printable {
@@ -83,20 +80,18 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
               flex-direction: column;
               justify-content: space-between;
               overflow: hidden;
-              font-size: 9pt;
-              line-height: 1.3;
-              width: 90mm !important; /* Half of the container width minus gap */
-              height: 90mm !important; /* Third of the container height minus gap */
+              width: 105mm !important;
+              height: 99mm !important;
             }
-             .supplier-box, .client-box {
+            .info-box {
                 border: 1px solid #ddd;
                 padding: 4px;
                 border-radius: 4px;
-             }
-             canvas {
+            }
+            canvas {
                 width: 100%;
                 height: auto;
-             }
+            }
           }
         `;
 
@@ -115,18 +110,18 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
   };
 
   const LabelContent = ({ index }: { index: number }) => (
-    <div className="label-item-printable flex flex-col justify-between p-1.5 font-sans border border-solid border-black" style={{width: '90mm', height: '90mm'}}>
+    <div className="label-item-printable flex flex-col justify-between p-2 font-sans border border-solid border-black" style={{width: '105mm', height: '99mm'}}>
         {/* Top Section: Info Boxes */}
-        <div>
+        <div className="space-y-2">
             {/* Supplier Box */}
-            <div className="supplier-box border border-gray-200 p-1 rounded-sm mb-2">
+            <div className="info-box border border-gray-300 p-1.5 rounded-md">
                 <div className="flex items-center gap-2">
                     {settings.logoUrl && (
                         <Image 
                             src={settings.logoUrl} 
                             alt="Logo" 
-                            width={24} 
-                            height={24} 
+                            width={32} 
+                            height={32} 
                             className="object-contain" 
                             data-ai-hint="logo"
                         />
@@ -139,7 +134,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
             </div>
             
             {/* Client Box */}
-            <div className="client-box border border-gray-200 p-1 rounded-sm">
+            <div className="info-box border border-gray-300 p-1.5 rounded-md">
                  <p className="text-xs text-muted-foreground">Client:</p>
                 <p className="font-bold text-sm truncate">{client.name}</p>
                 {client.phone && <p className="text-xs text-muted-foreground truncate">Tél: {client.phone}</p>}
@@ -148,7 +143,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
 
       {/* Bottom Section: Barcode */}
       <div className="w-full pt-2">
-        <canvas ref={el => barcodeRefs.current[index] = el}></canvas>
+        <canvas ref={el => { barcodeRefs.current[index] = el; }}></canvas>
       </div>
     </div>
   );
@@ -174,7 +169,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
           <DialogTitle>Aperçu des Étiquettes d'Expédition</DialogTitle>
         </DialogHeader>
         <div className="max-h-[70vh] overflow-y-auto bg-gray-100 p-8">
-            <div id={`shipping-labels-content-printable-${invoice.id}`} className="bg-white shadow-lg mx-auto labels-container-printable grid grid-cols-2 grid-rows-3 gap-2 p-2" style={{width: '190mm', minHeight: '277mm'}}>
+            <div id={`shipping-labels-content-printable-${invoice.id}`} className="bg-white shadow-lg mx-auto labels-container-printable grid grid-cols-2" style={{width: '210mm', minHeight: '297mm'}}>
                 {Array.from({ length: 6 }).map((_, i) => (
                     <LabelContent key={i} index={i} />
                 ))}
