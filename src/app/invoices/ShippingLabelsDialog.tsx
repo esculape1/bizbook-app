@@ -21,26 +21,29 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
 
   useEffect(() => {
     if (isOpen) {
-      // Generate 6 barcodes with unique IDs
-      for (let i = 1; i <= 6; i++) {
-        try {
-          JsBarcode(`#barcode-${i}`, invoice.invoiceNumber, {
-            format: "CODE128",
-            lineColor: "#000",
-            width: 1.5,
-            height: 40,
-            displayValue: true,
-            fontSize: 12
-          });
-        } catch (e) {
-          console.error(`Erreur lors de la génération du code-barres #${i}:`, e);
+      // Use a timeout to ensure the DOM is ready for barcode generation
+      setTimeout(() => {
+        // Generate 6 barcodes with unique IDs
+        for (let i = 1; i <= 6; i++) {
+          try {
+            JsBarcode(`#barcode-${invoice.id}-${i}`, invoice.invoiceNumber, {
+              format: "CODE128",
+              lineColor: "#000",
+              width: 1.5,
+              height: 40,
+              displayValue: true,
+              fontSize: 12
+            });
+          } catch (e) {
+            console.error(`Erreur lors de la génération du code-barres #${i}:`, e);
+          }
         }
-      }
+      }, 100); // A small delay can help
     }
-  }, [isOpen, invoice.invoiceNumber]);
+  }, [isOpen, invoice.invoiceNumber, invoice.id]);
 
   const handlePrint = () => {
-    const printContent = document.getElementById('shipping-labels-content-printable');
+    const printContent = document.getElementById(`shipping-labels-content-printable-${invoice.id}`);
     if (printContent) {
       const printWindow = window.open('', '_blank');
       if (printWindow) {
@@ -136,9 +139,9 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
           <DialogTitle>Aperçu des Étiquettes d'Expédition</DialogTitle>
         </DialogHeader>
         <div className="max-h-[70vh] overflow-y-auto bg-gray-100 p-8">
-            <div id="shipping-labels-content-printable" className="bg-white shadow-lg mx-auto labels-container-printable" style={{width: '210mm', height: '297mm'}}>
+            <div id={`shipping-labels-content-printable-${invoice.id}`} className="bg-white shadow-lg mx-auto labels-container-printable grid grid-cols-2 grid-rows-3 gap-2" style={{width: '210mm', minHeight: '297mm'}}>
                 {Array.from({ length: 6 }).map((_, i) => (
-                    <LabelContent key={i} barcodeId={`barcode-${i + 1}`} />
+                    <LabelContent key={i} barcodeId={`barcode-${invoice.id}-${i + 1}`} />
                 ))}
             </div>
         </div>
