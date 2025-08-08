@@ -70,7 +70,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
               grid-template-rows: repeat(3, 1fr) !important;
               gap: 5mm !important;
               width: 190mm;
-              height: 277mm;
+              height: auto;
               page-break-inside: avoid;
             }
             .label-item-printable {
@@ -83,6 +83,8 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
               overflow: hidden;
               font-size: 8pt;
               line-height: 1.2;
+              width: 75mm;
+              height: 75mm;
             }
              .label-item-printable .top-section {
                 display: flex;
@@ -94,6 +96,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
                  width: 50%;
                  display: flex;
                  flex-direction: column;
+                 gap: 4px; /* Space between elements */
              }
               .label-item-printable .right-info {
                  width: 50%;
@@ -126,9 +129,15 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
   const LabelContent = ({ barcodeId }: { barcodeId: string }) => (
     <div className="label-item-printable flex flex-col justify-between p-1 font-sans text-xs border border-solid border-black">
       <div className="top-section flex justify-between items-start gap-2">
-        <div className="left-info flex flex-col items-start w-1/2">
-          <p className="font-bold text-sm truncate">{client.name}</p>
-          <p className="text-xs text-gray-700">{settings.companyName}</p>
+        <div className="left-info flex flex-col items-start w-1/2 gap-1.5">
+          <div>
+            <span className="text-xs">Client:</span>
+            <p className="font-bold text-sm truncate">{client.name}</p>
+          </div>
+          <div>
+            <span className="text-xs">Fournisseur:</span>
+            <p className="font-bold text-sm truncate">{settings.companyName}</p>
+          </div>
           {settings.logoUrl && (
             <Image src={settings.logoUrl} alt="Logo" width={40} height={40} className="object-contain mt-auto" data-ai-hint="logo" />
           )}
@@ -145,12 +154,14 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
       </div>
 
       <div className="mt-auto">
-        <hr className="border-t border-black" />
-        <div className="flex justify-between items-center text-xs py-0.5">
-          <span>Quantité: ________</span>
-          <span>Date: {format(new Date(invoice.date), 'dd/MM/yy')}</span>
+        <div className="pt-2">
+            <hr className="border-t border-black" />
+            <div className="flex justify-between items-center text-xs py-0.5">
+            <span>Quantité: ________</span>
+            <span>Date: {format(new Date(invoice.date), 'dd/MM/yy')}</span>
+            </div>
+            <hr className="border-t border-black" />
         </div>
-        <hr className="border-t border-black" />
 
         <div className="text-center flex justify-center mt-1">
           <svg id={barcodeId}></svg>
@@ -180,7 +191,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
           <DialogTitle>Aperçu des Étiquettes d'Expédition</DialogTitle>
         </DialogHeader>
         <div className="max-h-[70vh] overflow-y-auto bg-gray-100 p-8">
-            <div id={`shipping-labels-content-printable-${invoice.id}`} className="bg-white shadow-lg mx-auto labels-container-printable grid grid-cols-2 grid-rows-3 gap-2" style={{width: '210mm', minHeight: '297mm'}}>
+            <div id={`shipping-labels-content-printable-${invoice.id}`} className="bg-white shadow-lg mx-auto labels-container-printable grid grid-cols-2 grid-rows-3 gap-2" style={{width: '190mm', minHeight: '297mm'}}>
                 {Array.from({ length: 6 }).map((_, i) => (
                     <LabelContent key={i} barcodeId={`barcode-${invoice.id}-${i + 1}`} />
                 ))}
