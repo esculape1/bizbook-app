@@ -22,8 +22,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
 
   useEffect(() => {
     if (isOpen) {
-      barcodeRefs.current = []; // Reset refs array
-      // A small delay ensures the DOM is fully rendered before we try to generate barcodes
+      // A small delay gives the DOM time to render before we generate barcodes
       setTimeout(() => {
         barcodeRefs.current.forEach((canvas) => {
           if (canvas) {
@@ -43,7 +42,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
         });
       }, 100);
     }
-  }, [isOpen, invoice.id, invoice.invoiceNumber]); // Rerun when the dialog opens or the invoice changes
+  }, [isOpen, invoice.id, invoice.invoiceNumber]); // Rerun when dialog opens or invoice changes
 
   const handlePrint = () => {
     const printContent = document.getElementById(`shipping-labels-content-printable-${invoice.id}`);
@@ -68,7 +67,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
           @media print {
             @page {
               size: A4;
-              margin: 10mm;
+              margin: 10mm !important;
             }
             body { 
               -webkit-print-color-adjust: exact !important; 
@@ -148,7 +147,9 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
 
         {/* Bottom Section: Barcode */}
         <div className="w-full pt-2">
-            <canvas ref={(el: HTMLCanvasElement | null) => { barcodeRefs.current[index] = el; }}></canvas>
+             <canvas ref={el => {
+                if (el) barcodeRefs.current[index] = el;
+             }}></canvas>
         </div>
     </div>
   );
@@ -193,4 +194,3 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
     </Dialog>
   );
 }
-
