@@ -22,6 +22,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
 
   useEffect(() => {
     if (isOpen) {
+      // Use a timeout to ensure the DOM is ready for barcode generation
       setTimeout(() => {
         for (let i = 1; i <= 6; i++) {
           try {
@@ -49,6 +50,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
         const title = `Etiquettes_${invoice.invoiceNumber.replace(/[\/\s]/g, '-')}`;
         printWindow.document.write(`<html><head><title>${title}</title>`);
         
+        // This style block ensures the layout is correct for printing
         const printStyles = `
           @page {
             size: A4;
@@ -80,6 +82,22 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
               overflow: hidden;
               font-size: 8pt;
             }
+             .label-item-printable .top-section {
+                display: flex;
+                justify-content: space-between;
+                gap: 8px;
+             }
+             .label-item-printable .left-info {
+                 width: 50%;
+             }
+             .label-item-printable .right-info {
+                 width: 50%;
+                 text-align: right;
+             }
+            .label-item-printable hr {
+                border-color: #000;
+                border-top-width: 1px;
+            }
           }
         `;
 
@@ -100,19 +118,19 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
   const LabelContent = ({ barcodeId }: { barcodeId: string }) => (
     <div className="label-item-printable flex flex-col justify-between p-1 font-sans text-xs border border-solid border-black">
       {/* Top section */}
-      <div className="flex justify-between items-start gap-2">
-        {/* Top-left: Client, Supplier, Logo */}
-        <div className="flex flex-col items-start w-1/2">
+      <div className="top-section flex justify-between items-start gap-2">
+        {/* Left-side: Client, Supplier, Logo */}
+        <div className="left-info flex flex-col items-start w-1/2">
           <p className="font-bold text-sm truncate">{client.name}</p>
           <p className="text-xs text-gray-700">{settings.companyName}</p>
           {settings.logoUrl && (
-            <Image src={settings.logoUrl} alt="Logo" width={40} height={40} className="object-contain mt-1" data-ai-hint="logo company" />
+            <Image src={settings.logoUrl} alt="Logo" width={40} height={40} className="object-contain mt-1" data-ai-hint="logo" />
           )}
         </div>
-        {/* Top-right: Items List */}
-        <div className="w-1/2 text-right">
+        {/* Right-side: Items List */}
+        <div className="right-info w-1/2 text-right">
             <ul className="list-none p-0 m-0 text-gray-800" style={{ fontSize: '7pt', lineHeight: '1.2' }}>
-                {invoice.items.slice(0, 4).map(item => ( // Limit to 4 items to avoid overflow
+                {invoice.items.slice(0, 4).map(item => (
                     <li key={item.productId} className="truncate"> - {item.productName}</li>
                 ))}
                 {invoice.items.length > 4 && <li className="truncate">...et autres</li>}
@@ -122,7 +140,6 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
 
       {/* Bottom section: Bars and Barcode */}
       <div className="mt-auto">
-        {/* Middle section with horizontal rules */}
         <div className="my-1 text-xs">
           <hr className="border-t border-black" />
           <div className="flex justify-between items-center py-0.5">
@@ -132,7 +149,6 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
           <hr className="border-t border-black" />
         </div>
 
-        {/* Barcode */}
         <div className="text-center flex justify-center">
           <svg id={barcodeId}></svg>
         </div>
@@ -178,4 +194,3 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
     </Dialog>
   );
 }
-
