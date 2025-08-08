@@ -13,9 +13,10 @@ type ShippingLabelsDialogProps = {
   invoice: Invoice;
   client: Client;
   settings: Settings;
+  asTextButton?: boolean;
 };
 
-export function ShippingLabelsDialog({ invoice, client, settings }: ShippingLabelsDialogProps) {
+export function ShippingLabelsDialog({ invoice, client, settings, asTextButton = false }: ShippingLabelsDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -70,6 +71,9 @@ export function ShippingLabelsDialog({ invoice, client, settings }: ShippingLabe
                 padding: 10px;
                 height: 30%; /* Approximately 1/3 of the page height */
                 box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
             }
           }
         `;
@@ -89,7 +93,7 @@ export function ShippingLabelsDialog({ invoice, client, settings }: ShippingLabe
   };
 
   const LabelContent = () => (
-    <div className="label-item flex flex-col justify-between p-4 font-sans text-sm">
+    <div className="label-item flex flex-col justify-between p-4 font-sans text-sm border border-dashed border-gray-400">
       <div className="flex justify-between">
         <div>
           <p className="font-bold text-lg">{client.name}</p>
@@ -109,12 +113,21 @@ export function ShippingLabelsDialog({ invoice, client, settings }: ShippingLabe
     </div>
   );
 
+  const TriggerButton = asTextButton ? (
+    <Button variant="outline" size="sm">
+      <Ticket className="mr-2 h-4 w-4" />
+      Étiquettes
+    </Button>
+  ) : (
+    <Button variant="ghost" size="icon" title="Imprimer les étiquettes">
+      <Ticket className="h-4 w-4" />
+    </Button>
+  );
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" title="Imprimer les étiquettes">
-          <Ticket className="h-4 w-4" />
-        </Button>
+        {TriggerButton}
       </DialogTrigger>
       <DialogContent className="max-w-4xl p-0">
         <DialogHeader className="p-6 pb-2">
@@ -122,7 +135,7 @@ export function ShippingLabelsDialog({ invoice, client, settings }: ShippingLabe
         </DialogHeader>
         <div className="bg-gray-100 p-8">
             <div id="shipping-labels-content" className="bg-white shadow-lg mx-auto" style={{width: '210mm', height: '297mm'}}>
-                <div className="labels-container h-full flex flex-col justify-around">
+                <div className="labels-container h-full flex flex-col justify-around gap-4">
                     <LabelContent />
                     <LabelContent />
                     <LabelContent />

@@ -92,7 +92,7 @@ export default async function InvoicesPage() {
                   {canEdit && client && (
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end">
-                        {!isCancelled && <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} />}
+                        {!isCancelled && <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} asTextButton />}
                         <RecordPaymentButton invoice={invoice} settings={settings} />
                         <EditInvoiceForm invoice={invoice} clients={clients} products={products} settings={settings} />
                         <CancelInvoiceButton id={invoice.id} invoiceNumber={invoice.invoiceNumber} disabled={isCancelledOrPaid} />
