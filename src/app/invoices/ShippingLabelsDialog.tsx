@@ -22,14 +22,10 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
   useEffect(() => {
     if (isOpen) {
       try {
-        JsBarcode("#barcode", invoice.invoiceNumber, {
-          format: "CODE128",
-          lineColor: "#000",
-          width: 2,
-          height: 50,
-          displayValue: true,
-          fontSize: 14,
-        });
+        // We need to generate 3 separate barcodes with unique IDs
+        JsBarcode("#barcode-1", invoice.invoiceNumber, { format: "CODE128", lineColor: "#000", width: 2, height: 50, displayValue: true, fontSize: 14 });
+        JsBarcode("#barcode-2", invoice.invoiceNumber, { format: "CODE128", lineColor: "#000", width: 2, height: 50, displayValue: true, fontSize: 14 });
+        JsBarcode("#barcode-3", invoice.invoiceNumber, { format: "CODE128", lineColor: "#000", width: 2, height: 50, displayValue: true, fontSize: 14 });
       } catch (e) {
         console.error("Erreur lors de la génération du code-barres:", e);
       }
@@ -67,7 +63,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
                 justify-content: space-around;
             }
             .label-item {
-                border: 1px dashed #ccc;
+                border: 1px dashed #ccc !important;
                 padding: 10px;
                 height: 30%; /* Approximately 1/3 of the page height */
                 box-sizing: border-box;
@@ -92,7 +88,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
     }
   };
 
-  const LabelContent = () => (
+  const LabelContent = ({ barcodeId }: { barcodeId: string }) => (
     <div className="label-item flex flex-col justify-between p-4 font-sans text-sm border border-dashed border-gray-400">
       <div className="flex justify-between">
         <div>
@@ -105,7 +101,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
         </div>
       </div>
       <div className="text-center my-4">
-        <svg id="barcode"></svg>
+        <svg id={barcodeId}></svg>
       </div>
       <div className="text-center text-xs text-gray-500">
         Date de commande: {format(new Date(invoice.date), 'dd/MM/yyyy')}
@@ -135,10 +131,10 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
         </DialogHeader>
         <div className="bg-gray-100 p-8">
             <div id="shipping-labels-content" className="bg-white shadow-lg mx-auto" style={{width: '210mm', height: '297mm'}}>
-                <div className="labels-container h-full flex flex-col justify-around gap-4">
-                    <LabelContent />
-                    <LabelContent />
-                    <LabelContent />
+                <div className="labels-container h-full flex flex-col justify-around gap-4 p-4">
+                    <LabelContent barcodeId="barcode-1" />
+                    <LabelContent barcodeId="barcode-2" />
+                    <LabelContent barcodeId="barcode-3" />
                 </div>
             </div>
         </div>
