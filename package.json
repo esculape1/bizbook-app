@@ -42,6 +42,7 @@
     "firebase-admin": "^12.4.0",
     "genkit": "1.1.0",
     "html2canvas": "^1.4.1",
+    "jsbarcode": "^3.11.6",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.8.2",
     "lucide-react": "^0.475.0",
@@ -57,6 +58,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@types/jsbarcode": "^3.11.4",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
