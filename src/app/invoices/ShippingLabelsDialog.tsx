@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Printer, Ticket } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { format } from 'date-fns';
+import Image from 'next/image';
 
 type ShippingLabelsDialogProps = {
   invoice: Invoice;
@@ -21,9 +22,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
 
   useEffect(() => {
     if (isOpen) {
-      // Use a timeout to ensure the DOM is ready for barcode generation
       setTimeout(() => {
-        // Generate 6 barcodes with unique IDs
         for (let i = 1; i <= 6; i++) {
           try {
             JsBarcode(`#barcode-${invoice.id}-${i}`, invoice.invoiceNumber, {
@@ -38,7 +37,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
             console.error(`Erreur lors de la génération du code-barres #${i}:`, e);
           }
         }
-      }, 100); // A small delay can help
+      }, 100);
     }
   }, [isOpen, invoice.invoiceNumber, invoice.id]);
 
@@ -72,7 +71,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
               page-break-inside: avoid;
             }
             .label-item-printable {
-              border: 1px dashed #999 !important;
+              border: 1px solid #000 !important;
               padding: 10px;
               box-sizing: border-box;
               display: flex;
@@ -98,22 +97,36 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
   };
 
   const LabelContent = ({ barcodeId }: { barcodeId: string }) => (
-    <div className="label-item-printable flex flex-col justify-between p-2 font-sans text-sm border border-dashed border-gray-400">
-      <div className="flex justify-between items-start text-xs">
-        <div>
-          <p className="font-bold text-base">{client.name}</p>
-          <p className="text-gray-600">Client</p>
+    <div className="label-item-printable flex flex-col justify-between p-2 font-sans text-sm border border-solid border-gray-600">
+      {/* Top section */}
+      <div className="flex justify-between items-start">
+        {/* Top-left: Logo and Company Name */}
+        <div className="flex flex-col items-start w-1/2">
+          {settings.logoUrl && (
+            <Image src={settings.logoUrl} alt="Logo" width={40} height={40} className="object-contain" data-ai-hint="logo company" />
+          )}
+          <p className="text-xs font-bold mt-1">DLG Caverne Consortium</p>
         </div>
-        <div className="text-right">
-          <p className="font-bold">{settings.companyName}</p>
-          <p className="text-gray-600">Fournisseur</p>
+        {/* Top-right: Client Info */}
+        <div className="text-right w-1/2">
+          <p className="font-bold text-base truncate">{client.name}</p>
+          <p className="text-xs text-gray-600">{client.phone}</p>
         </div>
       </div>
-      <div className="text-center my-2 flex justify-center">
+
+      {/* Middle section with horizontal rules */}
+      <div className="my-2 text-xs">
+        <hr className="border-t border-gray-400" />
+        <div className="flex justify-between items-center py-1">
+          <span>Quantité: ________</span>
+          <span>Date: {format(new Date(invoice.date), 'dd/MM/yyyy')}</span>
+        </div>
+        <hr className="border-t border-gray-400" />
+      </div>
+
+      {/* Bottom section: Barcode */}
+      <div className="text-center flex justify-center">
         <svg id={barcodeId}></svg>
-      </div>
-      <div className="text-center text-xs text-gray-500">
-        Date: {format(new Date(invoice.date), 'dd/MM/yyyy')}
       </div>
     </div>
   );
