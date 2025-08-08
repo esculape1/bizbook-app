@@ -105,7 +105,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
           {settings.logoUrl && (
             <Image src={settings.logoUrl} alt="Logo" width={40} height={40} className="object-contain" data-ai-hint="logo company" />
           )}
-          <p className="text-xs font-bold mt-1">DLG Caverne Consortium</p>
+          <p className="text-xs font-bold mt-1">{settings.companyName}</p>
         </div>
         {/* Top-right: Client Info */}
         <div className="text-right w-1/2">
@@ -132,7 +132,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
   );
 
   const TriggerButton = asTextButton ? (
-    <Button variant="outline" size="sm">
+    <Button variant="outline">
       <Ticket className="mr-2 h-4 w-4" />
       Étiquettes
     </Button>
