@@ -20,17 +20,10 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
   const [isOpen, setIsOpen] = useState(false);
   const barcodeRefs = useRef<(HTMLCanvasElement | null)[]>([]);
 
-  // Reset the refs array whenever the dialog is opened for a new invoice
   useEffect(() => {
     if (isOpen) {
-      barcodeRefs.current = [];
-    }
-  }, [isOpen, invoice.id]);
-  
-  // This effect runs after the component renders and the dialog is open.
-  useEffect(() => {
-    if (isOpen) {
-      // Small delay to ensure the DOM is ready
+      barcodeRefs.current = []; // Reset refs array
+      // A small delay ensures the DOM is fully rendered before we try to generate barcodes
       setTimeout(() => {
         barcodeRefs.current.forEach((canvas) => {
           if (canvas) {
@@ -44,13 +37,13 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
                 margin: 0,
               });
             } catch (e) {
-              console.error(`Failed to generate barcode:`, e);
+              console.error(`Failed to generate barcode for canvas:`, e);
             }
           }
         });
       }, 100);
     }
-  }, [isOpen, invoice.id, invoice.invoiceNumber]);
+  }, [isOpen, invoice.id, invoice.invoiceNumber]); // Rerun when the dialog opens or the invoice changes
 
   const handlePrint = () => {
     const printContent = document.getElementById(`shipping-labels-content-printable-${invoice.id}`);
@@ -75,12 +68,12 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
           @media print {
             @page {
               size: A4;
-              margin: 0;
+              margin: 10mm;
             }
             body { 
               -webkit-print-color-adjust: exact !important; 
               print-color-adjust: exact !important;
-              margin: 10mm !important; /* Margins for the page */
+              margin: 0 !important;
               padding: 0 !important;
             }
             .labels-container-printable {
@@ -125,40 +118,38 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
   };
 
   const LabelContent = ({ index }: { index: number }) => (
-    <div className="label-item-printable flex flex-col justify-between p-2 font-sans border border-solid border-black">
-      {/* Top Section */}
-      <div className="space-y-2">
-        {/* Supplier Info Box */}
-        <div className="border border-gray-300 rounded p-2">
-            <p className="text-xs font-bold uppercase text-gray-500">Fournisseur</p>
-            <div className="flex items-center gap-2 mt-1">
-                {settings.logoUrl && (
-                    <Image 
-                        src={settings.logoUrl} 
-                        alt="Logo" 
-                        width={24} 
-                        height={24} 
-                        className="object-contain" 
-                        data-ai-hint="logo"
-                    />
-                )}
-                <p className="font-semibold text-sm truncate">{settings.companyName}</p>
+    <div className="label-item-printable flex flex-col justify-between p-2 font-sans border border-solid border-black" style={{ width: '7cm', height: '7cm' }}>
+        {/* Top section for supplier and client info */}
+        <div>
+            {/* Supplier Info Box */}
+            <div className="border border-gray-300 rounded p-2 mb-2">
+                <div className="flex items-center gap-2">
+                    {settings.logoUrl && (
+                        <Image 
+                            src={settings.logoUrl} 
+                            alt="Logo" 
+                            width={24} 
+                            height={24} 
+                            className="object-contain" 
+                            data-ai-hint="logo"
+                        />
+                    )}
+                    <p className="font-semibold text-sm truncate">{settings.companyName}</p>
+                </div>
+            </div>
+            {/* Client Info Box */}
+             <div className="border border-gray-300 rounded p-2">
+                <div className="mt-1">
+                     <p className="font-bold text-base truncate">{client.name}</p>
+                    {client.phone && <p className="text-sm text-muted-foreground truncate">{client.phone}</p>}
+                </div>
             </div>
         </div>
-        {/* Client Info Box */}
-         <div className="border border-gray-300 rounded p-2">
-            <p className="text-xs font-bold uppercase text-gray-500">Client</p>
-            <div className="mt-1">
-                 <p className="font-bold text-base truncate">{client.name}</p>
-                {client.phone && <p className="text-sm text-muted-foreground truncate">{client.phone}</p>}
-            </div>
-        </div>
-      </div>
 
-      {/* Bottom Section: Barcode */}
-      <div className="w-full pt-2">
-         <canvas ref={el => barcodeRefs.current[index] = el}></canvas>
-      </div>
+        {/* Bottom Section: Barcode */}
+        <div className="w-full pt-2">
+            <canvas ref={(el: HTMLCanvasElement | null) => { barcodeRefs.current[index] = el; }}></canvas>
+        </div>
     </div>
   );
 
@@ -185,7 +176,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
         <div className="max-h-[70vh] overflow-y-auto bg-gray-100 p-8">
             <div id={`shipping-labels-content-printable-${invoice.id}`} className="bg-white shadow-lg mx-auto labels-container-printable grid grid-cols-2 gap-4" style={{width: '190mm', minHeight: '277mm'}}>
                 {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} style={{width: '7cm', height: '7cm'}}>
+                    <div key={i}>
                         <LabelContent index={i} />
                     </div>
                 ))}
@@ -202,3 +193,4 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
     </Dialog>
   );
 }
+
