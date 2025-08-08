@@ -8,8 +8,6 @@ import { Printer, Ticket } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import Image from 'next/image';
 import JsBarcode from 'jsbarcode';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
 
 type ShippingLabelsDialogProps = {
   invoice: Invoice;
@@ -51,12 +49,23 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
         const title = `Etiquettes_${invoice.invoiceNumber.replace(/[\/\s]/g, '-')}`;
         printWindow.document.write(`<html><head><title>${title}</title>`);
         
+        const styles = Array.from(document.styleSheets)
+          .map(styleSheet => {
+            try {
+              // @ts-ignore
+              return Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('');
+            } catch (e) {
+              // @ts-ignore
+              return `<link rel="stylesheet" href="${styleSheet.href}">`;
+            }
+          }).join('\n');
+          
         const printStyles = `
-          @page {
-            size: A4;
-            margin: 0;
-          }
           @media print {
+            @page {
+              size: A4;
+              margin: 0;
+            }
             body { 
               -webkit-print-color-adjust: exact; 
               print-color-adjust: exact;
@@ -95,7 +104,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
           }
         `;
 
-        printWindow.document.write(`<style>${printStyles}</style></head><body>`);
+        printWindow.document.write(`<style>${styles}${printStyles}</style></head><body>`);
         printWindow.document.write(printContent.innerHTML);
         printWindow.document.write('</body></html>');
         printWindow.document.close();
@@ -111,39 +120,32 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
 
   const LabelContent = ({ index }: { index: number }) => (
     <div className="label-item-printable flex flex-col justify-between p-2 font-sans border border-solid border-black" style={{width: '105mm', height: '99mm'}}>
-        {/* Top Section: Info Boxes */}
-        <div className="space-y-2">
-            {/* Supplier Box */}
-            <div className="info-box border border-gray-300 p-1.5 rounded-md">
-                <div className="flex items-center gap-2">
-                    {settings.logoUrl && (
-                        <Image 
-                            src={settings.logoUrl} 
-                            alt="Logo" 
-                            width={32} 
-                            height={32} 
-                            className="object-contain" 
-                            data-ai-hint="logo"
-                        />
-                    )}
-                    <div className="flex-1">
-                        <p className="text-xs text-muted-foreground">Fournisseur:</p>
-                        <p className="font-bold text-sm truncate">{settings.companyName}</p>
-                    </div>
-                </div>
+        {/* Top Section: Info */}
+        <div className="flex justify-between items-start gap-2">
+            {/* Left: Supplier */}
+            <div className="w-1/2 space-y-1">
+                {settings.logoUrl && (
+                    <Image 
+                        src={settings.logoUrl} 
+                        alt="Logo" 
+                        width={40} 
+                        height={40} 
+                        className="object-contain" 
+                        data-ai-hint="logo"
+                    />
+                )}
+                <p className="font-bold text-xs truncate">{settings.companyName}</p>
             </div>
-            
-            {/* Client Box */}
-            <div className="info-box border border-gray-300 p-1.5 rounded-md">
-                 <p className="text-xs text-muted-foreground">Client:</p>
+            {/* Right: Client */}
+            <div className="w-1/2 text-right">
                 <p className="font-bold text-sm truncate">{client.name}</p>
-                {client.phone && <p className="text-xs text-muted-foreground truncate">Tél: {client.phone}</p>}
+                {client.phone && <p className="text-xs text-muted-foreground truncate">{client.phone}</p>}
             </div>
         </div>
 
       {/* Bottom Section: Barcode */}
       <div className="w-full pt-2">
-        <canvas ref={el => { barcodeRefs.current[index] = el; }}></canvas>
+        <canvas ref={el => { if (el) barcodeRefs.current[index] = el; }}></canvas>
       </div>
     </div>
   );
