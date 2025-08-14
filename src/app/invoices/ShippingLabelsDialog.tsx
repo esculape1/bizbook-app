@@ -4,12 +4,14 @@
 import { useState, useEffect, useRef } from 'react';
 import type { Invoice, Client, Settings } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Printer, Ticket } from 'lucide-react';
+import { Printer, Ticket, Download } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import Image from 'next/image';
 import JsBarcode from 'jsbarcode';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 type ShippingLabelsDialogProps = {
   invoice: Invoice;
@@ -21,6 +23,7 @@ type ShippingLabelsDialogProps = {
 export function ShippingLabelsDialog({ invoice, client, settings, asTextButton = false }: ShippingLabelsDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const barcodeRefs = useRef<(HTMLCanvasElement | null)[]>([]);
+  const labelsContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -117,6 +120,38 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
       }
     }
   };
+  
+  const handleDownloadPdf = async () => {
+    const container = labelsContainerRef.current;
+    if (!container) return;
+
+    const canvas = await html2canvas(container, {
+      scale: 3, // Increase scale for better quality
+      useCORS: true
+    });
+    
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    const ratio = canvasWidth / canvasHeight;
+    
+    let imgWidth = pdfWidth - 20; // with margin
+    let imgHeight = imgWidth / ratio;
+
+    if (imgHeight > pdfHeight - 20) {
+        imgHeight = pdfHeight - 20;
+        imgWidth = imgHeight * ratio;
+    }
+
+    const x = (pdfWidth - imgWidth) / 2;
+    const y = (pdfHeight - imgHeight) / 2;
+
+    pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+    pdf.save(`Etiquettes_${invoice.invoiceNumber}.pdf`);
+  };
 
   const LabelContent = ({ index }: { index: number }) => (
     <div className="label-item-printable flex flex-col justify-between p-2 font-sans border border-solid border-black">
@@ -177,7 +212,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
           <DialogTitle>Aperçu des Étiquettes d'Expédition</DialogTitle>
         </DialogHeader>
         <div className="max-h-[70vh] overflow-y-auto bg-gray-100 p-8 flex justify-center items-start">
-            <div id={`shipping-labels-content-printable-${invoice.id}`} className="bg-white shadow-lg mx-auto labels-container-printable grid grid-cols-2 gap-4" style={{width: '16cm', minHeight: '23cm'}}>
+            <div id={`shipping-labels-content-printable-${invoice.id}`} ref={labelsContainerRef} className="bg-white shadow-lg mx-auto labels-container-printable grid grid-cols-2 gap-4" style={{width: '16cm', minHeight: '23cm'}}>
                 {Array.from({ length: 6 }).map((_, i) => (
                     <div key={i} className="label-item-preview" style={{width: '7.6cm', height: '7.6cm'}}>
                         <LabelContent index={i} />
@@ -187,6 +222,10 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
         </div>
         <DialogFooter className="p-6 bg-white border-t">
             <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>Fermer</Button>
+            <Button onClick={handleDownloadPdf} variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Télécharger en PDF
+            </Button>
             <Button onClick={handlePrint}>
                 <Printer className="mr-2 h-4 w-4" />
                 Imprimer les 6 étiquettes
