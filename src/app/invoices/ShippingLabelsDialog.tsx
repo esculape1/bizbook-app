@@ -154,36 +154,36 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
   };
 
   const LabelContent = ({ index }: { index: number }) => (
-    <div className="label-item-printable flex flex-col justify-between p-2 font-sans border border-solid border-black">
-        <div>
-            <div className="border border-gray-300 rounded p-1 mb-2">
-                <div className="flex items-center gap-2">
-                    {settings.logoUrl && (
-                        <Image 
-                            src={settings.logoUrl} 
-                            alt="Logo" 
-                            width={24} 
-                            height={24} 
-                            className="object-contain" 
-                            data-ai-hint="logo"
-                        />
-                    )}
-                    <p className="font-semibold text-xs truncate">{settings.companyName}</p>
-                </div>
+    <div className="label-item-printable flex h-full flex-col justify-between border border-solid border-black p-2 font-sans">
+        <div className="space-y-1.5">
+            {/* Company Info */}
+            <div className="flex items-center gap-2 rounded border border-gray-300 p-1">
+                {settings.logoUrl && (
+                    <Image 
+                        src={settings.logoUrl} 
+                        alt="Logo" 
+                        width={20} 
+                        height={20} 
+                        className="shrink-0 object-contain" 
+                        data-ai-hint="logo"
+                    />
+                )}
+                <p className="truncate font-semibold text-xs">{settings.companyName}</p>
             </div>
-             <div className="border border-gray-300 rounded p-2">
-                <div className="mt-1">
-                     <p className="font-bold text-sm truncate">{client.name}</p>
-                    {client.phone && <p className="text-xs text-muted-foreground truncate">{client.phone}</p>}
-                </div>
+            {/* Client Info */}
+            <div className="rounded border border-gray-300 p-1">
+                <p className="truncate font-bold text-sm">{client.name}</p>
+                {client.phone && <p className="truncate text-xs text-gray-600">{client.phone}</p>}
             </div>
-            <div className="text-xs mt-2 border-t border-dashed pt-1 space-y-1">
-                <p><strong>Quantité:</strong> .....................................</p>
-                <p><strong>Date:</strong> {format(new Date(invoice.date), "dd/MM/yyyy", { locale: fr })}</p>
+            {/* Quantity and Date */}
+            <div className="flex justify-between border-t border-dashed pt-1 text-xs">
+                <span><strong>Qté:</strong> ....................</span>
+                <span><strong>Date:</strong> {format(new Date(invoice.date), "dd/MM/yy")}</span>
             </div>
         </div>
 
-        <div className="w-full pt-2">
+        {/* Barcode */}
+        <div className="w-full pt-1">
              <canvas ref={el => {
                 if (el) barcodeRefs.current[index] = el;
              }}></canvas>
@@ -212,7 +212,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
           <DialogTitle>Aperçu des Étiquettes d'Expédition</DialogTitle>
         </DialogHeader>
         <div className="max-h-[70vh] overflow-y-auto bg-gray-100 p-8 flex justify-center items-start">
-            <div id={`shipping-labels-content-printable-${invoice.id}`} ref={labelsContainerRef} className="bg-white shadow-lg mx-auto labels-container-printable grid grid-cols-2 gap-4" style={{width: '16cm', minHeight: '23cm'}}>
+            <div id={`shipping-labels-content-printable-${invoice.id}`} ref={labelsContainerRef} className="bg-white shadow-lg mx-auto labels-container-printable grid grid-cols-2 gap-px" style={{width: '15.4cm', minHeight: '23.1cm'}}>
                 {Array.from({ length: 6 }).map((_, i) => (
                     <div key={i} className="label-item-preview" style={{width: '7.6cm', height: '7.6cm'}}>
                         <LabelContent index={i} />
