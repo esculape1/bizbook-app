@@ -42,7 +42,7 @@ export default async function ExpensesPage() {
     getSession()
   ]);
 
-  const canEdit = user?.role === 'Admin';
+  const canEdit = user?.role === 'Admin' || user?.role === 'SuperAdmin';
 
   const groupedExpenses = expenses.reduce((acc, expense) => {
     const expenseDate = new Date(expense.date);

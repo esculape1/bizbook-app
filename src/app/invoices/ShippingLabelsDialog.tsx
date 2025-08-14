@@ -8,6 +8,8 @@ import { Printer, Ticket } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import Image from 'next/image';
 import JsBarcode from 'jsbarcode';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 type ShippingLabelsDialogProps = {
   invoice: Invoice;
@@ -32,7 +34,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
                 displayValue: true,
                 fontSize: 14,
                 height: 40,
-                width: 1.5,
+                width: 1.2, // Adjusted barcode width
                 margin: 0,
               });
             } catch (e) {
@@ -78,7 +80,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
             .labels-container-printable {
               display: grid !important;
               grid-template-columns: repeat(2, 1fr) !important;
-              grid-template-rows: repeat(3, 1fr) !important;
+              grid-auto-rows: 1fr !important;
               gap: 5mm !important;
               width: 190mm !important; /* 210mm - 2*10mm margin */
               height: 277mm !important; /* 297mm - 2*10mm margin */
@@ -117,11 +119,11 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
   };
 
   const LabelContent = ({ index }: { index: number }) => (
-    <div className="label-item-printable flex flex-col justify-between p-2 font-sans border border-solid border-black" style={{ width: '7cm', height: '7cm' }}>
+    <div className="label-item-printable flex flex-col justify-between p-2 font-sans border border-solid border-black">
         {/* Top section for supplier and client info */}
         <div>
             {/* Supplier Info Box */}
-            <div className="border border-gray-300 rounded p-2 mb-2">
+            <div className="border border-gray-300 rounded p-1 mb-2">
                 <div className="flex items-center gap-2">
                     {settings.logoUrl && (
                         <Image 
@@ -133,15 +135,20 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
                             data-ai-hint="logo"
                         />
                     )}
-                    <p className="font-semibold text-sm truncate">{settings.companyName}</p>
+                    <p className="font-semibold text-xs truncate">{settings.companyName}</p>
                 </div>
             </div>
             {/* Client Info Box */}
              <div className="border border-gray-300 rounded p-2">
                 <div className="mt-1">
-                     <p className="font-bold text-base truncate">{client.name}</p>
-                    {client.phone && <p className="text-sm text-muted-foreground truncate">{client.phone}</p>}
+                     <p className="font-bold text-sm truncate">{client.name}</p>
+                    {client.phone && <p className="text-xs text-muted-foreground truncate">{client.phone}</p>}
                 </div>
+            </div>
+            {/* New Quantity and Date section */}
+            <div className="text-xs mt-2 border-t border-dashed pt-1 space-y-1">
+                <p><strong>Quantité:</strong> .....................................</p>
+                <p><strong>Date:</strong> {format(new Date(invoice.date), "dd/MM/yyyy", { locale: fr })}</p>
             </div>
         </div>
 

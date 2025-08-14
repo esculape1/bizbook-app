@@ -15,7 +15,7 @@ const expenseSchema = z.object({
 
 export async function createExpense(formData: unknown) {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
   }
 
@@ -47,7 +47,7 @@ export async function createExpense(formData: unknown) {
 
 export async function updateExpense(id: string, formData: unknown) {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
   }
 
@@ -79,7 +79,7 @@ export async function updateExpense(id: string, formData: unknown) {
 
 export async function deleteExpense(id: string) {
     const session = await getSession();
-    if (session?.role !== 'Admin') {
+    if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
       return { message: "Action non autorisée." };
     }
     
