@@ -173,7 +173,7 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
         }
 
         if (Object.keys(updatePayload).length > 0) {
-          productUpdatePromises.push(updateProductInDB(productId, updatePayload));
+          productUpdatePromises.push(updateProduct(productId, updatePayload));
         }
       }
     }
@@ -237,7 +237,7 @@ export async function cancelPurchase(id: string) {
         const product = products.find(p => p.id === item.productId);
         if (product) {
           const newStock = product.quantityInStock - item.quantity;
-          await updateProductInDB(item.productId, { quantityInStock: newStock });
+          await updateProduct(item.productId, { quantityInStock: newStock });
         }
       }
     }
