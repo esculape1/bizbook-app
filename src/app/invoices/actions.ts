@@ -53,7 +53,7 @@ const updateInvoiceSchema = z.object({
 
 export async function createInvoice(formData: unknown) {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
   }
 
@@ -153,7 +153,7 @@ export async function createInvoice(formData: unknown) {
 
 export async function updateInvoice(id: string, invoiceNumber: string, formData: unknown) {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
   }
 
@@ -265,7 +265,7 @@ export async function updateInvoice(id: string, invoiceNumber: string, formData:
 
 export async function cancelInvoice(id: string) {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
   }
 
@@ -313,7 +313,7 @@ const paymentSchema = z.object({
 
 export async function recordPayment(invoiceId: string, formData: unknown) {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
   }
 

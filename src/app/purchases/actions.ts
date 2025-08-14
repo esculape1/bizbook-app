@@ -37,7 +37,7 @@ const updatePurchaseSchema = purchaseSchema.extend({
 
 export async function createPurchase(formData: unknown) {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
   }
 
@@ -98,7 +98,7 @@ export async function createPurchase(formData: unknown) {
 
 export async function updatePurchase(id: string, purchaseNumber: string, formData: unknown) {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
   }
 
@@ -168,12 +168,12 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
         }
 
         // Update purchase price if the purchase is being received
-        if (isNowReceived) {
+        if (isNowReceived && landedCostPerUnit > 0) {
           updatePayload.purchasePrice = landedCostPerUnit;
         }
 
         if (Object.keys(updatePayload).length > 0) {
-          productUpdatePromises.push(updateProduct(productId, updatePayload));
+          productUpdatePromises.push(updateProductInDB(productId, updatePayload));
         }
       }
     }
@@ -221,7 +221,7 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
 
 export async function cancelPurchase(id: string) {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
   }
 
@@ -237,7 +237,7 @@ export async function cancelPurchase(id: string) {
         const product = products.find(p => p.id === item.productId);
         if (product) {
           const newStock = product.quantityInStock - item.quantity;
-          await updateProduct(item.productId, { quantityInStock: newStock });
+          await updateProductInDB(item.productId, { quantityInStock: newStock });
         }
       }
     }

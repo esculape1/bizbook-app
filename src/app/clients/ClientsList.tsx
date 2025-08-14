@@ -10,7 +10,7 @@ import { DeleteClientButton } from "./DeleteClientButton";
 import { EditClientButton } from "./EditClientButton";
 
 export default function ClientsList({ clients, userRole }: { clients: Client[], userRole: User['role'] | undefined }) {
-  const canEdit = userRole === 'Admin';
+  const canEdit = userRole === 'Admin' || userRole === 'SuperAdmin';
   
   return (
     <div className="flex flex-col gap-6">

@@ -24,7 +24,7 @@ export default async function InvoicesPage() {
     getSession()
   ]);
 
-  const canEdit = user?.role === 'Admin';
+  const canEdit = user?.role === 'Admin' || user?.role === 'SuperAdmin';
 
   const getStatusVariant = (status: Invoice['status']): "success" | "warning" | "destructive" | "outline" => {
     switch (status) {
@@ -64,7 +64,7 @@ export default async function InvoicesPage() {
                 <TableHead>Statut</TableHead>
                 <TableHead className="text-right">Montant Total</TableHead>
                 <TableHead className="text-right">Montant Dû</TableHead>
-                {canEdit && <TableHead className="text-right">Actions</TableHead>}
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -89,13 +89,13 @@ export default async function InvoicesPage() {
                   </TableCell>
                   <TableCell className="text-right">{formatCurrency(invoice.totalAmount, settings.currency)}</TableCell>
                   <TableCell className="text-right font-medium text-destructive">{formatCurrency(amountDue > 0 ? amountDue : 0, settings.currency)}</TableCell>
-                  {canEdit && client && (
+                  {client && (
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end">
-                        {!isCancelled && <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} asTextButton />}
-                        <RecordPaymentButton invoice={invoice} settings={settings} />
-                        <EditInvoiceForm invoice={invoice} clients={clients} products={products} settings={settings} />
-                        <CancelInvoiceButton id={invoice.id} invoiceNumber={invoice.invoiceNumber} disabled={isCancelledOrPaid} />
+                        {!isCancelled && <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} asTextButton={false} />}
+                        {canEdit && <RecordPaymentButton invoice={invoice} settings={settings} />}
+                        {canEdit && <EditInvoiceForm invoice={invoice} clients={clients} products={products} settings={settings} />}
+                        {canEdit && <CancelInvoiceButton id={invoice.id} invoiceNumber={invoice.invoiceNumber} disabled={isCancelledOrPaid} />}
                       </div>
                     </TableCell>
                   )}

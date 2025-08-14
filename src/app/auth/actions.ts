@@ -29,7 +29,7 @@ export async function signIn(prevState: { error: string } | undefined, formData:
         id: userRecord.id,
         name: userRecord.name,
         email: userRecord.email,
-        role: userRecord.role,
+        role: userRecord.role || 'User', // Default to 'User' if role is not set
     };
 
     const sessionData = JSON.stringify(authenticatedUser);

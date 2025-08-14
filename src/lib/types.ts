@@ -3,7 +3,7 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  role: 'Admin' | 'User';
+  role: 'SuperAdmin' | 'Admin' | 'User';
 };
 
 // This type is used for database interactions where the password might be included.

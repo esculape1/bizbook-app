@@ -21,7 +21,7 @@ export default async function PurchasesPage() {
     getSession()
   ]);
 
-  const canEdit = user?.role === 'Admin';
+  const canEdit = user?.role === 'Admin' || user?.role === 'SuperAdmin';
 
   const totalPendingAmount = purchases
     .filter(p => p.status === 'Pending')

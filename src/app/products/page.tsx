@@ -16,7 +16,8 @@ export default async function ProductsPage() {
     getSession(),
   ]);
 
-  const canEdit = user?.role === 'Admin';
+  const canManageProducts = user?.role === 'SuperAdmin';
+  const canViewPrices = user?.role === 'SuperAdmin' || user?.role === 'Admin';
 
   return (
     <div className="flex flex-col gap-6">
@@ -25,7 +26,7 @@ export default async function ProductsPage() {
         actions={
           <div className="flex items-center gap-2">
             <StockInventoryReport products={products} settings={settings} />
-            {canEdit ? <ProductForm /> : null}
+            {canManageProducts ? <ProductForm /> : null}
           </div>
         }
       />
@@ -37,12 +38,12 @@ export default async function ProductsPage() {
                 <TableHead>Nom</TableHead>
                 <TableHead>Référence</TableHead>
                 <TableHead>Catégorie</TableHead>
-                <TableHead className="text-right">Prix d'Achat</TableHead>
-                <TableHead className="text-right">Prix de Vente</TableHead>
+                {canViewPrices && <TableHead className="text-right">Prix d'Achat</TableHead>}
+                {canViewPrices && <TableHead className="text-right">Prix de Vente</TableHead>}
                 <TableHead className="text-right">Quantité</TableHead>
-                <TableHead className="text-right">Point de Cde.</TableHead>
-                <TableHead className="text-right">Stock Sécu.</TableHead>
-                {canEdit && <TableHead className="text-right">Actions</TableHead>}
+                {canViewPrices && <TableHead className="text-right">Point de Cde.</TableHead>}
+                {canViewPrices && <TableHead className="text-right">Stock Sécu.</TableHead>}
+                {canManageProducts && <TableHead className="text-right">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -51,12 +52,12 @@ export default async function ProductsPage() {
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell>{product.reference}</TableCell>
                   <TableCell>{product.category}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(product.purchasePrice || 0, settings.currency)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(product.unitPrice, settings.currency)}</TableCell>
+                  {canViewPrices && <TableCell className="text-right">{formatCurrency(product.purchasePrice || 0, settings.currency)}</TableCell>}
+                  {canViewPrices && <TableCell className="text-right">{formatCurrency(product.unitPrice, settings.currency)}</TableCell>}
                   <TableCell className="text-right">{product.quantityInStock}</TableCell>
-                  <TableCell className="text-right">{product.reorderPoint}</TableCell>
-                  <TableCell className="text-right">{product.safetyStock}</TableCell>
-                  {canEdit && (
+                  {canViewPrices && <TableCell className="text-right">{product.reorderPoint}</TableCell>}
+                  {canViewPrices && <TableCell className="text-right">{product.safetyStock}</TableCell>}
+                  {canManageProducts && (
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end">
                         <EditProductButton product={product} />

@@ -20,7 +20,7 @@ type NewClient = z.infer<typeof clientSchema>;
 
 export async function createClient(data: NewClient) {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
   }
 
@@ -46,7 +46,7 @@ export async function createClient(data: NewClient) {
 
 export async function updateClient(id: string, data: NewClient) {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
   }
 
@@ -72,7 +72,7 @@ export async function updateClient(id: string, data: NewClient) {
 
 export async function deleteClient(id: string) {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
   }
     

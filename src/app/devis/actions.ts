@@ -32,7 +32,7 @@ const updateQuoteSchema = quoteSchema.extend({
 
 export async function createQuote(formData: unknown) {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
   }
 
@@ -99,7 +99,7 @@ export async function createQuote(formData: unknown) {
 
 export async function updateQuote(id: string, quoteNumber: string, formData: unknown) {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
   }
 
@@ -248,7 +248,7 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
 
 export async function deleteQuote(id: string) {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
   }
     

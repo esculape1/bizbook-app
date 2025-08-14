@@ -22,7 +22,7 @@ export default async function DevisPage() {
     getSession()
   ]);
 
-  const canEdit = user?.role === 'Admin';
+  const canEdit = user?.role === 'Admin' || user?.role === 'SuperAdmin';
 
   const getStatusVariant = (status: 'Draft' | 'Sent' | 'Accepted' | 'Declined'): "outline" | "default" | "success" | "destructive" => {
     switch (status) {
@@ -61,7 +61,7 @@ export default async function DevisPage() {
                 <TableHead>Date</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead className="text-right">Montant</TableHead>
-                {canEdit && <TableHead className="text-right">Actions</TableHead>}
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -78,12 +78,12 @@ export default async function DevisPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">{formatCurrency(quote.totalAmount, settings.currency)}</TableCell>
-                  {canEdit && client && (
+                  {client && (
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end">
                         <QuoteViewerDialog quote={quote} client={client} settings={settings} />
-                        <EditQuoteForm quote={quote} clients={clients} products={products} settings={settings} />
-                        <DeleteQuoteButton id={quote.id} quoteNumber={quote.quoteNumber} />
+                        {canEdit && <EditQuoteForm quote={quote} clients={clients} products={products} settings={settings} />}
+                        {canEdit && <DeleteQuoteButton id={quote.id} quoteNumber={quote.quoteNumber} />}
                       </div>
                     </TableCell>
                   )}

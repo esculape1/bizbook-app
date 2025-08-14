@@ -36,24 +36,22 @@ import type { User, Settings as AppSettings } from '@/lib/types';
 import { signOut } from '@/app/auth/actions';
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['Admin', 'User'] },
-  { href: '/clients', label: 'Clients', icon: Users, roles: ['Admin', 'User'] },
-  { href: '/suppliers', label: 'Fournisseurs', icon: Briefcase, roles: ['Admin', 'User'] },
-  { href: '/purchases', label: 'Achats', icon: ShoppingCart, roles: ['Admin', 'User'] },
-  { href: '/products', label: 'Produits', icon: Box, roles: ['Admin', 'User'] },
-  { href: '/devis', label: 'Proforma', icon: FileClock, roles: ['Admin', 'User'] },
-  { href: '/invoices', label: 'Factures', icon: FileText, roles: ['Admin', 'User'] },
-  { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: ['Admin', 'User'] },
-  { href: '/reports', label: 'Rapports', icon: BarChart3, roles: ['Admin', 'User'] },
-  { href: '/analysis', label: 'Analyse', icon: BrainCircuit, roles: ['Admin', 'User'] },
-  { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['Admin', 'User'] },
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['SuperAdmin', 'Admin', 'User'] },
+  { href: '/clients', label: 'Clients', icon: Users, roles: ['SuperAdmin', 'Admin', 'User'] },
+  { href: '/suppliers', label: 'Fournisseurs', icon: Briefcase, roles: ['SuperAdmin', 'Admin', 'User'] },
+  { href: '/purchases', label: 'Achats', icon: ShoppingCart, roles: ['SuperAdmin', 'Admin', 'User'] },
+  { href: '/products', label: 'Produits', icon: Box, roles: ['SuperAdmin', 'Admin', 'User'] },
+  { href: '/devis', label: 'Proforma', icon: FileClock, roles: ['SuperAdmin', 'Admin', 'User'] },
+  { href: '/invoices', label: 'Factures', icon: FileText, roles: ['SuperAdmin', 'Admin', 'User'] },
+  { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: ['SuperAdmin', 'Admin', 'User'] },
+  { href: '/reports', label: 'Rapports', icon: BarChart3, roles: ['SuperAdmin', 'Admin', 'User'] },
+  { href: '/analysis', label: 'Analyse', icon: BrainCircuit, roles: ['SuperAdmin', 'Admin'] },
+  { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['SuperAdmin', 'Admin', 'User'] },
 ];
 
 export function AppLayout({ children, user, settings }: { children: ReactNode, user: User, settings: AppSettings }) {
   const pathname = usePathname();
-  const rawUserRole = user?.role || 'User';
-  // Normalize the role to ensure the first letter is capitalized, making the check case-insensitive.
-  const userRole = rawUserRole.charAt(0).toUpperCase() + rawUserRole.slice(1).toLowerCase();
+  const userRole = user?.role || 'User';
 
   const accessibleNavItems = navItems.filter(item => item.roles.includes(userRole));
 
