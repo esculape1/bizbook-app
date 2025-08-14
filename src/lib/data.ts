@@ -1,5 +1,4 @@
 
-
 import { db } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User, UserWithPassword } from './types';
