@@ -173,7 +173,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
             {/* Client Info */}
             <div className="rounded border border-gray-300 p-1">
                 <p className="font-bold text-base break-words">{client.name}</p>
-                {client.phone && <p className="text-sm text-gray-600">{client.phone}</p>}
+                {client.phone && <p className="text-sm text-gray-600 break-words">{client.phone}</p>}
             </div>
             {/* Quantity and Date */}
             <div className="flex justify-between border-t border-dashed pt-1 text-sm">
