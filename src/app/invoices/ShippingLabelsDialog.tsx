@@ -36,7 +36,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
                 displayValue: true,
                 fontSize: 14,
                 height: 40,
-                width: 1.2,
+                width: 1.5, // Ajuster la largeur des barres pour un meilleur étirement
                 margin: 0,
               });
             } catch (e) {
@@ -82,8 +82,8 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
             .labels-container-printable {
               display: grid !important;
               grid-template-columns: repeat(2, 7.6cm) !important;
-              grid-template-rows: repeat(3, 7.6cm) !important;
-              gap: 1mm !important; /* Ajoute un petit espace entre les étiquettes */
+              grid-auto-rows: 7.6cm !important;
+              gap: 1mm !important;
               width: fit-content !important;
               height: fit-content !important;
               page-break-inside: avoid !important;
@@ -101,7 +101,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
               font-size: 8pt !important;
             }
             canvas {
-                max-width: 100% !important;
+                width: 100% !important;
                 height: auto !important;
             }
           }
@@ -126,7 +126,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
     if (!container) return;
 
     const canvas = await html2canvas(container, {
-      scale: 3, // Increase scale for better quality
+      scale: 3, // Augmenter la résolution pour une meilleure qualité
       useCORS: true
     });
     
@@ -138,7 +138,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
     const canvasHeight = canvas.height;
     const ratio = canvasWidth / canvasHeight;
     
-    let imgWidth = pdfWidth - 20; // with margin
+    let imgWidth = pdfWidth - 20; // avec marge
     let imgHeight = imgWidth / ratio;
 
     if (imgHeight > pdfHeight - 20) {
@@ -155,7 +155,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
 
   const LabelContent = ({ index }: { index: number }) => (
     <div className="label-item-printable flex h-full flex-col justify-between border border-solid border-black p-2 font-sans">
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 overflow-hidden">
             {/* Company Info */}
             <div className="flex items-center gap-2 rounded border border-gray-300 p-1">
                 {settings.logoUrl && (
@@ -168,12 +168,12 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
                         data-ai-hint="logo"
                     />
                 )}
-                <p className="truncate font-semibold text-xs">{settings.companyName}</p>
+                <p className="font-semibold text-xs break-words">{settings.companyName}</p>
             </div>
             {/* Client Info */}
             <div className="rounded border border-gray-300 p-1">
-                <p className="truncate font-bold text-sm">{client.name}</p>
-                {client.phone && <p className="truncate text-xs text-gray-600">{client.phone}</p>}
+                <p className="font-bold text-sm break-words">{client.name}</p>
+                {client.phone && <p className="text-xs text-gray-600">{client.phone}</p>}
             </div>
             {/* Quantity and Date */}
             <div className="flex justify-between border-t border-dashed pt-1 text-xs">
@@ -186,7 +186,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
         <div className="w-full pt-1">
              <canvas ref={el => {
                 if (el) barcodeRefs.current[index] = el;
-             }}></canvas>
+             }} className="w-full"></canvas>
         </div>
     </div>
   );
