@@ -24,7 +24,6 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
 
   useEffect(() => {
     if (isOpen) {
-      // A small delay gives the DOM time to render before we generate barcodes
       setTimeout(() => {
         barcodeRefs.current.forEach((canvas) => {
           if (canvas) {
@@ -34,7 +33,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
                 displayValue: true,
                 fontSize: 14,
                 height: 40,
-                width: 1.2, // Adjusted barcode width
+                width: 1.2,
                 margin: 0,
               });
             } catch (e) {
@@ -44,7 +43,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
         });
       }, 100);
     }
-  }, [isOpen, invoice.id, invoice.invoiceNumber]); // Rerun when dialog opens or invoice changes
+  }, [isOpen, invoice.id, invoice.invoiceNumber]);
 
   const handlePrint = () => {
     const printContent = document.getElementById(`shipping-labels-content-printable-${invoice.id}`);
@@ -79,14 +78,16 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
             }
             .labels-container-printable {
               display: grid !important;
-              grid-template-columns: repeat(2, 1fr) !important;
-              grid-auto-rows: 1fr !important;
-              gap: 5mm !important;
-              width: 190mm !important; /* 210mm - 2*10mm margin */
-              height: 277mm !important; /* 297mm - 2*10mm margin */
+              grid-template-columns: repeat(2, 7.6cm) !important;
+              grid-template-rows: repeat(3, 7.6cm) !important;
+              gap: 1mm !important; /* Ajoute un petit espace entre les étiquettes */
+              width: fit-content !important;
+              height: fit-content !important;
               page-break-inside: avoid !important;
             }
             .label-item-printable {
+              width: 7.6cm !important;
+              height: 7.6cm !important;
               border: 1px solid #000 !important;
               padding: 4mm !important;
               box-sizing: border-box !important;
@@ -94,11 +95,10 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
               flex-direction: column !important;
               justify-content: space-between !important;
               overflow: hidden !important;
-              height: 100% !important;
-              width: 100% !important;
+              font-size: 8pt !important;
             }
             canvas {
-                width: 100% !important;
+                max-width: 100% !important;
                 height: auto !important;
             }
           }
@@ -120,9 +120,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
 
   const LabelContent = ({ index }: { index: number }) => (
     <div className="label-item-printable flex flex-col justify-between p-2 font-sans border border-solid border-black">
-        {/* Top section for supplier and client info */}
         <div>
-            {/* Supplier Info Box */}
             <div className="border border-gray-300 rounded p-1 mb-2">
                 <div className="flex items-center gap-2">
                     {settings.logoUrl && (
@@ -138,21 +136,18 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
                     <p className="font-semibold text-xs truncate">{settings.companyName}</p>
                 </div>
             </div>
-            {/* Client Info Box */}
              <div className="border border-gray-300 rounded p-2">
                 <div className="mt-1">
                      <p className="font-bold text-sm truncate">{client.name}</p>
                     {client.phone && <p className="text-xs text-muted-foreground truncate">{client.phone}</p>}
                 </div>
             </div>
-            {/* New Quantity and Date section */}
             <div className="text-xs mt-2 border-t border-dashed pt-1 space-y-1">
                 <p><strong>Quantité:</strong> .....................................</p>
                 <p><strong>Date:</strong> {format(new Date(invoice.date), "dd/MM/yyyy", { locale: fr })}</p>
             </div>
         </div>
 
-        {/* Bottom Section: Barcode */}
         <div className="w-full pt-2">
              <canvas ref={el => {
                 if (el) barcodeRefs.current[index] = el;
@@ -181,10 +176,10 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
         <DialogHeader className="p-6 pb-2">
           <DialogTitle>Aperçu des Étiquettes d'Expédition</DialogTitle>
         </DialogHeader>
-        <div className="max-h-[70vh] overflow-y-auto bg-gray-100 p-8">
-            <div id={`shipping-labels-content-printable-${invoice.id}`} className="bg-white shadow-lg mx-auto labels-container-printable grid grid-cols-2 gap-4" style={{width: '190mm', minHeight: '277mm'}}>
+        <div className="max-h-[70vh] overflow-y-auto bg-gray-100 p-8 flex justify-center items-start">
+            <div id={`shipping-labels-content-printable-${invoice.id}`} className="bg-white shadow-lg mx-auto labels-container-printable grid grid-cols-2 gap-4" style={{width: '16cm', minHeight: '23cm'}}>
                 {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i}>
+                    <div key={i} className="label-item-preview" style={{width: '7.6cm', height: '7.6cm'}}>
                         <LabelContent index={i} />
                     </div>
                 ))}
