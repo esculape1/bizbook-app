@@ -36,7 +36,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
                 displayValue: true,
                 fontSize: 14,
                 height: 40,
-                width: 1.5, // Ajuster la largeur des barres pour un meilleur étirement
+                width: 1.5,
                 margin: 0,
               });
             } catch (e) {
@@ -172,11 +172,11 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
             </div>
             {/* Client Info */}
             <div className="rounded border border-gray-300 p-1">
-                <p className="font-bold text-sm break-words">{client.name}</p>
-                {client.phone && <p className="text-xs text-gray-600">{client.phone}</p>}
+                <p className="font-bold text-base break-words">{client.name}</p>
+                {client.phone && <p className="text-sm text-gray-600">{client.phone}</p>}
             </div>
             {/* Quantity and Date */}
-            <div className="flex justify-between border-t border-dashed pt-1 text-xs">
+            <div className="flex justify-between border-t border-dashed pt-1 text-sm">
                 <span><strong>Qté:</strong> ....................</span>
                 <span><strong>Date:</strong> {format(new Date(invoice.date), "dd/MM/yy")}</span>
             </div>
