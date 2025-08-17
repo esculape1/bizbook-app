@@ -19,7 +19,7 @@ export function ProductQrCodeDialog({ product, settings }: ProductQrCodeDialogPr
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   
-  const whatsappNumber = '22670150699'; // Extracted from your link
+  const whatsappNumber = '22670150699';
 
   useEffect(() => {
     if (isOpen) {
@@ -35,7 +35,7 @@ export function ProductQrCodeDialog({ product, settings }: ProductQrCodeDialogPr
           await QRCode.toCanvas(canvas, qrCodeContent, {
             width: 300,
             margin: 2,
-            errorCorrectionLevel: 'H', // High error correction to ensure readability with a logo
+            errorCorrectionLevel: 'H',
             color: {
               dark: '#000000',
               light: '#FFFFFF',
@@ -44,30 +44,25 @@ export function ProductQrCodeDialog({ product, settings }: ProductQrCodeDialogPr
 
           const ctx = canvas.getContext('2d');
           if (!ctx) {
-            // If context fails, still try to show the QR code from canvas
             setQrCodeDataUrl(canvas.toDataURL('image/png'));
             return;
           };
 
-          // If a logo exists, draw it in the center
           if (settings.logoUrl) {
             const logo = document.createElement('img');
-            logo.crossOrigin = "Anonymous"; // Important for CORS if logo is on another domain
+            logo.crossOrigin = "Anonymous";
             
             logo.onload = () => {
               try {
-                const logoSize = canvas.width / 5; // Logo will be 20% of the QR code width
+                const logoSize = canvas.width / 5;
                 const x = (canvas.width - logoSize) / 2;
                 const y = (canvas.height - logoSize) / 2;
 
-                // Draw a white background for the logo
                 ctx.fillStyle = '#FFFFFF';
                 ctx.fillRect(x - 5, y - 5, logoSize + 10, logoSize + 10);
                 
-                // Draw the logo image
                 ctx.drawImage(logo, x, y, logoSize, logoSize);
                 
-                // Update the state with the new data URL from the modified canvas
                 setQrCodeDataUrl(canvas.toDataURL('image/png'));
               } catch(e) {
                   console.error("Error drawing logo on canvas, using QR code without logo.", e);
@@ -76,24 +71,23 @@ export function ProductQrCodeDialog({ product, settings }: ProductQrCodeDialogPr
             };
             
             logo.onerror = () => {
-              // If logo fails to load, just use the QR code without it
               console.warn("Logo could not be loaded, using QR code without it.");
               setQrCodeDataUrl(canvas.toDataURL('image/png'));
             }
 
             logo.src = settings.logoUrl;
           } else {
-             // If no logo, just use the QR code as is
             setQrCodeDataUrl(canvas.toDataURL('image/png'));
           }
 
         } catch (err) {
           console.error("Failed to generate QR Code:", err);
-          setQrCodeDataUrl(''); // Clear on error
+          setQrCodeDataUrl('');
         }
       };
 
-      generateQrWithLogo();
+      // Use a small timeout to ensure the canvas is ready in the DOM
+      setTimeout(generateQrWithLogo, 50);
     }
   }, [isOpen, product.name, product.reference, settings.logoUrl]);
 
@@ -120,7 +114,6 @@ export function ProductQrCodeDialog({ product, settings }: ProductQrCodeDialogPr
           <DialogTitle>QR Code pour commander: {product.name}</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col items-center justify-center p-4">
-          {/* Hidden canvas for generation */}
           <canvas ref={canvasRef} style={{ display: 'none' }} width="300" height="300"></canvas>
           
           {qrCodeDataUrl ? (
