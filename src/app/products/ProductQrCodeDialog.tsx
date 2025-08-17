@@ -43,49 +43,62 @@ export function ProductQrCodeDialog({ product, settings }: ProductQrCodeDialogPr
           });
 
           const ctx = canvas.getContext('2d');
-          if (!ctx) return;
+          if (!ctx) {
+            // If context fails, still try to show the QR code from canvas
+            setQrCodeDataUrl(canvas.toDataURL('image/png'));
+            return;
+          };
 
           // If a logo exists, draw it in the center
           if (settings.logoUrl) {
             const logo = document.createElement('img');
             logo.crossOrigin = "Anonymous"; // Important for CORS if logo is on another domain
-            logo.src = settings.logoUrl;
             
             logo.onload = () => {
-              const logoSize = canvas.width / 5; // Logo will be 20% of the QR code width
-              const x = (canvas.width - logoSize) / 2;
-              const y = (canvas.height - logoSize) / 2;
+              try {
+                const logoSize = canvas.width / 5; // Logo will be 20% of the QR code width
+                const x = (canvas.width - logoSize) / 2;
+                const y = (canvas.height - logoSize) / 2;
 
-              // Draw a white background for the logo
-              ctx.fillStyle = '#FFFFFF';
-              ctx.fillRect(x - 5, y - 5, logoSize + 10, logoSize + 10);
-              
-              // Draw the logo image
-              ctx.drawImage(logo, x, y, logoSize, logoSize);
-              
-              // Update the state with the new data URL from the modified canvas
-              setQrCodeDataUrl(canvas.toDataURL('image/png'));
+                // Draw a white background for the logo
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(x - 5, y - 5, logoSize + 10, logoSize + 10);
+                
+                // Draw the logo image
+                ctx.drawImage(logo, x, y, logoSize, logoSize);
+                
+                // Update the state with the new data URL from the modified canvas
+                setQrCodeDataUrl(canvas.toDataURL('image/png'));
+              } catch(e) {
+                  console.error("Error drawing logo on canvas, using QR code without logo.", e);
+                  setQrCodeDataUrl(canvas.toDataURL('image/png'));
+              }
             };
             
             logo.onerror = () => {
               // If logo fails to load, just use the QR code without it
+              console.warn("Logo could not be loaded, using QR code without it.");
               setQrCodeDataUrl(canvas.toDataURL('image/png'));
             }
+
+            logo.src = settings.logoUrl;
           } else {
              // If no logo, just use the QR code as is
             setQrCodeDataUrl(canvas.toDataURL('image/png'));
           }
 
         } catch (err) {
-          console.error(err);
+          console.error("Failed to generate QR Code:", err);
+          setQrCodeDataUrl(''); // Clear on error
         }
       };
 
       generateQrWithLogo();
     }
-  }, [isOpen, product, settings]);
+  }, [isOpen, product.name, product.reference, settings.logoUrl]);
 
   const handleDownload = () => {
+    if (!qrCodeDataUrl) return;
     const link = document.createElement('a');
     link.href = qrCodeDataUrl;
     const sanitizedProductName = product.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
