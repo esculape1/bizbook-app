@@ -19,7 +19,7 @@ export function ProductQrCodeDialog({ product, settings }: ProductQrCodeDialogPr
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   
-  const whatsappNumber = '22670150699';
+  const whatsappNumber = '22678259385'; // Updated WhatsApp number
 
   useEffect(() => {
     if (isOpen) {
@@ -89,7 +89,7 @@ export function ProductQrCodeDialog({ product, settings }: ProductQrCodeDialogPr
       // Use a small timeout to ensure the canvas is ready in the DOM
       setTimeout(generateQrWithLogo, 50);
     }
-  }, [isOpen, product.name, product.reference, settings.logoUrl]);
+  }, [isOpen, product.name, product.reference, settings.logoUrl, whatsappNumber]);
 
   const handleDownload = () => {
     if (!qrCodeDataUrl) return;
