@@ -20,7 +20,7 @@ export function ProductQrCodeDialog({ product, settings }: ProductQrCodeDialogPr
 
   useEffect(() => {
     if (isOpen) {
-      const qrCodeContent = `Produit: ${product.name}\nFournisseur: ${settings.companyName}\nContact: ${settings.companyPhone}`;
+      const qrCodeContent = `https://wa.me/message/D3ZVUHGA6CZ5N1`;
       QRCode.toDataURL(qrCodeContent, { 
         width: 300,
         margin: 2,
@@ -40,7 +40,7 @@ export function ProductQrCodeDialog({ product, settings }: ProductQrCodeDialogPr
     link.href = qrCodeDataUrl;
     // Sanitize product name for filename
     const sanitizedProductName = product.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-    link.download = `qrcode_${sanitizedProductName}.png`;
+    link.download = `qrcode_commande_${sanitizedProductName}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -49,19 +49,19 @@ export function ProductQrCodeDialog({ product, settings }: ProductQrCodeDialogPr
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" title="Générer le QR Code">
+        <Button variant="ghost" size="icon" title="Générer le QR Code de commande">
           <QrCode className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>QR Code pour {product.name}</DialogTitle>
+          <DialogTitle>QR Code pour commander: {product.name}</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col items-center justify-center p-4">
           {qrCodeDataUrl ? (
             <Image
               src={qrCodeDataUrl}
-              alt={`QR Code for ${product.name}`}
+              alt={`QR Code pour commander ${product.name}`}
               width={256}
               height={256}
               className="rounded-lg border bg-white"
@@ -70,7 +70,7 @@ export function ProductQrCodeDialog({ product, settings }: ProductQrCodeDialogPr
             <div className="h-64 w-64 animate-pulse rounded-lg bg-muted" />
           )}
           <p className="mt-4 text-center text-sm text-muted-foreground">
-            Contient le nom du produit et les informations de contact de votre entreprise.
+            Scannez ce code pour ouvrir une discussion WhatsApp et commander ce produit.
           </p>
         </div>
         <DialogFooter>
