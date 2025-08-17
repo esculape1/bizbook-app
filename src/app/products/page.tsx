@@ -1,3 +1,4 @@
+
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,6 +9,7 @@ import { EditProductButton } from "./EditProductButton";
 import { DeleteProductButton } from "./DeleteProductButton";
 import { getSession } from "@/lib/session";
 import { StockInventoryReport } from "./StockInventoryReport";
+import { ProductQrCodeDialog } from "./ProductQrCodeDialog";
 
 export default async function ProductsPage() {
   const [products, settings, user] = await Promise.all([
@@ -43,7 +45,7 @@ export default async function ProductsPage() {
                 <TableHead className="text-right">Quantité</TableHead>
                 {canViewPrices && <TableHead className="text-right">Point de Cde.</TableHead>}
                 {canViewPrices && <TableHead className="text-right">Stock Sécu.</TableHead>}
-                {canManageProducts && <TableHead className="text-right">Actions</TableHead>}
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -57,14 +59,13 @@ export default async function ProductsPage() {
                   <TableCell className="text-right">{product.quantityInStock}</TableCell>
                   {canViewPrices && <TableCell className="text-right">{product.reorderPoint}</TableCell>}
                   {canViewPrices && <TableCell className="text-right">{product.safetyStock}</TableCell>}
-                  {canManageProducts && (
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end">
-                        <EditProductButton product={product} />
-                        <DeleteProductButton id={product.id} name={product.name} />
-                      </div>
-                    </TableCell>
-                  )}
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end">
+                      <ProductQrCodeDialog product={product} settings={settings} />
+                      {canManageProducts && <EditProductButton product={product} />}
+                      {canManageProducts && <DeleteProductButton id={product.id} name={product.name} />}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
