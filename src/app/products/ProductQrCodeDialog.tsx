@@ -17,28 +17,77 @@ type ProductQrCodeDialogProps = {
 export function ProductQrCodeDialog({ product, settings }: ProductQrCodeDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  
+  const whatsappNumber = '22670150699'; // Extracted from your link
 
   useEffect(() => {
     if (isOpen) {
-      const qrCodeContent = `https://wa.me/message/D3ZVUHGA6CZ5N1`;
-      QRCode.toDataURL(qrCodeContent, { 
-        width: 300,
-        margin: 2,
-        errorCorrectionLevel: 'H'
-      })
-        .then(url => {
-          setQrCodeDataUrl(url);
-        })
-        .catch(err => {
+      const generateQrWithLogo = async () => {
+        try {
+          const prefilledMessage = encodeURIComponent(`Bonjour, je suis intéressé(e) par le produit suivant :\n\nNom: ${product.name}\nRéférence: ${product.reference}\n\nMerci de me donner plus d'informations.`);
+          const qrCodeContent = `https://wa.me/${whatsappNumber}?text=${prefilledMessage}`;
+          
+          const canvas = canvasRef.current;
+          if (!canvas) return;
+
+          // Generate QR code on the canvas
+          await QRCode.toCanvas(canvas, qrCodeContent, {
+            width: 300,
+            margin: 2,
+            errorCorrectionLevel: 'H', // High error correction to ensure readability with a logo
+            color: {
+              dark: '#000000',
+              light: '#FFFFFF',
+            },
+          });
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+
+          // If a logo exists, draw it in the center
+          if (settings.logoUrl) {
+            const logo = document.createElement('img');
+            logo.crossOrigin = "Anonymous"; // Important for CORS if logo is on another domain
+            logo.src = settings.logoUrl;
+            
+            logo.onload = () => {
+              const logoSize = canvas.width / 5; // Logo will be 20% of the QR code width
+              const x = (canvas.width - logoSize) / 2;
+              const y = (canvas.height - logoSize) / 2;
+
+              // Draw a white background for the logo
+              ctx.fillStyle = '#FFFFFF';
+              ctx.fillRect(x - 5, y - 5, logoSize + 10, logoSize + 10);
+              
+              // Draw the logo image
+              ctx.drawImage(logo, x, y, logoSize, logoSize);
+              
+              // Update the state with the new data URL from the modified canvas
+              setQrCodeDataUrl(canvas.toDataURL('image/png'));
+            };
+            
+            logo.onerror = () => {
+              // If logo fails to load, just use the QR code without it
+              setQrCodeDataUrl(canvas.toDataURL('image/png'));
+            }
+          } else {
+             // If no logo, just use the QR code as is
+            setQrCodeDataUrl(canvas.toDataURL('image/png'));
+          }
+
+        } catch (err) {
           console.error(err);
-        });
+        }
+      };
+
+      generateQrWithLogo();
     }
   }, [isOpen, product, settings]);
 
   const handleDownload = () => {
     const link = document.createElement('a');
     link.href = qrCodeDataUrl;
-    // Sanitize product name for filename
     const sanitizedProductName = product.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     link.download = `qrcode_commande_${sanitizedProductName}.png`;
     document.body.appendChild(link);
@@ -58,6 +107,9 @@ export function ProductQrCodeDialog({ product, settings }: ProductQrCodeDialogPr
           <DialogTitle>QR Code pour commander: {product.name}</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col items-center justify-center p-4">
+          {/* Hidden canvas for generation */}
+          <canvas ref={canvasRef} style={{ display: 'none' }} width="300" height="300"></canvas>
+          
           {qrCodeDataUrl ? (
             <Image
               src={qrCodeDataUrl}
