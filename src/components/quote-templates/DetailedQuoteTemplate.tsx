@@ -124,37 +124,39 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                 
                 <main className="flex-grow flex flex-col">
                   {/* Items Table */}
-                  <table className="w-full border-collapse text-xs">
-                    <thead className="bg-[#002060] text-white">
-                      <tr>
-                        <th className="py-1 px-2 text-left font-bold w-[15%] border-r border-white">REFERENCE</th>
-                        <th className="py-1 px-2 text-left font-bold w-[45%] border-r border-white">DESIGNATION</th>
-                        <th className="py-1 px-2 text-right font-bold w-[15%] border-r border-white">PRIX</th>
-                        <th className="py-1 px-2 text-center font-bold w-[10%] border-r border-white">Qté</th>
-                        <th className="py-1 px-2 text-right font-bold w-[15%]">TOTAL</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pageItems.map((item, index) => (
-                        <tr key={index} className="border-b border-gray-400">
-                          <td className="py-1 px-2 border-l border-r border-gray-400 align-middle">{item.reference}</td>
-                          <td className="py-1 px-2 border-r border-gray-400 align-middle font-bold">{item.productName}</td>
-                          <td className="py-1 px-2 border-r border-gray-400 text-right align-middle">{formatCurrency(item.unitPrice, settings.currency)}</td>
-                          <td className="py-1 px-2 border-r border-gray-400 text-center align-middle">{item.quantity}</td>
-                          <td className="py-1 px-2 border-r border-gray-400 text-right align-middle font-semibold">{formatCurrency(item.total, settings.currency)}</td>
+                  <div className="flex-grow">
+                    <table className="w-full border-collapse text-xs">
+                      <thead className="bg-[#002060] text-white">
+                        <tr>
+                          <th className="py-1 px-2 text-left font-bold w-[15%] border-r border-white">REFERENCE</th>
+                          <th className="py-1 px-2 text-left font-bold w-[45%] border-r border-white">DESIGNATION</th>
+                          <th className="py-1 px-2 text-right font-bold w-[15%] border-r border-white">PRIX</th>
+                          <th className="py-1 px-2 text-center font-bold w-[10%] border-r border-white">Qté</th>
+                          <th className="py-1 px-2 text-right font-bold w-[15%]">TOTAL</th>
                         </tr>
-                      ))}
-                      {Array.from({ length: emptyRowsCount }).map((_, index) => (
-                        <tr key={`empty-${index}`} className="border-b border-gray-400 h-[24px]">
-                          <td className="border-l border-r border-gray-400">&nbsp;</td>
-                          <td className="border-r border-gray-400"></td>
-                          <td className="border-r border-gray-400"></td>
-                          <td className="border-r border-gray-400"></td>
-                          <td className="border-r border-gray-400"></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {pageItems.map((item, index) => (
+                          <tr key={index} className="border-b border-gray-400">
+                            <td className="py-1 px-2 border-l border-r border-gray-400 align-middle">{item.reference}</td>
+                            <td className="py-1 px-2 border-r border-gray-400 align-middle font-bold">{item.productName}</td>
+                            <td className="py-1 px-2 border-r border-gray-400 text-right align-middle">{formatCurrency(item.unitPrice, settings.currency)}</td>
+                            <td className="py-1 px-2 border-r border-gray-400 text-center align-middle">{item.quantity}</td>
+                            <td className="py-1 px-2 border-r border-gray-400 text-right align-middle font-semibold">{formatCurrency(item.total, settings.currency)}</td>
+                          </tr>
+                        ))}
+                        {Array.from({ length: emptyRowsCount }).map((_, index) => (
+                          <tr key={`empty-${index}`} className="border-b border-gray-400 h-[24px]">
+                            <td className="border-l border-r border-gray-400">&nbsp;</td>
+                            <td className="border-r border-gray-400"></td>
+                            <td className="border-r border-gray-400"></td>
+                            <td className="border-r border-gray-400"></td>
+                            <td className="border-r border-gray-400"></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                   
                    {isLastPage && (
                       <div className="flex justify-between items-start text-xs mt-4">
