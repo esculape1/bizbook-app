@@ -109,35 +109,37 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
                   </div>
                 </header>
                 
-                <main className="flex-grow">
-                  <table className="w-full border-collapse text-xs">
-                    <thead className="bg-[#002060] text-white">
-                        <tr>
-                            <th className="py-1 px-2 text-left font-bold w-[40%] border-r border-white">Désignation</th>
-                            <th className="py-1 px-2 text-center font-bold w-[15%] border-r border-white">Qté Commandée</th>
-                            <th className="py-1 px-2 text-center font-bold w-[15%] border-r border-white">Qté Livrée</th>
-                            <th className="py-1 px-2 text-center font-bold w-[30%]">Observations</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {pageItems.map((item, index) => (
-                          <tr key={index} className="border-b border-gray-400 h-[26px]">
-                              <td className="py-1 px-2 border-l border-r border-gray-400 align-middle font-bold">{item.productName}</td>
-                              <td className="py-1 px-2 border-r border-gray-400 text-center align-middle">{item.quantity}</td>
-                              <td className="py-1 px-2 border-r border-gray-400 text-center align-middle"></td>
-                              <td className="py-1 px-2 border-r border-gray-400 text-center align-middle"></td>
+                <main className="flex-grow flex flex-col">
+                  <div className="flex-grow">
+                    <table className="w-full border-collapse text-xs">
+                      <thead className="bg-[#002060] text-white">
+                          <tr>
+                              <th className="py-1 px-2 text-left font-bold w-[40%] border-r border-white">Désignation</th>
+                              <th className="py-1 px-2 text-center font-bold w-[15%] border-r border-white">Qté Commandée</th>
+                              <th className="py-1 px-2 text-center font-bold w-[15%] border-r border-white">Qté Livrée</th>
+                              <th className="py-1 px-2 text-center font-bold w-[30%]">Observations</th>
                           </tr>
-                        ))}
-                        {Array.from({ length: emptyRowsCount }).map((_, index) => (
-                        <tr key={`empty-${index}`} className="border-b border-gray-400 h-[26px]">
-                            <td className="border-l border-r border-gray-400">&nbsp;</td>
-                            <td className="border-r border-gray-400"></td>
-                            <td className="border-r border-gray-400"></td>
-                            <td className="border-r border-gray-400"></td>
-                        </tr>
-                        ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                          {pageItems.map((item, index) => (
+                            <tr key={index} className="border-b border-gray-400 h-[26px]">
+                                <td className="py-1 px-2 border-l border-r border-gray-400 align-middle font-bold">{item.productName}</td>
+                                <td className="py-1 px-2 border-r border-gray-400 text-center align-middle">{item.quantity}</td>
+                                <td className="py-1 px-2 border-r border-gray-400 text-center align-middle"></td>
+                                <td className="py-1 px-2 border-r border-gray-400 text-center align-middle"></td>
+                            </tr>
+                          ))}
+                          {Array.from({ length: emptyRowsCount }).map((_, index) => (
+                          <tr key={`empty-${index}`} className="border-b border-gray-400 h-[26px]">
+                              <td className="border-l border-r border-gray-400">&nbsp;</td>
+                              <td className="border-r border-gray-400"></td>
+                              <td className="border-r border-gray-400"></td>
+                              <td className="border-r border-gray-400"></td>
+                          </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </main>
                 
                 {/* Footer */}
