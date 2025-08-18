@@ -7,6 +7,8 @@ import { DetailedQuoteTemplate } from '@/components/quote-templates/DetailedQuot
 import { Button } from '@/components/ui/button';
 import { Eye, Printer, Download } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 type QuoteViewerDialogProps = {
   quote: Quote;
@@ -17,54 +19,52 @@ type QuoteViewerDialogProps = {
 export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const handlePrint = () => {
-    const printContent = document.getElementById('quote-content');
-    if (printContent) {
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        const title = `Proforma_${quote.quoteNumber.replace(/[\/\s]/g, '-')}`;
-        printWindow.document.write(`<html><head><title>${title}</title>`);
-        
-        const styles = Array.from(document.styleSheets)
-          .map(styleSheet => {
-            try {
-              // @ts-ignore
-              return Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('');
-            } catch (e) {
-              // @ts-ignore
-              return `<link rel="stylesheet" href="${styleSheet.href}">`;
-            }
-          }).join('\n');
-          
-        const printStyles = `
-          @page {
-            size: A4;
-            margin: 0 !important;
-          }
-          @media print {
-            body { 
-              -webkit-print-color-adjust: exact; 
-              print-color-adjust: exact; 
-            }
-            .printable-area {
-               background-color: #ffffff !important;
-               color: #000000 !important;
-            }
-          }
-        `;
+  const handleDownloadPdf = async () => {
+    const quoteElement = document.getElementById('quote-content');
+    if (!quoteElement) return;
 
-        printWindow.document.write(`<style>${styles}${printStyles}</style></head><body>`);
-        printWindow.document.write(printContent.innerHTML);
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
-        printWindow.focus();
-        
-        setTimeout(() => {
-          printWindow.print();
-          printWindow.close();
-        }, 250);
-      }
+    // Temporarily make all pages visible for capture
+    const pages = quoteElement.querySelectorAll('.page-container');
+    pages.forEach(page => (page as HTMLElement).style.display = 'block');
+
+    const canvas = await html2canvas(quoteElement, {
+      scale: 2,
+      useCORS: true,
+      scrollY: -window.scrollY,
+      windowWidth: quoteElement.scrollWidth,
+      windowHeight: quoteElement.scrollHeight,
+    });
+
+    // Re-hide pages for normal view
+    pages.forEach(page => (page as HTMLElement).style.display = '');
+
+    const imgData = canvas.toDataURL('image/png');
+    
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    
+    const ratio = canvasWidth / canvasHeight;
+    const imgWidth = pdfWidth;
+    const imgHeight = imgWidth / ratio;
+    
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pdfHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
     }
+    
+    pdf.save(`Proforma_${quote.quoteNumber.replace(/[\/\s]/g, '-')}.pdf`);
   };
 
   return (
@@ -85,11 +85,11 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
         </div>
         <DialogFooter className="p-6 bg-white border-t">
             <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>Fermer</Button>
-            <Button onClick={handlePrint} variant="outline">
+            <Button onClick={handleDownloadPdf} variant="outline">
                 <Download className="mr-2 h-4 w-4" />
                 Télécharger en PDF
             </Button>
-            <Button onClick={handlePrint}>
+            <Button onClick={handleDownloadPdf}>
                 <Printer className="mr-2 h-4 w-4" />
                 Imprimer
             </Button>

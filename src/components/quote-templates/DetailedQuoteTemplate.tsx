@@ -27,7 +27,13 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
   return (
     <>
       <style>{`
+        .printable-area .page-container:not(:first-child) {
+          display: none; /* Hide subsequent pages in normal view */
+        }
         @media print {
+          .printable-area .page-container {
+            display: block !important; /* Show all pages for printing */
+          }
           @page {
             size: A4;
             margin: 20mm 10mm 20mm 10mm;

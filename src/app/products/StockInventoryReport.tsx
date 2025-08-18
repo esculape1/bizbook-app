@@ -7,9 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/utils';
-import { Printer, FileText } from 'lucide-react';
+import { Printer, FileText, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 type StockInventoryReportProps = {
   products: Product[];
@@ -23,54 +25,37 @@ export function StockInventoryReport({ products, settings }: StockInventoryRepor
   const totalPurchaseValue = products.reduce((sum, p) => sum + (p.purchasePrice || 0) * p.quantityInStock, 0);
   const totalSellingValue = products.reduce((sum, p) => sum + p.unitPrice * p.quantityInStock, 0);
 
-  const handlePrint = () => {
-    const printContent = document.getElementById('stock-inventory-content');
-    if (printContent) {
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        const title = `Inventaire_du_Stock_${format(reportDate, "yyyy-MM-dd")}`;
-        printWindow.document.write(`<html><head><title>${title}</title>`);
-        
-        const styles = Array.from(document.styleSheets)
-          .map(styleSheet => {
-            try {
-              // @ts-ignore
-              return Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('');
-            } catch (e) {
-              // @ts-ignore
-              return `<link rel="stylesheet" href="${styleSheet.href}">`;
-            }
-          }).join('\n');
+  const handleDownloadPdf = async () => {
+    const reportElement = document.getElementById('stock-inventory-content');
+    if (!reportElement) return;
 
-        const printStyles = `
-          @page {
-            size: A4;
-            margin: 2.5cm !important;
-          }
-          @media print {
-            body { 
-              -webkit-print-color-adjust: exact; 
-              print-color-adjust: exact; 
-            }
-            .printable-area {
-               background-color: #ffffff !important;
-               color: #000000 !important;
-            }
-          }
-        `;
+    const canvas = await html2canvas(reportElement, {
+      scale: 2,
+      useCORS: true,
+      windowWidth: reportElement.scrollWidth,
+      windowHeight: reportElement.scrollHeight,
+    });
 
-        printWindow.document.write(`<style>${styles}${printStyles}</style></head><body>`);
-        printWindow.document.write(printContent.innerHTML);
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
-        printWindow.focus();
-        
-        setTimeout(() => {
-          printWindow.print();
-          printWindow.close();
-        }, 250);
-      }
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pdfWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pdfHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
     }
+    
+    pdf.save(`Inventaire_du_Stock_${format(reportDate, "yyyy-MM-dd")}.pdf`);
   };
   
   return (
@@ -151,7 +136,11 @@ export function StockInventoryReport({ products, settings }: StockInventoryRepor
         </div>
         <DialogFooter className="p-6 bg-background border-t">
           <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>Fermer</Button>
-          <Button onClick={handlePrint}>
+          <Button onClick={handleDownloadPdf}>
+            <Download className="mr-2 h-4 w-4" />
+            Télécharger en PDF
+          </Button>
+          <Button onClick={handleDownloadPdf}>
             <Printer className="mr-2 h-4 w-4" />
             Imprimer
           </Button>

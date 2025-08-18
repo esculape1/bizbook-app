@@ -8,6 +8,8 @@ import { Printer, Download } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { DeliverySlipDialog } from './DeliverySlipDialog';
 import { ShippingLabelsDialog } from './ShippingLabelsDialog';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 type InvoiceViewerProps = {
   invoice: Invoice;
@@ -23,55 +25,53 @@ const SimpleTemplate = ({ invoice, client, settings }: { invoice: Invoice, clien
 
 export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps) {
 
-  const handlePrint = () => {
-    const printContent = document.getElementById('invoice-content');
-    if (printContent) {
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        const title = `Facture_${invoice.invoiceNumber.replace(/[\/\s]/g, '-')}`;
-        printWindow.document.write(`<html><head><title>${title}</title>`);
-        
-        const styles = Array.from(document.styleSheets)
-          .map(styleSheet => {
-            try {
-              // @ts-ignore
-              return Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('');
-            } catch (e) {
-              console.warn("Could not read stylesheet, linking instead", e);
-              // @ts-ignore
-              return `<link rel="stylesheet" href="${styleSheet.href}">`;
-            }
-          }).join('\n');
+  const handleDownloadPdf = async () => {
+    const invoiceElement = document.getElementById('invoice-content');
+    if (!invoiceElement) return;
 
-        const printStyles = `
-          @page {
-            size: A4;
-            margin: 0 !important;
-          }
-          @media print {
-            body { 
-              -webkit-print-color-adjust: exact; 
-              print-color-adjust: exact; 
-            }
-            .printable-area {
-               background-color: #ffffff !important;
-               color: #000000 !important;
-            }
-          }
-        `;
+    // Temporarily make all pages visible for capture
+    const pages = invoiceElement.querySelectorAll('.page-container');
+    pages.forEach(page => (page as HTMLElement).style.display = 'block');
 
-        printWindow.document.write(`<style>${styles}${printStyles}</style></head><body>`);
-        printWindow.document.write(printContent.innerHTML);
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
-        printWindow.focus();
-        
-        setTimeout(() => {
-          printWindow.print();
-          printWindow.close();
-        }, 250);
-      }
+    const canvas = await html2canvas(invoiceElement, {
+      scale: 2,
+      useCORS: true,
+      scrollY: -window.scrollY,
+      windowWidth: invoiceElement.scrollWidth,
+      windowHeight: invoiceElement.scrollHeight,
+    });
+
+    // Re-hide pages for normal view
+    pages.forEach(page => (page as HTMLElement).style.display = '');
+
+
+    const imgData = canvas.toDataURL('image/png');
+    
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    
+    const ratio = canvasWidth / canvasHeight;
+    const imgWidth = pdfWidth;
+    const imgHeight = imgWidth / ratio;
+    
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pdfHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
     }
+    
+    pdf.save(`Facture_${invoice.invoiceNumber.replace(/[\/\s]/g, '-')}.pdf`);
   };
 
   const renderTemplate = () => {
@@ -94,11 +94,11 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
         <div className="flex justify-end gap-2">
             <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} asTextButton />
             <DeliverySlipDialog invoice={invoice} client={client} settings={settings} />
-            <Button onClick={handlePrint} variant="outline">
+            <Button onClick={handleDownloadPdf} variant="outline">
                 <Download className="mr-2 h-4 w-4" />
                 Télécharger en PDF
             </Button>
-            <Button onClick={handlePrint}>
+            <Button onClick={handleDownloadPdf}>
                 <Printer className="mr-2 h-4 w-4" />
                 Imprimer la facture
             </Button>
