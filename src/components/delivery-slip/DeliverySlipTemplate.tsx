@@ -30,7 +30,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
           }
           @page {
             size: A4;
-            margin: 20mm 10mm 20mm 10mm;
+            margin: 0;
           }
           body {
             -webkit-print-color-adjust: exact;
@@ -53,7 +53,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
               display: 'flex',
               flexDirection: 'column',
               boxSizing: 'border-box',
-              padding: '20mm 10mm 20mm 10mm',
+              padding: '14mm 10mm 20mm 10mm',
             }}>
               {/* Blue sidebar */}
               <div className="absolute top-0 left-0 h-full w-[8mm] bg-[#002060]"></div>
