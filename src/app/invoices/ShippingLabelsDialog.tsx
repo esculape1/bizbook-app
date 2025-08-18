@@ -10,7 +10,6 @@ import Image from 'next/image';
 import JsBarcode from 'jsbarcode';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
 type ShippingLabelsDialogProps = {
@@ -48,7 +47,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
     }
   }, [isOpen, invoice.invoiceNumber]);
 
-  const handleDownloadPdf = async () => {
+  const handleDownloadPng = async () => {
     const container = labelsContainerRef.current;
     if (!container) return;
 
@@ -57,27 +56,14 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
       useCORS: true
     });
     
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
-    const ratio = canvasWidth / canvasHeight;
+    const dataUrl = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = `Etiquettes_${invoice.invoiceNumber}.png`;
     
-    let imgWidth = pdfWidth - 20;
-    let imgHeight = imgWidth / ratio;
-
-    if (imgHeight > pdfHeight - 20) {
-        imgHeight = pdfHeight - 20;
-        imgWidth = imgHeight * ratio;
-    }
-
-    const x = (pdfWidth - imgWidth) / 2;
-    const y = (pdfHeight - imgHeight) / 2;
-
-    pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
-    pdf.save(`Etiquettes_${invoice.invoiceNumber}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const LabelContent = ({ index }: { index: number }) => (
@@ -145,9 +131,9 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
         </div>
         <DialogFooter className="p-6 bg-white border-t">
             <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>Fermer</Button>
-            <Button onClick={handleDownloadPdf}>
+            <Button onClick={handleDownloadPng}>
                 <Download className="mr-2 h-4 w-4" />
-                Télécharger en PDF
+                Télécharger en PNG
             </Button>
         </DialogFooter>
       </DialogContent>
