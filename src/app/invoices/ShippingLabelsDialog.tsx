@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { Invoice, Client, Settings } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Printer, Ticket, Download } from 'lucide-react';
+import { Ticket, Download } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import Image from 'next/image';
 import JsBarcode from 'jsbarcode';
@@ -46,87 +46,14 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
         });
       }, 100);
     }
-  }, [isOpen, invoice.id, invoice.invoiceNumber]);
+  }, [isOpen, invoice.invoiceNumber]);
 
-  const handlePrint = () => {
-    const printContent = document.getElementById(`shipping-labels-content-printable-${invoice.id}`);
-    if (printContent) {
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        const title = `Etiquettes_${invoice.invoiceNumber.replace(/[\/\s]/g, '-')}`;
-        printWindow.document.write(`<html><head><title>${title}</title>`);
-        
-        const styles = Array.from(document.styleSheets)
-          .map(styleSheet => {
-            try {
-              // @ts-ignore
-              return Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('');
-            } catch (e) {
-              // @ts-ignore
-              return `<link rel="stylesheet" href="${styleSheet.href}">`;
-            }
-          }).join('\n');
-          
-        const printStyles = `
-          @media print {
-            @page {
-              size: A4;
-              margin: 10mm !important;
-            }
-            body { 
-              -webkit-print-color-adjust: exact !important; 
-              print-color-adjust: exact !important;
-              margin: 0 !important;
-              padding: 0 !important;
-            }
-            .labels-container-printable {
-              display: grid !important;
-              grid-template-columns: repeat(2, 7.6cm) !important;
-              grid-auto-rows: 7.6cm !important;
-              gap: 1mm !important;
-              width: fit-content !important;
-              height: fit-content !important;
-              page-break-inside: avoid !important;
-            }
-            .label-item-printable {
-              width: 7.6cm !important;
-              height: 7.6cm !important;
-              border: 1px solid #000 !important;
-              padding: 4mm !important;
-              box-sizing: border-box !important;
-              display: flex !important;
-              flex-direction: column !important;
-              justify-content: space-between !important;
-              overflow: hidden !important;
-              font-size: 8pt !important;
-            }
-            canvas {
-                width: 100% !important;
-                height: auto !important;
-            }
-          }
-        `;
-
-        printWindow.document.write(`<style>${styles}${printStyles}</style></head><body>`);
-        printWindow.document.write(printContent.innerHTML);
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
-        printWindow.focus();
-        
-        setTimeout(() => {
-          printWindow.print();
-          printWindow.close();
-        }, 250);
-      }
-    }
-  };
-  
   const handleDownloadPdf = async () => {
     const container = labelsContainerRef.current;
     if (!container) return;
 
     const canvas = await html2canvas(container, {
-      scale: 3, // Augmenter la résolution pour une meilleure qualité
+      scale: 3,
       useCORS: true
     });
     
@@ -138,7 +65,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
     const canvasHeight = canvas.height;
     const ratio = canvasWidth / canvasHeight;
     
-    let imgWidth = pdfWidth - 20; // avec marge
+    let imgWidth = pdfWidth - 20;
     let imgHeight = imgWidth / ratio;
 
     if (imgHeight > pdfHeight - 20) {
@@ -156,7 +83,6 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
   const LabelContent = ({ index }: { index: number }) => (
     <div className="label-item-printable flex h-full flex-col justify-between border border-solid border-black p-2 font-sans">
         <div className="space-y-1.5 overflow-hidden">
-            {/* Company Info */}
             <div className="flex items-center gap-2 rounded border border-gray-300 p-1">
                 {settings.logoUrl && (
                     <Image 
@@ -170,19 +96,16 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
                 )}
                 <p className="font-semibold text-xs break-words">{settings.companyName}</p>
             </div>
-            {/* Client Info */}
             <div className="rounded border border-gray-300 p-1">
                 <p className="font-bold text-base break-words">{client.name}</p>
                 {client.phone && <p className="text-sm text-gray-600 break-words">{client.phone}</p>}
             </div>
-            {/* Quantity and Date */}
             <div className="flex justify-between border-t border-dashed pt-1 text-sm">
                 <span><strong>Qté:</strong> ....................</span>
                 <span><strong>Date:</strong> {format(new Date(invoice.date), "dd/MM/yy")}</span>
             </div>
         </div>
 
-        {/* Barcode */}
         <div className="w-full pt-1">
              <canvas ref={el => {
                 if (el) barcodeRefs.current[index] = el;
@@ -222,13 +145,9 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
         </div>
         <DialogFooter className="p-6 bg-white border-t">
             <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>Fermer</Button>
-            <Button onClick={handleDownloadPdf} variant="outline">
+            <Button onClick={handleDownloadPdf}>
                 <Download className="mr-2 h-4 w-4" />
                 Télécharger en PDF
-            </Button>
-            <Button onClick={handlePrint}>
-                <Printer className="mr-2 h-4 w-4" />
-                Imprimer les 6 étiquettes
             </Button>
         </DialogFooter>
       </DialogContent>

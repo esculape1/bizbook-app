@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/utils';
-import { Printer, FileText, Download } from 'lucide-react';
+import { FileText, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import jsPDF from 'jspdf';
@@ -72,7 +72,6 @@ export function StockInventoryReport({ products, settings }: StockInventoryRepor
         </DialogHeader>
         <div className="max-h-[70vh] overflow-y-auto px-6 py-4">
             <div id="stock-inventory-content" className="printable-area bg-white p-4 font-sans text-sm text-black ring-1 ring-gray-200">
-                {/* Header */}
                 <header className="flex justify-between items-start mb-8 pb-4 border-b">
                     <div>
                         <h2 className="text-xl font-bold">{settings.companyName}</h2>
@@ -88,7 +87,6 @@ export function StockInventoryReport({ products, settings }: StockInventoryRepor
                     </div>
                 </header>
 
-                {/* Table */}
                 <main>
                     <Table>
                         <TableHeader>
@@ -124,7 +122,6 @@ export function StockInventoryReport({ products, settings }: StockInventoryRepor
                     </Table>
                 </main>
                 
-                {/* Signature Footer */}
                 <footer className="flex justify-end mt-24 pt-4 border-t">
                     <div className="w-1/3 text-center">
                         <p className="font-bold">Signature du Gestionnaire</p>
@@ -139,10 +136,6 @@ export function StockInventoryReport({ products, settings }: StockInventoryRepor
           <Button onClick={handleDownloadPdf}>
             <Download className="mr-2 h-4 w-4" />
             Télécharger en PDF
-          </Button>
-          <Button onClick={handleDownloadPdf}>
-            <Printer className="mr-2 h-4 w-4" />
-            Imprimer
           </Button>
         </DialogFooter>
       </DialogContent>

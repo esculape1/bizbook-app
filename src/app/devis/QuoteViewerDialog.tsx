@@ -23,9 +23,8 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
     const quoteElement = document.getElementById('quote-content');
     if (!quoteElement) return;
 
-    // Temporarily make all pages visible for capture
     const pages = quoteElement.querySelectorAll('.page-container');
-    pages.forEach(page => (page as HTMLElement).style.display = 'block');
+    pages.forEach(page => ((page as HTMLElement).style.display = 'block'));
 
     const canvas = await html2canvas(quoteElement, {
       scale: 2,
@@ -35,8 +34,7 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
       windowHeight: quoteElement.scrollHeight,
     });
 
-    // Re-hide pages for normal view
-    pages.forEach(page => (page as HTMLElement).style.display = '');
+    pages.forEach(page => ((page as HTMLElement).style.display = ''));
 
     const imgData = canvas.toDataURL('image/png');
     
@@ -48,19 +46,24 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
     const canvasHeight = canvas.height;
     
     const ratio = canvasWidth / canvasHeight;
-    const imgWidth = pdfWidth;
-    const imgHeight = imgWidth / ratio;
+    let imgWidth = pdfWidth;
+    let imgHeight = imgWidth / ratio;
     
     let heightLeft = imgHeight;
     let position = 0;
+    
+    if (imgHeight < pdfHeight) {
+       imgHeight = pdfHeight;
+       imgWidth = imgHeight * ratio;
+    }
 
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
     heightLeft -= pdfHeight;
 
     while (heightLeft > 0) {
       position = heightLeft - imgHeight;
       pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
       heightLeft -= pdfHeight;
     }
     
@@ -85,13 +88,9 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
         </div>
         <DialogFooter className="p-6 bg-white border-t">
             <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>Fermer</Button>
-            <Button onClick={handleDownloadPdf} variant="outline">
+            <Button onClick={handleDownloadPdf}>
                 <Download className="mr-2 h-4 w-4" />
                 Télécharger en PDF
-            </Button>
-            <Button onClick={handleDownloadPdf}>
-                <Printer className="mr-2 h-4 w-4" />
-                Imprimer
             </Button>
         </DialogFooter>
       </DialogContent>

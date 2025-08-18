@@ -4,7 +4,7 @@
 import type { Invoice, Client, Settings } from '@/lib/types';
 import { DetailedTemplate } from '@/components/invoice-templates/DetailedTemplate';
 import { Button } from '@/components/ui/button';
-import { Printer, Download } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { DeliverySlipDialog } from './DeliverySlipDialog';
 import { ShippingLabelsDialog } from './ShippingLabelsDialog';
@@ -29,9 +29,8 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     const invoiceElement = document.getElementById('invoice-content');
     if (!invoiceElement) return;
 
-    // Temporarily make all pages visible for capture
     const pages = invoiceElement.querySelectorAll('.page-container');
-    pages.forEach(page => (page as HTMLElement).style.display = 'block');
+    pages.forEach(page => ((page as HTMLElement).style.display = 'block'));
 
     const canvas = await html2canvas(invoiceElement, {
       scale: 2,
@@ -41,9 +40,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
       windowHeight: invoiceElement.scrollHeight,
     });
 
-    // Re-hide pages for normal view
-    pages.forEach(page => (page as HTMLElement).style.display = '');
-
+    pages.forEach(page => ((page as HTMLElement).style.display = ''));
 
     const imgData = canvas.toDataURL('image/png');
     
@@ -55,19 +52,24 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     const canvasHeight = canvas.height;
     
     const ratio = canvasWidth / canvasHeight;
-    const imgWidth = pdfWidth;
-    const imgHeight = imgWidth / ratio;
+    let imgWidth = pdfWidth;
+    let imgHeight = imgWidth / ratio;
     
     let heightLeft = imgHeight;
     let position = 0;
+    
+    if (imgHeight < pdfHeight) {
+       imgHeight = pdfHeight;
+       imgWidth = imgHeight * ratio;
+    }
 
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
     heightLeft -= pdfHeight;
 
     while (heightLeft > 0) {
       position = heightLeft - imgHeight;
       pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
       heightLeft -= pdfHeight;
     }
     
@@ -94,13 +96,9 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
         <div className="flex justify-end gap-2">
             <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} asTextButton />
             <DeliverySlipDialog invoice={invoice} client={client} settings={settings} />
-            <Button onClick={handleDownloadPdf} variant="outline">
-                <Download className="mr-2 h-4 w-4" />
-                Télécharger en PDF
-            </Button>
             <Button onClick={handleDownloadPdf}>
-                <Printer className="mr-2 h-4 w-4" />
-                Imprimer la facture
+                <Download className="mr-2 h-4 w-4" />
+                Télécharger la facture (PDF)
             </Button>
         </div>
         <Card className="shadow-lg">
