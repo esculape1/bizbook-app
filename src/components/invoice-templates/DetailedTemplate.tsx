@@ -146,12 +146,12 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                           </tr>
                         ))}
                         {Array.from({ length: emptyRowsCount }).map((_, index) => (
-                          <tr key={`empty-${index}`} className="border-b border-gray-400 h-[24px]">
-                            <td className="border-l border-r border-gray-400">&nbsp;</td>
-                            <td className="border-r border-gray-400"></td>
-                            <td className="border-r border-gray-400"></td>
-                            <td className="border-r border-gray-400"></td>
-                            <td className="border-r border-gray-400"></td>
+                          <tr key={`empty-${index}`} className="border-b border-gray-400">
+                            <td className="py-1 px-2 border-l border-r border-gray-400">&nbsp;</td>
+                            <td className="py-1 px-2 border-r border-gray-400"></td>
+                            <td className="py-1 px-2 border-r border-gray-400"></td>
+                            <td className="py-1 px-2 border-r border-gray-400"></td>
+                            <td className="py-1 px-2 border-r border-gray-400"></td>
                           </tr>
                         ))}
                       </tbody>
