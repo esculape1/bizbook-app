@@ -9,7 +9,7 @@ import { cn, formatCurrency } from "@/lib/utils";
 import type { ReportData, Settings, Invoice, Client } from "@/lib/types";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Download, FileDown } from "lucide-react";
+import { FileDown } from "lucide-react";
 
 type ReportDisplayProps = {
   data: ReportData;
@@ -53,104 +53,10 @@ const StatCard = ({ title, value, className }: { title: string, value: string, c
 export function ReportDisplay({ data, settings, currency, client }: ReportDisplayProps) {
   if (!data) return null;
 
-  const generateFullPdf = async () => {
-    if (!data) return;
-
-    const { default: jsPDF } = await import('jspdf');
-    const { default: autoTable } = await import('jspdf-autotable');
-
-    const doc = new jsPDF();
-    const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
-    const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
-
-    // Header
-    doc.setFontSize(20);
-    doc.text("Rapport d'activité", pageWidth / 2, 20, { align: 'center' });
-    doc.setFontSize(12);
-    const reportPeriod = `Période du ${format(data.startDate, "d MMMM yyyy", { locale: fr })} au ${format(data.endDate, "d MMMM yyyy", { locale: fr })}`;
-    doc.text(reportPeriod, pageWidth / 2, 28, { align: 'center' });
-    doc.text(`Client: ${data.clientName}`, pageWidth / 2, 36, { align: 'center' });
-
-    let startY = 50;
-
-    // Summary
-    doc.setFontSize(16);
-    doc.text("Résumé", 14, startY);
-    autoTable(doc, {
-        startY: startY + 5,
-        body: [
-            ['Chiffre d\'Affaires (Encaissé)', formatCurrency(data.summary.totalRevenue, currency)],
-            ['Dépenses', formatCurrency(data.summary.totalExpenses, currency)],
-            ['Bénéfice Net', formatCurrency(data.summary.netProfit, currency)],
-            ['Total Impayé', formatCurrency(data.summary.totalUnpaid, currency)],
-        ],
-        theme: 'striped',
-        styles: { fontSize: 10 },
-    });
-
-    startY = (doc as any).lastAutoTable.finalY + 15;
-
-    // Product Sales
-    if (data.productSales.length > 0) {
-        doc.setFontSize(16);
-        doc.text("Ventes par Produit", 14, startY);
-        autoTable(doc, {
-            startY: startY + 5,
-            head: [['Produit', 'Quantité Vendue', 'Valeur Totale']],
-            body: data.productSales.map(p => [p.productName, p.quantitySold, formatCurrency(p.totalValue, currency)]),
-            theme: 'grid',
-            headStyles: { fillColor: [41, 128, 185] }, // Blue
-            styles: { fontSize: 10 },
-        });
-        startY = (doc as any).lastAutoTable.finalY + 15;
-    }
-
-    // Expenses
-    if (data.expenses.length > 0) {
-        if (startY > pageHeight - 50) { doc.addPage(); startY = 20; }
-        doc.setFontSize(16);
-        doc.text("Dépenses", 14, startY);
-        autoTable(doc, {
-            startY: startY + 5,
-            head: [['Date', 'Description', 'Catégorie', 'Montant']],
-            body: data.expenses.map(e => [format(new Date(e.date), "dd/MM/yyyy"), e.description, e.category, formatCurrency(e.amount, currency)]),
-            theme: 'grid',
-            headStyles: { fillColor: [230, 126, 34] }, // Orange
-            styles: { fontSize: 10 },
-        });
-        startY = (doc as any).lastAutoTable.finalY + 15;
-    }
-
-    // All Invoices
-    if (data.allInvoices.length > 0) {
-        if (startY > pageHeight - 60) { doc.addPage(); startY = 20; }
-        doc.setFontSize(16);
-        doc.text("Détail des Factures", 14, startY);
-        autoTable(doc, {
-            startY: startY + 5,
-            head: [['N° Facture', 'Client', 'Date', 'Statut', 'Montant']],
-            body: data.allInvoices.map(i => [i.invoiceNumber, i.clientName, format(new Date(i.date), "dd/MM/yyyy"), statusTranslations[i.status] || i.status, formatCurrency(i.totalAmount, currency)]),
-            theme: 'grid',
-            headStyles: { fillColor: [80, 80, 80] },
-            styles: { fontSize: 10 },
-        });
-    }
-
-    // Footer with page numbers
-    const pageCount = (doc as any).internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.text(`Page ${i} sur ${pageCount}`, pageWidth - 20, pageHeight - 10);
-    }
-
-    const fileName = `Rapport_Complet_${data.clientName.replace(/ /g, '_')}_${format(data.startDate, "yyyy-MM-dd")}_au_${format(data.endDate, "yyyy-MM-dd")}.pdf`;
-    doc.save(fileName);
-  };
-
   const generateUnpaidPdf = async () => {
     if (!data?.unpaidInvoices || data.unpaidInvoices.length === 0) return;
 
+    // Dynamically import jspdf and jspdf-autotable
     const { default: jsPDF } = await import('jspdf');
     const { default: autoTable } = await import('jspdf-autotable');
 
@@ -291,10 +197,6 @@ export function ReportDisplay({ data, settings, currency, client }: ReportDispla
                       PDF Impayés
                     </Button>
                 )}
-                <Button onClick={generateFullPdf} size="sm" variant="outline">
-                  <Download className="mr-2 h-4 w-4" />
-                  PDF Complet
-                </Button>
             </div>
           </div>
         </CardHeader>

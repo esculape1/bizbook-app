@@ -5,10 +5,8 @@ import { useState } from 'react';
 import type { Quote, Client, Settings } from '@/lib/types';
 import { DetailedQuoteTemplate } from '@/components/quote-templates/DetailedQuoteTemplate';
 import { Button } from '@/components/ui/button';
-import { Eye, Printer, Download } from 'lucide-react';
+import { Eye, Printer } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 type QuoteViewerDialogProps = {
   quote: Quote;
@@ -19,55 +17,33 @@ type QuoteViewerDialogProps = {
 export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleDownloadPdf = async () => {
-    const quoteElement = document.getElementById('quote-content');
-    if (!quoteElement) return;
-
-    const pages = quoteElement.querySelectorAll('.page-container');
-    pages.forEach(page => ((page as HTMLElement).style.display = 'block'));
-
-    const canvas = await html2canvas(quoteElement, {
-      scale: 2,
-      useCORS: true,
-      scrollY: -window.scrollY,
-      windowWidth: quoteElement.scrollWidth,
-      windowHeight: quoteElement.scrollHeight,
-    });
-
-    pages.forEach(page => ((page as HTMLElement).style.display = ''));
-
-    const imgData = canvas.toDataURL('image/png');
-    
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
-    
-    const ratio = canvasWidth / canvasHeight;
-    let imgWidth = pdfWidth;
-    let imgHeight = imgWidth / ratio;
-    
-    let heightLeft = imgHeight;
-    let position = 0;
-    
-    if (imgHeight < pdfHeight) {
-       imgHeight = pdfHeight;
-       imgWidth = imgHeight * ratio;
+  const handlePrint = () => {
+    const content = document.getElementById('quote-content');
+    if (content) {
+      const printWindow = window.open('', '_blank');
+      printWindow?.document.write('<html><head><title>Imprimer Proforma</title>');
+      // It's crucial to include stylesheets for print.
+      Array.from(document.styleSheets).forEach(styleSheet => {
+        try {
+          if (styleSheet.href) {
+            printWindow?.document.write(`<link rel="stylesheet" href="${styleSheet.href}">`);
+          } else if (styleSheet.cssRules) {
+            printWindow?.document.write(`<style>${Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('')}</style>`);
+          }
+        } catch (e) {
+            console.warn('Could not read stylesheet for printing', e);
+        }
+      });
+      printWindow?.document.write('</head><body>');
+      printWindow?.document.write(content.innerHTML);
+      printWindow?.document.write('</body></html>');
+      printWindow?.document.close();
+      
+      // Delay printing to allow styles to load
+      setTimeout(() => {
+        printWindow?.print();
+      }, 500);
     }
-
-    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-    heightLeft -= pdfHeight;
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-      heightLeft -= pdfHeight;
-    }
-    
-    pdf.save(`Proforma_${quote.quoteNumber.replace(/[\/\s]/g, '-')}.pdf`);
   };
 
   return (
@@ -88,9 +64,9 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
         </div>
         <DialogFooter className="p-6 bg-white border-t">
             <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>Fermer</Button>
-            <Button onClick={handleDownloadPdf}>
-                <Download className="mr-2 h-4 w-4" />
-                Télécharger en PDF
+            <Button onClick={handlePrint}>
+                <Printer className="mr-2 h-4 w-4" />
+                Imprimer / PDF
             </Button>
         </DialogFooter>
       </DialogContent>

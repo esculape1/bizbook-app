@@ -7,11 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/utils';
-import { FileText, Download } from 'lucide-react';
+import { FileText, Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 type StockInventoryReportProps = {
   products: Product[];
@@ -25,37 +23,30 @@ export function StockInventoryReport({ products, settings }: StockInventoryRepor
   const totalPurchaseValue = products.reduce((sum, p) => sum + (p.purchasePrice || 0) * p.quantityInStock, 0);
   const totalSellingValue = products.reduce((sum, p) => sum + p.unitPrice * p.quantityInStock, 0);
 
-  const handleDownloadPdf = async () => {
-    const reportElement = document.getElementById('stock-inventory-content');
-    if (!reportElement) return;
-
-    const canvas = await html2canvas(reportElement, {
-      scale: 2,
-      useCORS: true,
-      windowWidth: reportElement.scrollWidth,
-      windowHeight: reportElement.scrollHeight,
-    });
-
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = pdfWidth;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pdfHeight;
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
+  const handlePrint = () => {
+    const content = document.getElementById('stock-inventory-content');
+    if (content) {
+      const printWindow = window.open('', '_blank');
+      printWindow?.document.write('<html><head><title>Rapport d\'Inventaire</title>');
+      Array.from(document.styleSheets).forEach(styleSheet => {
+        try {
+          if (styleSheet.href) {
+            printWindow?.document.write(`<link rel="stylesheet" href="${styleSheet.href}">`);
+          } else if (styleSheet.cssRules) {
+            printWindow?.document.write(`<style>${Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('')}</style>`);
+          }
+        } catch (e) {
+          console.warn('Could not read stylesheet for printing', e);
+        }
+      });
+      printWindow?.document.write('</head><body>');
+      printWindow?.document.write(content.innerHTML);
+      printWindow?.document.write('</body></html>');
+      printWindow?.document.close();
+      setTimeout(() => {
+        printWindow?.print();
+      }, 500);
     }
-    
-    pdf.save(`Inventaire_du_Stock_${format(reportDate, "yyyy-MM-dd")}.pdf`);
   };
   
   return (
@@ -133,9 +124,9 @@ export function StockInventoryReport({ products, settings }: StockInventoryRepor
         </div>
         <DialogFooter className="p-6 bg-background border-t">
           <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>Fermer</Button>
-          <Button onClick={handleDownloadPdf}>
-            <Download className="mr-2 h-4 w-4" />
-            Télécharger en PDF
+          <Button onClick={handlePrint}>
+            <Printer className="mr-2 h-4 w-4" />
+            Imprimer / PDF
           </Button>
         </DialogFooter>
       </DialogContent>
