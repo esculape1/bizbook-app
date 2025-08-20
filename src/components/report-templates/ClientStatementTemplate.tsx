@@ -8,6 +8,10 @@ import { fr } from 'date-fns/locale';
 import Image from 'next/image';
 
 export function ClientStatementTemplate({ data, client, settings }: { data: ReportData, client: Client, settings: Settings }) {
+  if (!data) {
+    return null; // Return early if data is null to prevent runtime errors
+  }
+  
   const reportDate = new Date();
   
   const totalInvoiced = data.allInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
