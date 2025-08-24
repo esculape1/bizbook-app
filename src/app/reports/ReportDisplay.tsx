@@ -15,6 +15,16 @@ import { ClientStatementTemplate } from "@/components/report-templates/ClientSta
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import Image from 'next/image';
 
+const StatCard = ({ title, value, className }: { title: string, value: string, className?: string }) => (
+    <Card className={cn("text-center", className)}>
+        <CardHeader className="p-4 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+            <p className="text-2xl font-bold">{value}</p>
+        </CardContent>
+    </Card>
+)
 
 const getStatusVariant = (status: Invoice['status']): "success" | "warning" | "destructive" | "outline" => {
     switch (status) {
@@ -36,17 +46,6 @@ const statusTranslations: { [key: string]: string } = {
     'Partially Paid': 'Partiellement Payée',
     Cancelled: 'Annulée'
 };
-
-const StatCard = ({ title, value, className }: { title: string, value: string, className?: string }) => (
-    <Card className={cn("text-center", className)}>
-        <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0">
-            <p className="text-2xl font-bold">{value}</p>
-        </CardContent>
-    </Card>
-)
 
 export function ReportDisplay({ data, settings, currency, client }: { data: ReportData, settings: Settings, currency: Settings['currency'], client: Client | null }) {
   if (!data) return null;
@@ -144,10 +143,9 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
           </div>
         </CardHeader>
         <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+             <div id="report-summary-cards" className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <StatCard title="Chiffre d'Affaires (Ventes)" value={formatCurrency(data.summary.grossSales, currency)} className="bg-green-500/10 text-green-800" />
                 <StatCard title="Dépenses" value={formatCurrency(data.summary.totalExpenses, currency)} className="bg-orange-500/10 text-orange-800" />
-                <StatCard title="Bénéfice Brut" value={formatCurrency(data.summary.grossProfit, currency)} className="bg-sky-500/10 text-sky-800" />
                 <StatCard title="Bénéfice Net" value={formatCurrency(data.summary.netProfit, currency)} className="bg-blue-500/10 text-blue-800" />
             </div>
         </CardContent>
@@ -192,7 +190,6 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                       <TableHead>Date</TableHead>
                       <TableHead>Statut</TableHead>
                       <TableHead className="text-right">Montant</TableHead>
-                      <TableHead className="text-right">Payé</TableHead>
                       <TableHead className="text-right">Dû</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -208,14 +205,13 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">{formatCurrency(invoice.totalAmount, currency)}</TableCell>
-                        <TableCell className="text-right text-green-600">{formatCurrency(invoice.amountPaid, currency)}</TableCell>
                         <TableCell className="text-right text-red-600 font-medium">{formatCurrency(invoice.totalAmount - invoice.amountPaid, currency)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                    <TableFooter>
                       <TableRow>
-                          <TableCell colSpan={6} className="text-right font-bold">Total Ventes sur la période</TableCell>
+                          <TableCell colSpan={5} className="text-right font-bold">Total Ventes sur la période</TableCell>
                           <TableCell className="text-right font-bold">{formatCurrency(data.summary.grossSales, currency)}</TableCell>
                       </TableRow>
                   </TableFooter>
