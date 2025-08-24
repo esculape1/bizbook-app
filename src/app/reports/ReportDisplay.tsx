@@ -123,7 +123,7 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
           </div>
         </CardHeader>
         <CardContent>
-             <div id="report-summary-cards" className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div id="report-summary-cards" className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <StatCard title="Chiffre d'Affaires (Ventes)" value={formatCurrency(data.summary.grossSales, currency)} className="bg-green-500/10 text-green-800" />
                 <StatCard title="Dépenses" value={formatCurrency(data.summary.totalExpenses, currency)} className="bg-orange-500/10 text-orange-800" />
                 <StatCard title="Bénéfice Net" value={formatCurrency(data.summary.netProfit, currency)} className="bg-blue-500/10 text-blue-800" />
@@ -176,7 +176,6 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                       <TableHead>Date</TableHead>
                       <TableHead>Statut</TableHead>
                       <TableHead className="text-right whitespace-nowrap">Montant</TableHead>
-                      <TableHead className="text-right whitespace-nowrap">Dû</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -191,7 +190,6 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right whitespace-nowrap">{formatCurrency(invoice.totalAmount, currency)}</TableCell>
-                        <TableCell className="text-right text-red-600 font-medium whitespace-nowrap">{formatCurrency(invoice.totalAmount - invoice.amountPaid, currency)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -199,7 +197,6 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                       <TableRow>
                           <TableCell colSpan={4} className="text-right font-bold">Total Ventes sur la période</TableCell>
                           <TableCell className="text-right font-bold whitespace-nowrap">{formatCurrency(data.summary.grossSales, currency)}</TableCell>
-                          <TableCell className="text-right font-bold whitespace-nowrap text-red-600">{formatCurrency(data.summary.totalUnpaid, currency)}</TableCell>
                       </TableRow>
                   </TableFooter>
                 </Table>
