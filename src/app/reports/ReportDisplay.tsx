@@ -111,7 +111,7 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                                <ClientStatementTemplate data={data} settings={settings} client={client} />
                            </div>
                            <DialogFooter className="p-6 bg-white border-t">
-                               <Button variant="secondary" onClick={() => (document.querySelector('[data-radix-dialog-default-open="true"] [data-radix-dialog-close="true"]') as HTMLElement)?.click()}>Fermer</Button>
+                               <Button type="button" variant="secondary" onClick={() => (document.querySelector('[data-radix-dialog-default-open="true"] [data-radix-dialog-close="true"]') as HTMLElement)?.click()}>Fermer</Button>
                                <Button onClick={() => {
                                    const content = document.getElementById('client-statement-content');
                                    if (content) {
