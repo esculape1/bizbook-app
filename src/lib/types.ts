@@ -167,6 +167,7 @@ export type ReportData = {
     productName: string;
     quantitySold: number;
     totalValue: number;
+    quantityInStock: number;
   }[];
   unpaidInvoices: Invoice[];
   allInvoices: Invoice[];

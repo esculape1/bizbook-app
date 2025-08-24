@@ -61,22 +61,26 @@ export async function generateReport(
 
         const totalExpenses = expensesInPeriod.reduce((sum, exp) => sum + exp.amount, 0);
 
-        const productSales: { [key: string]: { productName: string; quantitySold: number; totalValue: number; } } = {};
+        const productSales: { [key: string]: { productName: string; quantitySold: number; totalValue: number; quantityInStock: number; } } = {};
         
         // Calculate Cost of Goods Sold (COGS)
         let costOfGoodsSold = 0;
 
         activeInvoices.forEach(inv => {
             inv.items.forEach(item => {
-                // Aggregate product sales for the report
+                const product = allProducts.find(p => p.id === item.productId);
+                
                 if (!productSales[item.productId]) {
-                    productSales[item.productId] = { productName: item.productName, quantitySold: 0, totalValue: 0 };
+                    productSales[item.productId] = { 
+                        productName: item.productName, 
+                        quantitySold: 0, 
+                        totalValue: 0,
+                        quantityInStock: product?.quantityInStock ?? 0 
+                    };
                 }
                 productSales[item.productId].quantitySold += item.quantity;
                 productSales[item.productId].totalValue += item.total;
                 
-                // Find product to calculate COGS
-                const product = allProducts.find(p => p.id === item.productId);
                 if (product) {
                     costOfGoodsSold += (product.purchasePrice || 0) * item.quantity;
                 }
@@ -105,3 +109,4 @@ export async function generateReport(
         return { error: "Une erreur est survenue lors de la génération du rapport." }
     }
 };
+

@@ -12,13 +12,8 @@ import { fr } from "date-fns/locale";
 import { Printer } from "lucide-react";
 import { ClientStatementTemplate } from "@/components/report-templates/ClientStatementTemplate";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import Image from 'next/image';
 
-type ReportDisplayProps = {
-  data: ReportData;
-  settings: Settings;
-  currency: Settings['currency'];
-  client: Client | null;
-};
 
 const getStatusVariant = (status: Invoice['status']): "success" | "warning" | "destructive" | "outline" => {
     switch (status) {
@@ -52,8 +47,9 @@ const StatCard = ({ title, value, className }: { title: string, value: string, c
     </Card>
 )
 
-export function ReportDisplay({ data, settings, currency, client }: ReportDisplayProps) {
+export function ReportDisplay({ data, settings, currency, client }: { data: ReportData, settings: Settings, currency: Settings['currency'], client: Client | null }) {
   if (!data) return null;
+  const reportDate = new Date();
 
   const handlePrint = () => {
     const content = document.getElementById('report-display-content-printable');
@@ -88,8 +84,10 @@ export function ReportDisplay({ data, settings, currency, client }: ReportDispla
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
             <div>
-              <CardTitle>Rapport du {format(data.startDate, "d MMMM yyyy", { locale: fr })} au {format(data.endDate, "d MMMM yyyy", { locale: fr })}</CardTitle>
-              <CardDescription>Client: {data.clientName}</CardDescription>
+              <CardTitle>Rapport d'activité</CardTitle>
+              <CardDescription>
+                  Période du {format(data.startDate, "d MMMM yyyy", { locale: fr })} au {format(data.endDate, "d MMMM yyyy", { locale: fr })}
+              </CardDescription>
             </div>
             <div className="flex gap-2">
                 <Button size="sm" variant="outline" onClick={handlePrint}>
@@ -155,10 +153,33 @@ export function ReportDisplay({ data, settings, currency, client }: ReportDispla
       </Card>
       
       <div id="report-display-content-printable" className="printable-report space-y-6">
+        <header className="flex justify-between items-start mb-8 pb-4 border-b">
+            <div>
+              {settings.logoUrl && (
+                <Image 
+                  src={settings.logoUrl} 
+                  alt={`${settings.companyName} logo`} 
+                  width={120} 
+                  height={60} 
+                  className="object-contain mb-4"
+                  data-ai-hint="logo"
+                />
+              )}
+              <h2 className="text-lg font-bold">{settings.companyName}</h2>
+              <p className="text-xs">{settings.companyAddress}</p>
+              <p className="text-xs">Tél: {settings.companyPhone}</p>
+            </div>
+            <div className="text-right">
+              <h1 className="text-2xl font-bold">Rapport d'Activité</h1>
+              <p className="text-sm">Date: {format(reportDate, 'd MMMM yyyy', { locale: fr })}</p>
+              <p className="text-sm">Période du {format(data.startDate, 'dd/MM/yy')} au {format(data.endDate, 'dd/MM/yy')}</p>
+            </div>
+        </header>
+
         {data.allInvoices.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Détail des Factures</CardTitle>
+                <CardTitle>Détail des Factures ({data.clientName})</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -212,8 +233,9 @@ export function ReportDisplay({ data, settings, currency, client }: ReportDispla
                           <TableHeader>
                               <TableRow>
                                   <TableHead>Produit</TableHead>
-                                  <TableHead className="text-right">Quantité Vendue</TableHead>
-                                  <TableHead className="text-right">Valeur Totale</TableHead>
+                                  <TableHead className="text-right">Qté Vendue</TableHead>
+                                  <TableHead className="text-right">Stock Actuel</TableHead>
+                                  <TableHead className="text-right">Valeur Vente</TableHead>
                               </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -221,6 +243,7 @@ export function ReportDisplay({ data, settings, currency, client }: ReportDispla
                                   <TableRow key={item.productName}>
                                       <TableCell>{item.productName}</TableCell>
                                       <TableCell className="text-right">{item.quantitySold}</TableCell>
+                                      <TableCell className="text-right">{item.quantityInStock}</TableCell>
                                       <TableCell className="text-right">{formatCurrency(item.totalValue, currency)}</TableCell>
                                   </TableRow>
                               ))}
