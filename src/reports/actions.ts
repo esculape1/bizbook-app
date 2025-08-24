@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { getInvoices, getExpenses, getProducts } from '@/lib/data';
@@ -49,10 +50,6 @@ export async function generateReport(
 
         const activeInvoices = invoicesInPeriod.filter(inv => inv.status !== 'Cancelled');
         
-        // Calculate report metrics
-        const totalRevenue = activeInvoices
-            .reduce((sum, inv) => sum + (inv.amountPaid || 0), 0);
-        
         const grossSales = activeInvoices
             .reduce((sum, inv) => sum + inv.totalAmount, 0);
 
@@ -61,42 +58,47 @@ export async function generateReport(
 
         const totalExpenses = expensesInPeriod.reduce((sum, exp) => sum + exp.amount, 0);
 
-        const productSales: { [key: string]: { productName: string; quantitySold: number; totalValue: number; } } = {};
+        const productSales: { [key: string]: { productName: string; quantitySold: number; totalValue: number; quantityInStock: number; } } = {};
         
-        // Calculate Cost of Goods Sold (COGS)
         let costOfGoodsSold = 0;
 
         activeInvoices.forEach(inv => {
             inv.items.forEach(item => {
-                // Aggregate product sales for the report
+                const product = allProducts.find(p => p.id === item.productId);
+                
                 if (!productSales[item.productId]) {
-                    productSales[item.productId] = { productName: item.productName, quantitySold: 0, totalValue: 0 };
+                    productSales[item.productId] = { 
+                        productName: item.productName, 
+                        quantitySold: 0, 
+                        totalValue: 0,
+                        quantityInStock: product?.quantityInStock ?? 0 
+                    };
                 }
                 productSales[item.productId].quantitySold += item.quantity;
                 productSales[item.productId].totalValue += item.total;
                 
-                // Find product to calculate COGS
-                const product = allProducts.find(p => p.id === item.productId);
                 if (product) {
                     costOfGoodsSold += (product.purchasePrice || 0) * item.quantity;
                 }
             });
         });
         
-        const netProfit = grossSales - costOfGoodsSold - totalExpenses;
+        const grossProfit = grossSales - costOfGoodsSold;
+        const netProfit = grossProfit - totalExpenses;
 
         return {
           startDate,
           endDate,
           clientName,
           summary: {
-              totalRevenue,
+              grossSales,
               totalExpenses,
+              costOfGoodsSold,
+              grossProfit,
               netProfit: netProfit,
               totalUnpaid,
           },
           productSales: Object.values(productSales).sort((a, b) => b.quantitySold - a.quantitySold),
-          unpaidInvoices: invoicesInPeriod.filter(inv => inv.status === 'Unpaid' || inv.status === 'Partially Paid'),
           allInvoices: invoicesInPeriod,
           expenses: expensesInPeriod,
         };
