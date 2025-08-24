@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn, formatCurrency } from "@/lib/utils";
-import type { ReportData, Settings, Invoice, Client } from "@/lib/types";
+import type { ReportData, Settings, Client, Invoice } from "@/lib/types";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Printer } from "lucide-react";
@@ -51,8 +51,8 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
   if (!data) return null;
   const reportDate = new Date();
 
-  const handlePrint = () => {
-    const content = document.getElementById('report-display-content-printable');
+  const handlePrint = (elementId: string) => {
+    const content = document.getElementById(elementId);
     if (content) {
       const printWindow = window.open('', '_blank');
       printWindow?.document.write('<html><head><title>Imprimer Rapport</title>');
@@ -90,7 +90,7 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
               </CardDescription>
             </div>
              <div className="flex flex-wrap items-center justify-end gap-2">
-                <Button size="sm" variant="outline" onClick={handlePrint}>
+                <Button size="sm" variant="outline" onClick={() => handlePrint('report-display-content-printable')}>
                     <Printer className="mr-2 h-4 w-4" />
                     Imprimer le rapport
                 </Button>
@@ -111,27 +111,7 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                            </div>
                            <DialogFooter className="p-6 bg-white border-t">
                                <Button type="button" variant="secondary" onClick={() => (document.querySelector('[data-radix-dialog-default-open="true"] [data-radix-dialog-close="true"]') as HTMLElement)?.click()}>Fermer</Button>
-                               <Button onClick={() => {
-                                   const content = document.getElementById('client-statement-content');
-                                   if (content) {
-                                       const printWindow = window.open('', '_blank');
-                                       printWindow?.document.write('<html><head><title>Relevé de Compte</title>');
-                                       Array.from(document.styleSheets).forEach(styleSheet => {
-                                           try {
-                                             if (styleSheet.href) {
-                                                 printWindow?.document.write(`<link rel="stylesheet" href="${styleSheet.href}">`);
-                                             } else if (styleSheet.cssRules) {
-                                                 printWindow?.document.write(`<style>${Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('')}</style>`);
-                                             }
-                                           } catch (e) { console.warn('Could not read stylesheet for printing', e); }
-                                       });
-                                       printWindow?.document.write('</head><body>');
-                                       printWindow?.document.write(content.innerHTML);
-                                       printWindow?.document.write('</body></html>');
-                                       printWindow?.document.close();
-                                       setTimeout(() => { printWindow?.print(); }, 500);
-                                   }
-                               }}>
+                               <Button onClick={() => handlePrint('client-statement-content')}>
                                    <Printer className="mr-2 h-4 w-4" />
                                    Imprimer / PDF
                                </Button>
@@ -151,7 +131,7 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
         </CardContent>
       </Card>
       
-      <div id="report-display-content-printable" className="printable-report space-y-6">
+      <div id="report-display-content-printable" className="printable-report space-y-6 hidden print:block">
         <header className="flex justify-between items-start mb-8 pb-4 border-b">
             <div>
               {settings.logoUrl && (
@@ -176,6 +156,12 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
             </div>
         </header>
 
+        <div className="grid gap-4 grid-cols-3" style={{ breakInside: 'avoid-page' }}>
+            <StatCard title="Chiffre d'Affaires (Ventes)" value={formatCurrency(data.summary.grossSales, currency)} className="bg-green-500/10 text-green-800" />
+            <StatCard title="Dépenses" value={formatCurrency(data.summary.totalExpenses, currency)} className="bg-orange-500/10 text-orange-800" />
+            <StatCard title="Bénéfice Net" value={formatCurrency(data.summary.netProfit, currency)} className="bg-blue-500/10 text-blue-800" />
+        </div>
+
         {data.allInvoices.length > 0 && (
             <Card>
               <CardHeader>
@@ -189,8 +175,8 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                       <TableHead>Client</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Statut</TableHead>
-                      <TableHead className="text-right">Montant</TableHead>
-                      <TableHead className="text-right">Dû</TableHead>
+                      <TableHead className="text-right whitespace-nowrap">Montant</TableHead>
+                      <TableHead className="text-right whitespace-nowrap">Dû</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -204,15 +190,16 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                             {statusTranslations[invoice.status]}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right">{formatCurrency(invoice.totalAmount, currency)}</TableCell>
-                        <TableCell className="text-right text-red-600 font-medium">{formatCurrency(invoice.totalAmount - invoice.amountPaid, currency)}</TableCell>
+                        <TableCell className="text-right whitespace-nowrap">{formatCurrency(invoice.totalAmount, currency)}</TableCell>
+                        <TableCell className="text-right text-red-600 font-medium whitespace-nowrap">{formatCurrency(invoice.totalAmount - invoice.amountPaid, currency)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                    <TableFooter>
                       <TableRow>
-                          <TableCell colSpan={5} className="text-right font-bold">Total Ventes sur la période</TableCell>
-                          <TableCell className="text-right font-bold">{formatCurrency(data.summary.grossSales, currency)}</TableCell>
+                          <TableCell colSpan={4} className="text-right font-bold">Total Ventes sur la période</TableCell>
+                          <TableCell className="text-right font-bold whitespace-nowrap">{formatCurrency(data.summary.grossSales, currency)}</TableCell>
+                          <TableCell className="text-right font-bold whitespace-nowrap text-red-600">{formatCurrency(data.summary.totalUnpaid, currency)}</TableCell>
                       </TableRow>
                   </TableFooter>
                 </Table>
@@ -270,14 +257,14 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                                       <TableCell>{format(new Date(exp.date), "dd/MM/yyyy")}</TableCell>
                                       <TableCell>{exp.description}</TableCell>
                                       <TableCell>{exp.category}</TableCell>
-                                      <TableCell className="text-right">{formatCurrency(exp.amount, currency)}</TableCell>
+                                      <TableCell className="text-right whitespace-nowrap">{formatCurrency(exp.amount, currency)}</TableCell>
                                   </TableRow>
                               ))}
                           </TableBody>
                            <TableFooter>
                               <TableRow>
                                   <TableCell colSpan={3} className="text-right font-bold">Total Dépenses</TableCell>
-                                  <TableCell className="text-right font-bold">{formatCurrency(data.summary.totalExpenses, currency)}</TableCell>
+                                  <TableCell className="text-right font-bold whitespace-nowrap">{formatCurrency(data.summary.totalExpenses, currency)}</TableCell>
                               </TableRow>
                           </TableFooter>
                       </Table>
