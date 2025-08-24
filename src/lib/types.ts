@@ -1,4 +1,5 @@
 
+
 export type User = {
   id: string;
   name: string;
@@ -158,8 +159,10 @@ export type ReportData = {
   endDate: Date;
   clientName: string;
   summary: {
-    totalRevenue: number;
+    grossSales: number;
     totalExpenses: number;
+    costOfGoodsSold: number;
+    grossProfit: number;
     netProfit: number;
     totalUnpaid: number;
   };
@@ -169,7 +172,6 @@ export type ReportData = {
     totalValue: number;
     quantityInStock: number;
   }[];
-  unpaidInvoices: Invoice[];
   allInvoices: Invoice[];
   expenses: Expense[];
 } | null;

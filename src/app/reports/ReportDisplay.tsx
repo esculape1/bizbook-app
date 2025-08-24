@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -89,7 +90,7 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                   Période du {format(data.startDate, "d MMMM yyyy", { locale: fr })} au {format(data.endDate, "d MMMM yyyy", { locale: fr })}
               </CardDescription>
             </div>
-            <div className="flex gap-2">
+             <div className="flex flex-wrap items-center justify-end gap-2">
                 <Button size="sm" variant="outline" onClick={handlePrint}>
                     <Printer className="mr-2 h-4 w-4" />
                     Imprimer le rapport
@@ -99,7 +100,7 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                         <DialogTrigger asChild>
                            <Button size="sm" variant="outline">
                                <Printer className="mr-2 h-4 w-4" />
-                               Imprimer le relevé
+                               Relevé du Client
                            </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-4xl p-0">
@@ -144,10 +145,10 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
         </CardHeader>
         <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <StatCard title="Chiffre d'Affaires (Encaissé)" value={formatCurrency(data.summary.totalRevenue, currency)} className="bg-green-500/10 text-green-800" />
+                <StatCard title="Chiffre d'Affaires (Ventes)" value={formatCurrency(data.summary.grossSales, currency)} className="bg-green-500/10 text-green-800" />
                 <StatCard title="Dépenses" value={formatCurrency(data.summary.totalExpenses, currency)} className="bg-orange-500/10 text-orange-800" />
+                <StatCard title="Bénéfice Brut" value={formatCurrency(data.summary.grossProfit, currency)} className="bg-sky-500/10 text-sky-800" />
                 <StatCard title="Bénéfice Net" value={formatCurrency(data.summary.netProfit, currency)} className="bg-blue-500/10 text-blue-800" />
-                <StatCard title="Total Impayé" value={formatCurrency(data.summary.totalUnpaid, currency)} className="bg-red-500/10 text-red-800" />
             </div>
         </CardContent>
       </Card>
@@ -173,13 +174,14 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
               <h1 className="text-2xl font-bold">Rapport d'Activité</h1>
               <p className="text-sm">Date: {format(reportDate, 'd MMMM yyyy', { locale: fr })}</p>
               <p className="text-sm">Période du {format(data.startDate, 'dd/MM/yy')} au {format(data.endDate, 'dd/MM/yy')}</p>
+              {data.clientName !== "Tous les clients" && <p className="text-sm font-bold">Client: {data.clientName}</p>}
             </div>
         </header>
 
         {data.allInvoices.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Détail des Factures ({data.clientName})</CardTitle>
+                <CardTitle>Détail des Factures ({data.allInvoices.length})</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -213,8 +215,8 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                   </TableBody>
                    <TableFooter>
                       <TableRow>
-                          <TableCell colSpan={6} className="text-right font-bold">Total Impayé sur la période</TableCell>
-                          <TableCell className="text-right font-bold text-red-600">{formatCurrency(data.summary.totalUnpaid, currency)}</TableCell>
+                          <TableCell colSpan={6} className="text-right font-bold">Total Ventes sur la période</TableCell>
+                          <TableCell className="text-right font-bold">{formatCurrency(data.summary.grossSales, currency)}</TableCell>
                       </TableRow>
                   </TableFooter>
                 </Table>
@@ -222,7 +224,7 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
             </Card>
         )}
 
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2" style={{ breakInside: 'avoid-page' }}>
           {data.productSales.length > 0 && (
               <Card>
                   <CardHeader>
@@ -235,7 +237,6 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                                   <TableHead>Produit</TableHead>
                                   <TableHead className="text-right">Qté Vendue</TableHead>
                                   <TableHead className="text-right">Stock Actuel</TableHead>
-                                  <TableHead className="text-right">Valeur Vente</TableHead>
                               </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -244,7 +245,6 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                                       <TableCell>{item.productName}</TableCell>
                                       <TableCell className="text-right">{item.quantitySold}</TableCell>
                                       <TableCell className="text-right">{item.quantityInStock}</TableCell>
-                                      <TableCell className="text-right">{formatCurrency(item.totalValue, currency)}</TableCell>
                                   </TableRow>
                               ))}
                           </TableBody>
@@ -289,6 +289,17 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
               </Card>
           )}
         </div>
+         <footer className="flex justify-between items-start mt-24 pt-8 border-t-2 border-dashed" style={{ breakInside: 'avoid-page' }}>
+            <div className="w-2/5 text-center">
+                <p className="font-bold text-sm">Le Magasinier</p>
+                <div className="mt-20 border-b-2 border-gray-400"></div>
+            </div>
+            <div className="w-2/5 text-center">
+                <p className="font-bold text-sm">La Gérante</p>
+                <div className="mt-20 border-b-2 border-gray-400"></div>
+                <p className="text-xs text-gray-700 mt-1">{settings.managerName}</p>
+            </div>
+        </footer>
       </div>
     </div>
   );
