@@ -92,6 +92,10 @@ export function ReportDisplay({ data, settings, currency, client }: ReportDispla
               <CardDescription>Client: {data.clientName}</CardDescription>
             </div>
             <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={handlePrint}>
+                    <Printer className="mr-2 h-4 w-4" />
+                    Imprimer le rapport
+                </Button>
                 {client && (
                     <Dialog>
                         <DialogTrigger asChild>
