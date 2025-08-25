@@ -1,6 +1,7 @@
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'export', // Très important pour Capacitor
   async redirects() {
     return [
       {
@@ -11,6 +12,7 @@ const nextConfig = {
     ]
   },
   images: {
+    unoptimized: true, // Requis pour l'export statique avec next/image
     remotePatterns: [
       {
         protocol: 'https',

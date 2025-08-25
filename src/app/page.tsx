@@ -1,6 +1,4 @@
 
-export const dynamic = 'force-dynamic';
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SalesChart } from "@/components/dashboard/SalesChart";

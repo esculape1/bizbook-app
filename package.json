@@ -57,6 +57,9 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@capacitor/android": "^6.1.0",
+    "@capacitor/cli": "^6.1.0",
+    "@capacitor/core": "^6.1.0",
     "@opentelemetry/exporter-jaeger": "^1.25.1",
     "@types/jsbarcode": "^3.11.4",
     "@types/node": "^20",
