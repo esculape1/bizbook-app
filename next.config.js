@@ -1,7 +1,6 @@
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export', // Très important pour Capacitor
   async redirects() {
     return [
       {
