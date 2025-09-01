@@ -52,7 +52,7 @@ export function RecordPaymentButton({ invoice, settings }: RecordPaymentButtonPr
     },
   });
   
-  const isActionDisabled = invoice.status === 'Cancelled';
+  const isActionDisabled = invoice.status === 'Cancelled' || invoice.status === 'Paid';
 
   const onSubmit = (data: PaymentFormValues) => {
     startTransition(async () => {

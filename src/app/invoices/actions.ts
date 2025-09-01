@@ -41,13 +41,13 @@ const updateInvoiceItemSchema = z.object({
 });
 
 const updateInvoiceSchema = z.object({
+    invoiceNumber: z.string().min(1, "Le numéro de facture est requis."),
     clientId: z.string(),
     date: z.date(),
     dueDate: z.date(),
     items: z.array(updateInvoiceItemSchema),
     vat: z.coerce.number(),
     discount: z.coerce.number(),
-    status: z.enum(['Paid', 'Unpaid', 'Partially Paid', 'Cancelled']),
 });
 
 
@@ -151,7 +151,7 @@ export async function createInvoice(formData: unknown) {
   }
 }
 
-export async function updateInvoice(id: string, invoiceNumber: string, formData: unknown) {
+export async function updateInvoice(id: string, formData: unknown) {
   const session = await getSession();
   if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
@@ -166,7 +166,7 @@ export async function updateInvoice(id: string, invoiceNumber: string, formData:
   }
 
   try {
-    const { clientId, date, dueDate, items, vat, discount, status } = validatedFields.data;
+    const { clientId, date, dueDate, items, vat, discount, invoiceNumber } = validatedFields.data;
     
     const originalInvoice = await getInvoiceById(id);
     if (!originalInvoice) {
@@ -226,7 +226,10 @@ export async function updateInvoice(id: string, invoiceNumber: string, formData:
     const vatAmount = totalAfterDiscount * (vat / 100);
     const totalAmount = totalAfterDiscount + vatAmount;
 
-    const invoiceData: Omit<Invoice, 'id' | 'payments' | 'amountPaid'> = {
+    // Retain original status, as it's not editable from this form anymore
+    const status = originalInvoice.status;
+
+    const invoiceData: Omit<Invoice, 'id' | 'payments' | 'amountPaid' | 'status'> = {
       invoiceNumber,
       clientId,
       clientName: client.name,
@@ -239,7 +242,6 @@ export async function updateInvoice(id: string, invoiceNumber: string, formData:
       discount,
       discountAmount,
       totalAmount,
-      status,
     }
 
     await updateInvoiceInDB(id, invoiceData);
@@ -275,8 +277,8 @@ export async function cancelInvoice(id: string) {
       throw new Error("Facture non trouvée pour l'annulation.");
     }
     
-    // Restore stock if the invoice is not already cancelled
-    if (invoiceToCancel.status !== 'Cancelled') {
+    // Restore stock if the invoice is not already cancelled or paid
+    if (invoiceToCancel.status !== 'Cancelled' && invoiceToCancel.status !== 'Paid') {
       const products = await getProducts();
       for (const item of invoiceToCancel.items) {
         const product = products.find(p => p.id === item.productId);
@@ -285,9 +287,10 @@ export async function cancelInvoice(id: string) {
           await updateProduct(item.productId, { quantityInStock: newStock });
         }
       }
-      // Update invoice status to 'Cancelled' and reset paid amount
-      await updateInvoiceInDB(id, { status: 'Cancelled', amountPaid: 0 });
     }
+    
+    // Update invoice status to 'Cancelled' and reset paid amount
+    await updateInvoiceInDB(id, { status: 'Cancelled', amountPaid: 0 });
 
     revalidatePath('/invoices');
     revalidatePath('/');

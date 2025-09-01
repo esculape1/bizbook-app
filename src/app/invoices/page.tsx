@@ -71,9 +71,9 @@ export default async function InvoicesPage() {
               {invoices.map((invoice) => {
                 const client = clients.find(c => c.id === invoice.clientId);
                 const amountDue = invoice.totalAmount - (invoice.amountPaid || 0);
-                const isCancelled = invoice.status === 'Cancelled';
+                const isLocked = invoice.status === 'Cancelled' || invoice.status === 'Paid';
                 return (
-                <TableRow key={invoice.id} className={cn(isCancelled && 'bg-muted/50 text-muted-foreground')}>
+                <TableRow key={invoice.id} className={cn(invoice.status === 'Cancelled' && 'bg-muted/50 text-muted-foreground')}>
                   <TableCell className="font-medium">
                     <Link href={`/invoices/${invoice.id}`} className="text-primary hover:underline">
                       {invoice.invoiceNumber}
@@ -91,10 +91,10 @@ export default async function InvoicesPage() {
                   {client && (
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end">
-                        {!isCancelled && <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} asTextButton={false} />}
+                        {!isLocked && <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} asTextButton={false} />}
                         {canEdit && <RecordPaymentButton invoice={invoice} settings={settings} />}
                         {canEdit && <EditInvoiceForm invoice={invoice} clients={clients} products={products} settings={settings} />}
-                        {canEdit && <CancelInvoiceButton id={invoice.id} invoiceNumber={invoice.invoiceNumber} disabled={isCancelled} />}
+                        {canEdit && <CancelInvoiceButton id={invoice.id} invoiceNumber={invoice.invoiceNumber} disabled={isLocked} />}
                       </div>
                     </TableCell>
                   )}

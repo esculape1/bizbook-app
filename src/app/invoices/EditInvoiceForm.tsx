@@ -44,6 +44,7 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
   });
 
   const invoiceSchema = z.object({
+    invoiceNumber: z.string().min(1, "Le numéro de facture est requis."),
     clientId: z.string().min(1, "Client requis"),
     date: z.date({ required_error: "Date requise" }),
     dueDate: z.date({ required_error: "Date d'échéance requise" }),
@@ -61,7 +62,6 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
       }),
     vat: z.coerce.number().min(0).default(0),
     discount: z.coerce.number().min(0).default(0),
-    status: z.enum(['Paid', 'Unpaid', 'Partially Paid', 'Cancelled']),
   });
 
   type InvoiceFormValues = z.infer<typeof invoiceSchema>;
@@ -114,7 +114,7 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
 
   const onSubmit = (data: InvoiceFormValues) => {
     startTransition(async () => {
-      const result = await updateInvoice(invoice.id, invoice.invoiceNumber, data);
+      const result = await updateInvoice(invoice.id, data);
       if (result?.message) {
         toast({
           variant: "destructive",
@@ -131,7 +131,7 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
     });
   };
   
-  const isEditDisabled = invoice.status === 'Cancelled';
+  const isEditDisabled = invoice.status === 'Cancelled' || invoice.status === 'Paid';
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -146,7 +146,20 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4 max-h-[80vh] overflow-y-auto px-2">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="invoiceNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Numéro de facture</FormLabel>
+                     <FormControl>
+                        <Input placeholder="FACT-2024-001" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="clientId"
@@ -211,29 +224,6 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
                         <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
                       </PopoverContent>
                     </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Statut</FormLabel>
-                     <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner un statut" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Unpaid">Impayée</SelectItem>
-                        <SelectItem value="Paid">Payée</SelectItem>
-                        <SelectItem value="Partially Paid">Partiellement Payée</SelectItem>
-                        <SelectItem value="Cancelled">Annulée</SelectItem>
-                      </SelectContent>
-                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
