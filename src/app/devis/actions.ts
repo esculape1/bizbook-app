@@ -63,8 +63,8 @@ export async function createQuote(formData: unknown) {
         productName: product.name,
         reference: product.reference,
         quantity: item.quantity,
-        unitPrice: product.unitPrice,
-        total: item.quantity * product.unitPrice,
+        unitPrice: item.unitPrice,
+        total: item.quantity * item.unitPrice,
       };
     });
 
@@ -150,8 +150,8 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
         productName: product.name,
         reference: product.reference,
         quantity: item.quantity,
-        unitPrice: product.unitPrice,
-        total: item.quantity * product.unitPrice,
+        unitPrice: item.unitPrice,
+        total: item.quantity * item.unitPrice,
       };
     });
 

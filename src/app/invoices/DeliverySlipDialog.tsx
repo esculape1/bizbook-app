@@ -21,7 +21,8 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
     const content = document.getElementById('delivery-slip-content');
     if (content) {
       const printWindow = window.open('', '_blank');
-      printWindow?.document.write('<html><head><title>Imprimer Bordereau</title>');
+      const suggestedFilename = `BL-${invoice.invoiceNumber}`;
+      printWindow?.document.write(`<html><head><title>${suggestedFilename}</title>`);
       Array.from(document.styleSheets).forEach(styleSheet => {
         try {
           if (styleSheet.href) {

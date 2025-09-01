@@ -21,7 +21,8 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
     const content = document.getElementById('quote-content');
     if (content) {
       const printWindow = window.open('', '_blank');
-      printWindow?.document.write('<html><head><title>Imprimer Proforma</title>');
+      const suggestedFilename = `PROFORMA-${quote.quoteNumber}`;
+      printWindow?.document.write(`<html><head><title>${suggestedFilename}</title>`);
       // It's crucial to include stylesheets for print.
       Array.from(document.styleSheets).forEach(styleSheet => {
         try {

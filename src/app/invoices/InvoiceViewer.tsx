@@ -27,7 +27,8 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     const content = document.getElementById('invoice-content');
     if (content) {
       const printWindow = window.open('', '_blank');
-      printWindow?.document.write('<html><head><title>Imprimer Facture</title>');
+      const suggestedFilename = `FACTURE-${invoice.invoiceNumber}`;
+      printWindow?.document.write(`<html><head><title>${suggestedFilename}</title>`);
       Array.from(document.styleSheets).forEach(styleSheet => {
         try {
           if (styleSheet.href) {
