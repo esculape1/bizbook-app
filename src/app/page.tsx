@@ -9,6 +9,8 @@ import { formatCurrency } from "@/lib/utils";
 import { OverdueInvoicesTable } from "@/components/dashboard/OverdueInvoicesTable";
 import { DateTimeDisplay } from "@/components/dashboard/DateTimeDisplay";
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage() {
   const [clients, products, invoices, expenses, settings] = await Promise.all([
     getClients(),
