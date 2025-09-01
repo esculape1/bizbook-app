@@ -122,6 +122,7 @@ export function ExpenseForm({ currency }: { currency: Settings['currency'] }) {
                           <SelectItem value="Salaire">Salaire</SelectItem>
                           <SelectItem value="Envois">Envois</SelectItem>
                           <SelectItem value="Loyer">Loyer</SelectItem>
+                          <SelectItem value="Épargne">Épargne</SelectItem>
                           <SelectItem value="Autre">Autre</SelectItem>
                         </SelectContent>
                       </Select>

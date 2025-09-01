@@ -118,6 +118,7 @@ export function EditExpenseButton({ expense, currency }: { expense: Expense, cur
                           <SelectItem value="Salaire">Salaire</SelectItem>
                           <SelectItem value="Envois">Envois</SelectItem>
                           <SelectItem value="Loyer">Loyer</SelectItem>
+                           <SelectItem value="Épargne">Épargne</SelectItem>
                           <SelectItem value="Autre">Autre</SelectItem>
                         </SelectContent>
                       </Select>

@@ -9,6 +9,7 @@ import {
   updateInvoice as updateInvoiceInDB,
   getInvoiceById,
   updateProduct,
+  getInvoices,
 } from '@/lib/data';
 import { revalidatePath } from 'next/cache';
 import type { InvoiceItem, Invoice, Payment } from '@/lib/types';
@@ -68,12 +69,23 @@ export async function createInvoice(formData: unknown) {
   try {
     const { invoiceNumberSuffix, clientId, date, dueDate, items, vat, discount } = validatedFields.data;
     
-    const clients = await getClients();
-    const products = await getProducts();
+    const [clients, products, allInvoices] = await Promise.all([
+        getClients(),
+        getProducts(),
+        getInvoices(),
+    ]);
 
     const client = clients.find(c => c.id === clientId);
     if (!client) {
       return { message: 'Client non trouvé.' };
+    }
+
+    const currentYear = new Date().getFullYear();
+    const invoiceNumber = `FACT-${currentYear}-${invoiceNumberSuffix}`;
+
+    // Check for duplicate invoice number
+    if (allInvoices.some(inv => inv.invoiceNumber === invoiceNumber)) {
+        return { message: `Le numéro de facture ${invoiceNumber} existe déjà.` };
     }
     
     const invoiceItems: InvoiceItem[] = [];
@@ -110,8 +122,6 @@ export async function createInvoice(formData: unknown) {
     const vatAmount = totalAfterDiscount * (vat / 100);
     const totalAmount = totalAfterDiscount + vatAmount;
 
-    const currentYear = new Date().getFullYear();
-    const invoiceNumber = `FACT-${currentYear}-${invoiceNumberSuffix}`;
 
     // 1. Create invoice
     await addInvoice({
@@ -278,7 +288,7 @@ export async function cancelInvoice(id: string) {
     }
     
     // Restore stock if the invoice is not already cancelled or paid
-    if (invoiceToCancel.status !== 'Cancelled' && invoiceToCancel.status !== 'Paid') {
+    if (invoiceToCancel.status !== 'Cancelled') {
       const products = await getProducts();
       for (const item of invoiceToCancel.items) {
         const product = products.find(p => p.id === item.productId);
