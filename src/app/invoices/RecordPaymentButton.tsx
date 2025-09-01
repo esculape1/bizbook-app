@@ -52,7 +52,7 @@ export function RecordPaymentButton({ invoice, settings }: RecordPaymentButtonPr
     },
   });
   
-  const isActionDisabled = invoice.status === 'Paid' || invoice.status === 'Cancelled' || amountDue <= 0;
+  const isActionDisabled = invoice.status === 'Cancelled';
 
   const onSubmit = (data: PaymentFormValues) => {
     startTransition(async () => {
@@ -172,7 +172,7 @@ export function RecordPaymentButton({ invoice, settings }: RecordPaymentButtonPr
 
             <DialogFooter>
               <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>Annuler</Button>
-              <Button type="submit" disabled={isPending || amountDue <= 0}>
+              <Button type="submit" disabled={isPending}>
                 {isPending ? 'Enregistrement...' : 'Enregistrer'}
               </Button>
             </DialogFooter>

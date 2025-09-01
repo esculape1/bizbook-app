@@ -71,7 +71,6 @@ export default async function InvoicesPage() {
               {invoices.map((invoice) => {
                 const client = clients.find(c => c.id === invoice.clientId);
                 const amountDue = invoice.totalAmount - (invoice.amountPaid || 0);
-                const isCancelledOrPaid = invoice.status === 'Cancelled' || invoice.status === 'Paid';
                 const isCancelled = invoice.status === 'Cancelled';
                 return (
                 <TableRow key={invoice.id} className={cn(isCancelled && 'bg-muted/50 text-muted-foreground')}>
@@ -95,7 +94,7 @@ export default async function InvoicesPage() {
                         {!isCancelled && <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} asTextButton={false} />}
                         {canEdit && <RecordPaymentButton invoice={invoice} settings={settings} />}
                         {canEdit && <EditInvoiceForm invoice={invoice} clients={clients} products={products} settings={settings} />}
-                        {canEdit && <CancelInvoiceButton id={invoice.id} invoiceNumber={invoice.invoiceNumber} disabled={isCancelledOrPaid} />}
+                        {canEdit && <CancelInvoiceButton id={invoice.id} invoiceNumber={invoice.invoiceNumber} disabled={isCancelled} />}
                       </div>
                     </TableCell>
                   )}

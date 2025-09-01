@@ -131,7 +131,7 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
     });
   };
   
-  const isEditDisabled = invoice.status === 'Cancelled' || invoice.status === 'Paid';
+  const isEditDisabled = invoice.status === 'Cancelled';
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
