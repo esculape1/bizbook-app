@@ -35,7 +35,7 @@ const quoteSchema = z.object({
   date: z.date({ required_error: "Date requise" }),
   expiryDate: z.date({ required_error: "Date d'expiration requise" }),
   items: z.array(quoteItemSchema).min(1, "Ajoutez au moins un produit."),
-  vat: z.coerce.number().min(0).default(20),
+  vat: z.coerce.number().min(0).default(0),
   discount: z.coerce.number().min(0).default(0),
   status: z.enum(['Draft', 'Sent', 'Accepted', 'Declined']),
 });
@@ -73,7 +73,9 @@ export function EditQuoteForm({ quote, clients, products, settings }: EditQuoteF
   const watchedVat = useWatch({ control: form.control, name: 'vat' });
 
   const subTotal = watchedItems.reduce((acc, item) => {
-    return acc + (item.unitPrice || 0) * (item.quantity || 0);
+    const calculatedTotal = (item.unitPrice || 0) * (item.quantity || 0);
+    form.setValue(`items.${watchedItems.indexOf(item)}.total`, calculatedTotal);
+    return acc + calculatedTotal;
   }, 0);
   
   const discountAmount = subTotal * (watchedDiscount / 100);
@@ -88,7 +90,6 @@ export function EditQuoteForm({ quote, clients, products, settings }: EditQuoteF
       form.setValue(`items.${index}.unitPrice`, product.unitPrice);
       form.setValue(`items.${index}.quantity`, 1);
       form.setValue(`items.${index}.reference`, product.reference);
-      form.setValue(`items.${index}.total`, product.unitPrice);
     }
   };
 

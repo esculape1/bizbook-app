@@ -20,7 +20,7 @@ const quoteSchema = z.object({
   clientId: z.string(),
   date: z.date(),
   expiryDate: z.date(),
-  items: z.array(quoteItemSchema),
+  items: z.array(quoteItemSchema).min(1, "Ajoutez au moins un produit."),
   vat: z.coerce.number(),
   discount: z.coerce.number(),
 });
@@ -145,6 +145,7 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
     const quoteItems: QuoteItem[] = items.map(item => {
       const product = products.find(p => p.id === item.productId);
       if (!product) throw new Error(`Produit non trouvé: ${item.productId}`);
+      // The price from the form (item.unitPrice) is now correctly used.
       return {
         productId: item.productId,
         productName: product.name,
@@ -179,7 +180,15 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
 
     // Create invoice if status changed to 'Accepted'
     if (status === 'Accepted' && originalQuote.status !== 'Accepted') {
-      const invoiceItems: InvoiceItem[] = quoteItems.map(item => ({ ...item }));
+      // Use the unit prices from the accepted quote, not the default product prices
+      const invoiceItems: InvoiceItem[] = quoteItems.map(item => ({ 
+          productId: item.productId,
+          productName: item.productName,
+          reference: item.reference,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice, // Important: use the price from the quote
+          total: item.total,
+      }));
       
       // Get the next sequential invoice number
       const allInvoices = await getInvoices();
