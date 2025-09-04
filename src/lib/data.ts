@@ -3,20 +3,43 @@ import { db } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User, UserWithPassword } from './types';
 
-// Helper to convert Firestore docs to plain objects
-function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
-  const data = doc.data() as T;
-  return { id: doc.id, ...data };
+const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Veuillez vérifier la configuration de Firebase ou vos quotas d'utilisation.";
+
+// Helper to recursively convert Firestore Timestamps to ISO strings
+function convertTimestamps(data: any): any {
+  if (data instanceof Timestamp) {
+    return data.toDate().toISOString();
+  }
+  if (Array.isArray(data)) {
+    return data.map(item => convertTimestamps(item));
+  }
+  if (data !== null && typeof data === 'object') {
+    const newObj: { [key: string]: any } = {};
+    for (const key in data) {
+      if (Object.prototype.hasOwnProperty.call(data, key)) {
+        newObj[key] = convertTimestamps(data[key]);
+      }
+    }
+    return newObj;
+  }
+  return data;
 }
 
-const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Veuillez vérifier la configuration de Firebase.";
-const DB_READ_ERROR = "Erreur de lecture dans la base de données. L'application peut être partiellement fonctionnelle.";
+function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
+    if (!doc.exists) {
+        // This case should ideally be handled by the caller, but as a safeguard:
+        return null as T;
+    }
+    const data = doc.data();
+    const convertedData = convertTimestamps(data);
+    return { id: doc.id, ...convertedData } as T;
+}
 
 // USERS
 export async function getUserByEmail(email: string): Promise<UserWithPassword | null> {
     if (!db) {
-        console.error("La connexion à la base de données a échoué. DB non disponible.");
-        return null;
+        console.error(DB_UNAVAILABLE_ERROR);
+        return null; // For auth, we don't want to throw, just fail silently.
     }
     try {
         const usersCol = db.collection('users');
@@ -24,20 +47,10 @@ export async function getUserByEmail(email: string): Promise<UserWithPassword | 
         const userSnapshot = await q.get();
 
         if (userSnapshot.empty) {
-            console.log(`Aucun utilisateur trouvé pour l'email: ${email}`);
             return null;
         }
         
-        console.log(`Utilisateur trouvé pour l'email: ${email}`);
-        const userDoc = userSnapshot.docs[0];
-        const data = userDoc.data();
-
-        // Manually convert Timestamps to ISO strings
-        if (data.registrationDate && data.registrationDate instanceof Timestamp) {
-            data.registrationDate = data.registrationDate.toDate().toISOString();
-        }
-
-        return { id: userDoc.id, ...data } as UserWithPassword;
+        return docToObject<UserWithPassword>(userSnapshot.docs[0]);
     } catch (error) {
         console.error(`Impossible de récupérer l'utilisateur avec l'email ${email}:`, error);
         return null;
@@ -47,44 +60,21 @@ export async function getUserByEmail(email: string): Promise<UserWithPassword | 
 
 // CLIENTS
 export async function getClients(): Promise<Client[]> {
-  if (!db) return [];
-  try {
-    const clientsCol = db.collection('clients');
-    const q = clientsCol.orderBy('registrationDate', 'desc');
-    const clientSnapshot = await q.get();
-    return clientSnapshot.docs.map(doc => {
-        const data = doc.data();
-        if (data.registrationDate && data.registrationDate instanceof Timestamp) {
-            data.registrationDate = data.registrationDate.toDate().toISOString();
-        }
-        return { id: doc.id, ...data } as Client;
-    });
-  } catch (error) {
-    console.error("Impossible de récupérer les clients:", error);
-    // Return empty array to prevent crashing the app
-    return [];
-  }
+  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+  const clientsCol = db.collection('clients');
+  const q = clientsCol.orderBy('registrationDate', 'desc');
+  const clientSnapshot = await q.get();
+  return clientSnapshot.docs.map(doc => docToObject<Client>(doc));
 }
 
 export async function getClientById(id: string): Promise<Client | null> {
-  if (!db) return null;
-  try {
-    const clientDocRef = db.collection('clients').doc(id);
-    const clientDoc = await clientDocRef.get();
-    if (clientDoc.exists) {
-      const data = clientDoc.data();
-      if(data) {
-        if (data.registrationDate && data.registrationDate instanceof Timestamp) {
-            data.registrationDate = data.registrationDate.toDate().toISOString();
-        }
-        return { id: clientDoc.id, ...data } as Client;
-      }
-    }
-    return null;
-  } catch (error) {
-    console.error(`Impossible de récupérer le client ${id}:`, error);
-    return null;
+  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+  const clientDocRef = db.collection('clients').doc(id);
+  const clientDoc = await clientDocRef.get();
+  if (clientDoc.exists) {
+    return docToObject<Client>(clientDoc);
   }
+  return null;
 }
 
 export async function addClient(clientData: Omit<Client, 'id' | 'registrationDate' | 'status'>): Promise<Client> {
@@ -112,22 +102,11 @@ export async function deleteClient(id: string): Promise<void> {
 
 // SUPPLIERS
 export async function getSuppliers(): Promise<Supplier[]> {
-  if (!db) return [];
-  try {
-    const suppliersCol = db.collection('suppliers');
-    const q = suppliersCol.orderBy('registrationDate', 'desc');
-    const supplierSnapshot = await q.get();
-    return supplierSnapshot.docs.map(doc => {
-        const data = doc.data();
-        if (data.registrationDate && data.registrationDate instanceof Timestamp) {
-            data.registrationDate = data.registrationDate.toDate().toISOString();
-        }
-        return { id: doc.id, ...data } as Supplier;
-    });
-  } catch (error) {
-    console.error("Impossible de récupérer les fournisseurs:", error);
-    return [];
-  }
+  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+  const suppliersCol = db.collection('suppliers');
+  const q = suppliersCol.orderBy('registrationDate', 'desc');
+  const supplierSnapshot = await q.get();
+  return supplierSnapshot.docs.map(doc => docToObject<Supplier>(doc));
 }
 
 export async function addSupplier(supplierData: Omit<Supplier, 'id' | 'registrationDate'>): Promise<Supplier> {
@@ -155,16 +134,11 @@ export async function deleteSupplier(id: string): Promise<void> {
 
 // PRODUCTS
 export async function getProducts(): Promise<Product[]> {
-  if (!db) return [];
-  try {
-    const productsCol = db.collection('products');
-    const q = productsCol.orderBy('name');
-    const productSnapshot = await q.get();
-    return productSnapshot.docs.map(doc => docToObject<Product>(doc));
-  } catch (error) {
-    console.error("Impossible de récupérer les produits:", error);
-    return [];
-  }
+  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+  const productsCol = db.collection('products');
+  const q = productsCol.orderBy('name');
+  const productSnapshot = await q.get();
+  return productSnapshot.docs.map(doc => docToObject<Product>(doc));
 }
 
 export async function addProduct(productData: Omit<Product, 'id'>): Promise<Product> {
@@ -187,41 +161,21 @@ export async function deleteProduct(id: string): Promise<void> {
 
 // QUOTES
 export async function getQuotes(): Promise<Quote[]> {
-    if (!db) return [];
-    try {
-      const quotesCol = db.collection('quotes');
-      const q = quotesCol.orderBy('date', 'desc');
-      const quoteSnapshot = await q.get();
-      return quoteSnapshot.docs.map(doc => {
-        const data = doc.data();
-        if (data.date && data.date instanceof Timestamp) data.date = data.date.toDate().toISOString();
-        if (data.expiryDate && data.expiryDate instanceof Timestamp) data.expiryDate = data.expiryDate.toDate().toISOString();
-        return { id: doc.id, ...data } as Quote;
-      });
-    } catch (error) {
-      console.error("Impossible de récupérer les proformas:", error);
-      return [];
-    }
+    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+    const quotesCol = db.collection('quotes');
+    const q = quotesCol.orderBy('date', 'desc');
+    const quoteSnapshot = await q.get();
+    return quoteSnapshot.docs.map(doc => docToObject<Quote>(doc));
 }
 
 export async function getQuoteById(id: string): Promise<Quote | null> {
-    if (!db) return null;
-    try {
-      const quoteDocRef = db.collection('quotes').doc(id);
-      const quoteDoc = await quoteDocRef.get();
-      if (quoteDoc.exists) {
-          const data = quoteDoc.data();
-          if (data) {
-            if (data.date && data.date instanceof Timestamp) data.date = data.date.toDate().toISOString();
-            if (data.expiryDate && data.expiryDate instanceof Timestamp) data.expiryDate = data.expiryDate.toDate().toISOString();
-            return { id: quoteDoc.id, ...data } as Quote;
-          }
-      }
-      return null;
-    } catch (error) {
-      console.error(`Impossible de récupérer la proforma ${id}:`, error);
-      return null;
+    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+    const quoteDocRef = db.collection('quotes').doc(id);
+    const quoteDoc = await quoteDocRef.get();
+    if (quoteDoc.exists) {
+        return docToObject<Quote>(quoteDoc);
     }
+    return null;
 }
 
 export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>): Promise<Quote> {
@@ -273,63 +227,21 @@ export async function deleteQuote(id: string): Promise<void> {
 
 // INVOICES
 export async function getInvoices(): Promise<Invoice[]> {
-    if (!db) return [];
-    try {
-      const invoicesCol = db.collection('invoices');
-      const q = invoicesCol.orderBy('date', 'desc');
-      const invoiceSnapshot = await q.get();
-      return invoiceSnapshot.docs.map(doc => {
-          const data = doc.data();
-          if (data.date && data.date instanceof Timestamp) {
-            data.date = data.date.toDate().toISOString();
-          }
-          if (data.dueDate && data.dueDate instanceof Timestamp) {
-            data.dueDate = data.dueDate.toDate().toISOString();
-          }
-          if (data.payments && Array.isArray(data.payments)) {
-            data.payments.forEach((p: any) => {
-              if (p.date && p.date instanceof Timestamp) {
-                p.date = p.date.toDate().toISOString();
-              }
-            });
-          }
-          return { id: doc.id, ...data } as Invoice;
-      });
-    } catch (error) {
-      console.error("Impossible de récupérer les factures:", error);
-      return [];
-    }
+    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+    const invoicesCol = db.collection('invoices');
+    const q = invoicesCol.orderBy('date', 'desc');
+    const invoiceSnapshot = await q.get();
+    return invoiceSnapshot.docs.map(doc => docToObject<Invoice>(doc));
 }
 
 export async function getInvoiceById(id: string): Promise<Invoice | null> {
-    if (!db) return null;
-    try {
-      const invoiceDocRef = db.collection('invoices').doc(id);
-      const invoiceDoc = await invoiceDocRef.get();
-      if (invoiceDoc.exists) {
-          const data = invoiceDoc.data();
-          if (data) {
-            if (data.date && data.date instanceof Timestamp) {
-                data.date = data.date.toDate().toISOString();
-            }
-            if (data.dueDate && data.dueDate instanceof Timestamp) {
-                data.dueDate = data.dueDate.toDate().toISOString();
-            }
-            if (data.payments && Array.isArray(data.payments)) {
-                data.payments.forEach((p: any) => {
-                  if (p.date && p.date instanceof Timestamp) {
-                    p.date = p.date.toDate().toISOString();
-                  }
-                });
-            }
-            return { id: invoiceDoc.id, ...data } as Invoice;
-          }
-      }
-      return null;
-    } catch (error) {
-      console.error(`Impossible de récupérer la facture ${id}:`, error);
-      return null;
+    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+    const invoiceDocRef = db.collection('invoices').doc(id);
+    const invoiceDoc = await invoiceDocRef.get();
+    if (invoiceDoc.exists) {
+        return docToObject<Invoice>(invoiceDoc);
     }
+    return null;
 }
 
 export async function addInvoice(invoiceData: Omit<Invoice, 'id'>): Promise<Invoice> {
@@ -354,41 +266,21 @@ export async function deleteInvoice(id: string): Promise<void> {
 
 // PURCHASES
 export async function getPurchases(): Promise<Purchase[]> {
-    if (!db) return [];
-    try {
-      const purchasesCol = db.collection('purchases');
-      const q = purchasesCol.orderBy('date', 'desc');
-      const purchaseSnapshot = await q.get();
-      return purchaseSnapshot.docs.map(doc => {
-          const data = doc.data();
-          if (data.date && data.date instanceof Timestamp) {
-              data.date = data.date.toDate().toISOString();
-          }
-          return { id: doc.id, ...data } as Purchase;
-      });
-    } catch (error) {
-      console.error("Impossible de récupérer les achats:", error);
-      return [];
-    }
+    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+    const purchasesCol = db.collection('purchases');
+    const q = purchasesCol.orderBy('date', 'desc');
+    const purchaseSnapshot = await q.get();
+    return purchaseSnapshot.docs.map(doc => docToObject<Purchase>(doc));
 }
 
 export async function getPurchaseById(id: string): Promise<Purchase | null> {
-    if (!db) return null;
-    try {
-      const purchaseDocRef = db.collection('purchases').doc(id);
-      const purchaseDoc = await purchaseDocRef.get();
-      if (purchaseDoc.exists) {
-          const data = purchaseDoc.data();
-          if(data && data.date && data.date instanceof Timestamp) {
-            data.date = data.date.toDate().toISOString();
-          }
-          return {id: purchaseDoc.id, ...data} as Purchase;
-      }
-      return null;
-    } catch (error) {
-      console.error(`Impossible de récupérer l'achat ${id}:`, error);
-      return null;
+    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+    const purchaseDocRef = db.collection('purchases').doc(id);
+    const purchaseDoc = await purchaseDocRef.get();
+    if (purchaseDoc.exists) {
+        return docToObject<Purchase>(purchaseDoc);
     }
+    return null;
 }
 
 export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'purchaseNumber'>): Promise<Purchase> {
@@ -422,22 +314,11 @@ export async function updatePurchase(id: string, purchaseData: Partial<Omit<Purc
 
 // EXPENSES
 export async function getExpenses(): Promise<Expense[]> {
-  if (!db) return [];
-  try {
-    const expensesCol = db.collection('expenses');
-    const q = expensesCol.orderBy('date', 'desc');
-    const expenseSnapshot = await q.get();
-    return expenseSnapshot.docs.map(doc => {
-        const data = doc.data();
-        if (data.date && data.date instanceof Timestamp) {
-            data.date = data.date.toDate().toISOString();
-        }
-        return { id: doc.id, ...data } as Expense;
-    });
-  } catch (error) {
-    console.error("Impossible de récupérer les dépenses:", error);
-    return [];
-  }
+  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+  const expensesCol = db.collection('expenses');
+  const q = expensesCol.orderBy('date', 'desc');
+  const expenseSnapshot = await q.get();
+  return expenseSnapshot.docs.map(doc => docToObject<Expense>(doc));
 }
 
 export async function addExpense(expenseData: Omit<Expense, 'id'>): Promise<Expense> {
@@ -474,22 +355,15 @@ const defaultSettings: Settings = {
 };
 
 export async function getSettings(): Promise<Settings> {
-  if (!db) return defaultSettings;
+  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
   const settingsDocRef = db.collection('settings').doc('main');
-  try {
-      const settingsDoc = await settingsDocRef.get();
-      if (settingsDoc.exists) {
-        const data = settingsDoc.data();
-        // Merge with defaults to ensure all keys are present, even if not in DB
-        return { ...defaultSettings, ...data } as Settings;
-      }
-      // If no settings doc exists, create one with defaults
-      await settingsDocRef.set(defaultSettings);
-      return defaultSettings;
-  } catch (e) {
-      console.warn(DB_READ_ERROR, e);
-      return defaultSettings;
+  const settingsDoc = await settingsDocRef.get();
+  if (settingsDoc.exists) {
+    const data = settingsDoc.data();
+    return { ...defaultSettings, ...data } as Settings;
   }
+  await settingsDocRef.set(defaultSettings);
+  return defaultSettings;
 }
 
 export async function updateSettings(settingsData: Partial<Settings>): Promise<Settings> {

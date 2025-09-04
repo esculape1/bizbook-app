@@ -3,22 +3,54 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SalesChart } from "@/components/dashboard/SalesChart";
 import { LowStockTable } from "@/components/dashboard/LowStockTable";
-import { DollarSign, Users, Box, Receipt, Wallet } from "lucide-react";
+import { DollarSign, Users, Box, Receipt, Wallet, AlertTriangle } from "lucide-react";
 import { getClients, getProducts, getInvoices, getExpenses, getSettings } from "@/lib/data";
 import { formatCurrency } from "@/lib/utils";
 import { OverdueInvoicesTable } from "@/components/dashboard/OverdueInvoicesTable";
 import { DateTimeDisplay } from "@/components/dashboard/DateTimeDisplay";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export const dynamic = 'force-dynamic';
 
+async function getDashboardData() {
+  try {
+    const [clients, products, invoices, expenses, settings] = await Promise.all([
+      getClients(),
+      getProducts(),
+      getInvoices(),
+      getExpenses(),
+      getSettings(),
+    ]);
+    return { clients, products, invoices, expenses, settings, error: null };
+  } catch (error: any) {
+    console.error("Erreur de récupération des données du tableau de bord:", error);
+    return { 
+      clients: [], 
+      products: [], 
+      invoices: [], 
+      expenses: [], 
+      settings: null, 
+      error: error.message || "Une erreur inconnue est survenue." 
+    };
+  }
+}
+
+
 export default async function DashboardPage() {
-  const [clients, products, invoices, expenses, settings] = await Promise.all([
-    getClients(),
-    getProducts(),
-    getInvoices(),
-    getExpenses(),
-    getSettings(),
-  ]);
+  const { clients, products, invoices, expenses, settings, error } = await getDashboardData();
+  
+  if (error || !settings) {
+    return (
+       <Alert variant="destructive" className="mt-10">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Erreur de connexion à la base de données</AlertTitle>
+        <AlertDescription>
+          <p>Impossible de récupérer les données de l'application. Cela peut être dû à un problème de connexion ou à un dépassement des quotas d'utilisation de Firebase.</p>
+          <p className="mt-2 text-xs">Détail de l'erreur : {error}</p>
+        </AlertDescription>
+      </Alert>
+    )
+  }
 
   const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.amountPaid || 0), 0);
   const totalDue = invoices.reduce((sum, inv) => inv.status !== 'Paid' && inv.status !== 'Cancelled' ? sum + inv.totalAmount - (inv.amountPaid || 0) : sum, 0);
