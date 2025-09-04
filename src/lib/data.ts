@@ -3,48 +3,11 @@ import { db } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User, UserWithPassword } from './types';
 
-// Helper to recursively convert Firestore Timestamps to ISO strings
-function convertTimestamps(data: any): any {
-    if (data === null || typeof data !== 'object') {
-        return data;
-    }
-
-    // Check if it's a Firestore Timestamp
-    if (typeof data === 'object' && data !== null && '_seconds' in data && '_nanoseconds' in data && Object.keys(data).length === 2) {
-        try {
-            return new Timestamp(data._seconds, data._nanoseconds).toDate().toISOString();
-        } catch (e) {
-            console.warn(`Could not convert Firestore Timestamp:`, e);
-            return data; // Return original on error
-        }
-    }
-    
-    // If it's an array, convert each item
-    if (Array.isArray(data)) {
-        return data.map(item => convertTimestamps(item));
-    }
-
-    // If it's an object, convert each value
-    const newData: { [key: string]: any } = {};
-    for (const key in data) {
-        newData[key] = convertTimestamps(data[key]);
-    }
-    return newData;
-}
-
-
-// Helper to convert Firestore docs to plain objects with deep timestamp conversion
+// Helper to convert Firestore docs to plain objects
 function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
-  const data = doc.data();
-  if (!data) {
-      // This should ideally not happen if doc.exists is true, but it's a safe guard.
-      return { id: doc.id } as T;
-  }
-  // Create a deep copy and convert all timestamps, no matter how nested.
-  const convertedData = convertTimestamps(JSON.parse(JSON.stringify(data)));
-  return { id: doc.id, ...convertedData } as T;
+  const data = doc.data() as T;
+  return { id: doc.id, ...data };
 }
-
 
 const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Veuillez vérifier la configuration de Firebase.";
 const DB_READ_ERROR = "Erreur de lecture dans la base de données. L'application peut être partiellement fonctionnelle.";
@@ -66,7 +29,15 @@ export async function getUserByEmail(email: string): Promise<UserWithPassword | 
         }
         
         console.log(`Utilisateur trouvé pour l'email: ${email}`);
-        return docToObject<UserWithPassword>(userSnapshot.docs[0]);
+        const userDoc = userSnapshot.docs[0];
+        const data = userDoc.data();
+
+        // Manually convert Timestamps to ISO strings
+        if (data.registrationDate && data.registrationDate instanceof Timestamp) {
+            data.registrationDate = data.registrationDate.toDate().toISOString();
+        }
+
+        return { id: userDoc.id, ...data } as UserWithPassword;
     } catch (error) {
         console.error(`Impossible de récupérer l'utilisateur avec l'email ${email}:`, error);
         return null;
@@ -81,7 +52,13 @@ export async function getClients(): Promise<Client[]> {
     const clientsCol = db.collection('clients');
     const q = clientsCol.orderBy('registrationDate', 'desc');
     const clientSnapshot = await q.get();
-    return clientSnapshot.docs.map(doc => docToObject<Client>(doc));
+    return clientSnapshot.docs.map(doc => {
+        const data = doc.data();
+        if (data.registrationDate && data.registrationDate instanceof Timestamp) {
+            data.registrationDate = data.registrationDate.toDate().toISOString();
+        }
+        return { id: doc.id, ...data } as Client;
+    });
   } catch (error) {
     console.error("Impossible de récupérer les clients:", error);
     // Return empty array to prevent crashing the app
@@ -95,7 +72,13 @@ export async function getClientById(id: string): Promise<Client | null> {
     const clientDocRef = db.collection('clients').doc(id);
     const clientDoc = await clientDocRef.get();
     if (clientDoc.exists) {
-      return docToObject<Client>(clientDoc);
+      const data = clientDoc.data();
+      if(data) {
+        if (data.registrationDate && data.registrationDate instanceof Timestamp) {
+            data.registrationDate = data.registrationDate.toDate().toISOString();
+        }
+        return { id: clientDoc.id, ...data } as Client;
+      }
     }
     return null;
   } catch (error) {
@@ -134,7 +117,13 @@ export async function getSuppliers(): Promise<Supplier[]> {
     const suppliersCol = db.collection('suppliers');
     const q = suppliersCol.orderBy('registrationDate', 'desc');
     const supplierSnapshot = await q.get();
-    return supplierSnapshot.docs.map(doc => docToObject<Supplier>(doc));
+    return supplierSnapshot.docs.map(doc => {
+        const data = doc.data();
+        if (data.registrationDate && data.registrationDate instanceof Timestamp) {
+            data.registrationDate = data.registrationDate.toDate().toISOString();
+        }
+        return { id: doc.id, ...data } as Supplier;
+    });
   } catch (error) {
     console.error("Impossible de récupérer les fournisseurs:", error);
     return [];
@@ -203,7 +192,12 @@ export async function getQuotes(): Promise<Quote[]> {
       const quotesCol = db.collection('quotes');
       const q = quotesCol.orderBy('date', 'desc');
       const quoteSnapshot = await q.get();
-      return quoteSnapshot.docs.map(doc => docToObject<Quote>(doc));
+      return quoteSnapshot.docs.map(doc => {
+        const data = doc.data();
+        if (data.date && data.date instanceof Timestamp) data.date = data.date.toDate().toISOString();
+        if (data.expiryDate && data.expiryDate instanceof Timestamp) data.expiryDate = data.expiryDate.toDate().toISOString();
+        return { id: doc.id, ...data } as Quote;
+      });
     } catch (error) {
       console.error("Impossible de récupérer les proformas:", error);
       return [];
@@ -216,7 +210,12 @@ export async function getQuoteById(id: string): Promise<Quote | null> {
       const quoteDocRef = db.collection('quotes').doc(id);
       const quoteDoc = await quoteDocRef.get();
       if (quoteDoc.exists) {
-          return docToObject<Quote>(quoteDoc);
+          const data = quoteDoc.data();
+          if (data) {
+            if (data.date && data.date instanceof Timestamp) data.date = data.date.toDate().toISOString();
+            if (data.expiryDate && data.expiryDate instanceof Timestamp) data.expiryDate = data.expiryDate.toDate().toISOString();
+            return { id: quoteDoc.id, ...data } as Quote;
+          }
       }
       return null;
     } catch (error) {
@@ -279,7 +278,23 @@ export async function getInvoices(): Promise<Invoice[]> {
       const invoicesCol = db.collection('invoices');
       const q = invoicesCol.orderBy('date', 'desc');
       const invoiceSnapshot = await q.get();
-      return invoiceSnapshot.docs.map(doc => docToObject<Invoice>(doc));
+      return invoiceSnapshot.docs.map(doc => {
+          const data = doc.data();
+          if (data.date && data.date instanceof Timestamp) {
+            data.date = data.date.toDate().toISOString();
+          }
+          if (data.dueDate && data.dueDate instanceof Timestamp) {
+            data.dueDate = data.dueDate.toDate().toISOString();
+          }
+          if (data.payments && Array.isArray(data.payments)) {
+            data.payments.forEach((p: any) => {
+              if (p.date && p.date instanceof Timestamp) {
+                p.date = p.date.toDate().toISOString();
+              }
+            });
+          }
+          return { id: doc.id, ...data } as Invoice;
+      });
     } catch (error) {
       console.error("Impossible de récupérer les factures:", error);
       return [];
@@ -292,7 +307,23 @@ export async function getInvoiceById(id: string): Promise<Invoice | null> {
       const invoiceDocRef = db.collection('invoices').doc(id);
       const invoiceDoc = await invoiceDocRef.get();
       if (invoiceDoc.exists) {
-          return docToObject<Invoice>(invoiceDoc);
+          const data = invoiceDoc.data();
+          if (data) {
+            if (data.date && data.date instanceof Timestamp) {
+                data.date = data.date.toDate().toISOString();
+            }
+            if (data.dueDate && data.dueDate instanceof Timestamp) {
+                data.dueDate = data.dueDate.toDate().toISOString();
+            }
+            if (data.payments && Array.isArray(data.payments)) {
+                data.payments.forEach((p: any) => {
+                  if (p.date && p.date instanceof Timestamp) {
+                    p.date = p.date.toDate().toISOString();
+                  }
+                });
+            }
+            return { id: invoiceDoc.id, ...data } as Invoice;
+          }
       }
       return null;
     } catch (error) {
@@ -328,7 +359,13 @@ export async function getPurchases(): Promise<Purchase[]> {
       const purchasesCol = db.collection('purchases');
       const q = purchasesCol.orderBy('date', 'desc');
       const purchaseSnapshot = await q.get();
-      return purchaseSnapshot.docs.map(doc => docToObject<Purchase>(doc));
+      return purchaseSnapshot.docs.map(doc => {
+          const data = doc.data();
+          if (data.date && data.date instanceof Timestamp) {
+              data.date = data.date.toDate().toISOString();
+          }
+          return { id: doc.id, ...data } as Purchase;
+      });
     } catch (error) {
       console.error("Impossible de récupérer les achats:", error);
       return [];
@@ -341,7 +378,11 @@ export async function getPurchaseById(id: string): Promise<Purchase | null> {
       const purchaseDocRef = db.collection('purchases').doc(id);
       const purchaseDoc = await purchaseDocRef.get();
       if (purchaseDoc.exists) {
-          return docToObject<Purchase>(purchaseDoc);
+          const data = purchaseDoc.data();
+          if(data && data.date && data.date instanceof Timestamp) {
+            data.date = data.date.toDate().toISOString();
+          }
+          return {id: purchaseDoc.id, ...data} as Purchase;
       }
       return null;
     } catch (error) {
@@ -386,7 +427,13 @@ export async function getExpenses(): Promise<Expense[]> {
     const expensesCol = db.collection('expenses');
     const q = expensesCol.orderBy('date', 'desc');
     const expenseSnapshot = await q.get();
-    return expenseSnapshot.docs.map(doc => docToObject<Expense>(doc));
+    return expenseSnapshot.docs.map(doc => {
+        const data = doc.data();
+        if (data.date && data.date instanceof Timestamp) {
+            data.date = data.date.toDate().toISOString();
+        }
+        return { id: doc.id, ...data } as Expense;
+    });
   } catch (error) {
     console.error("Impossible de récupérer les dépenses:", error);
     return [];
