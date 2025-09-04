@@ -87,8 +87,8 @@ export async function generateReport(
         const netProfit = grossProfit - totalExpenses;
 
         return {
-          startDate,
-          endDate,
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
           clientName,
           summary: {
               grossSales,

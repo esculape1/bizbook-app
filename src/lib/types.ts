@@ -155,8 +155,8 @@ export type Settings = {
 };
 
 export type ReportData = {
-  startDate: Date;
-  endDate: Date;
+  startDate: string;
+  endDate: string;
   clientName: string;
   summary: {
     grossSales: number;

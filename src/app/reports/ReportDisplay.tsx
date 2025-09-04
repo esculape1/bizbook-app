@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { ReportData, Settings, Client, Invoice } from "@/lib/types";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Printer } from "lucide-react";
 import { ClientStatementTemplate } from "@/components/report-templates/ClientStatementTemplate";
@@ -50,6 +50,10 @@ const statusTranslations: { [key: string]: string } = {
 export function ReportDisplay({ data, settings, currency, client }: { data: ReportData, settings: Settings, currency: Settings['currency'], client: Client | null }) {
   if (!data) return null;
   const reportDate = new Date();
+  
+  const startDate = parseISO(data.startDate);
+  const endDate = parseISO(data.endDate);
+
 
   const handlePrint = (elementId: string) => {
     const content = document.getElementById(elementId);
@@ -86,7 +90,7 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
             <div>
               <CardTitle>Rapport d'activité</CardTitle>
               <CardDescription>
-                  Période du {format(data.startDate, "d MMMM yyyy", { locale: fr })} au {format(data.endDate, "d MMMM yyyy", { locale: fr })}
+                  Période du {format(startDate, "d MMMM yyyy", { locale: fr })} au {format(endDate, "d MMMM yyyy", { locale: fr })}
               </CardDescription>
             </div>
              <div className="flex flex-wrap items-center justify-end gap-2">
@@ -151,7 +155,7 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
             <div className="text-right">
               <h1 className="text-2xl font-bold">Rapport d'Activité</h1>
               <p className="text-sm">Date: {format(reportDate, 'd MMMM yyyy', { locale: fr })}</p>
-              <p className="text-sm">Période du {format(data.startDate, 'dd/MM/yy')} au {format(data.endDate, 'dd/MM/yy')}</p>
+              <p className="text-sm">Période du {format(startDate, 'dd/MM/yy')} au {format(endDate, 'dd/MM/yy')}</p>
               {data.clientName !== "Tous les clients" && <p className="text-sm font-bold">Client: {data.clientName}</p>}
             </div>
         </header>

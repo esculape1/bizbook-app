@@ -3,7 +3,7 @@
 
 import type { ReportData, Client, Settings } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Image from 'next/image';
 
@@ -13,6 +13,9 @@ export function ClientStatementTemplate({ data, client, settings }: { data: Repo
   }
   
   const reportDate = new Date();
+  const startDate = parseISO(data.startDate);
+  const endDate = parseISO(data.endDate);
+
   
   const totalInvoiced = data.allInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
   const totalPaid = data.allInvoices.reduce((sum, inv) => sum + inv.amountPaid, 0);
@@ -52,7 +55,7 @@ export function ClientStatementTemplate({ data, client, settings }: { data: Repo
           <div className="text-right">
             <h1 className="text-2xl font-bold">Relevé de Compte</h1>
             <p className="text-sm">Date: {format(reportDate, 'd MMMM yyyy', { locale: fr })}</p>
-            <p className="text-sm">Période du {format(data.startDate, 'dd/MM/yy')} au {format(data.endDate, 'dd/MM/yy')}</p>
+            <p className="text-sm">Période du {format(startDate, 'dd/MM/yy')} au {format(endDate, 'dd/MM/yy')}</p>
           </div>
         </header>
 
