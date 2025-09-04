@@ -24,7 +24,7 @@ const quoteItemSchema = z.object({
   productId: z.string().min(1, "Produit requis"),
   productName: z.string(),
   quantity: z.coerce.number().min(1, "Qté > 0"),
-  unitPrice: z.coerce.number(),
+  unitPrice: z.coerce.number().min(0, "Prix invalide"),
   reference: z.string(),
   total: z.coerce.number(),
 });
@@ -34,7 +34,7 @@ const quoteSchema = z.object({
   date: z.date({ required_error: "Date requise" }),
   expiryDate: z.date({ required_error: "Date d'expiration requise" }),
   items: z.array(quoteItemSchema).min(1, "Ajoutez au moins un produit."),
-  vat: z.coerce.number().min(0).default(20),
+  vat: z.coerce.number().min(0).default(0),
   discount: z.coerce.number().min(0).default(0),
 });
 
@@ -58,7 +58,7 @@ export function QuoteForm({ clients, products, settings }: QuoteFormProps) {
       date: new Date(),
       expiryDate: new Date(new Date().setDate(new Date().getDate() + 30)),
       items: [],
-      vat: 20,
+      vat: 0,
       discount: 0,
     },
   });
@@ -77,8 +77,9 @@ export function QuoteForm({ clients, products, settings }: QuoteFormProps) {
   const watchedVat = useWatch({ control: form.control, name: 'vat' });
 
   const subTotal = watchedItems.reduce((acc, item) => {
-    const product = products.find(p => p.id === item.productId);
-    return acc + (product?.unitPrice || 0) * (item.quantity || 0);
+    const calculatedTotal = (item.unitPrice || 0) * (item.quantity || 0);
+    form.setValue(`items.${watchedItems.indexOf(item)}.total`, calculatedTotal);
+    return acc + calculatedTotal;
   }, 0);
   
   const discountAmount = subTotal * (watchedDiscount / 100);
@@ -224,8 +225,7 @@ export function QuoteForm({ clients, products, settings }: QuoteFormProps) {
                       </TableRow>
                     )}
                     {fields.map((item, index) => {
-                      const product = products.find(p => p.id === watchedItems[index]?.productId);
-                      const itemTotal = (product?.unitPrice || 0) * (watchedItems[index]?.quantity || 0);
+                      const itemTotal = (watchedItems[index]?.unitPrice || 0) * (watchedItems[index]?.quantity || 0);
 
                       return (
                       <TableRow key={item.id}>
@@ -258,7 +258,20 @@ export function QuoteForm({ clients, products, settings }: QuoteFormProps) {
                             )}
                           />
                         </TableCell>
-                        <TableCell>{formatCurrency(product?.unitPrice || 0, settings.currency)}</TableCell>
+                        <TableCell>
+                           <FormField
+                              control={form.control}
+                              name={`items.${index}.unitPrice`}
+                              render={({ field }) => (
+                               <FormItem>
+                                 <FormControl>
+                                   <Input type="number" {...field} step="0.01" className="w-24"/>
+                                 </FormControl>
+                                 <FormMessage/>
+                               </FormItem>
+                              )}
+                            />
+                        </TableCell>
                         <TableCell className="text-right">{formatCurrency(itemTotal, settings.currency)}</TableCell>
                         <TableCell>
                           <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>

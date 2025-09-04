@@ -8,21 +8,21 @@ import type { Quote, QuoteItem, InvoiceItem } from '@/lib/types';
 import { getSession } from '@/lib/session';
 
 const quoteItemSchema = z.object({
-  productId: z.string(),
+  productId: z.string().min(1, "Produit requis"),
   productName: z.string(),
-  quantity: z.coerce.number(),
-  unitPrice: z.coerce.number(),
+  quantity: z.coerce.number().min(1, "Qté > 0"),
+  unitPrice: z.coerce.number().min(0, "Prix invalide"),
   reference: z.string(),
   total: z.coerce.number(),
 });
 
 const quoteSchema = z.object({
-  clientId: z.string(),
-  date: z.date(),
-  expiryDate: z.date(),
+  clientId: z.string().min(1, "Client requis"),
+  date: z.date({ required_error: "Date requise" }),
+  expiryDate: z.date({ required_error: "Date d'expiration requise" }),
   items: z.array(quoteItemSchema).min(1, "Ajoutez au moins un produit."),
-  vat: z.coerce.number(),
-  discount: z.coerce.number(),
+  vat: z.coerce.number().min(0).default(0),
+  discount: z.coerce.number().min(0).default(0),
 });
 
 const updateQuoteSchema = quoteSchema.extend({
@@ -141,18 +141,17 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
       }
     }
 
-
+    // THIS IS THE FIX: The unitPrice from the form (item.unitPrice) is now correctly used.
     const quoteItems: QuoteItem[] = items.map(item => {
       const product = products.find(p => p.id === item.productId);
       if (!product) throw new Error(`Produit non trouvé: ${item.productId}`);
-      // The price from the form (item.unitPrice) is now correctly used.
       return {
         productId: item.productId,
         productName: product.name,
         reference: product.reference,
         quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        total: item.quantity * item.unitPrice,
+        unitPrice: item.unitPrice, // Use the price from the submitted form data
+        total: item.quantity * item.unitPrice, // Recalculate total with the submitted price
       };
     });
 
