@@ -5,12 +5,20 @@ import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purc
 
 // Helper to convert Firestore docs to plain objects
 function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
-  const data = doc.data();
+  // Create a deep copy of the data to avoid mutating the cache
+  const data = JSON.parse(JSON.stringify(doc.data()));
+
   // Convert Timestamps to ISO strings
   if (data) {
     for (const key in data) {
-      if (data[key] instanceof Timestamp) {
-        data[key] = data[key].toDate().toISOString();
+      if (data[key] && typeof data[key] === 'object' && '_seconds' in data[key] && '_nanoseconds' in data[key]) {
+        try {
+          const timestamp = new Timestamp(data[key]._seconds, data[key]._nanoseconds);
+          data[key] = timestamp.toDate().toISOString();
+        } catch (e) {
+          // Fallback for cases where conversion might fail.
+          console.warn(`Could not convert Firestore Timestamp for key ${key}:`, e);
+        }
       }
     }
   }
