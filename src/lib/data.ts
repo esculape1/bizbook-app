@@ -3,27 +3,48 @@ import { db } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User, UserWithPassword } from './types';
 
-// Helper to convert Firestore docs to plain objects
-function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
-  // Create a deep copy of the data to avoid mutating the cache
-  const data = JSON.parse(JSON.stringify(doc.data()));
-
-  // Convert Timestamps to ISO strings
-  if (data) {
-    for (const key in data) {
-      if (data[key] && typeof data[key] === 'object' && '_seconds' in data[key] && '_nanoseconds' in data[key]) {
-        try {
-          const timestamp = new Timestamp(data[key]._seconds, data[key]._nanoseconds);
-          data[key] = timestamp.toDate().toISOString();
-        } catch (e) {
-          // Fallback for cases where conversion might fail.
-          console.warn(`Could not convert Firestore Timestamp for key ${key}:`, e);
-        }
-      }
+// Helper to recursively convert Firestore Timestamps to ISO strings
+function convertTimestamps(data: any): any {
+    if (data === null || typeof data !== 'object') {
+        return data;
     }
-  }
-  return { id: doc.id, ...data } as T;
+
+    // Check if it's a Firestore Timestamp
+    if (typeof data === 'object' && data !== null && '_seconds' in data && '_nanoseconds' in data && Object.keys(data).length === 2) {
+        try {
+            return new Timestamp(data._seconds, data._nanoseconds).toDate().toISOString();
+        } catch (e) {
+            console.warn(`Could not convert Firestore Timestamp:`, e);
+            return data; // Return original on error
+        }
+    }
+    
+    // If it's an array, convert each item
+    if (Array.isArray(data)) {
+        return data.map(item => convertTimestamps(item));
+    }
+
+    // If it's an object, convert each value
+    const newData: { [key: string]: any } = {};
+    for (const key in data) {
+        newData[key] = convertTimestamps(data[key]);
+    }
+    return newData;
 }
+
+
+// Helper to convert Firestore docs to plain objects with deep timestamp conversion
+function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
+  const data = doc.data();
+  if (!data) {
+      // This should ideally not happen if doc.exists is true, but it's a safe guard.
+      return { id: doc.id } as T;
+  }
+  // Create a deep copy and convert all timestamps, no matter how nested.
+  const convertedData = convertTimestamps(JSON.parse(JSON.stringify(data)));
+  return { id: doc.id, ...convertedData } as T;
+}
+
 
 const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Veuillez vérifier la configuration de Firebase.";
 const DB_READ_ERROR = "Erreur de lecture dans la base de données. L'application peut être partiellement fonctionnelle.";
@@ -412,8 +433,10 @@ export async function getSettings(): Promise<Settings> {
       const settingsDoc = await settingsDocRef.get();
       if (settingsDoc.exists) {
         const data = settingsDoc.data();
+        // Merge with defaults to ensure all keys are present, even if not in DB
         return { ...defaultSettings, ...data } as Settings;
       }
+      // If no settings doc exists, create one with defaults
       await settingsDocRef.set(defaultSettings);
       return defaultSettings;
   } catch (e) {
