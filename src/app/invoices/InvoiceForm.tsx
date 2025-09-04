@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { createInvoice } from './actions';
 import type { Client, Product, Settings } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ProductPicker } from '@/components/ProductPicker';
 
 type InvoiceFormProps = {
   clients: Client[];
@@ -78,7 +79,7 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, update } = useFieldArray({
     control: form.control,
     name: "items"
   });
@@ -97,17 +98,18 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
   
   const discountAmount = subTotal * (watchedDiscount / 100);
   const totalAfterDiscount = subTotal - discountAmount;
-  const vatAmount = totalAfterDiscount * (watchedVat / 100);
+  const vatAmount = totalAfterDiscount * (vat / 100);
   const totalAmount = totalAfterDiscount + vatAmount;
 
-  const handleProductChange = (productId: string, index: number) => {
-    const product = products.find(p => p.id === productId);
-    if (product) {
-      form.setValue(`items.${index}.productName`, product.name);
-      form.setValue(`items.${index}.unitPrice`, product.unitPrice);
-      form.setValue(`items.${index}.quantity`, 1);
-      form.setValue(`items.${index}.purchasePrice`, product.purchasePrice ?? 0);
-    }
+  const handleProductSelect = (product: Product, index: number) => {
+    update(index, {
+        ...watchedItems[index],
+        productId: product.id,
+        productName: product.name,
+        unitPrice: product.unitPrice,
+        purchasePrice: product.purchasePrice ?? 0,
+        quantity: watchedItems[index].quantity || 1,
+    });
   };
 
   const onSubmit = (data: InvoiceFormValues) => {
@@ -259,24 +261,11 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
                         return (
                         <TableRow key={item.id}>
                           <TableCell>
-                            <FormField
-                              control={form.control}
-                              name={`items.${index}.productId`}
-                              render={({ field }) => (
-                                <Select onValueChange={(value) => { field.onChange(value); handleProductChange(value, index); }} defaultValue={field.value}>
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Sélectionner un produit" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {products.map(p => (
-                                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              )}
-                            />
+                             <ProductPicker 
+                                products={products}
+                                onProductSelect={(product) => handleProductSelect(product, index)}
+                                selectedProductName={item.productName}
+                              />
                           </TableCell>
                           <TableCell>
                             <FormField
@@ -312,7 +301,7 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
                     </TableBody>
                   </Table>
                 </div>
-                <Button type="button" variant="outline" size="sm" onClick={() => append({ productId: '', productName: '', quantity: 1, unitPrice: 0, purchasePrice: 0 })}>
+                <Button type="button" variant="outline" size="sm" onClick={() => append({ productId: '', productName: 'Sélectionner un produit', quantity: 1, unitPrice: 0, purchasePrice: 0 })}>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Ajouter un article
                 </Button>
