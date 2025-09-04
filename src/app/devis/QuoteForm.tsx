@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -78,7 +79,10 @@ export function QuoteForm({ clients, products, settings }: QuoteFormProps) {
 
   const subTotal = watchedItems.reduce((acc, item) => {
     const calculatedTotal = (item.unitPrice || 0) * (item.quantity || 0);
-    form.setValue(`items.${watchedItems.indexOf(item)}.total`, calculatedTotal);
+    // This check prevents an error if the item is being created and form value is not yet set
+    if (form.getValues(`items.${watchedItems.indexOf(item)}.total`) !== calculatedTotal) {
+        form.setValue(`items.${watchedItems.indexOf(item)}.total`, calculatedTotal);
+    }
     return acc + calculatedTotal;
   }, 0);
   
