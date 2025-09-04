@@ -2,6 +2,7 @@
 import { db } from '@/lib/firebase-admin';
 import { Timestamp } from 'firebase-admin/firestore';
 import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User, UserWithPassword } from './types';
+import { unstable_cache as cache } from 'next/cache';
 
 const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Veuillez vérifier la configuration de Firebase ou vos quotas d'utilisation.";
 
@@ -59,23 +60,31 @@ export async function getUserByEmail(email: string): Promise<UserWithPassword | 
 
 
 // CLIENTS
-export async function getClients(): Promise<Client[]> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const clientsCol = db.collection('clients');
-  const q = clientsCol.orderBy('registrationDate', 'desc');
-  const clientSnapshot = await q.get();
-  return clientSnapshot.docs.map(doc => docToObject<Client>(doc));
-}
+export const getClients = cache(
+  async (): Promise<Client[]> => {
+    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+    const clientsCol = db.collection('clients');
+    const q = clientsCol.orderBy('registrationDate', 'desc');
+    const clientSnapshot = await q.get();
+    return clientSnapshot.docs.map(doc => docToObject<Client>(doc));
+  },
+  ['clients'],
+  { revalidate: 10, tags: ['clients'] }
+);
 
-export async function getClientById(id: string): Promise<Client | null> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const clientDocRef = db.collection('clients').doc(id);
-  const clientDoc = await clientDocRef.get();
-  if (clientDoc.exists) {
-    return docToObject<Client>(clientDoc);
-  }
-  return null;
-}
+export const getClientById = cache(
+  async (id: string): Promise<Client | null> => {
+    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+    const clientDocRef = db.collection('clients').doc(id);
+    const clientDoc = await clientDocRef.get();
+    if (clientDoc.exists) {
+        return docToObject<Client>(clientDoc);
+    }
+    return null;
+  },
+  ['client'],
+  { tags: ['clients'] }
+);
 
 export async function addClient(clientData: Omit<Client, 'id' | 'registrationDate' | 'status'>): Promise<Client> {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
@@ -101,13 +110,17 @@ export async function deleteClient(id: string): Promise<void> {
 }
 
 // SUPPLIERS
-export async function getSuppliers(): Promise<Supplier[]> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const suppliersCol = db.collection('suppliers');
-  const q = suppliersCol.orderBy('registrationDate', 'desc');
-  const supplierSnapshot = await q.get();
-  return supplierSnapshot.docs.map(doc => docToObject<Supplier>(doc));
-}
+export const getSuppliers = cache(
+  async (): Promise<Supplier[]> => {
+    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+    const suppliersCol = db.collection('suppliers');
+    const q = suppliersCol.orderBy('registrationDate', 'desc');
+    const supplierSnapshot = await q.get();
+    return supplierSnapshot.docs.map(doc => docToObject<Supplier>(doc));
+  },
+  ['suppliers'],
+  { revalidate: 10, tags: ['suppliers'] }
+);
 
 export async function addSupplier(supplierData: Omit<Supplier, 'id' | 'registrationDate'>): Promise<Supplier> {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
@@ -133,13 +146,17 @@ export async function deleteSupplier(id: string): Promise<void> {
 
 
 // PRODUCTS
-export async function getProducts(): Promise<Product[]> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const productsCol = db.collection('products');
-  const q = productsCol.orderBy('name');
-  const productSnapshot = await q.get();
-  return productSnapshot.docs.map(doc => docToObject<Product>(doc));
-}
+export const getProducts = cache(
+  async (): Promise<Product[]> => {
+    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+    const productsCol = db.collection('products');
+    const q = productsCol.orderBy('name');
+    const productSnapshot = await q.get();
+    return productSnapshot.docs.map(doc => docToObject<Product>(doc));
+  },
+  ['products'],
+  { revalidate: 10, tags: ['products'] }
+);
 
 export async function addProduct(productData: Omit<Product, 'id'>): Promise<Product> {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
@@ -160,15 +177,20 @@ export async function deleteProduct(id: string): Promise<void> {
 }
 
 // QUOTES
-export async function getQuotes(): Promise<Quote[]> {
+export const getQuotes = cache(
+  async (): Promise<Quote[]> => {
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
     const quotesCol = db.collection('quotes');
     const q = quotesCol.orderBy('date', 'desc');
     const quoteSnapshot = await q.get();
     return quoteSnapshot.docs.map(doc => docToObject<Quote>(doc));
-}
+  },
+  ['quotes'],
+  { revalidate: 10, tags: ['quotes'] }
+);
 
-export async function getQuoteById(id: string): Promise<Quote | null> {
+export const getQuoteById = cache(
+  async (id: string): Promise<Quote | null> => {
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
     const quoteDocRef = db.collection('quotes').doc(id);
     const quoteDoc = await quoteDocRef.get();
@@ -176,7 +198,10 @@ export async function getQuoteById(id: string): Promise<Quote | null> {
         return docToObject<Quote>(quoteDoc);
     }
     return null;
-}
+  },
+  ['quote'],
+  { tags: ['quotes'] }
+);
 
 export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>): Promise<Quote> {
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
@@ -226,15 +251,20 @@ export async function deleteQuote(id: string): Promise<void> {
 }
 
 // INVOICES
-export async function getInvoices(): Promise<Invoice[]> {
+export const getInvoices = cache(
+  async (): Promise<Invoice[]> => {
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
     const invoicesCol = db.collection('invoices');
     const q = invoicesCol.orderBy('date', 'desc');
     const invoiceSnapshot = await q.get();
     return invoiceSnapshot.docs.map(doc => docToObject<Invoice>(doc));
-}
+  },
+  ['invoices'],
+  { revalidate: 10, tags: ['invoices'] }
+);
 
-export async function getInvoiceById(id: string): Promise<Invoice | null> {
+export const getInvoiceById = cache(
+  async (id: string): Promise<Invoice | null> => {
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
     const invoiceDocRef = db.collection('invoices').doc(id);
     const invoiceDoc = await invoiceDocRef.get();
@@ -242,7 +272,10 @@ export async function getInvoiceById(id: string): Promise<Invoice | null> {
         return docToObject<Invoice>(invoiceDoc);
     }
     return null;
-}
+  },
+  ['invoice'],
+  { tags: ['invoices'] }
+);
 
 export async function addInvoice(invoiceData: Omit<Invoice, 'id'>): Promise<Invoice> {
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
@@ -265,15 +298,20 @@ export async function deleteInvoice(id: string): Promise<void> {
 
 
 // PURCHASES
-export async function getPurchases(): Promise<Purchase[]> {
+export const getPurchases = cache(
+  async (): Promise<Purchase[]> => {
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
     const purchasesCol = db.collection('purchases');
     const q = purchasesCol.orderBy('date', 'desc');
     const purchaseSnapshot = await q.get();
     return purchaseSnapshot.docs.map(doc => docToObject<Purchase>(doc));
-}
+  },
+  ['purchases'],
+  { revalidate: 10, tags: ['purchases'] }
+);
 
-export async function getPurchaseById(id: string): Promise<Purchase | null> {
+export const getPurchaseById = cache(
+  async (id: string): Promise<Purchase | null> => {
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
     const purchaseDocRef = db.collection('purchases').doc(id);
     const purchaseDoc = await purchaseDocRef.get();
@@ -281,7 +319,10 @@ export async function getPurchaseById(id: string): Promise<Purchase | null> {
         return docToObject<Purchase>(purchaseDoc);
     }
     return null;
-}
+  },
+  ['purchase'],
+  { tags: ['purchases'] }
+);
 
 export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'purchaseNumber'>): Promise<Purchase> {
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
@@ -313,13 +354,17 @@ export async function updatePurchase(id: string, purchaseData: Partial<Omit<Purc
 
 
 // EXPENSES
-export async function getExpenses(): Promise<Expense[]> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const expensesCol = db.collection('expenses');
-  const q = expensesCol.orderBy('date', 'desc');
-  const expenseSnapshot = await q.get();
-  return expenseSnapshot.docs.map(doc => docToObject<Expense>(doc));
-}
+export const getExpenses = cache(
+  async (): Promise<Expense[]> => {
+    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+    const expensesCol = db.collection('expenses');
+    const q = expensesCol.orderBy('date', 'desc');
+    const expenseSnapshot = await q.get();
+    return expenseSnapshot.docs.map(doc => docToObject<Expense>(doc));
+  },
+  ['expenses'],
+  { revalidate: 10, tags: ['expenses'] }
+);
 
 export async function addExpense(expenseData: Omit<Expense, 'id'>): Promise<Expense> {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
@@ -354,17 +399,22 @@ const defaultSettings: Settings = {
   invoiceTemplate: 'detailed',
 };
 
-export async function getSettings(): Promise<Settings> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const settingsDocRef = db.collection('settings').doc('main');
-  const settingsDoc = await settingsDocRef.get();
-  if (settingsDoc.exists) {
-    const data = settingsDoc.data();
-    return { ...defaultSettings, ...data } as Settings;
-  }
-  await settingsDocRef.set(defaultSettings);
-  return defaultSettings;
-}
+export const getSettings = cache(
+  async (): Promise<Settings> => {
+    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+    const settingsDocRef = db.collection('settings').doc('main');
+    const settingsDoc = await settingsDocRef.get();
+    if (settingsDoc.exists) {
+        const data = settingsDoc.data();
+        return { ...defaultSettings, ...data } as Settings;
+    }
+    await settingsDocRef.set(defaultSettings);
+    return defaultSettings;
+  },
+  ['settings'],
+  { revalidate: 10, tags: ['settings'] }
+);
+
 
 export async function updateSettings(settingsData: Partial<Settings>): Promise<Settings> {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
