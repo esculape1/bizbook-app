@@ -27,7 +27,9 @@ if (!admin.apps.length) {
 }
 
 // Always assign db instance if admin is initialized, even if it's not the first time.
-if (admin.apps.length > 0) {
+// This ensures that in serverless environments where the context is reused, 
+// the db variable is always correctly assigned.
+if (admin.apps.length > 0 && !db) {
   db = admin.firestore();
 }
 
