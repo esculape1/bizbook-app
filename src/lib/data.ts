@@ -467,7 +467,7 @@ export const getDashboardStats = cache(async () => {
     expenseAggQuery.get(),
     clientAggQuery.get(),
     activeClientAggQuery.get(),
-    productAggSnapshot.get()
+    productAggQuery.get()
   ]);
 
   const invoiceData = invoiceAggSnapshot.data();
