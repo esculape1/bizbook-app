@@ -430,49 +430,21 @@ export async function updateSettings(settingsData: Partial<Settings>): Promise<S
 export const getDashboardStats = cache(async () => {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
   
-  // Aggregate data using Firestore's aggregation queries for efficiency
   const invoicesCol = db.collection('invoices');
   const expensesCol = db.collection('expenses');
   const clientsCol = db.collection('clients');
   const productsCol = db.collection('products');
 
-  const invoiceAggQuery = invoicesCol.aggregate({
-    totalRevenue: AggregateField.sum('amountPaid'),
-    totalDue: AggregateField.sum('totalAmount'),
-    totalPaid: AggregateField.sum('amountPaid'),
-    unpaidInvoicesCount: AggregateField.count()
-  });
-
-  const unpaidInvoicesAgg = await invoicesCol
-    .where('status', 'in', ['Unpaid', 'Partially Paid'])
-    .count()
-    .get();
-
-  const expenseAggQuery = expensesCol.aggregate({
-    totalExpenses: AggregateField.sum('amount'),
-  });
-
-  const clientAggQuery = clientsCol.count();
-  const activeClientAggQuery = clientsCol.where('status', '==', 'Active').count();
-  const productAggQuery = productsCol.count();
+  // Simpler, separate aggregations to avoid complex index requirements.
+  const totalRevenueAgg = await invoicesCol.aggregate({ total: AggregateField.sum('amountPaid') }).get();
+  const totalExpensesAgg = await expensesCol.aggregate({ total: AggregateField.sum('amount') }).get();
   
-  const [
-    invoiceAggSnapshot, 
-    expenseAggSnapshot,
-    clientAggSnapshot,
-    activeClientAggSnapshot,
-    productAggSnapshot
-  ] = await Promise.all([
-    invoiceAggQuery.get(),
-    expenseAggQuery.get(),
-    clientAggQuery.get(),
-    activeClientAggQuery.get(),
-    productAggQuery.get()
-  ]);
+  const unpaidInvoicesAgg = await invoicesCol.where('status', 'in', ['Unpaid', 'Partially Paid']).count().get();
+  const totalClientsAgg = await clientsCol.count().get();
+  const activeClientsAgg = await clientsCol.where('status', '==', 'Active').count().get();
+  const totalProductsAgg = await productsCol.count().get();
 
-  const invoiceData = invoiceAggSnapshot.data();
-  
-  // Calculate total due manually as Firestore aggregation on calculated fields is not direct
+  // Manual calculation for total due amount, which is safer.
   const unpaidInvoices = await invoicesCol.where('status', 'in', ['Unpaid', 'Partially Paid']).get();
   const totalDueManual = unpaidInvoices.docs.reduce((sum, doc) => {
     const inv = doc.data() as Invoice;
@@ -481,16 +453,14 @@ export const getDashboardStats = cache(async () => {
 
 
   return {
-    totalRevenue: invoiceData.totalRevenue || 0,
+    totalRevenue: totalRevenueAgg.data().total || 0,
     totalDue: totalDueManual,
     unpaidInvoicesCount: unpaidInvoicesAgg.data().count,
-    totalExpenses: expenseAggSnapshot.data().totalExpenses || 0,
-    totalClients: clientAggSnapshot.data().count,
-    activeClients: activeClientAggSnapshot.data().count,
-    productCount: productAggSnapshot.data().count,
+    totalExpenses: totalExpensesAgg.data().total || 0,
+    totalClients: totalClientsAgg.data().count,
+    activeClients: activeClientsAgg.data().count,
+    productCount: totalProductsAgg.data().count,
   };
 },
 ['dashboard-stats'],
 { revalidate: 10, tags: ['invoices', 'expenses', 'clients', 'products'] });
-
-    
