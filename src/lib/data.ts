@@ -37,6 +37,7 @@ function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
 }
 
 // USERS
+// This function should NOT be cached as it retrieves sensitive data for authentication.
 export async function getUserByEmail(email: string): Promise<UserWithPassword | null> {
     if (!db) {
         console.error(DB_UNAVAILABLE_ERROR);
@@ -466,7 +467,7 @@ export const getDashboardStats = cache(async () => {
     expenseAggQuery.get(),
     clientAggQuery.get(),
     activeClientAggQuery.get(),
-    productAggQuery.get()
+    productAggSnapshot.get()
   ]);
 
   const invoiceData = invoiceAggSnapshot.data();
