@@ -1,7 +1,7 @@
 
 import admin from 'firebase-admin';
 
-let db: admin.firestore.Firestore | null = null;
+let db: admin.firestore.Firestore;
 
 if (!admin.apps.length) {
   console.log("Tentative d'initialisation de Firebase Admin...");
@@ -16,6 +16,7 @@ if (!admin.apps.length) {
           credential: admin.credential.cert(serviceAccount),
         });
         console.log("✅ Firebase Admin initialisé avec succès !");
+        db = admin.firestore();
     }
   } catch (error: any) {
     console.error('❌ ERREUR D\'INITIALISATION FIREBASE ADMIN:', error.message);
@@ -24,13 +25,10 @@ if (!admin.apps.length) {
     }
     console.error("L'application ne pourra pas se connecter à la base de données.");
   }
-}
-
-// Always assign db instance if admin is initialized, even if it's not the first time.
-// This ensures that in serverless environments where the context is reused, 
-// the db variable is always correctly assigned.
-if (admin.apps.length > 0 && !db) {
-  db = admin.firestore();
+} else {
+  // If the app is already initialized, just get the firestore instance.
+  // This is crucial for serverless environments and hot-reloading.
+  db = admin.app().firestore();
 }
 
 export { db };
