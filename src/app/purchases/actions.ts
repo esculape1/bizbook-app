@@ -123,6 +123,10 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
       return { message: 'Achat original non trouvé.' };
     }
 
+    if (!db) {
+        throw new Error("La connexion à la base de données a échoué.");
+    }
+
     const supplier = suppliers.find(c => c.id === supplierId);
     if (!supplier) {
       return { message: 'Fournisseur non trouvé.' };
@@ -158,22 +162,22 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
     };
 
     // Use a transaction to ensure atomicity
-    await db!.runTransaction(async (transaction) => {
+    await db.runTransaction(async (transaction) => {
       // 1. Update the purchase document
-      const purchaseRef = db!.collection('purchases').doc(id);
+      const purchaseRef = db.collection('purchases').doc(id);
       transaction.update(purchaseRef, purchaseUpdateData);
 
       // 2. Adjust stock levels if status changed to or from 'Received'
       if (wasReceived && !isNowReceived) { // Was received, but not anymore
         for (const item of originalPurchase.items) {
-          const productRef = db!.collection('products').doc(item.productId);
+          const productRef = db.collection('products').doc(item.productId);
           transaction.update(productRef, { 
             quantityInStock: db.FieldValue.increment(-item.quantity)
           });
         }
       } else if (!wasReceived && isNowReceived) { // Was not received, but is now
         for (const item of items) {
-          const productRef = db!.collection('products').doc(item.productId);
+          const productRef = db.collection('products').doc(item.productId);
           const totalQuantity = items.reduce((sum, i) => sum + i.quantity, 0);
           const landedCostPerUnit = totalQuantity > 0 ? totalAmount / totalQuantity : 0;
           
