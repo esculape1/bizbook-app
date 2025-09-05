@@ -30,11 +30,10 @@ function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
     if (!doc.exists) {
         return null as T;
     }
-    const data = doc.data();
+    const data = doc.data()!;
     const convertedData = convertTimestamps(data);
-    
+
     // We intentionally do not include the password field anymore.
-    // Auth is handled by Firebase Auth.
     const { password, ...restData } = convertedData;
 
     return { id: doc.id, ...restData } as T;
@@ -42,7 +41,7 @@ function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
 
 // USERS
 // This function should NOT be cached.
-export async function getUserByEmail(email: string): Promise<UserWithPassword | null> {
+export async function getUserByEmail(email: string): Promise<User | null> {
     if (!db) {
         console.error(DB_UNAVAILABLE_ERROR);
         return null;
@@ -56,18 +55,7 @@ export async function getUserByEmail(email: string): Promise<UserWithPassword | 
             return null;
         }
         
-        const userDoc = userSnapshot.docs[0];
-        const data = userDoc.data();
-
-        // We only need this for legacy password migration, not for general use.
-        const user: UserWithPassword = {
-            id: userDoc.id,
-            name: data.name,
-            email: data.email,
-            role: data.role || 'User',
-            password: data.password, // Keep for migration script
-        };
-        return user;
+        return docToObject<User>(userSnapshot.docs[0]);
 
     } catch (error) {
         console.error(`Impossible de récupérer l'utilisateur avec l'email ${email}:`, error);
