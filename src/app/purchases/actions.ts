@@ -3,6 +3,7 @@
 
 import { z } from 'zod';
 import { db } from '@/lib/firebase-admin';
+import { FieldValue } from 'firebase-admin/firestore';
 import {
   addPurchase,
   getSuppliers,
@@ -113,6 +114,8 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
   if (!db) {
     throw new Error("La connexion à la base de données a échoué.");
   }
+  
+  // Create a local, non-null instance of the db for TypeScript to trust inside the transaction.
   const firestore = db;
 
   try {
@@ -163,25 +166,28 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
     };
     
     await firestore.runTransaction(async (transaction) => {
+      // 1. Update the purchase document
       const purchaseRef = firestore.collection('purchases').doc(id);
       transaction.update(purchaseRef, purchaseUpdateData);
 
-      if (wasReceived && !isNowReceived) {
+      // 2. Adjust stock levels if status changed to or from 'Received'
+      if (wasReceived && !isNowReceived) { // Was received, but not anymore
         for (const item of originalPurchase.items) {
           const productRef = firestore.collection('products').doc(item.productId);
           transaction.update(productRef, { 
-            quantityInStock: firestore.FieldValue.increment(-item.quantity)
+            quantityInStock: FieldValue.increment(-item.quantity)
           });
         }
-      } else if (!wasReceived && isNowReceived) {
+      } else if (!wasReceived && isNowReceived) { // Was not received, but is now
         for (const item of items) {
           const productRef = firestore.collection('products').doc(item.productId);
           const totalQuantity = items.reduce((sum, i) => sum + i.quantity, 0);
           const landedCostPerUnit = totalQuantity > 0 ? totalAmount / totalQuantity : 0;
           
-          const productUpdate: Partial<Omit<Product, 'id'>> = {
-            quantityInStock: firestore.FieldValue.increment(item.quantity) as unknown as number,
+          const productUpdate: { [key: string]: any } = {
+            quantityInStock: FieldValue.increment(item.quantity),
           };
+          // Only update purchase price if it's greater than zero
           if (landedCostPerUnit > 0) {
             productUpdate.purchasePrice = landedCostPerUnit;
           }
@@ -189,6 +195,7 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
         }
       }
     });
+
 
     revalidatePath('/purchases');
     revalidatePath('/products');
@@ -236,5 +243,3 @@ export async function cancelPurchase(id: string) {
     return { success: false, message };
   }
 }
-
-    
