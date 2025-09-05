@@ -12,6 +12,8 @@ import { getSession } from "@/lib/session";
 import type { Purchase } from "@/lib/types";
 import { PackageSearch } from "lucide-react";
 
+export const dynamic = 'force-dynamic';
+
 export default async function PurchasesPage() {
   const [purchases, suppliers, products, settings, user] = await Promise.all([
     getPurchases(),

@@ -11,6 +11,8 @@ import { format, subMonths, getDate } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ExpenseCategoryDetailsDialog } from "./ExpenseCategoryDetailsDialog";
 
+export const dynamic = 'force-dynamic';
+
 type CategoryExpense = {
   category: string;
   total: number;

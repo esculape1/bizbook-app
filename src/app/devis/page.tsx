@@ -12,6 +12,7 @@ import { EditQuoteForm } from "./EditQuoteForm";
 import { DeleteQuoteButton } from "./DeleteQuoteButton";
 import { QuoteViewerDialog } from "./QuoteViewerDialog";
 
+export const dynamic = 'force-dynamic';
 
 export default async function DevisPage() {
   const [quotes, clients, products, settings, user] = await Promise.all([

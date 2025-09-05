@@ -11,6 +11,8 @@ import { getSession } from "@/lib/session";
 import { StockInventoryReport } from "./StockInventoryReport";
 import { ProductQrCodeDialog } from "./ProductQrCodeDialog";
 
+export const dynamic = 'force-dynamic';
+
 export default async function ProductsPage() {
   const [products, settings, user] = await Promise.all([
     getProducts(),

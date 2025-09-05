@@ -15,6 +15,8 @@ import { getSession } from "@/lib/session";
 import type { Invoice } from "@/lib/types";
 import { ShippingLabelsDialog } from "./ShippingLabelsDialog";
 
+export const dynamic = 'force-dynamic';
+
 export default async function InvoicesPage() {
   const [invoices, clients, products, settings, user] = await Promise.all([
     getInvoices(),
