@@ -1,4 +1,6 @@
 
+'use client';
+
 import { db } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp, AggregateField } from 'firebase-admin/firestore';
 import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User, UserWithPassword } from './types';
