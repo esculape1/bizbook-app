@@ -6,7 +6,7 @@ import { analyzeBusinessData } from '@/ai/flows/business-analysis-flow';
 
 export async function askAI(query: string): Promise<{ status: 'success', response: string } | { status: 'error', error: string }> {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { status: 'error', error: 'Action non autorisée.' };
   }
   
