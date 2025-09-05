@@ -33,7 +33,16 @@ function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
     }
     const data = doc.data();
     const convertedData = convertTimestamps(data);
-    return { id: doc.id, ...convertedData } as T;
+
+    const result: { [key: string]: any } = { id: doc.id, ...convertedData };
+    
+    // Explicitly check for and include the password field if it exists.
+    // This is crucial for authentication.
+    if (data && 'password' in data) {
+      result.password = data.password;
+    }
+
+    return result as T;
 }
 
 // USERS
