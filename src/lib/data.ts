@@ -1,7 +1,8 @@
 
+
 import { db } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp, AggregateField } from 'firebase-admin/firestore';
-import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User, UserWithPassword } from './types';
+import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User } from './types';
 import { unstable_cache as cache } from 'next/cache';
 
 const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Veuillez vérifier la configuration de Firebase ou vos quotas d'utilisation.";
@@ -32,11 +33,7 @@ function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
     }
     const data = doc.data()!;
     const convertedData = convertTimestamps(data);
-
-    // We intentionally do not include the password field anymore.
-    const { password, ...restData } = convertedData;
-
-    return { id: doc.id, ...restData } as T;
+    return { id: doc.id, ...convertedData } as T;
 }
 
 // USERS
@@ -434,36 +431,42 @@ export async function updateSettings(settingsData: Partial<Settings>): Promise<S
 export const getDashboardStats = cache(async () => {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
   
-  const invoicesCol = db.collection('invoices');
-  const expensesCol = db.collection('expenses');
-  const clientsCol = db.collection('clients');
-  const productsCol = db.collection('products');
+  const [invoicesSnapshot, expensesSnapshot, clientsSnapshot, productsSnapshot] = await Promise.all([
+    db.collection('invoices').get(),
+    db.collection('expenses').get(),
+    db.collection('clients').get(),
+    db.collection('products').get()
+  ]);
 
-  // Simpler, separate aggregations to avoid complex index requirements.
-  const totalRevenueAgg = await invoicesCol.where('status', 'in', ['Paid', 'Partially Paid']).aggregate({ total: AggregateField.sum('amountPaid') }).get();
-  const totalExpensesAgg = await expensesCol.aggregate({ total: AggregateField.sum('amount') }).get();
-  
-  const unpaidInvoicesAgg = await invoicesCol.where('status', 'in', ['Unpaid', 'Partially Paid']).count().get();
-  const totalClientsAgg = await clientsCol.count().get();
-  const activeClientsAgg = await clientsCol.where('status', '==', 'Active').count().get();
-  const totalProductsAgg = await productsCol.count().get();
+  const allInvoices = invoicesSnapshot.docs.map(doc => doc.data() as Invoice);
+  const allExpenses = expensesSnapshot.docs.map(doc => doc.data() as Expense);
+  const allClients = clientsSnapshot.docs.map(doc => doc.data() as Client);
 
-  // Manual calculation for total due amount, which is safer.
-  const unpaidInvoices = await invoicesCol.where('status', 'in', ['Unpaid', 'Partially Paid']).get();
-  const totalDueManual = unpaidInvoices.docs.reduce((sum, doc) => {
-    const inv = doc.data() as Invoice;
-    return sum + (inv.totalAmount - (inv.amountPaid || 0));
-  }, 0);
+  let totalRevenue = 0;
+  let totalDue = 0;
+  let unpaidInvoicesCount = 0;
 
+  allInvoices.forEach(inv => {
+    if (inv.status === 'Paid' || inv.status === 'Partially Paid') {
+      totalRevenue += inv.amountPaid || 0;
+    }
+    if (inv.status === 'Unpaid' || inv.status === 'Partially Paid') {
+      totalDue += inv.totalAmount - (inv.amountPaid || 0);
+      unpaidInvoicesCount++;
+    }
+  });
+
+  const totalExpenses = allExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+  const activeClients = allClients.filter(c => c.status === 'Active').length;
 
   return {
-    totalRevenue: totalRevenueAgg.data().total || 0,
-    totalDue: totalDueManual,
-    unpaidInvoicesCount: unpaidInvoicesAgg.data().count,
-    totalExpenses: totalExpensesAgg.data().total || 0,
-    totalClients: totalClientsAgg.data().count,
-    activeClients: activeClientsAgg.data().count,
-    productCount: totalProductsAgg.data().count,
+    totalRevenue,
+    totalDue,
+    unpaidInvoicesCount,
+    totalExpenses,
+    totalClients: allClients.length,
+    activeClients,
+    productCount: productsSnapshot.size,
   };
 },
 ['dashboard-stats'],
