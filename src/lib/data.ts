@@ -1,6 +1,6 @@
 
 import { db } from '@/lib/firebase-admin';
-import { FieldValue, Timestamp } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp, AggregateField } from 'firebase-admin/firestore';
 import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User, UserWithPassword } from './types';
 import { unstable_cache as cache } from 'next/cache';
 
@@ -436,10 +436,10 @@ export const getDashboardStats = cache(async () => {
   const productsCol = db.collection('products');
 
   const invoiceAggQuery = invoicesCol.aggregate({
-    totalRevenue: db.AggregateField.sum('amountPaid'),
-    totalDue: db.AggregateField.sum('totalAmount'),
-    totalPaid: db.AggregateField.sum('amountPaid'),
-    unpaidInvoicesCount: db.AggregateField.count()
+    totalRevenue: AggregateField.sum('amountPaid'),
+    totalDue: AggregateField.sum('totalAmount'),
+    totalPaid: AggregateField.sum('amountPaid'),
+    unpaidInvoicesCount: AggregateField.count()
   });
 
   const unpaidInvoicesAgg = await invoicesCol
@@ -448,7 +448,7 @@ export const getDashboardStats = cache(async () => {
     .get();
 
   const expenseAggQuery = expensesCol.aggregate({
-    totalExpenses: db.AggregateField.sum('amount'),
+    totalExpenses: AggregateField.sum('amount'),
   });
 
   const clientAggQuery = clientsCol.count();
@@ -491,3 +491,5 @@ export const getDashboardStats = cache(async () => {
 },
 ['dashboard-stats'],
 { revalidate: 10, tags: ['invoices', 'expenses', 'clients', 'products'] });
+
+    
