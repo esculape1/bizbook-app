@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   description: 'Gestion commerciale simplifiée',
 };
 
+// Force dynamic rendering for the entire app because of session management
+export const dynamic = 'force-dynamic';
+
 async function getLayoutData() {
     try {
         const [user, settings] = await Promise.all([getSession(), getSettings()]);
