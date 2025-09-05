@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import type { User, UserWithPassword } from '@/lib/types';
 import { getUserByEmail } from '@/lib/data';
+import bcrypt from 'bcryptjs';
 
 export async function signIn(prevState: { error: string } | undefined, formData: FormData) {
   const email = (formData.get('email') as string || '').trim();
@@ -14,22 +15,20 @@ export async function signIn(prevState: { error: string } | undefined, formData:
     return { error: 'Email et mot de passe sont requis.' };
   }
   
-  // Find user in the database by email
   const userRecord: UserWithPassword | null = await getUserByEmail(email);
 
-  // Check if user exists
-  if (!userRecord) {
+  if (!userRecord || !userRecord.password) {
       return { error: 'Email ou mot de passe incorrect.' };
   }
   
-  // Check if password matches
-  if (userRecord.password === password) {
-    // This is the user object we want to store in the session (without the password)
+  const passwordMatches = await bcrypt.compare(password, userRecord.password);
+  
+  if (passwordMatches) {
     const authenticatedUser: User = {
         id: userRecord.id,
         name: userRecord.name,
         email: userRecord.email,
-        role: userRecord.role || 'User', // Default to 'User' if role is not set
+        role: userRecord.role || 'User',
     };
 
     const sessionData = JSON.stringify(authenticatedUser);

@@ -2,6 +2,7 @@
 'use server';
 
 import { z } from 'zod';
+import { db } from '@/lib/firebase-admin';
 import {
   addPurchase,
   getSuppliers,
@@ -130,57 +131,6 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
     const wasReceived = originalPurchase.status === 'Received';
     const isNowReceived = status === 'Received';
     
-    const stockUpdates: { [productId: string]: number } = {};
-    
-    // 1. Determine stock QUANTITY changes
-    if (wasReceived) {
-      for (const item of originalPurchase.items) {
-        stockUpdates[item.productId] = (stockUpdates[item.productId] || 0) - item.quantity;
-      }
-    }
-    if (isNowReceived) {
-      for (const item of items) {
-        stockUpdates[item.productId] = (stockUpdates[item.productId] || 0) + item.quantity;
-      }
-    }
-
-    // 2. Determine PRICE updates (only if becoming "Received")
-    let landedCostPerUnit = 0;
-    if (isNowReceived) {
-      const totalAmount = premierVersement + deuxiemeVersement + transportCost + otherFees;
-      const totalQuantity = items.reduce((sum, i) => sum + i.quantity, 0);
-      // Stability check: prevent division by zero
-      landedCostPerUnit = totalQuantity > 0 ? totalAmount / totalQuantity : 0;
-    }
-
-    // 3. Apply updates to products in a batch
-    const productUpdatePromises: Promise<void>[] = [];
-    const allProductIds = new Set(Object.keys(stockUpdates));
-
-    for (const productId of allProductIds) {
-      const product = allProducts.find(p => p.id === productId);
-      if (product) {
-        const updatePayload: Partial<Omit<Product, 'id'>> = {};
-        
-        // Update stock quantity
-        if (stockUpdates[productId] !== undefined) {
-          updatePayload.quantityInStock = product.quantityInStock + stockUpdates[productId];
-        }
-
-        // Update purchase price if the purchase is being received
-        if (isNowReceived && landedCostPerUnit > 0) {
-          updatePayload.purchasePrice = landedCostPerUnit;
-        }
-
-        if (Object.keys(updatePayload).length > 0) {
-          productUpdatePromises.push(updateProduct(productId, updatePayload));
-        }
-      }
-    }
-    await Promise.all(productUpdatePromises);
-
-
-    // 4. Update the Purchase document itself
     const purchaseItems: PurchaseItem[] = items.map(item => {
       const product = allProducts.find(p => p.id === item.productId);
       if (!product) throw new Error(`Produit non trouvé: ${item.productId}`);
@@ -193,7 +143,7 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
     });
     const totalAmount = premierVersement + deuxiemeVersement + transportCost + otherFees;
 
-    const purchaseData: Partial<Omit<Purchase, 'id'>> = {
+    const purchaseUpdateData: Partial<Omit<Purchase, 'id'>> = {
       purchaseNumber,
       supplierId,
       supplierName: supplier.name,
@@ -206,7 +156,38 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
       totalAmount,
       status,
     };
-    await updatePurchaseInDB(id, purchaseData);
+
+    // Use a transaction to ensure atomicity
+    await db!.runTransaction(async (transaction) => {
+      // 1. Update the purchase document
+      const purchaseRef = db!.collection('purchases').doc(id);
+      transaction.update(purchaseRef, purchaseUpdateData);
+
+      // 2. Adjust stock levels if status changed to or from 'Received'
+      if (wasReceived && !isNowReceived) { // Was received, but not anymore
+        for (const item of originalPurchase.items) {
+          const productRef = db!.collection('products').doc(item.productId);
+          transaction.update(productRef, { 
+            quantityInStock: db.FieldValue.increment(-item.quantity)
+          });
+        }
+      } else if (!wasReceived && isNowReceived) { // Was not received, but is now
+        for (const item of items) {
+          const productRef = db!.collection('products').doc(item.productId);
+          const totalQuantity = items.reduce((sum, i) => sum + i.quantity, 0);
+          const landedCostPerUnit = totalQuantity > 0 ? totalAmount / totalQuantity : 0;
+          
+          const productUpdate: Partial<Omit<Product, 'id'>> = {
+            quantityInStock: db.FieldValue.increment(item.quantity) as unknown as number,
+          };
+          // Only update purchase price if it's greater than zero
+          if (landedCostPerUnit > 0) {
+            productUpdate.purchasePrice = landedCostPerUnit;
+          }
+          transaction.update(productRef, productUpdate);
+        }
+      }
+    });
 
     revalidatePath('/purchases');
     revalidatePath('/products');

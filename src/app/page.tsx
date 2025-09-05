@@ -4,7 +4,7 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { SalesChart } from "@/components/dashboard/SalesChart";
 import { LowStockTable } from "@/components/dashboard/LowStockTable";
 import { DollarSign, Users, Box, Receipt, Wallet, AlertTriangle } from "lucide-react";
-import { getClients, getProducts, getInvoices, getExpenses, getSettings } from "@/lib/data";
+import { getDashboardStats, getProducts, getInvoices, getSettings } from "@/lib/data";
 import { formatCurrency } from "@/lib/utils";
 import { OverdueInvoicesTable } from "@/components/dashboard/OverdueInvoicesTable";
 import { DateTimeDisplay } from "@/components/dashboard/DateTimeDisplay";
@@ -14,21 +14,20 @@ export const dynamic = 'force-dynamic';
 
 async function getDashboardData() {
   try {
-    const [clients, products, invoices, expenses, settings] = await Promise.all([
-      getClients(),
+    // These calls are now optimized with server-side caching
+    const [stats, products, invoices, settings] = await Promise.all([
+      getDashboardStats(),
       getProducts(),
       getInvoices(),
-      getExpenses(),
       getSettings(),
     ]);
-    return { clients, products, invoices, expenses, settings, error: null };
+    return { stats, products, invoices, settings, error: null };
   } catch (error: any) {
     console.error("Erreur de récupération des données du tableau de bord:", error);
     return { 
-      clients: [], 
+      stats: null, 
       products: [], 
       invoices: [], 
-      expenses: [], 
       settings: null, 
       error: error.message || "Une erreur inconnue est survenue." 
     };
@@ -37,9 +36,9 @@ async function getDashboardData() {
 
 
 export default async function DashboardPage() {
-  const { clients, products, invoices, expenses, settings, error } = await getDashboardData();
+  const { stats, products, invoices, settings, error } = await getDashboardData();
   
-  if (error || !settings) {
+  if (error || !settings || !stats) {
     return (
        <Alert variant="destructive" className="mt-10">
         <AlertTriangle className="h-4 w-4" />
@@ -51,10 +50,6 @@ export default async function DashboardPage() {
       </Alert>
     )
   }
-
-  const totalRevenue = invoices.reduce((sum, inv) => sum + (inv.amountPaid || 0), 0);
-  const totalDue = invoices.reduce((sum, inv) => inv.status !== 'Paid' && inv.status !== 'Cancelled' ? sum + inv.totalAmount - (inv.amountPaid || 0) : sum, 0);
-  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
 
   return (
     <div className="flex flex-col gap-6">
@@ -75,37 +70,37 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <StatCard 
           title="Chiffre d'affaires" 
-          value={formatCurrency(totalRevenue, settings.currency)} 
+          value={formatCurrency(stats.totalRevenue, settings.currency)} 
           icon={<DollarSign />} 
           description="Total des paiements reçus"
           className="bg-green-500/10 text-green-700 border-green-500/20"
         />
         <StatCard 
           title="Total Dépenses" 
-          value={formatCurrency(totalExpenses, settings.currency)} 
+          value={formatCurrency(stats.totalExpenses, settings.currency)} 
           icon={<Wallet />}
           description="Total des dépenses enregistrées"
           className="bg-red-500/10 text-red-700 border-red-500/20"
         />
         <StatCard 
           title="Clients Actifs" 
-          value={clients.filter(c => c.status === 'Active').length.toString()} 
+          value={stats.activeClients.toString()} 
           icon={<Users />}
-          description={`${clients.length} clients au total`}
+          description={`${stats.totalClients} clients au total`}
           className="bg-blue-500/10 text-blue-700 border-blue-500/20"
         />
         <StatCard 
           title="Produits en Stock" 
-          value={products.length.toString()} 
+          value={stats.productCount.toString()} 
           icon={<Box />}
           description="Nombre de références uniques"
           className="bg-orange-500/10 text-orange-700 border-orange-500/20"
         />
         <StatCard 
           title="Total Impayé" 
-          value={formatCurrency(totalDue, settings.currency)} 
+          value={formatCurrency(stats.totalDue, settings.currency)} 
           icon={<Receipt />}
-          description={`${invoices.filter(i => i.status === 'Unpaid' || i.status === 'Partially Paid').length} factures non soldées`}
+          description={`${stats.unpaidInvoicesCount} factures non soldées`}
           className="bg-yellow-500/10 text-yellow-700 border-yellow-500/20"
         />
       </div>
