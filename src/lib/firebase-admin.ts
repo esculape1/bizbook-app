@@ -16,7 +16,6 @@ if (!admin.apps.length) {
           credential: admin.credential.cert(serviceAccount),
         });
         console.log("✅ Firebase Admin initialisé avec succès !");
-        db = admin.firestore();
     }
   } catch (error: any) {
     console.error('❌ ERREUR D\'INITIALISATION FIREBASE ADMIN:', error.message);
@@ -25,10 +24,10 @@ if (!admin.apps.length) {
     }
     console.error("L'application ne pourra pas se connecter à la base de données.");
   }
-} else {
-  // If the app is already initialized, just get the firestore instance.
-  // This is crucial for serverless environments and hot-reloading.
-  db = admin.app().firestore();
 }
+
+// Assigner db après l'initialisation potentielle
+db = admin.firestore();
+
 
 export { db };
