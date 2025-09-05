@@ -141,7 +141,7 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
       }
     }
 
-    // THIS IS THE FIX: The unitPrice from the form (item.unitPrice) is now correctly used.
+    // The unitPrice from the form (item.unitPrice) is now correctly used.
     const quoteItems: QuoteItem[] = items.map(item => {
       const product = products.find(p => p.id === item.productId);
       if (!product) throw new Error(`Produit non trouvé: ${item.productId}`);
@@ -273,3 +273,5 @@ export async function deleteQuote(id: string) {
     };
   }
 }
+
+    

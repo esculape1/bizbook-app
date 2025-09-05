@@ -105,12 +105,10 @@ const getInvoicesTool = ai.defineTool(
     outputSchema: z.array(InvoiceSchema),
   },
   async ({ startDate, endDate, clientId }) => {
-    const rawData = await getInvoices();
-    
-    let filteredData = rawData;
+    let rawData = await getInvoices();
     
     if (clientId) {
-      filteredData = filteredData.filter(inv => inv.clientId === clientId);
+      rawData = rawData.filter(inv => inv.clientId === clientId);
     }
     
     if (startDate || endDate) {
@@ -118,9 +116,9 @@ const getInvoicesTool = ai.defineTool(
             start: startDate ? new Date(startDate) : new Date(0),
             end: endDate ? new Date(endDate) : new Date()
         };
-        filteredData = filteredData.filter(inv => {
+        rawData = rawData.filter(inv => {
             try {
-                return isWithinInterval(new Date(inv.date), interval);
+                return inv.date && isWithinInterval(new Date(inv.date), interval);
             } catch (e) {
                 return false;
             }
@@ -128,7 +126,7 @@ const getInvoicesTool = ai.defineTool(
     }
 
     const validData: z.infer<typeof InvoiceSchema>[] = [];
-    for (const item of filteredData) {
+    for (const item of rawData) {
         const parsed = InvoiceSchema.safeParse(item);
         if (parsed.success) {
             validData.push(parsed.data);
@@ -152,17 +150,16 @@ const getExpensesTool = ai.defineTool(
     outputSchema: z.array(ExpenseSchema),
   },
   async ({ startDate, endDate }) => {
-    const rawData = await getExpenses();
+    let rawData = await getExpenses();
 
-    let filteredData = rawData;
     if (startDate || endDate) {
         const interval = {
             start: startDate ? new Date(startDate) : new Date(0),
             end: endDate ? new Date(endDate) : new Date()
         };
-        filteredData = rawData.filter(exp => {
+        rawData = rawData.filter(exp => {
             try {
-                return isWithinInterval(new Date(exp.date), interval);
+                return exp.date && isWithinInterval(new Date(exp.date), interval);
             } catch(e) {
                 return false;
             }
@@ -170,7 +167,7 @@ const getExpensesTool = ai.defineTool(
     }
 
     const validData: z.infer<typeof ExpenseSchema>[] = [];
-    for (const item of filteredData) {
+    for (const item of rawData) {
         const parsed = ExpenseSchema.safeParse(item);
         if (parsed.success) {
             validData.push(parsed.data);
@@ -320,7 +317,6 @@ const businessAnalysisFlow = ai.defineFlow(
     async (query) => {
         const response = await analysisPrompt(query);
         
-        // Robust check for the response and its output.
         if (!response || !response.output) {
             return "Je n'ai pas pu générer de réponse. Le modèle n'a fourni aucune sortie. Veuillez reformuler votre question ou vérifier les données.";
         }
@@ -332,3 +328,5 @@ const businessAnalysisFlow = ai.defineFlow(
 export async function analyzeBusinessData(query: string): Promise<string> {
     return businessAnalysisFlow(query);
 }
+
+    

@@ -115,7 +115,6 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
     throw new Error("La connexion à la base de données a échoué.");
   }
   
-  // Create a local, non-null instance of the db for TypeScript to trust inside the transaction.
   const firestore = db;
 
   try {
@@ -166,33 +165,52 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
     };
     
     await firestore.runTransaction(async (transaction) => {
-      // 1. Update the purchase document
       const purchaseRef = firestore.collection('purchases').doc(id);
       transaction.update(purchaseRef, purchaseUpdateData);
 
-      // 2. Adjust stock levels if status changed to or from 'Received'
-      if (wasReceived && !isNowReceived) { // Was received, but not anymore
-        for (const item of originalPurchase.items) {
+      const handleStockUpdate = (item: PurchaseItem, operation: 'add' | 'subtract') => {
           const productRef = firestore.collection('products').doc(item.productId);
+          const increment = operation === 'add' ? item.quantity : -item.quantity;
           transaction.update(productRef, { 
-            quantityInStock: FieldValue.increment(-item.quantity)
+            quantityInStock: FieldValue.increment(increment)
           });
-        }
-      } else if (!wasReceived && isNowReceived) { // Was not received, but is now
-        for (const item of items) {
+      };
+      
+      const handlePriceUpdate = (item: PurchaseItem, product: Product) => {
           const productRef = firestore.collection('products').doc(item.productId);
-          const totalQuantity = items.reduce((sum, i) => sum + i.quantity, 0);
-          const landedCostPerUnit = totalQuantity > 0 ? totalAmount / totalQuantity : 0;
+          const totalQuantityInPurchase = items.reduce((sum, i) => i.productId === item.productId ? sum + i.quantity : sum, 0);
           
-          const productUpdate: { [key: string]: any } = {
-            quantityInStock: FieldValue.increment(item.quantity),
-          };
-          // Only update purchase price if it's greater than zero
-          if (landedCostPerUnit > 0) {
-            productUpdate.purchasePrice = landedCostPerUnit;
+          if(totalQuantityInPurchase > 0) {
+            const oldTotalValue = (product.purchasePrice || 0) * (product.quantityInStock);
+            const newItemsValue = totalAmount; // This is the total cost of the purchase for all items.
+
+            // Let's calculate cost per item in this purchase
+            const totalItemsInPurchase = items.reduce((sum, i) => sum + i.quantity, 0);
+            if(totalItemsInPurchase > 0){
+              const landedCostPerUnitInPurchase = totalAmount / totalItemsInPurchase;
+              const newPurchasePrice = ((oldTotalValue) + (landedCostPerUnitInPurchase * item.quantity)) / (product.quantityInStock + item.quantity);
+
+              if (landedCostPerUnitInPurchase > 0) {
+                transaction.update(productRef, { purchasePrice: newPurchasePrice });
+              }
+            }
           }
-          transaction.update(productRef, productUpdate);
-        }
+      }
+
+      if (isNowReceived && !wasReceived) { // Transition to "Received"
+          for (const item of items) {
+              const product = allProducts.find(p => p.id === item.productId);
+              if(product) {
+                handleStockUpdate(item, 'add');
+                handlePriceUpdate(item, product);
+              }
+          }
+      } else if (!isNowReceived && wasReceived) { // Reverting from "Received"
+          for (const item of originalPurchase.items) {
+              handleStockUpdate(item, 'subtract');
+              // Note: Reverting price is complex and can lead to inaccuracies.
+              // We'll leave the price as is to reflect the last known valid purchase price.
+          }
       }
     });
 
@@ -243,3 +261,5 @@ export async function cancelPurchase(id: string) {
     return { success: false, message };
   }
 }
+
+    
