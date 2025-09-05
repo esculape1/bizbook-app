@@ -163,28 +163,25 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
     };
     
     await firestore.runTransaction(async (transaction) => {
-      // 1. Update the purchase document
       const purchaseRef = firestore.collection('purchases').doc(id);
       transaction.update(purchaseRef, purchaseUpdateData);
 
-      // 2. Adjust stock levels if status changed to or from 'Received'
-      if (wasReceived && !isNowReceived) { // Was received, but not anymore
+      if (wasReceived && !isNowReceived) {
         for (const item of originalPurchase.items) {
           const productRef = firestore.collection('products').doc(item.productId);
           transaction.update(productRef, { 
-            quantityInStock: db.FieldValue.increment(-item.quantity)
+            quantityInStock: firestore.FieldValue.increment(-item.quantity)
           });
         }
-      } else if (!wasReceived && isNowReceived) { // Was not received, but is now
+      } else if (!wasReceived && isNowReceived) {
         for (const item of items) {
           const productRef = firestore.collection('products').doc(item.productId);
           const totalQuantity = items.reduce((sum, i) => sum + i.quantity, 0);
           const landedCostPerUnit = totalQuantity > 0 ? totalAmount / totalQuantity : 0;
           
           const productUpdate: Partial<Omit<Product, 'id'>> = {
-            quantityInStock: db.FieldValue.increment(item.quantity) as unknown as number,
+            quantityInStock: firestore.FieldValue.increment(item.quantity) as unknown as number,
           };
-          // Only update purchase price if it's greater than zero
           if (landedCostPerUnit > 0) {
             productUpdate.purchasePrice = landedCostPerUnit;
           }
