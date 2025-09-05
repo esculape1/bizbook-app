@@ -113,6 +113,11 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
   try {
     const { supplierId, date, items, status, premierVersement, deuxiemeVersement, transportCost, otherFees } = validatedFields.data;
     
+    // Crucial check to ensure db is not null
+    if (!db) {
+        throw new Error("La connexion à la base de données a échoué.");
+    }
+    
     const [originalPurchase, suppliers, allProducts] = await Promise.all([
       getPurchaseById(id),
       getSuppliers(),
@@ -121,10 +126,6 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
     
     if (!originalPurchase) {
       return { message: 'Achat original non trouvé.' };
-    }
-
-    if (!db) {
-        throw new Error("La connexion à la base de données a échoué.");
     }
 
     const supplier = suppliers.find(c => c.id === supplierId);
