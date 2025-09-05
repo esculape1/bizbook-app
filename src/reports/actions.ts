@@ -107,3 +107,4 @@ export async function generateReport(
         return { error: "Une erreur est survenue lors de la génération du rapport." }
     }
 };
+
