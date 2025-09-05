@@ -8,7 +8,7 @@ import { getUserByEmail } from '@/lib/data';
 import bcrypt from 'bcryptjs';
 
 export async function signIn(prevState: { error: string } | undefined, formData: FormData) {
-  const email = (formData.get('email') as string || '').trim();
+  const email = (formData.get('email') as string || '').trim().toLowerCase();
   const password = (formData.get('password') as string || '').trim();
 
   if (!email || !password) {
