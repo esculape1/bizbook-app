@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp, AggregateField } from 'firebase-admin/firestore';
-import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User } from './types';
+import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User, UserWithPassword } from './types';
 import { unstable_cache as cache } from 'next/cache';
 
 const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Veuillez vérifier la configuration de Firebase ou vos quotas d'utilisation.";
@@ -19,7 +19,12 @@ function convertTimestamps(data: any): any {
     const newObj: { [key: string]: any } = {};
     for (const key in data) {
       if (Object.prototype.hasOwnProperty.call(data, key)) {
-        newObj[key] = convertTimestamps(data[key]);
+          // Explicitly include the password field if it exists
+          if (key === 'password') {
+              newObj[key] = data[key];
+          } else {
+              newObj[key] = convertTimestamps(data[key]);
+          }
       }
     }
     return newObj;
@@ -32,31 +37,38 @@ function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
         return null as T;
     }
     const data = doc.data()!;
-    const convertedData = convertTimestamps(data);
+    let convertedData = convertTimestamps(data);
+
+    // Ensure password field is retained if it exists, as it's not a timestamp
+    if (data.password) {
+        convertedData.password = data.password;
+    }
+
     return { id: doc.id, ...convertedData } as T;
 }
 
+
 // USERS
 // This function should NOT be cached.
-export async function getUserByEmail(email: string): Promise<User | null> {
+export async function getUserByEmail(email: string): Promise<UserWithPassword | null> {
     if (!db) {
         console.error(DB_UNAVAILABLE_ERROR);
-        return null;
+        throw new Error(DB_UNAVAILABLE_ERROR);
     }
     try {
         const usersCol = db.collection('users');
-        const q = usersCol.where('email', '==', email.toLowerCase()).limit(1);
+        const q = usersCol.where('email', '==', email).limit(1);
         const userSnapshot = await q.get();
 
         if (userSnapshot.empty) {
             return null;
         }
         
-        return docToObject<User>(userSnapshot.docs[0]);
+        return docToObject<UserWithPassword>(userSnapshot.docs[0]);
 
     } catch (error) {
         console.error(`Impossible de récupérer l'utilisateur avec l'email ${email}:`, error);
-        return null;
+        throw error;
     }
 }
 
@@ -431,6 +443,7 @@ export async function updateSettings(settingsData: Partial<Settings>): Promise<S
 export const getDashboardStats = cache(async () => {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
   
+  // Use Promise.all to fetch all data concurrently.
   const [invoicesSnapshot, expensesSnapshot, clientsSnapshot, productsSnapshot] = await Promise.all([
     db.collection('invoices').get(),
     db.collection('expenses').get(),
@@ -438,33 +451,46 @@ export const getDashboardStats = cache(async () => {
     db.collection('products').get()
   ]);
 
-  const allInvoices = invoicesSnapshot.docs.map(doc => doc.data() as Invoice);
-  const allExpenses = expensesSnapshot.docs.map(doc => doc.data() as Expense);
-  const allClients = clientsSnapshot.docs.map(doc => doc.data() as Client);
-
+  // Process invoices
   let totalRevenue = 0;
   let totalDue = 0;
   let unpaidInvoicesCount = 0;
-
-  allInvoices.forEach(inv => {
+  invoicesSnapshot.forEach(doc => {
+    const inv = doc.data() as Invoice;
     if (inv.status === 'Paid' || inv.status === 'Partially Paid') {
       totalRevenue += inv.amountPaid || 0;
     }
     if (inv.status === 'Unpaid' || inv.status === 'Partially Paid') {
-      totalDue += inv.totalAmount - (inv.amountPaid || 0);
-      unpaidInvoicesCount++;
+      const due = inv.totalAmount - (inv.amountPaid || 0);
+      if (due > 0) {
+        totalDue += due;
+        unpaidInvoicesCount++;
+      }
     }
   });
 
-  const totalExpenses = allExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const activeClients = allClients.filter(c => c.status === 'Active').length;
+  // Process expenses
+  let totalExpenses = 0;
+  expensesSnapshot.forEach(doc => {
+    const exp = doc.data() as Expense;
+    totalExpenses += exp.amount;
+  });
+  
+  // Process clients
+  let activeClients = 0;
+  clientsSnapshot.forEach(doc => {
+    const client = doc.data() as Client;
+    if (client.status === 'Active') {
+      activeClients++;
+    }
+  });
 
   return {
     totalRevenue,
     totalDue,
     unpaidInvoicesCount,
     totalExpenses,
-    totalClients: allClients.length,
+    totalClients: clientsSnapshot.size,
     activeClients,
     productCount: productsSnapshot.size,
   };
