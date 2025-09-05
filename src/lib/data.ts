@@ -49,7 +49,7 @@ function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
 
 // USERS
 // This function should NOT be cached.
-export async function getUserByEmail(email: string): Promise<UserWithPassword | null> {
+export async function getUserByEmail(email: string): Promise<User | null> {
     if (!db) {
         console.error(DB_UNAVAILABLE_ERROR);
         throw new Error(DB_UNAVAILABLE_ERROR);
@@ -63,7 +63,7 @@ export async function getUserByEmail(email: string): Promise<UserWithPassword | 
             return null;
         }
         
-        return docToObject<UserWithPassword>(userSnapshot.docs[0]);
+        return docToObject<User>(userSnapshot.docs[0]);
 
     } catch (error) {
         console.error(`Impossible de récupérer l'utilisateur avec l'email ${email}:`, error);
@@ -496,3 +496,5 @@ export const getDashboardStats = cache(async () => {
 },
 ['dashboard-stats'],
 { revalidate: 10, tags: ['invoices', 'expenses', 'clients', 'products'] });
+
+    
