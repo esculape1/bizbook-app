@@ -113,11 +113,6 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
   try {
     const { supplierId, date, items, status, premierVersement, deuxiemeVersement, transportCost, otherFees } = validatedFields.data;
     
-    // Crucial check to ensure db is not null
-    if (!db) {
-        throw new Error("La connexion à la base de données a échoué.");
-    }
-    
     const [originalPurchase, suppliers, allProducts] = await Promise.all([
       getPurchaseById(id),
       getSuppliers(),
@@ -162,21 +157,22 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
       status,
     };
 
-    // Use a transaction to ensure atomicity
+    if (!db) {
+      throw new Error("La connexion à la base de données a échoué.");
+    }
+    
     await db.runTransaction(async (transaction) => {
-      // 1. Update the purchase document
       const purchaseRef = db.collection('purchases').doc(id);
       transaction.update(purchaseRef, purchaseUpdateData);
 
-      // 2. Adjust stock levels if status changed to or from 'Received'
-      if (wasReceived && !isNowReceived) { // Was received, but not anymore
+      if (wasReceived && !isNowReceived) {
         for (const item of originalPurchase.items) {
           const productRef = db.collection('products').doc(item.productId);
           transaction.update(productRef, { 
             quantityInStock: db.FieldValue.increment(-item.quantity)
           });
         }
-      } else if (!wasReceived && isNowReceived) { // Was not received, but is now
+      } else if (!wasReceived && isNowReceived) {
         for (const item of items) {
           const productRef = db.collection('products').doc(item.productId);
           const totalQuantity = items.reduce((sum, i) => sum + i.quantity, 0);
@@ -185,7 +181,6 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
           const productUpdate: Partial<Omit<Product, 'id'>> = {
             quantityInStock: db.FieldValue.increment(item.quantity) as unknown as number,
           };
-          // Only update purchase price if it's greater than zero
           if (landedCostPerUnit > 0) {
             productUpdate.purchasePrice = landedCostPerUnit;
           }
