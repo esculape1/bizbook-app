@@ -1,7 +1,8 @@
 
 
 export type User = {
-  id: string;
+  id: string; // This is the Firestore document ID
+  uid?: string; // This will be the Firebase Auth UID after migration
   name: string;
   email: string;
   role: 'SuperAdmin' | 'Admin' | 'User';

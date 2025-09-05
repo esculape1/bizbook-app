@@ -28,29 +28,24 @@ function convertTimestamps(data: any): any {
 
 function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
     if (!doc.exists) {
-        // This case should ideally be handled by the caller, but as a safeguard:
         return null as T;
     }
     const data = doc.data();
     const convertedData = convertTimestamps(data);
-
-    const result: { [key: string]: any } = { id: doc.id, ...convertedData };
     
-    // Explicitly check for and include the password field if it exists.
-    // This is crucial for authentication.
-    if (data && 'password' in data) {
-      result.password = data.password;
-    }
+    // We intentionally do not include the password field anymore.
+    // Auth is handled by Firebase Auth.
+    const { password, ...restData } = convertedData;
 
-    return result as T;
+    return { id: doc.id, ...restData } as T;
 }
 
 // USERS
-// This function should NOT be cached as it retrieves sensitive data for authentication.
+// This function should NOT be cached.
 export async function getUserByEmail(email: string): Promise<UserWithPassword | null> {
     if (!db) {
         console.error(DB_UNAVAILABLE_ERROR);
-        return null; // For auth, we don't want to throw, just fail silently.
+        return null;
     }
     try {
         const usersCol = db.collection('users');
@@ -61,7 +56,19 @@ export async function getUserByEmail(email: string): Promise<UserWithPassword | 
             return null;
         }
         
-        return docToObject<UserWithPassword>(userSnapshot.docs[0]);
+        const userDoc = userSnapshot.docs[0];
+        const data = userDoc.data();
+
+        // We only need this for legacy password migration, not for general use.
+        const user: UserWithPassword = {
+            id: userDoc.id,
+            name: data.name,
+            email: data.email,
+            role: data.role || 'User',
+            password: data.password, // Keep for migration script
+        };
+        return user;
+
     } catch (error) {
         console.error(`Impossible de récupérer l'utilisateur avec l'email ${email}:`, error);
         return null;
@@ -445,7 +452,7 @@ export const getDashboardStats = cache(async () => {
   const productsCol = db.collection('products');
 
   // Simpler, separate aggregations to avoid complex index requirements.
-  const totalRevenueAgg = await invoicesCol.aggregate({ total: AggregateField.sum('amountPaid') }).get();
+  const totalRevenueAgg = await invoicesCol.where('status', 'in', ['Paid', 'Partially Paid']).aggregate({ total: AggregateField.sum('amountPaid') }).get();
   const totalExpensesAgg = await expensesCol.aggregate({ total: AggregateField.sum('amount') }).get();
   
   const unpaidInvoicesAgg = await invoicesCol.where('status', 'in', ['Unpaid', 'Partially Paid']).count().get();
