@@ -273,5 +273,3 @@ export async function deleteQuote(id: string) {
     };
   }
 }
-
-    

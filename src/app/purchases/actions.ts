@@ -178,24 +178,24 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
       
       const handlePriceUpdate = (item: PurchaseItem, product: Product) => {
           const productRef = firestore.collection('products').doc(item.productId);
-          const totalQuantityInPurchase = items.reduce((sum, i) => i.productId === item.productId ? sum + i.quantity : sum, 0);
           
-          if(totalQuantityInPurchase > 0) {
-            const oldTotalValue = (product.purchasePrice || 0) * (product.quantityInStock);
-            const newItemsValue = totalAmount; // This is the total cost of the purchase for all items.
+          // Cost for all items in this specific purchase
+          const totalItemsInPurchase = items.reduce((sum, i) => sum + i.quantity, 0);
+          if (totalItemsInPurchase === 0) return; // Avoid division by zero
+          
+          const landedCostPerUnitInPurchase = totalAmount / totalItemsInPurchase;
+          const newItemsValue = landedCostPerUnitInPurchase * item.quantity;
+          const oldStockValue = (product.purchasePrice || 0) * (product.quantityInStock);
 
-            // Let's calculate cost per item in this purchase
-            const totalItemsInPurchase = items.reduce((sum, i) => sum + i.quantity, 0);
-            if(totalItemsInPurchase > 0){
-              const landedCostPerUnitInPurchase = totalAmount / totalItemsInPurchase;
-              const newPurchasePrice = ((oldTotalValue) + (landedCostPerUnitInPurchase * item.quantity)) / (product.quantityInStock + item.quantity);
+          const newTotalStock = product.quantityInStock + item.quantity;
+          if (newTotalStock === 0) return; // Avoid division by zero
 
-              if (landedCostPerUnitInPurchase > 0) {
-                transaction.update(productRef, { purchasePrice: newPurchasePrice });
-              }
-            }
+          const newAveragePurchasePrice = (oldStockValue + newItemsValue) / newTotalStock;
+
+          if (isFinite(newAveragePurchasePrice)) {
+            transaction.update(productRef, { purchasePrice: newAveragePurchasePrice });
           }
-      }
+      };
 
       if (isNowReceived && !wasReceived) { // Transition to "Received"
           for (const item of items) {
@@ -208,8 +208,8 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
       } else if (!isNowReceived && wasReceived) { // Reverting from "Received"
           for (const item of originalPurchase.items) {
               handleStockUpdate(item, 'subtract');
-              // Note: Reverting price is complex and can lead to inaccuracies.
-              // We'll leave the price as is to reflect the last known valid purchase price.
+              // Note: Reverting price is complex. We will not adjust the price on cancellation
+              // to avoid historical data inaccuracies. The price will be re-averaged on the next reception.
           }
       }
     });
@@ -261,5 +261,3 @@ export async function cancelPurchase(id: string) {
     return { success: false, message };
   }
 }
-
-    

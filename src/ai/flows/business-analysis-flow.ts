@@ -328,5 +328,3 @@ const businessAnalysisFlow = ai.defineFlow(
 export async function analyzeBusinessData(query: string): Promise<string> {
     return businessAnalysisFlow(query);
 }
-
-    
