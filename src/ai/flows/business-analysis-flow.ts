@@ -262,7 +262,10 @@ const analysisPrompt = ai.definePrompt(
         output: { schema: z.string() },
         model: 'googleai/gemini-1.5-flash',
         tools: [getInvoicesTool, getExpensesTool, getProductsTool, getClientsTool, getSettingsTool],
-        system: `Tu es un assistant expert en analyse de données pour l'application BizBook.
+        prompt: [
+            {
+                role: 'system',
+                content: `Tu es un assistant expert en analyse de données pour l'application BizBook.
 Ta mission est de répondre aux questions de l'utilisateur en utilisant les outils à ta disposition pour récupérer les données.
 Tu DOIS utiliser les outils pour obtenir les données. Ne demande jamais à l'utilisateur de te fournir les données.
 Sois concis, précis et professionnel. Réponds toujours en français.
@@ -324,6 +327,9 @@ LOGIQUE DE RAISONNEMENT OBLIGATOIRE :
     *   Formate TOUS les montants monétaires dans ta réponse finale en utilisant cette devise (ex: "1 500 000 F CFA").
     *   Sois clair et direct. Commence par la réponse, puis donne une brève explication de ton calcul si nécessaire.
     *   Exemple : "Le chiffre d'affaires pour le client DLG le mois dernier était de 1 500 000 F CFA. Ce calcul est basé sur la somme des factures X, Y et Z."`,
+            },
+            { role: 'user', content: '{{{input}}}' },
+        ],
         config: {
             toolRequest: 'parallel',
         },
