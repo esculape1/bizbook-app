@@ -74,7 +74,7 @@ const InvoiceSchema = z.object({
 
 const ExpenseSchema = z.object({
   id: z.string().nullable().optional(),
-  date: z.string().describe("Date de la dépense au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ).").nullable().optional(),
+  date: zstring().describe("Date de la dépense au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ).").nullable().optional(),
   description: z.string().nullable().optional(),
   amount: z.number().nullable().optional(),
   category: z.string().nullable().optional(),
@@ -324,7 +324,6 @@ LOGIQUE DE RAISONNEMENT OBLIGATOIRE :
     *   Formate TOUS les montants monétaires dans ta réponse finale en utilisant cette devise (ex: "1 500 000 F CFA").
     *   Sois clair et direct. Commence par la réponse, puis donne une brève explication de ton calcul si nécessaire.
     *   Exemple : "Le chiffre d'affaires pour le client DLG le mois dernier était de 1 500 000 F CFA. Ce calcul est basé sur la somme des factures X, Y et Z."`,
-        prompt: `{{{input}}}`,
         config: {
             toolRequest: 'parallel',
         },
@@ -352,3 +351,5 @@ const businessAnalysisFlow = ai.defineFlow(
 export async function analyzeBusinessData(query: string): Promise<string> {
     return businessAnalysisFlow(query);
 }
+
+    
