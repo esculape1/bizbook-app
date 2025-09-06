@@ -2,7 +2,7 @@
 'use server';
 /**
  * @fileOverview An AI agent for business data analysis.
- * - analyzeBusinessData - A function that handles business analysis queries.
+ * - analyzeBusinessData - a function that handles business analysis queries.
  */
 
 import {ai} from '@/ai/genkit';
@@ -258,13 +258,9 @@ const getSettingsTool = ai.defineTool(
 const analysisPrompt = ai.definePrompt(
     {
         name: 'businessAnalysisPrompt',
-        input: { schema: z.string() },
-        output: { schema: z.string() },
         model: 'googleai/gemini-1.5-flash',
         tools: [getInvoicesTool, getExpensesTool, getProductsTool, getClientsTool, getSettingsTool],
-        config: {
-            toolRequest: 'parallel',
-        },
+        output: { schema: z.string() },
     },
 );
 
