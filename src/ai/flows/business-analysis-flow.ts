@@ -260,7 +260,7 @@ const analysisPrompt = ai.definePrompt(
         name: 'businessAnalysisPrompt',
         input: { schema: z.string() },
         output: { schema: z.string() },
-        model: googleAI.model('gemini-1.5-flash-latest'),
+        model: 'googleai/gemini-1.5-flash-latest',
         tools: [getInvoicesTool, getExpensesTool, getProductsTool, getClientsTool, getSettingsTool],
         system: `Tu es un assistant expert en analyse de données pour l'application BizBook.
 Ta mission est de répondre aux questions de l'utilisateur en utilisant les outils à ta disposition pour récupérer les données.
@@ -351,5 +351,3 @@ const businessAnalysisFlow = ai.defineFlow(
 export async function analyzeBusinessData(query: string): Promise<string> {
     return businessAnalysisFlow(query);
 }
-
-    
