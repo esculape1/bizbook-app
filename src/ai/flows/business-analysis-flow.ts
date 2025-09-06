@@ -74,7 +74,7 @@ const InvoiceSchema = z.object({
 
 const ExpenseSchema = z.object({
   id: z.string().nullable().optional(),
-  date: zstring().describe("Date de la dépense au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ).").nullable().optional(),
+  date: z.string().describe("Date de la dépense au format ISO (YYYY-MM-DDTHH:mm:ss.sssZ).").nullable().optional(),
   description: z.string().nullable().optional(),
   amount: z.number().nullable().optional(),
   category: z.string().nullable().optional(),
@@ -260,7 +260,7 @@ const analysisPrompt = ai.definePrompt(
         name: 'businessAnalysisPrompt',
         input: { schema: z.string() },
         output: { schema: z.string() },
-        model: 'googleai/gemini-1.5-flash',
+        model: googleAI.model('gemini-1.5-flash'),
         tools: [getInvoicesTool, getExpensesTool, getProductsTool, getClientsTool, getSettingsTool],
         system: `Tu es un assistant expert en analyse de données pour l'application BizBook.
 Ta mission est de répondre aux questions de l'utilisateur en utilisant les outils à ta disposition pour récupérer les données.
