@@ -254,14 +254,7 @@ const getSettingsTool = ai.defineTool(
   }
 );
 
-
-const analysisPrompt = ai.definePrompt(
-    {
-        name: 'businessAnalysisPrompt',
-        model: 'googleai/gemini-1.5-flash',
-        tools: [getInvoicesTool, getExpensesTool, getProductsTool, getClientsTool, getSettingsTool],
-        output: { schema: z.string() },
-        system: `Tu es un assistant expert en analyse de données pour l'application BizBook.
+const systemPrompt = `Tu es un assistant expert en analyse de données pour l'application BizBook.
 Ta mission est de répondre aux questions de l'utilisateur en utilisant les outils à ta disposition pour récupérer les données.
 Tu DOIS utiliser les outils pour obtenir les données. Ne demande jamais à l'utilisateur de te fournir les données.
 Sois concis, précis et professionnel. Réponds toujours en français.
@@ -322,10 +315,7 @@ LOGIQUE DE RAISONNEMENT OBLIGATOIRE :
     *   Utilise \`getSettings\` pour connaître la devise de l'entreprise.
     *   Formate TOUS les montants monétaires dans ta réponse finale en utilisant cette devise (ex: "1 500 000 F CFA").
     *   Sois clair et direct. Commence par la réponse, puis donne une brève explication de ton calcul si nécessaire.
-    *   Exemple : "Le chiffre d'affaires pour le client DLG le mois dernier était de 1 500 000 F CFA. Ce calcul est basé sur la somme des factures X, Y et Z."`,
-    },
-);
-
+    *   Exemple : "Le chiffre d'affaires pour le client DLG le mois dernier était de 1 500 000 F CFA. Ce calcul est basé sur la somme des factures X, Y et Z."`;
 
 const businessAnalysisFlow = ai.defineFlow(
     {
@@ -338,7 +328,16 @@ const businessAnalysisFlow = ai.defineFlow(
             return "Veuillez fournir une question pour l'analyse.";
         }
         
-        const response = await analysisPrompt(query);
+        const llm = googleAI.model('gemini-1.5-flash');
+        const response = await ai.generate({
+            model: llm,
+            prompt: query,
+            system: systemPrompt,
+            tools: [getInvoicesTool, getExpensesTool, getProductsTool, getClientsTool, getSettingsTool],
+            output: {
+                schema: z.string()
+            }
+        });
         
         if (!response || !response.output) {
             return "Je n'ai pas pu générer de réponse. Le modèle n'a fourni aucune sortie. Veuillez reformuler votre question ou vérifier les données.";
