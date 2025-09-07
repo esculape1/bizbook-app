@@ -10,6 +10,7 @@ import {z} from 'zod';
 import { getClients, getInvoices, getProducts, getExpenses, getSettings } from '@/lib/data';
 import { isWithinInterval } from 'date-fns';
 import { googleAI } from '@genkit-ai/googleai';
+import {type MessageData, getHistory} from 'genkit';
 
 const ClientSchema = z.object({
   id: z.string().nullable().optional(),
@@ -329,21 +330,36 @@ const businessAnalysisFlow = ai.defineFlow(
         }
         
         const llm = googleAI.model('gemini-1.5-flash');
+        
+        // Generate the full response, including tool calls
         const response = await ai.generate({
             model: llm,
             prompt: query,
             system: systemPrompt,
             tools: [getInvoicesTool, getExpensesTool, getProductsTool, getClientsTool, getSettingsTool],
-            output: {
-                schema: z.string()
-            }
         });
+
+        // Extract the final text output from the model
+        const textResponse = response.text;
         
-        if (!response || !response.output) {
-            return "Je n'ai pas pu générer de réponse. Le modèle n'a fourni aucune sortie. Veuillez reformuler votre question ou vérifier les données.";
+        if (textResponse) {
+          return textResponse;
         }
-        
-        return response.output;
+
+        // If no direct text response, check the history for the last model message
+        const history = getHistory();
+        if (history && history.length > 0) {
+            const lastMessage = history[history.length - 1];
+            if (lastMessage.role === 'model' && lastMessage.content.length > 0) {
+                const textPart = lastMessage.content.find(part => part.text);
+                if (textPart && textPart.text) {
+                    return textPart.text;
+                }
+            }
+        }
+
+        // Fallback message if no clear response is found
+        return "Je n'ai pas pu trouver de réponse claire. Pourriez-vous reformuler votre question ou vérifier que les données nécessaires sont disponibles ?";
     }
 );
 
