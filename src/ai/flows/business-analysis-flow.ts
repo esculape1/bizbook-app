@@ -343,10 +343,14 @@ const businessAnalysisFlow = ai.defineFlow(
         if (textResponse) {
           return textResponse;
         }
-        
-        const toolCalls = response.toolCalls;
-        if (toolCalls && toolCalls.length > 0) {
-            return `J'ai pu récupérer des données en utilisant les outils suivants : ${toolCalls.map(c => c.tool).join(', ')}. Cependant, je n'ai pas pu formuler de réponse finale. Pourriez-vous reformuler votre question ? Il est possible que certaines informations nécessaires, comme le prix d'achat des produits, manquent pour effectuer le calcul demandé.`;
+
+        const toolRequestParts = response.choices
+          .flatMap(c => c.message.content)
+          .filter(part => !!part.toolRequest);
+
+        if (toolRequestParts.length > 0) {
+            const toolNames = toolRequestParts.map(p => p.toolRequest?.name).join(', ');
+            return `J'ai pu récupérer des données en utilisant les outils suivants : ${toolNames}. Cependant, je n'ai pas pu formuler de réponse finale. Pourriez-vous reformuler votre question ? Il est possible que certaines informations nécessaires, comme le prix d'achat des produits, manquent pour effectuer le calcul demandé.`;
         }
 
         return "Je n'ai pas pu trouver de réponse claire. Pourriez-vous reformuler votre question ou vérifier que les données nécessaires sont disponibles ?";
