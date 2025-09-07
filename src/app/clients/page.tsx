@@ -9,5 +9,9 @@ export default async function ClientsPage() {
   const clients = await getClients();
   const user = await getSession();
 
-  return <ClientsList clients={clients} userRole={user?.role} />;
+  return (
+    <div className="flex flex-col h-full">
+      <ClientsList clients={clients} userRole={user?.role} />
+    </div>
+  );
 }
