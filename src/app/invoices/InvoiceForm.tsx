@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, PlusCircle, Trash2 } from 'lucide-react';
@@ -21,6 +20,7 @@ import { createInvoice } from './actions';
 import type { Client, Product, Settings } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ProductPicker } from '@/components/ProductPicker';
+import { ClientPicker } from '@/components/ClientPicker';
 
 type InvoiceFormProps = {
   clients: Client[];
@@ -46,6 +46,7 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
   const invoiceSchema = z.object({
     invoiceNumberSuffix: z.string().min(1, "Le numéro de facture est requis."),
     clientId: z.string().min(1, "Client requis"),
+    clientName: z.string(),
     date: z.date({ required_error: "Date requise" }),
     dueDate: z.date({ required_error: "Date d'échéance requise" }),
     items: z.array(invoiceItemSchema).min(1, "Ajoutez au moins un produit.")
@@ -71,6 +72,7 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
     defaultValues: {
       invoiceNumberSuffix: '',
       clientId: '',
+      clientName: '',
       date: new Date(),
       dueDate: new Date(new Date().setDate(new Date().getDate() + 30)),
       items: [],
@@ -91,6 +93,7 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
   
   const watchedDiscount = useWatch({ control: form.control, name: 'discount' });
   const watchedVat = useWatch({ control: form.control, name: 'vat' });
+  const selectedClientName = useWatch({ control: form.control, name: 'clientName' });
 
   const subTotal = watchedItems.reduce((acc, item) => {
     return acc + (item.unitPrice || 0) * (item.quantity || 0);
@@ -111,6 +114,11 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
         quantity: watchedItems[index].quantity || 1,
     });
   };
+  
+  const handleClientSelect = (client: Client) => {
+    form.setValue('clientId', client.id);
+    form.setValue('clientName', client.name);
+  }
 
   const onSubmit = (data: InvoiceFormValues) => {
     startTransition(async () => {
@@ -170,18 +178,11 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Client</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner un client" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {clients.map(client => (
-                            <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <ClientPicker
+                        clients={clients}
+                        onClientSelect={handleClientSelect}
+                        selectedClientName={selectedClientName || "Sélectionner un client"}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}
@@ -283,7 +284,7 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
                               render={({ field }) => (
                                 <FormItem>
                                   <FormControl>
-                                    <Input type="number" {...field} step="0.01" className="w-24"/>
+                                    <Input type="number" step="0.01" className="w-24"/>
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>

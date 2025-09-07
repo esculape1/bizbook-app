@@ -18,6 +18,7 @@ const quoteItemSchema = z.object({
 
 const quoteSchema = z.object({
   clientId: z.string().min(1, "Client requis"),
+  clientName: z.string(),
   date: z.date({ required_error: "Date requise" }),
   expiryDate: z.date({ required_error: "Date d'expiration requise" }),
   items: z.array(quoteItemSchema).min(1, "Ajoutez au moins un produit."),
@@ -45,15 +46,9 @@ export async function createQuote(formData: unknown) {
   }
   
   try {
-    const { clientId, date, expiryDate, items, vat, discount } = validatedFields.data;
+    const { clientId, clientName, date, expiryDate, items, vat, discount } = validatedFields.data;
     
-    const clients = await getClients();
     const products = await getProducts();
-
-    const client = clients.find(c => c.id === clientId);
-    if (!client) {
-      return { message: 'Client non trouvé.' };
-    }
 
     const quoteItems: QuoteItem[] = items.map(item => {
       const product = products.find(p => p.id === item.productId);
@@ -76,7 +71,7 @@ export async function createQuote(formData: unknown) {
 
     await addQuote({
       clientId,
-      clientName: client.name,
+      clientName: clientName,
       date: date.toISOString(),
       expiryDate: expiryDate.toISOString(),
       items: quoteItems,

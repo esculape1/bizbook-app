@@ -27,6 +27,7 @@ const invoiceItemSchema = z.object({
 const invoiceSchema = z.object({
   invoiceNumberSuffix: z.string().min(1, { message: "Le numéro de facture est requis." }),
   clientId: z.string(),
+  clientName: z.string(),
   date: z.date(),
   dueDate: z.date(),
   items: z.array(invoiceItemSchema),
@@ -61,24 +62,19 @@ export async function createInvoice(formData: unknown) {
   const validatedFields = invoiceSchema.safeParse(formData);
 
   if (!validatedFields.success) {
+    console.log(validatedFields.error.flatten().fieldErrors);
     return {
       message: 'Certains champs sont invalides. Impossible de créer la facture.',
     };
   }
 
   try {
-    const { invoiceNumberSuffix, clientId, date, dueDate, items, vat, discount } = validatedFields.data;
+    const { invoiceNumberSuffix, clientId, clientName, date, dueDate, items, vat, discount } = validatedFields.data;
     
-    const [clients, products, allInvoices] = await Promise.all([
-        getClients(),
+    const [products, allInvoices] = await Promise.all([
         getProducts(),
         getInvoices(),
     ]);
-
-    const client = clients.find(c => c.id === clientId);
-    if (!client) {
-      return { message: 'Client non trouvé.' };
-    }
 
     const currentYear = new Date().getFullYear();
     const invoiceNumber = `FACT-${currentYear}-${invoiceNumberSuffix}`;
@@ -127,7 +123,7 @@ export async function createInvoice(formData: unknown) {
     await addInvoice({
       invoiceNumber: invoiceNumber, // Use combined invoice number
       clientId,
-      clientName: client.name,
+      clientName: clientName,
       date: date.toISOString(),
       dueDate: dueDate.toISOString(),
       items: invoiceItems,

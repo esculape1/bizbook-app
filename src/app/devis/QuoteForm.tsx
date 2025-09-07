@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, PlusCircle, Trash2 } from 'lucide-react';
@@ -21,6 +20,7 @@ import { createQuote } from './actions';
 import type { Client, Product, Settings } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ProductPicker } from '@/components/ProductPicker';
+import { ClientPicker } from '@/components/ClientPicker';
 
 const quoteItemSchema = z.object({
   productId: z.string().min(1, "Produit requis"),
@@ -33,6 +33,7 @@ const quoteItemSchema = z.object({
 
 const quoteSchema = z.object({
   clientId: z.string().min(1, "Client requis"),
+  clientName: z.string(),
   date: z.date({ required_error: "Date requise" }),
   expiryDate: z.date({ required_error: "Date d'expiration requise" }),
   items: z.array(quoteItemSchema).min(1, "Ajoutez au moins un produit."),
@@ -57,6 +58,7 @@ export function QuoteForm({ clients, products, settings }: QuoteFormProps) {
     resolver: zodResolver(quoteSchema),
     defaultValues: {
       clientId: '',
+      clientName: '',
       date: new Date(),
       expiryDate: new Date(new Date().setDate(new Date().getDate() + 30)),
       items: [],
@@ -77,6 +79,7 @@ export function QuoteForm({ clients, products, settings }: QuoteFormProps) {
   
   const watchedDiscount = useWatch({ control: form.control, name: 'discount' });
   const watchedVat = useWatch({ control: form.control, name: 'vat' });
+  const selectedClientName = useWatch({ control: form.control, name: 'clientName' });
 
   const subTotal = watchedItems.reduce((acc, item) => {
     const calculatedTotal = (item.unitPrice || 0) * (item.quantity || 0);
@@ -102,6 +105,11 @@ export function QuoteForm({ clients, products, settings }: QuoteFormProps) {
         total: product.unitPrice * (watchedItems[index].quantity || 1)
     });
   };
+
+  const handleClientSelect = (client: Client) => {
+    form.setValue('clientId', client.id);
+    form.setValue('clientName', client.name);
+  }
 
   const onSubmit = (data: QuoteFormValues) => {
     startTransition(async () => {
@@ -144,18 +152,11 @@ export function QuoteForm({ clients, products, settings }: QuoteFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Client</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Sélectionner un client" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {clients.map(client => (
-                          <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <ClientPicker
+                      clients={clients}
+                      onClientSelect={handleClientSelect}
+                      selectedClientName={selectedClientName || "Sélectionner un client"}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -257,7 +258,7 @@ export function QuoteForm({ clients, products, settings }: QuoteFormProps) {
                               render={({ field }) => (
                                <FormItem>
                                  <FormControl>
-                                   <Input type="number" {...field} step="0.01" className="w-24"/>
+                                   <Input type="number" step="0.01" className="w-24"/>
                                  </FormControl>
                                  <FormMessage/>
                                </FormItem>
