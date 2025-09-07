@@ -25,7 +25,7 @@ export default async function ProductsPage() {
   const canViewPrices = user?.role === 'SuperAdmin' || user?.role === 'Admin';
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 h-full">
       <PageHeader
         title="Produits"
         actions={
@@ -35,9 +35,9 @@ export default async function ProductsPage() {
           </div>
         }
       />
-      <Card>
-        <CardContent className="pt-6">
-          <ScrollArea className="h-[calc(100vh-22rem)]">
+      <Card className="flex-1 flex flex-col min-h-0">
+        <CardContent className="flex-1 flex flex-col p-0">
+          <ScrollArea className="flex-1">
             <Table>
               <TableHeader>
                 <TableRow>

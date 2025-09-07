@@ -169,7 +169,7 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
             </DropdownMenu>
         </div>
       </header>
-      <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+      <main className="flex-1 flex flex-col min-h-0 p-4 lg:p-6">
         {children}
       </main>
       <footer className="w-full p-4 text-center text-xs text-muted-foreground bg-background/90 backdrop-blur-sm">

@@ -15,14 +15,14 @@ export default function ClientsList({ clients, userRole }: { clients: Client[], 
   const canEdit = userRole === 'Admin' || userRole === 'SuperAdmin';
   
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 h-full">
       <PageHeader
         title="Clients"
         actions={canEdit ? <ClientForm /> : undefined}
       />
-      <Card>
-        <CardContent className="pt-6">
-          <ScrollArea className="h-[calc(100vh-22rem)]">
+      <Card className="flex-1 flex flex-col min-h-0">
+        <CardContent className="flex-1 flex flex-col p-0">
+          <ScrollArea className="flex-1">
             <Table>
               <TableHeader>
                 <TableRow>
