@@ -14,7 +14,7 @@ import { googleAI } from '@genkit-ai/googleai';
 const ClientSchema = z.object({
   id: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
-  email: z.string().email().nullable().optional(),
+  email: z.string().nullable().optional(), // Changed from .email() to .string() to be more lenient
   phone: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
   ifu: z.string().nullable().optional(),
@@ -280,7 +280,7 @@ LOGIQUE DE RAISONNEMENT OBLIGATOIRE :
         1.  Calcule le CA (voir ci-dessus).
         2.  Calcule le Coût des Marchandises Vendues (CMV) :
             a. Pour chaque facture non annulée, parcours ses \`items\`.
-            b. Pour chaque \`item\`, utilise \`getProductsTool\` pour trouver le produit correspondant (\`productId\`) et obtenir son \`purchasePrice\`.
+            b. **Tu DOIS appeler \`getProductsTool\` pour obtenir la liste complète des produits et trouver le \`purchasePrice\` correspondant à chaque \`item\` en utilisant le \`productId\`.**
             c. Multiplie la \`quantity\` de l'item par son \`purchasePrice\`.
             d. La somme de tous ces coûts est le CMV.
         3.  Calcule le total des dépenses avec \`getExpensesTool\` (filtré par période).
@@ -293,11 +293,12 @@ LOGIQUE DE RAISONNEMENT OBLIGATOIRE :
         4.  Identifie le produit avec la plus grande quantité totale.
 
     *   **PRODUIT LE PLUS RENTABLE :**
-        1.  Utilise \`getInvoicesTool\` et \`getProductsTool\`.
-        2.  Crée un compteur de marge pour chaque produit.
-        3.  Parcours les factures non annulées et pour chaque \`item\`, calcule la marge de cet item : (\`unitPrice\` de la facture - \`purchasePrice\` du produit) * \`quantity\`.
-        4.  Ajoute cette marge au compteur du produit.
-        5.  Identifie le produit avec la plus grande marge totale.
+        1.  **Tu DOIS appeler \`getProductsTool\`** pour obtenir tous les prix d'achat.
+        2.  Utilise \`getInvoicesTool\` pour obtenir les ventes.
+        3.  Crée un compteur de marge pour chaque produit.
+        4.  Parcours les factures non annulées et pour chaque \`item\`, calcule la marge de cet item : (\`unitPrice\` de la facture - \`purchasePrice\` du produit) * \`quantity\`.
+        5.  Ajoute cette marge au compteur du produit.
+        6.  Identifie le produit avec la plus grande marge totale.
 
     *   **CLIENT LE PLUS IMPORTANT (en CA) :**
         1.  Utilise \`getInvoicesTool\` pour la période demandée (sans filtre client).
@@ -342,8 +343,15 @@ const businessAnalysisFlow = ai.defineFlow(
         if (textResponse) {
           return textResponse;
         }
+        
+        // Fallback message if no clear text response is found.
+        // This can happen if the model only uses tools but doesn't generate a final summary.
+        // We can check the tool calls to provide a more specific message.
+        const toolCalls = response.toolCalls;
+        if (toolCalls && toolCalls.length > 0) {
+            return `J'ai pu récupérer des données (${toolCalls.map(c => c.tool).join(', ')}), mais je n'ai pas pu formuler de réponse finale. Pourriez-vous reformuler votre question ?`;
+        }
 
-        // Fallback message if no clear response is found
         return "Je n'ai pas pu trouver de réponse claire. Pourriez-vous reformuler votre question ou vérifier que les données nécessaires sont disponibles ?";
     }
 );
