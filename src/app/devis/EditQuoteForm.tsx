@@ -273,7 +273,7 @@ export function EditQuoteForm({ quote, clients, products, settings }: EditQuoteF
                               render={({ field }) => (
                                <FormItem>
                                  <FormControl>
-                                   <Input type="number" {...field} step="0.01" className="w-24"/>
+                                   <Input type="number" step="0.01" className="w-24"/>
                                  </FormControl>
                                  <FormMessage/>
                                </FormItem>
