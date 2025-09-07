@@ -344,12 +344,9 @@ const businessAnalysisFlow = ai.defineFlow(
           return textResponse;
         }
         
-        // Fallback message if no clear text response is found.
-        // This can happen if the model only uses tools but doesn't generate a final summary.
-        // We can check the tool calls to provide a more specific message.
         const toolCalls = response.toolCalls;
         if (toolCalls && toolCalls.length > 0) {
-            return `J'ai pu récupérer des données (${toolCalls.map(c => c.tool).join(', ')}), mais je n'ai pas pu formuler de réponse finale. Pourriez-vous reformuler votre question ?`;
+            return `J'ai pu récupérer des données en utilisant les outils suivants : ${toolCalls.map(c => c.tool).join(', ')}. Cependant, je n'ai pas pu formuler de réponse finale. Pourriez-vous reformuler votre question ? Il est possible que certaines informations nécessaires, comme le prix d'achat des produits, manquent pour effectuer le calcul demandé.`;
         }
 
         return "Je n'ai pas pu trouver de réponse claire. Pourriez-vous reformuler votre question ou vérifier que les données nécessaires sont disponibles ?";
