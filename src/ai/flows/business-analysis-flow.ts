@@ -10,7 +10,6 @@ import {z} from 'zod';
 import { getClients, getInvoices, getProducts, getExpenses, getSettings } from '@/lib/data';
 import { isWithinInterval } from 'date-fns';
 import { googleAI } from '@genkit-ai/googleai';
-import {type MessageData, getHistory} from 'genkit';
 
 const ClientSchema = z.object({
   id: z.string().nullable().optional(),
@@ -331,7 +330,6 @@ const businessAnalysisFlow = ai.defineFlow(
         
         const llm = googleAI.model('gemini-1.5-flash');
         
-        // Generate the full response, including tool calls
         const response = await ai.generate({
             model: llm,
             prompt: query,
@@ -339,23 +337,10 @@ const businessAnalysisFlow = ai.defineFlow(
             tools: [getInvoicesTool, getExpensesTool, getProductsTool, getClientsTool, getSettingsTool],
         });
 
-        // Extract the final text output from the model
         const textResponse = response.text;
         
         if (textResponse) {
           return textResponse;
-        }
-
-        // If no direct text response, check the history for the last model message
-        const history = getHistory();
-        if (history && history.length > 0) {
-            const lastMessage = history[history.length - 1];
-            if (lastMessage.role === 'model' && lastMessage.content.length > 0) {
-                const textPart = lastMessage.content.find(part => part.text);
-                if (textPart && textPart.text) {
-                    return textPart.text;
-                }
-            }
         }
 
         // Fallback message if no clear response is found
