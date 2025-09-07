@@ -24,7 +24,7 @@ export default async function ProductsPage() {
   const canViewPrices = user?.role === 'SuperAdmin' || user?.role === 'Admin';
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="space-y-6">
       <PageHeader
         title="Produits"
         actions={
@@ -36,42 +36,44 @@ export default async function ProductsPage() {
       />
       <Card>
         <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nom</TableHead>
-                <TableHead>Référence</TableHead>
-                <TableHead>Catégorie</TableHead>
-                {canViewPrices && <TableHead className="text-right">Prix d'Achat</TableHead>}
-                {canViewPrices && <TableHead className="text-right">Prix de Vente</TableHead>}
-                <TableHead className="text-right">Quantité</TableHead>
-                {canViewPrices && <TableHead className="text-right">Point de Cde.</TableHead>}
-                {canViewPrices && <TableHead className="text-right">Stock Sécu.</TableHead>}
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {products.map((product) => (
-                <TableRow key={product.id} className={product.quantityInStock <= product.reorderPoint ? 'bg-red-500/10' : ''}>
-                  <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{product.reference}</TableCell>
-                  <TableCell>{product.category}</TableCell>
-                  {canViewPrices && <TableCell className="text-right">{formatCurrency(product.purchasePrice || 0, settings.currency)}</TableCell>}
-                  {canViewPrices && <TableCell className="text-right">{formatCurrency(product.unitPrice, settings.currency)}</TableCell>}
-                  <TableCell className="text-right">{product.quantityInStock}</TableCell>
-                  {canViewPrices && <TableCell className="text-right">{product.reorderPoint}</TableCell>}
-                  {canViewPrices && <TableCell className="text-right">{product.safetyStock}</TableCell>}
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end">
-                      <ProductQrCodeDialog product={product} settings={settings} />
-                      {canManageProducts && <EditProductButton product={product} />}
-                      {canManageProducts && <DeleteProductButton id={product.id} name={product.name} />}
-                    </div>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nom</TableHead>
+                  <TableHead>Référence</TableHead>
+                  <TableHead>Catégorie</TableHead>
+                  {canViewPrices && <TableHead className="text-right">Prix d'Achat</TableHead>}
+                  {canViewPrices && <TableHead className="text-right">Prix de Vente</TableHead>}
+                  <TableHead className="text-right">Quantité</TableHead>
+                  {canViewPrices && <TableHead className="text-right">Point de Cde.</TableHead>}
+                  {canViewPrices && <TableHead className="text-right">Stock Sécu.</TableHead>}
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {products.map((product) => (
+                  <TableRow key={product.id} className={product.quantityInStock <= product.reorderPoint ? 'bg-red-500/10' : ''}>
+                    <TableCell className="font-medium">{product.name}</TableCell>
+                    <TableCell>{product.reference}</TableCell>
+                    <TableCell>{product.category}</TableCell>
+                    {canViewPrices && <TableCell className="text-right">{formatCurrency(product.purchasePrice || 0, settings.currency)}</TableCell>}
+                    {canViewPrices && <TableCell className="text-right">{formatCurrency(product.unitPrice, settings.currency)}</TableCell>}
+                    <TableCell className="text-right">{product.quantityInStock}</TableCell>
+                    {canViewPrices && <TableCell className="text-right">{product.reorderPoint}</TableCell>}
+                    {canViewPrices && <TableCell className="text-right">{product.safetyStock}</TableCell>}
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end">
+                        <ProductQrCodeDialog product={product} settings={settings} />
+                        {canManageProducts && <EditProductButton product={product} />}
+                        {canManageProducts && <DeleteProductButton id={product.id} name={product.name} />}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
