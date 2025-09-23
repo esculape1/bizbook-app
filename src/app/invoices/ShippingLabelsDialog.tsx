@@ -107,7 +107,7 @@ export function ShippingLabelsDialog({ invoice, client, settings, asTextButton =
     </Button>
   ) : (
     <Button variant="ghost" size="icon" title="Imprimer les étiquettes">
-      <Ticket className="h-4 w-4" />
+      <Ticket className="h-5 w-5" />
     </Button>
   );
 

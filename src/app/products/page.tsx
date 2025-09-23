@@ -32,49 +32,56 @@ export default async function ProductsPage() {
         actions={
           <div className="flex items-center gap-2">
             <StockInventoryReport products={products} settings={settings} />
-            {canManageProducts ? <ProductForm /> : null}
+            {canManageProducts && <div className="hidden md:block"><ProductForm /></div>}
           </div>
         }
       />
       
       {/* Mobile View */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:hidden">
-        {products.map((product) => (
-           <Card key={product.id} className={cn("flex flex-col", product.quantityInStock <= product.reorderPoint ? 'bg-red-500/10' : '')}>
-            <CardHeader className="pb-4">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <CardTitle className="text-lg">{product.name}</CardTitle>
-                  <CardDescription>Réf: {product.reference}</CardDescription>
-                </div>
-                <div className="flex flex-col items-end">
-                   <Badge variant={product.quantityInStock > product.reorderPoint ? 'success' : 'destructive'}>
-                      Stock: {product.quantityInStock}
-                   </Badge>
-                </div>
-              </div>
-            </CardHeader>
-            {canViewPrices && (
-                 <CardContent className="flex-grow space-y-2 text-sm pt-0">
-                    <p>Catégorie: <strong>{product.category}</strong></p>
-                    <div className="flex justify-between items-center text-base pt-2">
-                        <span>P.Achat:</span>
-                        <span className="font-semibold">{formatCurrency(product.purchasePrice || 0, settings.currency)}</span>
+      <div className="md:hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {products.map((product) => {
+                const isLowStock = product.quantityInStock <= product.reorderPoint;
+                return (
+                <Card key={product.id} className={cn("flex flex-col shadow-sm border", isLowStock ? 'border-red-500/50 bg-red-500/5' : 'border-border')}>
+                    <CardHeader className="pb-4">
+                    <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                        <CardTitle className="text-lg">{product.name}</CardTitle>
+                        <CardDescription>Réf: {product.reference}</CardDescription>
+                        </div>
+                        <div className="flex flex-col items-end">
+                        <Badge variant={!isLowStock ? 'success' : 'destructive'}>
+                            Stock: {product.quantityInStock}
+                        </Badge>
+                        </div>
                     </div>
-                    <div className="flex justify-between items-center text-base">
-                        <span>P.Vente:</span>
-                        <span className="font-bold">{formatCurrency(product.unitPrice, settings.currency)}</span>
-                    </div>
-                </CardContent>
-            )}
-             <CardFooter className="flex items-center justify-end p-2 border-t mt-auto">
-                <ProductQrCodeDialog product={product} settings={settings} />
-                {canManageProducts && <EditProductButton product={product} />}
-                {canManageProducts && <DeleteProductButton id={product.id} name={product.name} />}
-             </CardFooter>
-           </Card>
-        ))}
+                    </CardHeader>
+                    {canViewPrices && (
+                        <CardContent className="flex-grow space-y-2 text-sm pt-0">
+                            <p>Catégorie: <strong>{product.category}</strong></p>
+                            <div className="flex justify-between items-center text-base pt-2">
+                                <span>P.Achat:</span>
+                                <span className="font-semibold">{formatCurrency(product.purchasePrice || 0, settings.currency)}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-base">
+                                <span>P.Vente:</span>
+                                <span className="font-bold">{formatCurrency(product.unitPrice, settings.currency)}</span>
+                            </div>
+                        </CardContent>
+                    )}
+                    <CardFooter className="flex items-center justify-end p-2 border-t mt-auto">
+                        <ProductQrCodeDialog product={product} settings={settings} />
+                        {canManageProducts && <EditProductButton product={product} />}
+                        {canManageProducts && <DeleteProductButton id={product.id} name={product.name} />}
+                    </CardFooter>
+                </Card>
+                )
+            })}
+        </div>
+        {canManageProducts && <div className="mt-6 flex justify-center"><ProductForm /></div>}
       </div>
+
 
       {/* Desktop View */}
       <Card className="hidden md:flex flex-1 flex-col min-h-0">
@@ -103,7 +110,7 @@ export default async function ProductsPage() {
                         <TableCell>{product.category}</TableCell>
                         {canViewPrices && <TableCell className="text-right">{formatCurrency(product.purchasePrice || 0, settings.currency)}</TableCell>}
                         {canViewPrices && <TableCell className="text-right">{formatCurrency(product.unitPrice, settings.currency)}</TableCell>}
-                        <TableCell className="text-right">{product.quantityInStock}</TableCell>
+                        <TableCell className="text-right font-bold">{product.quantityInStock}</TableCell>
                         {canViewPrices && <TableCell className="text-right">{product.reorderPoint}</TableCell>}
                         {canViewPrices && <TableCell className="text-right">{product.safetyStock}</TableCell>}
                         <TableCell className="text-right">

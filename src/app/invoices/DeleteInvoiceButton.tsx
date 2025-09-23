@@ -44,7 +44,7 @@ export function CancelInvoiceButton({ id, invoiceNumber, disabled }: { id: strin
     <AlertDialog>
       <AlertDialogTrigger asChild>
         <Button variant="ghost" size="icon" disabled={disabled} title="Annuler la facture">
-          <FileX className="h-4 w-4 text-destructive" />
+          <FileX className="h-5 w-5 text-destructive" />
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>

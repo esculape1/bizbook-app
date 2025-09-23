@@ -1,4 +1,6 @@
 
+'use client';
+
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,20 +13,42 @@ import { EditInvoiceForm } from "./EditInvoiceForm";
 import { CancelInvoiceButton } from "./DeleteInvoiceButton";
 import { RecordPaymentButton } from "./RecordPaymentButton";
 import { getSession } from "@/lib/session";
-import type { Invoice } from "@/lib/types";
+import type { Invoice, Client, Product, Settings, User } from "@/lib/types";
 import { ShippingLabelsDialog } from "./ShippingLabelsDialog";
 import { Separator } from "@/components/ui/separator";
+import { useEffect, useState } from 'react';
 
-export const dynamic = 'force-dynamic';
+export default function InvoicesPage() {
+    const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [clients, setClients] = useState<Client[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
+    const [settings, setSettings] = useState<Settings | null>(null);
+    const [user, setUser] = useState<User | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-export default async function InvoicesPage() {
-  const [invoices, clients, products, settings, user] = await Promise.all([
-    getInvoices(),
-    getClients(),
-    getProducts(),
-    getSettings(),
-    getSession()
-  ]);
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const [invoicesData, clientsData, productsData, settingsData, userData] = await Promise.all([
+                    getInvoices(),
+                    getClients(),
+                    getProducts(),
+                    getSettings(),
+                    getSession()
+                ]);
+                setInvoices(invoicesData);
+                setClients(clientsData);
+                setProducts(productsData);
+                setSettings(settingsData);
+                setUser(userData);
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchData();
+    }, []);
 
   const canEdit = user?.role === 'Admin' || user?.role === 'SuperAdmin';
 
@@ -48,22 +72,43 @@ export default async function InvoicesPage() {
     'Partially Paid': 'Partiellement Payée',
     Cancelled: 'Annulée',
   };
+  
+   const cardColors = [
+      "bg-sky-500/10 border-sky-500/20 text-sky-800",
+      "bg-emerald-500/10 border-emerald-500/20 text-emerald-800",
+      "bg-amber-500/10 border-amber-500/20 text-amber-800",
+      "bg-rose-500/10 border-rose-500/20 text-rose-800",
+      "bg-violet-500/10 border-violet-500/20 text-violet-800",
+      "bg-teal-500/10 border-teal-500/20 text-teal-800",
+  ];
+
+  if (isLoading || !settings) {
+    return <div>Chargement...</div>;
+  }
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Factures"
-        actions={canEdit ? <InvoiceForm clients={clients} products={products} settings={settings} /> : undefined}
-      />
+      <div className="md:hidden flex flex-col items-center gap-4 mb-4">
+        <h2 className="text-3xl font-bold tracking-tight">Factures</h2>
+        {canEdit && <InvoiceForm clients={clients} products={products} settings={settings} />}
+      </div>
+      <div className="hidden md:block">
+        <PageHeader
+            title="Factures"
+            actions={canEdit ? <InvoiceForm clients={clients} products={products} settings={settings} /> : undefined}
+        />
+      </div>
       
       {/* Mobile View */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
-        {invoices.map(invoice => {
+        {invoices.map((invoice, index) => {
            const client = clients.find(c => c.id === invoice.clientId);
            const amountDue = invoice.totalAmount - (invoice.amountPaid || 0);
            const isLocked = invoice.status === 'Cancelled' || invoice.status === 'Paid';
+           const cardColorClass = invoice.status === 'Cancelled' ? 'bg-muted/50 text-muted-foreground' : cardColors[index % cardColors.length];
+           
            return (
-             <Card key={invoice.id} className={cn("flex flex-col", invoice.status === 'Cancelled' && 'bg-muted/50 text-muted-foreground')}>
+             <Card key={invoice.id} className={cn("flex flex-col shadow-md", cardColorClass)}>
                 <CardHeader>
                     <div className="flex justify-between items-start">
                         <div>
@@ -72,7 +117,7 @@ export default async function InvoicesPage() {
                                  {invoice.invoiceNumber}
                                </Link>
                             </CardTitle>
-                            <CardDescription>{invoice.clientName}</CardDescription>
+                            <CardDescription className="font-bold text-current/80">{invoice.clientName}</CardDescription>
                         </div>
                         <Badge variant={getStatusVariant(invoice.status)}>{statusTranslations[invoice.status]}</Badge>
                     </div>
@@ -90,7 +135,7 @@ export default async function InvoicesPage() {
                     </div>
                 </CardContent>
                 {client && (
-                    <CardFooter className="flex items-center justify-end gap-2">
+                    <CardFooter className="flex items-center justify-end gap-1 p-2 border-t mt-auto">
                         {!isLocked && <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} asTextButton={false} />}
                         {canEdit && <RecordPaymentButton invoice={invoice} settings={settings} />}
                         {canEdit && <EditInvoiceForm invoice={invoice} clients={clients} products={products} settings={settings} />}
