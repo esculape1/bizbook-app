@@ -1,9 +1,9 @@
 
 import { PageHeader } from "@/components/PageHeader";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getProducts, getSettings } from "@/lib/data";
-import { formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { ProductForm } from "./ProductForm";
 import { EditProductButton } from "./EditProductButton";
 import { DeleteProductButton } from "./DeleteProductButton";
@@ -11,6 +11,7 @@ import { getSession } from "@/lib/session";
 import { StockInventoryReport } from "./StockInventoryReport";
 import { ProductQrCodeDialog } from "./ProductQrCodeDialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +26,7 @@ export default async function ProductsPage() {
   const canViewPrices = user?.role === 'SuperAdmin' || user?.role === 'Admin';
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full gap-6">
       <PageHeader
         title="Produits"
         actions={
@@ -35,7 +36,48 @@ export default async function ProductsPage() {
           </div>
         }
       />
-      <Card className="flex-1 flex flex-col min-h-0">
+      
+      {/* Mobile View */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:hidden">
+        {products.map((product) => (
+           <Card key={product.id} className={cn("flex flex-col", product.quantityInStock <= product.reorderPoint ? 'bg-red-500/10' : '')}>
+            <CardHeader className="pb-4">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <CardTitle className="text-lg">{product.name}</CardTitle>
+                  <CardDescription>Réf: {product.reference}</CardDescription>
+                </div>
+                <div className="flex flex-col items-end">
+                   <Badge variant={product.quantityInStock > product.reorderPoint ? 'success' : 'destructive'}>
+                      Stock: {product.quantityInStock}
+                   </Badge>
+                </div>
+              </div>
+            </CardHeader>
+            {canViewPrices && (
+                 <CardContent className="flex-grow space-y-2 text-sm pt-0">
+                    <p>Catégorie: <strong>{product.category}</strong></p>
+                    <div className="flex justify-between items-center text-base pt-2">
+                        <span>P.Achat:</span>
+                        <span className="font-semibold">{formatCurrency(product.purchasePrice || 0, settings.currency)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-base">
+                        <span>P.Vente:</span>
+                        <span className="font-bold">{formatCurrency(product.unitPrice, settings.currency)}</span>
+                    </div>
+                </CardContent>
+            )}
+             <div className="flex items-center justify-end p-2 border-t mt-auto">
+                <ProductQrCodeDialog product={product} settings={settings} />
+                {canManageProducts && <EditProductButton product={product} />}
+                {canManageProducts && <DeleteProductButton id={product.id} name={product.name} />}
+             </div>
+           </Card>
+        ))}
+      </div>
+
+      {/* Desktop View */}
+      <Card className="hidden md:flex flex-1 flex-col min-h-0">
         <CardContent className="flex-1 flex flex-col p-0">
           <ScrollArea className="flex-grow">
             <div className="p-6">

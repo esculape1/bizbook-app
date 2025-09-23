@@ -1,6 +1,6 @@
 
 import { PageHeader } from "@/components/PageHeader";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getPurchases, getSuppliers, getProducts, getSettings } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { CancelPurchaseButton } from "./CancelPurchaseButton";
 import { getSession } from "@/lib/session";
 import type { Purchase } from "@/lib/types";
 import { PackageSearch } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 export const dynamic = 'force-dynamic';
 
@@ -66,7 +67,46 @@ export default async function PurchasesPage() {
             {canEdit && <PurchaseForm suppliers={suppliers} products={products} settings={settings} />}
         </div>
       </div>
-      <Card>
+      
+      {/* Mobile View */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
+        {purchases.map(purchase => {
+           const isCancelled = purchase.status === 'Cancelled';
+           const itemNames = purchase.items.map(item => `${item.productName} (x${item.quantity})`).join(', ');
+
+          return (
+            <Card key={purchase.id} className={cn("flex flex-col", isCancelled && 'bg-muted/50 text-muted-foreground')}>
+              <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle>{purchase.purchaseNumber}</CardTitle>
+                      <CardDescription>{purchase.supplierName}</CardDescription>
+                    </div>
+                    <Badge variant={getStatusVariant(purchase.status)}>{statusTranslations[purchase.status]}</Badge>
+                  </div>
+              </CardHeader>
+              <CardContent className="flex-grow space-y-2 text-sm">
+                <p><strong>Date:</strong> {new Date(purchase.date).toLocaleDateString('fr-FR')}</p>
+                <p className="text-xs text-muted-foreground truncate" title={itemNames}><strong>Articles:</strong> {itemNames}</p>
+                <Separator />
+                <div className="flex justify-between items-center text-base pt-2">
+                    <span>Total:</span>
+                    <span className="font-bold">{formatCurrency(purchase.totalAmount, settings.currency)}</span>
+                </div>
+              </CardContent>
+              {canEdit && (
+                 <CardFooter className="flex items-center justify-end gap-2">
+                    <EditPurchaseForm purchase={purchase} suppliers={suppliers} products={products} settings={settings} />
+                    <CancelPurchaseButton id={purchase.id} purchaseNumber={purchase.purchaseNumber} disabled={isCancelled} />
+                 </CardFooter>
+              )}
+            </Card>
+          )
+        })}
+      </div>
+
+      {/* Desktop View */}
+      <Card className="hidden md:block">
         <CardContent className="pt-6">
           <Table>
             <TableHeader>

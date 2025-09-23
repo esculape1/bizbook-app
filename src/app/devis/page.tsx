@@ -1,16 +1,17 @@
 
 import { PageHeader } from "@/components/PageHeader";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getQuotes, getClients, getProducts, getSettings } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
 import { QuoteForm } from "./QuoteForm";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 import { getSession } from "@/lib/session";
 import type { Quote } from "@/lib/types";
 import { EditQuoteForm } from "./EditQuoteForm";
 import { DeleteQuoteButton } from "./DeleteQuoteButton";
 import { QuoteViewerDialog } from "./QuoteViewerDialog";
+import { Separator } from "@/components/ui/separator";
 
 export const dynamic = 'force-dynamic';
 
@@ -52,7 +53,44 @@ export default async function DevisPage() {
         title="Proforma"
         actions={canEdit ? <QuoteForm clients={clients} products={products} settings={settings} /> : undefined}
       />
-      <Card>
+
+      {/* Mobile View */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
+        {quotes.map((quote) => {
+          const client = clients.find(c => c.id === quote.clientId);
+          return (
+            <Card key={quote.id} className="flex flex-col">
+              <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle>{quote.quoteNumber}</CardTitle>
+                      <CardDescription>{quote.clientName}</CardDescription>
+                    </div>
+                    <Badge variant={getStatusVariant(quote.status)}>{statusTranslations[quote.status]}</Badge>
+                  </div>
+              </CardHeader>
+              <CardContent className="flex-grow space-y-2 text-sm">
+                <p><strong>Date:</strong> {new Date(quote.date).toLocaleDateString('fr-FR')}</p>
+                <Separator />
+                <div className="flex justify-between items-center text-base pt-2">
+                    <span>Total:</span>
+                    <span className="font-bold">{formatCurrency(quote.totalAmount, settings.currency)}</span>
+                </div>
+              </CardContent>
+              {client && (
+                 <CardFooter className="flex items-center justify-end gap-2">
+                    <QuoteViewerDialog quote={quote} client={client} settings={settings} />
+                    {canEdit && <EditQuoteForm quote={quote} clients={clients} products={products} settings={settings} />}
+                    {canEdit && <DeleteQuoteButton id={quote.id} quoteNumber={quote.quoteNumber} />}
+                 </CardFooter>
+              )}
+            </Card>
+          )
+        })}
+      </div>
+
+      {/* Desktop View */}
+      <Card className="hidden md:block">
         <CardContent className="pt-6">
           <Table>
             <TableHeader>
