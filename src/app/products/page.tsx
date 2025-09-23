@@ -43,7 +43,7 @@ export default async function ProductsPage() {
             {products.map((product) => {
                 const isLowStock = product.quantityInStock <= product.reorderPoint;
                 return (
-                <Card key={product.id} className={cn("flex flex-col shadow-md", isLowStock ? 'border-red-500/50 bg-red-500/10' : 'border-border bg-card')}>
+                <Card key={product.id} className={cn("flex flex-col shadow-md", isLowStock ? 'border-red-500/50 bg-red-500/10' : 'border-border/50 bg-card')}>
                     <CardHeader className="pb-4">
                     <div className="flex justify-between items-start">
                         <div className="flex-1">
