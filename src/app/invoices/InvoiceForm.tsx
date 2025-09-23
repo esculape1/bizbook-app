@@ -28,47 +28,46 @@ type InvoiceFormProps = {
   settings: Settings;
 };
 
-// The Zod schema now includes `total` which will be calculated, but it's good practice to have it.
-const invoiceItemSchema = z.object({
-  productId: z.string().min(1, "Produit requis"),
-  productName: z.string(),
-  quantity: z.coerce.number().min(1, "Qté > 0"),
-  unitPrice: z.coerce.number().min(0, "Prix invalide"),
-  purchasePrice: z.coerce.number(),
-  total: z.coerce.number(),
-});
-
-const invoiceSchema = z.object({
-  invoiceNumberSuffix: z.string().min(1, "Le numéro de facture est requis."),
-  clientId: z.string().min(1, "Client requis"),
-  clientName: z.string(),
-  date: z.date({ required_error: "Date requise" }),
-  dueDate: z.date({ required_error: "Date d'échéance requise" }),
-  items: z.array(invoiceItemSchema).min(1, "Ajoutez au moins un produit.")
-    .superRefine((items, ctx) => {
-      items.forEach((item, index) => {
-        if (item.unitPrice < item.purchasePrice) {
-          ctx.addIssue({
-            path: [`${index}`, 'unitPrice'],
-            message: `>= ${formatCurrency(item.purchasePrice, settings.currency)}`,
-            code: z.ZodIssueCode.custom,
-          });
-        }
-      });
-    }),
-  vat: z.coerce.number().min(0).default(0),
-  discount: z.coerce.number().min(0).default(0),
-});
-
-type InvoiceFormValues = z.infer<typeof invoiceSchema>;
-
-
 export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const currentYear = new Date().getFullYear();
   const invoicePrefix = `FACT-${currentYear}-`;
+
+  // Define schema inside the component to access 'settings' prop
+  const invoiceItemSchema = z.object({
+    productId: z.string().min(1, "Produit requis"),
+    productName: z.string(),
+    quantity: z.coerce.number().min(1, "Qté > 0"),
+    unitPrice: z.coerce.number().min(0, "Prix invalide"),
+    purchasePrice: z.coerce.number(),
+    total: z.coerce.number(),
+  });
+
+  const invoiceSchema = z.object({
+    invoiceNumberSuffix: z.string().min(1, { message: "Le numéro de facture est requis." }),
+    clientId: z.string().min(1, "Client requis"),
+    clientName: z.string(),
+    date: z.date({ required_error: "Date requise" }),
+    dueDate: z.date({ required_error: "Date d'échéance requise" }),
+    items: z.array(invoiceItemSchema).min(1, "Ajoutez au moins un produit.")
+      .superRefine((items, ctx) => {
+        items.forEach((item, index) => {
+          if (item.unitPrice < item.purchasePrice) {
+            ctx.addIssue({
+              path: [`${index}`, 'unitPrice'],
+              message: `>= ${formatCurrency(item.purchasePrice, settings.currency)}`,
+              code: z.ZodIssueCode.custom,
+            });
+          }
+        });
+      }),
+    vat: z.coerce.number().min(0).default(0),
+    discount: z.coerce.number().min(0).default(0),
+  });
+
+  type InvoiceFormValues = z.infer<typeof invoiceSchema>;
 
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
@@ -100,7 +99,6 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
 
   const subTotal = watchedItems.reduce((acc, item, index) => {
     const calculatedTotal = (item.unitPrice || 0) * (item.quantity || 0);
-    // This check prevents an error if the item is being created and form value is not yet set
     if (form.getValues(`items.${index}.total`) !== calculatedTotal) {
       form.setValue(`items.${index}.total`, calculatedTotal, { shouldValidate: true });
     }

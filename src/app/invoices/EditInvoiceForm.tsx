@@ -33,6 +33,7 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
+  // Define schema inside the component to access 'settings' prop
   const invoiceItemSchema = z.object({
     productId: z.string().min(1, "Produit requis"),
     productName: z.string(),
@@ -65,7 +66,6 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
   });
 
   type InvoiceFormValues = z.infer<typeof invoiceSchema>;
-
 
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
