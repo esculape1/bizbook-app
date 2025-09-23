@@ -16,12 +16,12 @@ import type { InvoiceItem, Invoice, Payment } from '@/lib/types';
 import { randomUUID } from 'crypto';
 import { getSession } from '@/lib/session';
 
-const invoiceItemSchema = z.object({
+const invoiceItemSchemaForCreate = z.object({
   productId: z.string(),
   productName: z.string(),
   quantity: z.coerce.number(),
-  unitPrice: z.coerce.number(), // This is the manually entered price from the form
-  purchasePrice: z.coerce.number(), // For validation
+  unitPrice: z.coerce.number(),
+  purchasePrice: z.coerce.number(),
   total: z.coerce.number(),
 });
 
@@ -31,7 +31,7 @@ const createInvoiceSchema = z.object({
   clientName: z.string(),
   date: z.date(),
   dueDate: z.date(),
-  items: z.array(invoiceItemSchema),
+  items: z.array(invoiceItemSchemaForCreate),
   vat: z.coerce.number(),
   discount: z.coerce.number(),
 });
@@ -110,8 +110,8 @@ export async function createInvoice(formData: unknown) {
         productName: product.name,
         reference: product.reference,
         quantity: item.quantity,
-        unitPrice: item.unitPrice, // CRITICAL FIX: Use the user-provided price from the form
-        total: item.quantity * item.unitPrice, // Recalculate total with the correct price
+        unitPrice: item.unitPrice,
+        total: item.quantity * item.unitPrice,
       });
     }
 
@@ -125,7 +125,7 @@ export async function createInvoice(formData: unknown) {
 
     // 1. Create invoice
     await addInvoice({
-      invoiceNumber: invoiceNumber, // Use combined invoice number
+      invoiceNumber: invoiceNumber,
       clientId,
       clientName: clientName,
       date: date.toISOString(),
@@ -381,3 +381,5 @@ export async function recordPayment(invoiceId: string, formData: unknown) {
     return { message };
   }
 }
+
+    
