@@ -13,6 +13,7 @@ import type { Purchase } from "@/lib/types";
 import { PackageSearch } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ReceivePurchaseButton } from "./ReceivePurchaseButton";
+import { Button } from "@/components/ui/button";
 
 export const dynamic = 'force-dynamic';
 
@@ -124,7 +125,8 @@ export default async function PurchasesPage() {
               </CardContent>
               {canEdit && (
                  <CardFooter className="flex items-center justify-end gap-1 p-2 bg-blue-950/10 border-t mt-auto">
-                    <ReceivePurchaseButton purchaseId={purchase.id} disabled={isCancelled || isReceived} purchaseNumber={purchase.purchaseNumber} />
+                    {purchase.status === 'Pending' && <ReceivePurchaseButton purchaseId={purchase.id} purchaseNumber={purchase.purchaseNumber} />}
+                    {purchase.status === 'Received' && <Button size="sm" variant="success" className="h-8 text-xs" disabled>Reçu</Button>}
                     <EditPurchaseForm purchase={purchase} suppliers={suppliers} products={products} settings={settings} />
                     <CancelPurchaseButton id={purchase.id} purchaseNumber={purchase.purchaseNumber} disabled={isCancelled} />
                  </CardFooter>
@@ -171,7 +173,8 @@ export default async function PurchasesPage() {
                   {canEdit && (
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end">
-                        <ReceivePurchaseButton purchaseId={purchase.id} disabled={isCancelled || isReceived} purchaseNumber={purchase.purchaseNumber}/>
+                        {purchase.status === 'Pending' && <ReceivePurchaseButton purchaseId={purchase.id} disabled={isCancelled || isReceived} purchaseNumber={purchase.purchaseNumber}/>}
+                        {purchase.status === 'Received' && <Button size="sm" variant="success" className="h-8 text-xs" disabled>Reçu</Button>}
                         <EditPurchaseForm purchase={purchase} suppliers={suppliers} products={products} settings={settings} />
                         <CancelPurchaseButton id={purchase.id} purchaseNumber={purchase.purchaseNumber} disabled={isCancelled} />
                       </div>

@@ -43,7 +43,7 @@ export default async function ProductsPage() {
             {products.map((product) => {
                 const isLowStock = product.quantityInStock <= product.reorderPoint;
                 return (
-                <Card key={product.id} className={cn("flex flex-col shadow-md", isLowStock ? 'border-red-500/50 bg-red-500/10' : 'border-border/50 bg-card')}>
+                <Card key={product.id} className={cn("flex flex-col shadow-md", isLowStock ? 'border-red-500/50 bg-red-500/10' : 'border-slate-300 bg-card')}>
                     <CardHeader className="pb-4">
                     <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -70,11 +70,13 @@ export default async function ProductsPage() {
                             </div>
                         </CardContent>
                     )}
-                    <CardFooter className="flex items-center justify-end p-2 border-t mt-auto">
-                        <ProductQrCodeDialog product={product} settings={settings} />
-                        {canManageProducts && <EditProductButton product={product} />}
-                        {canManageProducts && <DeleteProductButton id={product.id} name={product.name} />}
-                    </CardFooter>
+                    {canManageProducts && (
+                      <CardFooter className="flex items-center justify-end p-2 bg-blue-950/10 border-t mt-auto">
+                          <ProductQrCodeDialog product={product} settings={settings} />
+                          <EditProductButton product={product} />
+                          <DeleteProductButton id={product.id} name={product.name} />
+                      </CardFooter>
+                    )}
                 </Card>
                 )
             })}

@@ -3,7 +3,6 @@
 
 import { useTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckCheck } from 'lucide-react';
 import { receivePurchase } from './actions';
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -43,8 +42,8 @@ export function ReceivePurchaseButton({ purchaseId, purchaseNumber, disabled }: 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="icon" disabled={disabled} title="Réceptionner l'achat">
-          <CheckCheck className="h-4 w-4 text-green-600" />
+        <Button size="sm" variant="destructive" className="h-8 text-xs" disabled={disabled}>
+          Réceptionner
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>

@@ -28,44 +28,47 @@ type InvoiceFormProps = {
   settings: Settings;
 };
 
+// The Zod schema now includes `total` which will be calculated, but it's good practice to have it.
+const invoiceItemSchema = z.object({
+  productId: z.string().min(1, "Produit requis"),
+  productName: z.string(),
+  quantity: z.coerce.number().min(1, "Qté > 0"),
+  unitPrice: z.coerce.number().min(0, "Prix invalide"),
+  purchasePrice: z.coerce.number(),
+  total: z.coerce.number(),
+});
+
+const invoiceSchema = z.object({
+  invoiceNumberSuffix: z.string().min(1, "Le numéro de facture est requis."),
+  clientId: z.string().min(1, "Client requis"),
+  clientName: z.string(),
+  date: z.date({ required_error: "Date requise" }),
+  dueDate: z.date({ required_error: "Date d'échéance requise" }),
+  items: z.array(invoiceItemSchema).min(1, "Ajoutez au moins un produit.")
+    .superRefine((items, ctx) => {
+      items.forEach((item, index) => {
+        if (item.unitPrice < item.purchasePrice) {
+          ctx.addIssue({
+            path: [`${index}`, 'unitPrice'],
+            message: `>= ${formatCurrency(item.purchasePrice, settings.currency)}`,
+            code: z.ZodIssueCode.custom,
+          });
+        }
+      });
+    }),
+  vat: z.coerce.number().min(0).default(0),
+  discount: z.coerce.number().min(0).default(0),
+});
+
+type InvoiceFormValues = z.infer<typeof invoiceSchema>;
+
+
 export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const currentYear = new Date().getFullYear();
   const invoicePrefix = `FACT-${currentYear}-`;
-
-  const invoiceItemSchema = z.object({
-    productId: z.string().min(1, "Produit requis"),
-    productName: z.string(),
-    quantity: z.coerce.number().min(1, "Qté > 0"),
-    unitPrice: z.coerce.number().min(0, "Prix invalide"),
-    purchasePrice: z.coerce.number(),
-  });
-  
-  const invoiceSchema = z.object({
-    invoiceNumberSuffix: z.string().min(1, "Le numéro de facture est requis."),
-    clientId: z.string().min(1, "Client requis"),
-    clientName: z.string(),
-    date: z.date({ required_error: "Date requise" }),
-    dueDate: z.date({ required_error: "Date d'échéance requise" }),
-    items: z.array(invoiceItemSchema).min(1, "Ajoutez au moins un produit.")
-      .superRefine((items, ctx) => {
-        items.forEach((item, index) => {
-          if (item.unitPrice < item.purchasePrice) {
-            ctx.addIssue({
-              path: [`${index}`, 'unitPrice'],
-              message: `>= ${formatCurrency(item.purchasePrice, settings.currency)}`,
-              code: z.ZodIssueCode.custom,
-            });
-          }
-        });
-      }),
-    vat: z.coerce.number().min(0).default(0),
-    discount: z.coerce.number().min(0).default(0),
-  });
-
-  type InvoiceFormValues = z.infer<typeof invoiceSchema>;
 
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
@@ -95,8 +98,13 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
   const watchedVat = useWatch({ control: form.control, name: 'vat' });
   const selectedClientName = useWatch({ control: form.control, name: 'clientName' });
 
-  const subTotal = watchedItems.reduce((acc, item) => {
-    return acc + (item.unitPrice || 0) * (item.quantity || 0);
+  const subTotal = watchedItems.reduce((acc, item, index) => {
+    const calculatedTotal = (item.unitPrice || 0) * (item.quantity || 0);
+    // This check prevents an error if the item is being created and form value is not yet set
+    if (form.getValues(`items.${index}.total`) !== calculatedTotal) {
+      form.setValue(`items.${index}.total`, calculatedTotal, { shouldValidate: true });
+    }
+    return acc + calculatedTotal;
   }, 0);
   
   const discountAmount = subTotal * (watchedDiscount / 100);
@@ -105,13 +113,15 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
   const totalAmount = totalAfterDiscount + vatAmount;
 
   const handleProductSelect = (product: Product, index: number) => {
+    const currentItem = watchedItems[index];
+    const quantity = currentItem.quantity > 0 ? currentItem.quantity : 1;
     update(index, {
-        ...watchedItems[index],
         productId: product.id,
         productName: product.name,
         unitPrice: product.unitPrice,
         purchasePrice: product.purchasePrice ?? 0,
-        quantity: watchedItems[index].quantity || 1,
+        quantity: quantity,
+        total: product.unitPrice * quantity,
     });
   };
   
@@ -284,7 +294,7 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
                               render={({ field }) => (
                                 <FormItem>
                                   <FormControl>
-                                    <Input type="number" step="0.01" className="w-24"/>
+                                    <Input type="number" step="0.01" {...field} className="w-24"/>
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -302,7 +312,7 @@ export function InvoiceForm({ clients, products, settings }: InvoiceFormProps) {
                     </TableBody>
                   </Table>
                 </div>
-                <Button type="button" variant="outline" size="sm" onClick={() => append({ productId: '', productName: 'Sélectionner un produit', quantity: 1, unitPrice: 0, purchasePrice: 0 })}>
+                <Button type="button" variant="outline" size="sm" onClick={() => append({ productId: '', productName: 'Sélectionner un produit', quantity: 1, unitPrice: 0, purchasePrice: 0, total: 0 })}>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Ajouter un article
                 </Button>

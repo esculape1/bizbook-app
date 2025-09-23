@@ -20,8 +20,9 @@ const invoiceItemSchema = z.object({
   productId: z.string(),
   productName: z.string(),
   quantity: z.coerce.number(),
-  unitPrice: z.coerce.number(),
+  unitPrice: z.coerce.number(), // This is the manually entered price from the form
   purchasePrice: z.coerce.number(), // For validation
+  total: z.coerce.number(),
 });
 
 const invoiceSchema = z.object({
@@ -109,8 +110,8 @@ export async function createInvoice(formData: unknown) {
         productName: product.name,
         reference: product.reference,
         quantity: item.quantity,
-        unitPrice: item.unitPrice, // Use user-provided price
-        total: item.quantity * item.unitPrice,
+        unitPrice: item.unitPrice, // CRITICAL FIX: Use the user-provided price from the form
+        total: item.quantity * item.unitPrice, // Recalculate total with the correct price
       });
     }
 
@@ -370,7 +371,7 @@ export async function recordPayment(invoiceId: string, formData: unknown) {
     });
     
     revalidatePath('/invoices');
-    revalidatePath(`/invoices/${invoiceId}`);
+    revalidatePath(`/invoices/${id}`);
     revalidatePath('/'); // Dashboard
     return {}; // Success
 

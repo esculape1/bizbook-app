@@ -70,48 +70,15 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 z-50">
         
-        {/* Left Side: Logo & Mobile Menu */}
-        <div className="flex items-center gap-4">
-            <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="shrink-0 md:hidden">
-                  <Menu className="h-5 w-5" />
-                  <span className="sr-only">Toggle navigation menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left">
-                <nav className="grid gap-6 text-lg font-medium">
-                  <Link href="/" className="flex items-center gap-2 text-lg font-semibold" onClick={() => setSheetOpen(false)}>
-                    <Logo />
-                    <span>BizBook</span>
-                  </Link>
-                  {accessibleNavItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setSheetOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                        pathname === item.href ? "text-primary bg-muted" : "text-muted-foreground"
-                      )}
-                    >
-                        <item.icon className="h-6 w-6" />
-                        {item.label}
-                    </Link>
-                  ))}
-                </nav>
-              </SheetContent>
-            </Sheet>
-            
-            <Link href="/" className="hidden items-center gap-2 text-lg font-semibold md:flex">
-              <Logo />
-              <span className="hidden lg:flex">BizBook</span>
-            </Link>
-        </div>
+        {/* Left Side: Logo */}
+        <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
+          <Logo />
+          <span className="hidden lg:flex">BizBook</span>
+        </Link>
 
-        {/* Center: Desktop Navigation */}
-        <nav className="hidden flex-1 items-center justify-center md:flex">
-          <div className="flex items-center gap-1 rounded-xl bg-muted p-1 shadow-inner">
+        {/* Center/Right: Desktop Nav and User Profile */}
+        <div className="flex flex-1 items-center justify-end gap-4">
+          <nav className="hidden md:flex items-center gap-1 rounded-xl bg-muted p-1 shadow-inner">
             {accessibleNavItems.map((item) => (
               <Link
                 key={item.href}
@@ -126,11 +93,9 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
                 {item.label}
               </Link>
             ))}
-          </div>
-        </nav>
-
-        {/* Right Side: User Profile */}
-        <div className="flex items-center">
+          </nav>
+          
+          <div className="flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="icon" className="rounded-full">
@@ -169,6 +134,39 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Mobile Menu Trigger */}
+            <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="shrink-0 md:hidden">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Toggle navigation menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left">
+                <nav className="grid gap-6 text-lg font-medium">
+                  <Link href="/" className="flex items-center gap-2 text-lg font-semibold" onClick={() => setSheetOpen(false)}>
+                    <Logo />
+                    <span>BizBook</span>
+                  </Link>
+                  {accessibleNavItems.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setSheetOpen(false)}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
+                        pathname === item.href ? "text-primary bg-muted" : "text-muted-foreground"
+                      )}
+                    >
+                        <item.icon className="h-6 w-6" />
+                        {item.label}
+                    </Link>
+                  ))}
+                </nav>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </header>
       <main className="flex-1 flex flex-col min-h-0 p-4 lg:p-6">
