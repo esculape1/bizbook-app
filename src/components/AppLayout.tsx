@@ -55,6 +55,8 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
   const [isSheetOpen, setSheetOpen] = useState(false);
 
   const accessibleNavItems = navItems.filter(item => item.roles.includes(userRole));
+  
+  const currentPageTitle = accessibleNavItems.find(item => item.href === pathname)?.label || '';
 
   const Logo = () => (
     settings.logoUrl ? (
@@ -70,32 +72,28 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 z-50">
         
-        {/* Left Side: Logo */}
         <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
           <Logo />
           <span className="hidden lg:flex">BizBook</span>
         </Link>
-
-        {/* Center/Right: Desktop Nav and User Profile */}
-        <div className="flex flex-1 items-center justify-end gap-4">
-          <nav className="hidden md:flex items-center gap-1 rounded-xl bg-muted p-1 shadow-inner">
-            {accessibleNavItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
-                  pathname === item.href
-                    ? "bg-primary text-primary-foreground shadow"
-                    : "text-muted-foreground hover:bg-background/50"
-                )}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-          
-          <div className="flex items-center gap-2">
+        
+        <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6 mx-auto">
+          {accessibleNavItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "transition-colors hover:text-foreground",
+                pathname === item.href ? "text-foreground font-semibold" : "text-muted-foreground"
+              )}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        
+        <div className="flex items-center gap-4 ml-auto">
+            <h1 className="text-xl font-semibold text-foreground hidden md:block">{currentPageTitle}</h1>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="icon" className="rounded-full">
@@ -119,7 +117,6 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => alert('Fonctionnalité à venir.')}>Profile</DropdownMenuItem>
                 <DropdownMenuItem>
                   <Link href="/settings" className="w-full">Paramètres</Link>
                 </DropdownMenuItem>
@@ -167,7 +164,7 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
               </SheetContent>
             </Sheet>
           </div>
-        </div>
+
       </header>
       <main className="flex-1 flex flex-col min-h-0 p-4 lg:p-6">
         {children}
