@@ -25,7 +25,7 @@ const invoiceItemSchema = z.object({
   total: z.coerce.number(),
 });
 
-const invoiceSchema = z.object({
+const createInvoiceSchema = z.object({
   invoiceNumberSuffix: z.string().min(1, { message: "Le numéro de facture est requis." }),
   clientId: z.string(),
   clientName: z.string(),
@@ -63,7 +63,7 @@ export async function createInvoice(formData: unknown) {
     return { message: "Action non autorisée." };
   }
 
-  const validatedFields = invoiceSchema.safeParse(formData);
+  const validatedFields = createInvoiceSchema.safeParse(formData);
 
   if (!validatedFields.success) {
     console.log(validatedFields.error.flatten().fieldErrors);
@@ -371,7 +371,7 @@ export async function recordPayment(invoiceId: string, formData: unknown) {
     });
     
     revalidatePath('/invoices');
-    revalidatePath(`/invoices/${id}`);
+    revalidatePath(`/invoices/${invoiceId}`);
     revalidatePath('/'); // Dashboard
     return {}; // Success
 
