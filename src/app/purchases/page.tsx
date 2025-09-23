@@ -91,7 +91,7 @@ export default async function PurchasesPage() {
                 </div>
             </div>
         )}
-        {canEdit && <PurchaseForm suppliers={suppliers} products={products} settings={settings} />}
+        {canEdit && <div className="self-center"><PurchaseForm suppliers={suppliers} products={products} settings={settings} /></div>}
       </div>
       
       {/* Mobile View */}
@@ -153,7 +153,7 @@ export default async function PurchasesPage() {
               {purchases.map((purchase) => {
                 const isCancelled = purchase.status === 'Cancelled';
                 const isReceived = purchase.status === 'Received';
-                const itemNames = purchase.items.map(item => item.productName).join(', ');
+                const itemNames = purchase.items.map(item => `${item.productName} (x${item.quantity})`).join(', ');
                 return (
                 <TableRow key={purchase.id} className={cn(isCancelled && 'bg-muted/50 text-muted-foreground')}>
                   <TableCell className="font-medium">
@@ -161,7 +161,7 @@ export default async function PurchasesPage() {
                   </TableCell>
                   <TableCell>{purchase.supplierName}</TableCell>
                   <TableCell>{new Date(purchase.date).toLocaleDateString('fr-FR')}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground truncate max-w-xs">{itemNames}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground truncate max-w-xs" title={itemNames}>{itemNames}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusVariant(purchase.status)}>
                       {statusTranslations[purchase.status]}
