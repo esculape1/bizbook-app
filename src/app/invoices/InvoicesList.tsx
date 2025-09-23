@@ -106,7 +106,7 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                         </div>
                     </CardContent>
                     {client && (
-                        <CardFooter className="flex items-center justify-end gap-1 p-2 border-t mt-auto">
+                        <CardFooter className="flex items-center justify-end gap-1 p-2 bg-blue-950/10 border-t mt-auto">
                             {!isLocked && <ShippingLabelsDialog invoice={invoice} client={client} settings={initialSettings} asTextButton={false} />}
                             <RecordPaymentButton invoice={invoice} settings={initialSettings} />
                             <EditInvoiceForm invoice={invoice} clients={initialClients} products={initialProducts} settings={initialSettings} />

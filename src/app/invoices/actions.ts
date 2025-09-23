@@ -37,9 +37,12 @@ const invoiceSchema = z.object({
 
 const updateInvoiceItemSchema = z.object({
     productId: z.string(),
+    productName: z.string(),
+    reference: z.string(),
     quantity: z.coerce.number(),
     unitPrice: z.coerce.number(),
-    // We don't need all fields here, server will fetch them
+    total: z.coerce.number(),
+    purchasePrice: z.coerce.number(),
 });
 
 const updateInvoiceSchema = z.object({
@@ -235,7 +238,7 @@ export async function updateInvoice(id: string, formData: unknown) {
     // Retain original status, as it's not editable from this form anymore
     const status = originalInvoice.status;
 
-    const invoiceData: Omit<Invoice, 'id' | 'payments' | 'amountPaid' | 'status'> = {
+    const invoiceData: Partial<Omit<Invoice, 'id'>> = {
       invoiceNumber,
       clientId,
       clientName: client.name,
