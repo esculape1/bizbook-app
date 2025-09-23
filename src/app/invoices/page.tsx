@@ -17,6 +17,7 @@ import type { Invoice, Client, Product, Settings, User } from "@/lib/types";
 import { ShippingLabelsDialog } from "./ShippingLabelsDialog";
 import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from 'react';
+import { CreditCard, FileX, Pencil } from "lucide-react";
 
 export default function InvoicesPage() {
     const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -108,12 +109,12 @@ export default function InvoicesPage() {
            const cardColorClass = invoice.status === 'Cancelled' ? 'bg-muted/50 text-muted-foreground' : cardColors[index % cardColors.length];
            
            return (
-             <Card key={invoice.id} className={cn("flex flex-col shadow-md", cardColorClass)}>
+             <Card key={invoice.id} className={cn("flex flex-col shadow-md border", cardColorClass)}>
                 <CardHeader>
                     <div className="flex justify-between items-start">
                         <div>
                             <CardTitle>
-                               <Link href={`/invoices/${invoice.id}`} className="text-primary hover:underline">
+                               <Link href={`/invoices/${invoice.id}`} className="hover:underline">
                                  {invoice.invoiceNumber}
                                </Link>
                             </CardTitle>
@@ -137,9 +138,9 @@ export default function InvoicesPage() {
                 {client && (
                     <CardFooter className="flex items-center justify-end gap-1 p-2 border-t mt-auto">
                         {!isLocked && <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} asTextButton={false} />}
-                        {canEdit && <RecordPaymentButton invoice={invoice} settings={settings} />}
-                        {canEdit && <EditInvoiceForm invoice={invoice} clients={clients} products={products} settings={settings} />}
-                        {canEdit && <CancelInvoiceButton id={invoice.id} invoiceNumber={invoice.invoiceNumber} disabled={isLocked} />}
+                        <RecordPaymentButton invoice={invoice} settings={settings} />
+                        <EditInvoiceForm invoice={invoice} clients={clients} products={products} settings={settings} />
+                        <CancelInvoiceButton id={invoice.id} invoiceNumber={invoice.invoiceNumber} disabled={isLocked} />
                     </CardFooter>
                 )}
              </Card>
