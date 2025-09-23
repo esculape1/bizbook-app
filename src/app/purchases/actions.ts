@@ -226,6 +226,43 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
   }
 }
 
+export async function receivePurchase(id: string) {
+    const session = await getSession();
+    if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+      return { message: "Action non autorisée." };
+    }
+  
+    if (!db) {
+      throw new Error("La connexion à la base de données a échoué.");
+    }
+  
+    try {
+      const originalPurchase = await getPurchaseById(id);
+      
+      if (!originalPurchase) {
+        return { message: 'Achat original non trouvé.' };
+      }
+      if (originalPurchase.status === 'Received') {
+        return { message: 'Cet achat a déjà été réceptionné.' };
+      }
+      if (originalPurchase.status === 'Cancelled') {
+        return { message: 'Cet achat est annulé et ne peut être réceptionné.' };
+      }
+  
+      await updatePurchase(id, originalPurchase.purchaseNumber, { ...originalPurchase, status: 'Received' });
+  
+      revalidatePath('/purchases');
+      revalidatePath('/products');
+      revalidatePath('/');
+      return { success: true };
+  
+    } catch (error) {
+      console.error('Failed to receive purchase:', error);
+      const message = error instanceof Error ? error.message : 'Erreur DB: Impossible de réceptionner l\'achat.';
+      return { message };
+    }
+}
+
 export async function cancelPurchase(id: string) {
   const session = await getSession();
   if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {

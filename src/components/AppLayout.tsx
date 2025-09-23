@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import Image from 'next/image';
 import {
   LayoutDashboard,
@@ -52,6 +52,7 @@ const navItems = [
 export function AppLayout({ children, user, settings }: { children: ReactNode, user: User, settings: AppSettings }) {
   const pathname = usePathname();
   const userRole = user?.role || 'User';
+  const [isSheetOpen, setSheetOpen] = useState(false);
 
   const accessibleNavItems = navItems.filter(item => item.roles.includes(userRole));
 
@@ -71,7 +72,7 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
         
         {/* Left Side: Logo & Mobile Menu */}
         <div className="flex items-center gap-4">
-            <Sheet>
+            <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" size="icon" className="shrink-0 md:hidden">
                   <Menu className="h-5 w-5" />
@@ -80,7 +81,7 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
               </SheetTrigger>
               <SheetContent side="left">
                 <nav className="grid gap-6 text-lg font-medium">
-                  <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
+                  <Link href="/" className="flex items-center gap-2 text-lg font-semibold" onClick={() => setSheetOpen(false)}>
                     <Logo />
                     <span>BizBook</span>
                   </Link>
@@ -88,6 +89,7 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
                     <Link
                       key={item.href}
                       href={item.href}
+                      onClick={() => setSheetOpen(false)}
                       className={cn(
                         "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
                         pathname === item.href ? "text-primary bg-muted" : "text-muted-foreground"

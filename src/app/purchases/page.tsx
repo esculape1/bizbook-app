@@ -12,6 +12,7 @@ import { getSession } from "@/lib/session";
 import type { Purchase } from "@/lib/types";
 import { PackageSearch } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { ReceivePurchaseButton } from "./ReceivePurchaseButton";
 
 export const dynamic = 'force-dynamic';
 
@@ -47,10 +48,20 @@ export default async function PurchasesPage() {
     Received: 'Reçu',
     Cancelled: 'Annulé',
   };
+  
+  const cardColors = [
+    "bg-sky-500/10 border-sky-500/20 text-sky-800",
+    "bg-emerald-500/10 border-emerald-500/20 text-emerald-800",
+    "bg-amber-500/10 border-amber-500/20 text-amber-800",
+    "bg-rose-500/10 border-rose-500/20 text-rose-800",
+    "bg-violet-500/10 border-violet-500/20 text-violet-800",
+    "bg-teal-500/10 border-teal-500/20 text-teal-800",
+  ];
+
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+       <div className="hidden md:flex flex-col md:flex-row justify-between items-start gap-4">
         <div className="flex-1">
             <PageHeader title="Achats" />
         </div>
@@ -67,20 +78,37 @@ export default async function PurchasesPage() {
             {canEdit && <PurchaseForm suppliers={suppliers} products={products} settings={settings} />}
         </div>
       </div>
+
+       {/* Mobile Header */}
+      <div className="md:hidden flex flex-col gap-4">
+        <h2 className="text-3xl font-bold tracking-tight text-center">Achats</h2>
+        {totalPendingAmount > 0 && (
+            <div className="w-full p-3 rounded-lg bg-gradient-to-r from-lime-200 via-lime-300 to-lime-400 text-lime-900 shadow-md flex items-center gap-3">
+                <PackageSearch className="h-6 w-6" />
+                <div className="flex-1 text-right">
+                    <div className="text-sm font-medium">Achats en attente</div>
+                    <div className="text-lg font-bold">{formatCurrency(totalPendingAmount, settings.currency)}</div>
+                </div>
+            </div>
+        )}
+        {canEdit && <PurchaseForm suppliers={suppliers} products={products} settings={settings} />}
+      </div>
       
       {/* Mobile View */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
-        {purchases.map(purchase => {
+        {purchases.map((purchase, index) => {
            const isCancelled = purchase.status === 'Cancelled';
+           const isReceived = purchase.status === 'Received';
            const itemNames = purchase.items.map(item => `${item.productName} (x${item.quantity})`).join(', ');
+           const cardColorClass = isCancelled ? 'bg-muted/50 text-muted-foreground' : cardColors[index % cardColors.length];
 
           return (
-            <Card key={purchase.id} className={cn("flex flex-col", isCancelled && 'bg-muted/50 text-muted-foreground')}>
+            <Card key={purchase.id} className={cn("flex flex-col shadow-md border", cardColorClass)}>
               <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
                       <CardTitle>{purchase.purchaseNumber}</CardTitle>
-                      <CardDescription>{purchase.supplierName}</CardDescription>
+                      <CardDescription className="font-bold text-current/80">{purchase.supplierName}</CardDescription>
                     </div>
                     <Badge variant={getStatusVariant(purchase.status)}>{statusTranslations[purchase.status]}</Badge>
                   </div>
@@ -95,7 +123,8 @@ export default async function PurchasesPage() {
                 </div>
               </CardContent>
               {canEdit && (
-                 <CardFooter className="flex items-center justify-end gap-2">
+                 <CardFooter className="flex items-center justify-end gap-1 p-2 bg-blue-950/10 border-t mt-auto">
+                    <ReceivePurchaseButton purchaseId={purchase.id} disabled={isCancelled || isReceived} purchaseNumber={purchase.purchaseNumber} />
                     <EditPurchaseForm purchase={purchase} suppliers={suppliers} products={products} settings={settings} />
                     <CancelPurchaseButton id={purchase.id} purchaseNumber={purchase.purchaseNumber} disabled={isCancelled} />
                  </CardFooter>
@@ -123,6 +152,7 @@ export default async function PurchasesPage() {
             <TableBody>
               {purchases.map((purchase) => {
                 const isCancelled = purchase.status === 'Cancelled';
+                const isReceived = purchase.status === 'Received';
                 const itemNames = purchase.items.map(item => item.productName).join(', ');
                 return (
                 <TableRow key={purchase.id} className={cn(isCancelled && 'bg-muted/50 text-muted-foreground')}>
@@ -141,6 +171,7 @@ export default async function PurchasesPage() {
                   {canEdit && (
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end">
+                        <ReceivePurchaseButton purchaseId={purchase.id} disabled={isCancelled || isReceived} purchaseNumber={purchase.purchaseNumber}/>
                         <EditPurchaseForm purchase={purchase} suppliers={suppliers} products={products} settings={settings} />
                         <CancelPurchaseButton id={purchase.id} purchaseNumber={purchase.purchaseNumber} disabled={isCancelled} />
                       </div>
