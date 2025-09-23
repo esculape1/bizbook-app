@@ -1,6 +1,6 @@
 
 import { PageHeader } from "@/components/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getProducts, getSettings } from "@/lib/data";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -67,11 +67,11 @@ export default async function ProductsPage() {
                     </div>
                 </CardContent>
             )}
-             <div className="flex items-center justify-end p-2 border-t mt-auto">
+             <CardFooter className="flex items-center justify-end p-2 border-t mt-auto">
                 <ProductQrCodeDialog product={product} settings={settings} />
                 {canManageProducts && <EditProductButton product={product} />}
                 {canManageProducts && <DeleteProductButton id={product.id} name={product.name} />}
-             </div>
+             </CardFooter>
            </Card>
         ))}
       </div>
