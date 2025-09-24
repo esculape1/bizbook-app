@@ -1,10 +1,11 @@
 
+
 'use client';
 
 import type { Invoice, Client, Settings } from '@/lib/types';
 import { DetailedTemplate } from '@/components/invoice-templates/DetailedTemplate';
 import { Button } from '@/components/ui/button';
-import { Printer, Ticket, Truck } from 'lucide-react';
+import { Printer, Ticket } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { DeliverySlipDialog } from './DeliverySlipDialog';
 import { ShippingLabelsDialog } from './ShippingLabelsDialog';
