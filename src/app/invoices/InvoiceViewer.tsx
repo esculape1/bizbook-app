@@ -85,4 +85,3 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     </div>
   );
 }
-
