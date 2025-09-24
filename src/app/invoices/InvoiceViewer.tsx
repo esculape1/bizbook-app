@@ -67,7 +67,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
 
   return (
     <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-2">
+        <div className="flex flex-row flex-wrap justify-center items-center gap-2">
             <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} asTextButton />
             <DeliverySlipDialog invoice={invoice} client={client} settings={settings} />
             <Button onClick={handlePrint}>
@@ -76,7 +76,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
             </Button>
         </div>
         <Card className="shadow-lg overflow-hidden">
-            <CardContent className="p-0 sm:p-4 md:p-6 bg-gray-100 flex justify-center">
+            <CardContent className="p-0 sm:p-4 md:p-6 bg-gray-100 flex justify-center overflow-x-auto">
                 <div className="w-full max-w-[210mm] transform scale-[0.9] sm:scale-100 origin-top">
                     {renderTemplate()}
                 </div>
