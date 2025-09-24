@@ -67,7 +67,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
 
   return (
     <div className="space-y-4">
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-center gap-2">
             <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} asTextButton />
             <DeliverySlipDialog invoice={invoice} client={client} settings={settings} />
             <Button onClick={handlePrint}>

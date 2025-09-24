@@ -2,7 +2,6 @@
 import { getInvoiceById, getClientById, getSettings } from "@/lib/data";
 import { notFound } from 'next/navigation';
 import { InvoiceViewer } from "../InvoiceViewer";
-import { PageHeader } from "@/components/PageHeader";
 
 export default async function InvoiceDetailPage({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -24,7 +23,6 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={`Facture ${invoice.invoiceNumber}`} />
       <InvoiceViewer invoice={invoice} client={client} settings={settings} />
     </div>
   );
