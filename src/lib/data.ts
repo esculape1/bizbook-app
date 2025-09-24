@@ -5,6 +5,7 @@ import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purc
 import { unstable_cache as cache } from 'next/cache';
 
 const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Veuillez vérifier la configuration de Firebase ou vos quotas d'utilisation.";
+const REVALIDATION_TIME = 86400; // 24 heures en secondes
 
 // Helper to recursively convert Firestore Timestamps to ISO strings
 function convertTimestamps(data: any): any {
@@ -82,7 +83,7 @@ export const getClients = cache(
     return clientSnapshot.docs.map(doc => docToObject<Client>(doc));
   },
   ['clients'],
-  { revalidate: 10, tags: ['clients'] }
+  { revalidate: REVALIDATION_TIME, tags: ['clients'] }
 );
 
 export const getClientById = cache(
@@ -96,7 +97,7 @@ export const getClientById = cache(
     return null;
   },
   ['client'],
-  { tags: ['clients'] }
+  { revalidate: REVALIDATION_TIME, tags: ['clients'] }
 );
 
 export async function addClient(clientData: Omit<Client, 'id' | 'registrationDate' | 'status'>): Promise<Client> {
@@ -132,7 +133,7 @@ export const getSuppliers = cache(
     return supplierSnapshot.docs.map(doc => docToObject<Supplier>(doc));
   },
   ['suppliers'],
-  { revalidate: 10, tags: ['suppliers'] }
+  { revalidate: REVALIDATION_TIME, tags: ['suppliers'] }
 );
 
 export async function addSupplier(supplierData: Omit<Supplier, 'id' | 'registrationDate'>): Promise<Supplier> {
@@ -168,7 +169,7 @@ export const getProducts = cache(
     return productSnapshot.docs.map(doc => docToObject<Product>(doc));
   },
   ['products'],
-  { revalidate: 10, tags: ['products'] }
+  { revalidate: REVALIDATION_TIME, tags: ['products'] }
 );
 
 export async function addProduct(productData: Omit<Product, 'id'>): Promise<Product> {
@@ -199,7 +200,7 @@ export const getQuotes = cache(
     return quoteSnapshot.docs.map(doc => docToObject<Quote>(doc));
   },
   ['quotes'],
-  { revalidate: 10, tags: ['quotes'] }
+  { revalidate: REVALIDATION_TIME, tags: ['quotes'] }
 );
 
 export const getQuoteById = cache(
@@ -213,7 +214,7 @@ export const getQuoteById = cache(
     return null;
   },
   ['quote'],
-  { tags: ['quotes'] }
+  { revalidate: REVALIDATION_TIME, tags: ['quotes'] }
 );
 
 export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>): Promise<Quote> {
@@ -273,7 +274,7 @@ export const getInvoices = cache(
     return invoiceSnapshot.docs.map(doc => docToObject<Invoice>(doc));
   },
   ['invoices'],
-  { revalidate: 10, tags: ['invoices'] }
+  { revalidate: REVALIDATION_TIME, tags: ['invoices'] }
 );
 
 export const getInvoiceById = cache(
@@ -287,7 +288,7 @@ export const getInvoiceById = cache(
     return null;
   },
   ['invoice'],
-  { tags: ['invoices'] }
+  { revalidate: REVALIDATION_TIME, tags: ['invoices'] }
 );
 
 export async function addInvoice(invoiceData: Omit<Invoice, 'id'>): Promise<Invoice> {
@@ -320,7 +321,7 @@ export const getPurchases = cache(
     return purchaseSnapshot.docs.map(doc => docToObject<Purchase>(doc));
   },
   ['purchases'],
-  { revalidate: 10, tags: ['purchases'] }
+  { revalidate: REVALIDATION_TIME, tags: ['purchases'] }
 );
 
 export const getPurchaseById = cache(
@@ -334,7 +335,7 @@ export const getPurchaseById = cache(
     return null;
   },
   ['purchase'],
-  { tags: ['purchases'] }
+  { revalidate: REVALIDATION_TIME, tags: ['purchases'] }
 );
 
 export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'purchaseNumber'>): Promise<Purchase> {
@@ -376,7 +377,7 @@ export const getExpenses = cache(
     return expenseSnapshot.docs.map(doc => docToObject<Expense>(doc));
   },
   ['expenses'],
-  { revalidate: 10, tags: ['expenses'] }
+  { revalidate: REVALIDATION_TIME, tags: ['expenses'] }
 );
 
 export async function addExpense(expenseData: Omit<Expense, 'id'>): Promise<Expense> {
@@ -425,7 +426,7 @@ export const getSettings = cache(
     return defaultSettings;
   },
   ['settings'],
-  { revalidate: 10, tags: ['settings'] }
+  { revalidate: REVALIDATION_TIME, tags: ['settings'] }
 );
 
 
@@ -495,6 +496,7 @@ export const getDashboardStats = cache(async () => {
   };
 },
 ['dashboard-stats'],
-{ revalidate: 10, tags: ['invoices', 'expenses', 'clients', 'products'] });
+{ revalidate: REVALIDATION_TIME, tags: ['invoices', 'expenses', 'clients', 'products'] });
 
+    
     
