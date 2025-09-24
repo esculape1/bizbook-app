@@ -3,7 +3,6 @@
 import { getInvoiceById, getClientById, getSettings } from "@/lib/data";
 import { notFound } from 'next/navigation';
 import { InvoiceViewer } from "../InvoiceViewer";
-import { PageHeader } from "@/components/PageHeader";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 
@@ -26,8 +25,7 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
   // Instead, we show a helpful error message.
   if (!client) {
       return (
-        <div className="flex flex-col gap-6">
-          <PageHeader title={`Facture ${invoice.invoiceNumber}`} />
+        <div className="flex flex-col gap-6 p-4">
           <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Erreur de Données</AlertTitle>
@@ -41,7 +39,7 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={`Facture ${invoice.invoiceNumber}`} />
+      {/* Le PageHeader a été supprimé pour éviter la redondance du titre */}
       <InvoiceViewer invoice={invoice} client={client} settings={settings} />
     </div>
   );
