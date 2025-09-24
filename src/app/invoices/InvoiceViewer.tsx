@@ -76,8 +76,8 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
             </Button>
         </div>
         <Card className="shadow-lg overflow-hidden">
-            <CardContent className="p-0 sm:p-4 md:p-6 bg-gray-100 flex justify-center overflow-x-auto">
-                <div className="w-full max-w-[210mm] transform scale-[0.9] sm:scale-100 origin-top">
+            <CardContent className="p-0 md:p-6 bg-gray-100 flex justify-center overflow-x-auto">
+                <div className="w-full max-w-[210mm] lg:transform lg:scale-100 origin-top">
                     {renderTemplate()}
                 </div>
             </CardContent>
@@ -85,3 +85,4 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     </div>
   );
 }
+
