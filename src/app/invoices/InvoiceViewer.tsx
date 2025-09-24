@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import type { Invoice, Client, Settings } from '@/lib/types';
@@ -68,7 +67,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
 
   return (
     <div className="space-y-4">
-        <div className="flex flex-row flex-wrap justify-center items-center gap-2">
+        <div className="flex flex-wrap justify-center items-center gap-2">
             <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} asTextButton />
             <DeliverySlipDialog invoice={invoice} client={client} settings={settings} />
             <Button onClick={handlePrint}>
@@ -78,8 +77,10 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
         </div>
         <Card className="shadow-lg overflow-hidden">
             <CardContent className="p-0 md:p-6 bg-gray-100 flex justify-center">
-                <div className="w-full max-w-[210mm] scale-[0.9] sm:scale-100 origin-top">
-                    {renderTemplate()}
+                <div className="w-full max-w-full overflow-x-auto">
+                    <div className="mx-auto" style={{ width: '210mm' }}>
+                        {renderTemplate()}
+                    </div>
                 </div>
             </CardContent>
         </Card>
