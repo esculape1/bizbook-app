@@ -28,18 +28,17 @@ const purchaseItemSchema = z.object({
   quantity: z.coerce.number().min(1, "Qté > 0"),
 });
 
-const updatePurchaseSchema = z.object({
+const editPurchaseSchema = z.object({
   supplierId: z.string().min(1, "Fournisseur requis"),
   date: z.date({ required_error: "Date requise" }),
   items: z.array(purchaseItemSchema).min(1, "Ajoutez au moins un produit."),
-  status: z.enum(['Pending', 'Received', 'Cancelled']),
   premierVersement: z.coerce.number().min(0).default(0),
   deuxiemeVersement: z.coerce.number().min(0).default(0),
   transportCost: z.coerce.number().min(0).default(0),
   otherFees: z.coerce.number().min(0).default(0),
 });
 
-type PurchaseFormValues = z.infer<typeof updatePurchaseSchema>;
+type PurchaseFormValues = z.infer<typeof editPurchaseSchema>;
 
 type EditPurchaseFormProps = {
   purchase: Purchase;
@@ -54,7 +53,7 @@ export function EditPurchaseForm({ purchase, suppliers, products, settings }: Ed
   const { toast } = useToast();
 
   const form = useForm<PurchaseFormValues>({
-    resolver: zodResolver(updatePurchaseSchema),
+    resolver: zodResolver(editPurchaseSchema),
     defaultValues: {
       ...purchase,
       date: new Date(purchase.date),
@@ -105,13 +104,7 @@ export function EditPurchaseForm({ purchase, suppliers, products, settings }: Ed
     });
   };
   
-  const statusTranslations: { [key in Purchase['status']]: string } = {
-    Pending: 'En attente',
-    Received: 'Reçu',
-    Cancelled: 'Annulé',
-  }
-  
-  const isEditDisabled = purchase.status === 'Cancelled';
+  const isEditDisabled = purchase.status !== 'Pending';
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -127,7 +120,7 @@ export function EditPurchaseForm({ purchase, suppliers, products, settings }: Ed
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0">
             <div className="flex-1 overflow-y-auto space-y-6 px-2 pb-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                     control={form.control}
                     name="supplierId"
@@ -169,28 +162,6 @@ export function EditPurchaseForm({ purchase, suppliers, products, settings }: Ed
                             <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
                         </PopoverContent>
                         </Popover>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
-                <FormField
-                    control={form.control}
-                    name="status"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Statut</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                            <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner un statut" />
-                            </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                            {Object.entries(statusTranslations).map(([key, value]) => (
-                                <SelectItem key={key} value={key as Purchase['status']}>{value}</SelectItem>
-                            ))}
-                        </SelectContent>
-                        </Select>
                         <FormMessage />
                     </FormItem>
                     )}

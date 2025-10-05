@@ -98,56 +98,47 @@ export async function createPurchase(formData: unknown) {
   }
 }
 
+// Internal update function without status change logic
+async function performPurchaseUpdate(id: string, purchaseData: Partial<Omit<Purchase, 'id'>>) {
+    if (!db) throw new Error("La connexion à la base de données a échoué.");
+    await updatePurchaseInDB(id, purchaseData);
+}
+
 export async function updatePurchase(id: string, purchaseNumber: string, formData: unknown) {
   const session = await getSession();
   if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
   }
 
-  const validatedFields = updatePurchaseSchema.safeParse(formData);
+  const updateSchemaWithoutStatus = purchaseSchema.extend({});
+  const validatedFields = updateSchemaWithoutStatus.safeParse(formData);
 
   if (!validatedFields.success) {
     console.log(validatedFields.error.flatten().fieldErrors);
     return { message: 'Champs invalides. Impossible de mettre à jour l\'achat.' };
   }
   
-  if (!db) {
-    throw new Error("La connexion à la base de données a échoué.");
-  }
-  
-  const firestore = db;
-
   try {
-    const { supplierId, date, items, status, premierVersement, deuxiemeVersement, transportCost, otherFees } = validatedFields.data;
+    const { supplierId, date, items, premierVersement, deuxiemeVersement, transportCost, otherFees } = validatedFields.data;
     
-    const [originalPurchase, suppliers, allProducts] = await Promise.all([
+    const [originalPurchase, suppliers] = await Promise.all([
       getPurchaseById(id),
-      getSuppliers(),
-      getProducts()
+      getSuppliers()
     ]);
     
-    if (!originalPurchase) {
-      return { message: 'Achat original non trouvé.' };
-    }
+    if (!originalPurchase) return { message: 'Achat original non trouvé.' };
+    if (originalPurchase.status !== 'Pending') return { message: 'Seuls les achats "En attente" peuvent être modifiés.' };
 
     const supplier = suppliers.find(c => c.id === supplierId);
-    if (!supplier) {
-      return { message: 'Fournisseur non trouvé.' };
-    }
+    if (!supplier) return { message: 'Fournisseur non trouvé.' };
 
-    const wasReceived = originalPurchase.status === 'Received';
-    const isNowReceived = status === 'Received';
-    
+    const products = await getProducts();
     const purchaseItems: PurchaseItem[] = items.map(item => {
-      const product = allProducts.find(p => p.id === item.productId);
+      const product = products.find(p => p.id === item.productId);
       if (!product) throw new Error(`Produit non trouvé: ${item.productId}`);
-      return {
-        productId: item.productId,
-        productName: product.name,
-        reference: product.reference,
-        quantity: item.quantity,
-      };
+      return { productId: item.productId, productName: product.name, reference: product.reference, quantity: item.quantity };
     });
+    
     const totalAmount = premierVersement + deuxiemeVersement + transportCost + otherFees;
 
     const purchaseUpdateData: Partial<Omit<Purchase, 'id'>> = {
@@ -161,63 +152,11 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
       transportCost,
       otherFees,
       totalAmount,
-      status,
     };
     
-    await firestore.runTransaction(async (transaction) => {
-      const purchaseRef = firestore.collection('purchases').doc(id);
-      transaction.update(purchaseRef, purchaseUpdateData);
-
-      const handleStockUpdate = (item: PurchaseItem, operation: 'add' | 'subtract') => {
-          const productRef = firestore.collection('products').doc(item.productId);
-          const increment = operation === 'add' ? item.quantity : -item.quantity;
-          transaction.update(productRef, { 
-            quantityInStock: FieldValue.increment(increment)
-          });
-      };
-      
-      const handlePriceUpdate = (item: PurchaseItem, product: Product) => {
-          const productRef = firestore.collection('products').doc(item.productId);
-          
-          // Cost for all items in this specific purchase
-          const totalItemsInPurchase = items.reduce((sum, i) => sum + i.quantity, 0);
-          if (totalItemsInPurchase === 0) return; // Avoid division by zero
-          
-          const landedCostPerUnitInPurchase = totalAmount / totalItemsInPurchase;
-          const newItemsValue = landedCostPerUnitInPurchase * item.quantity;
-          const oldStockValue = (product.purchasePrice || 0) * (product.quantityInStock);
-
-          const newTotalStock = product.quantityInStock + item.quantity;
-          if (newTotalStock === 0) return; // Avoid division by zero
-
-          const newAveragePurchasePrice = (oldStockValue + newItemsValue) / newTotalStock;
-
-          if (isFinite(newAveragePurchasePrice)) {
-            transaction.update(productRef, { purchasePrice: newAveragePurchasePrice });
-          }
-      };
-
-      if (isNowReceived && !wasReceived) { // Transition to "Received"
-          for (const item of items) {
-              const product = allProducts.find(p => p.id === item.productId);
-              if(product) {
-                handleStockUpdate(item, 'add');
-                handlePriceUpdate(item, product);
-              }
-          }
-      } else if (!isNowReceived && wasReceived) { // Reverting from "Received"
-          for (const item of originalPurchase.items) {
-              handleStockUpdate(item, 'subtract');
-              // Note: Reverting price is complex. We will not adjust the price on cancellation
-              // to avoid historical data inaccuracies. The price will be re-averaged on the next reception.
-          }
-      }
-    });
-
+    await performPurchaseUpdate(id, purchaseUpdateData);
 
     revalidatePath('/purchases');
-    revalidatePath('/products');
-    revalidatePath('/');
     return {};
   } catch (error) {
     console.error('Failed to update purchase:', error);
@@ -237,19 +176,46 @@ export async function receivePurchase(id: string) {
     }
   
     try {
-      const originalPurchase = await getPurchaseById(id);
+      const purchase = await getPurchaseById(id);
       
-      if (!originalPurchase) {
-        return { message: 'Achat original non trouvé.' };
-      }
-      if (originalPurchase.status === 'Received') {
-        return { message: 'Cet achat a déjà été réceptionné.' };
-      }
-      if (originalPurchase.status === 'Cancelled') {
-        return { message: 'Cet achat est annulé et ne peut être réceptionné.' };
-      }
+      if (!purchase) return { message: 'Achat non trouvé.' };
+      if (purchase.status === 'Received') return { message: 'Cet achat a déjà été réceptionné.' };
+      if (purchase.status === 'Cancelled') return { message: 'Cet achat est annulé et ne peut être réceptionné.' };
   
-      await updatePurchase(id, originalPurchase.purchaseNumber, { ...originalPurchase, status: 'Received' });
+      await firestore.runTransaction(async (transaction) => {
+        const purchaseRef = db.collection('purchases').doc(id);
+        transaction.update(purchaseRef, { status: 'Received' });
+
+        for (const item of purchase.items) {
+          const productRef = db.collection('products').doc(item.productId);
+          const productDoc = await transaction.get(productRef);
+          
+          if (productDoc.exists) {
+            const product = productDoc.data() as Product;
+
+            // Increment stock
+            const stockUpdate = { quantityInStock: FieldValue.increment(item.quantity) };
+            
+            // Recalculate average purchase price
+            const totalItemsInPurchase = purchase.items.reduce((sum, i) => sum + i.quantity, 0);
+            if (totalItemsInPurchase > 0) {
+              const landedCostPerUnitInPurchase = purchase.totalAmount / totalItemsInPurchase;
+              const newItemsValue = landedCostPerUnitInPurchase * item.quantity;
+              const oldStockValue = (product.purchasePrice || 0) * (product.quantityInStock);
+              const newTotalStock = product.quantityInStock + item.quantity;
+              
+              if (newTotalStock > 0) {
+                const newAveragePurchasePrice = (oldStockValue + newItemsValue) / newTotalStock;
+                if (isFinite(newAveragePurchasePrice)) {
+                    (stockUpdate as any).purchasePrice = newAveragePurchasePrice;
+                }
+              }
+            }
+            
+            transaction.update(productRef, stockUpdate);
+          }
+        }
+      });
   
       revalidatePath('/purchases');
       revalidatePath('/products');
@@ -259,7 +225,7 @@ export async function receivePurchase(id: string) {
     } catch (error) {
       console.error('Failed to receive purchase:', error);
       const message = error instanceof Error ? error.message : 'Erreur DB: Impossible de réceptionner l\'achat.';
-      return { message };
+      return { success: false, message };
     }
 }
 
