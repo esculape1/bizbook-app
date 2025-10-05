@@ -33,10 +33,6 @@ const purchaseSchema = z.object({
   otherFees: z.coerce.number().min(0).default(0),
 });
 
-const updatePurchaseSchema = purchaseSchema.extend({
-  status: z.enum(['Pending', 'Received', 'Cancelled']),
-});
-
 export async function createPurchase(formData: unknown) {
   const session = await getSession();
   if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
@@ -182,7 +178,7 @@ export async function receivePurchase(id: string) {
       if (purchase.status === 'Received') return { message: 'Cet achat a déjà été réceptionné.' };
       if (purchase.status === 'Cancelled') return { message: 'Cet achat est annulé et ne peut être réceptionné.' };
   
-      await firestore.runTransaction(async (transaction) => {
+      await db.runTransaction(async (transaction) => {
         const purchaseRef = db.collection('purchases').doc(id);
         transaction.update(purchaseRef, { status: 'Received' });
 
