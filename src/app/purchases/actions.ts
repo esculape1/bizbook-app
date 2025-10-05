@@ -106,8 +106,9 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
     return { message: "Action non autorisée." };
   }
 
-  const updateSchemaWithoutStatus = purchaseSchema.extend({});
-  const validatedFields = updateSchemaWithoutStatus.safeParse(formData);
+  // Schema for editing doesn't include status
+  const editPurchaseSchema = purchaseSchema.extend({});
+  const validatedFields = editPurchaseSchema.safeParse(formData);
 
   if (!validatedFields.success) {
     console.log(validatedFields.error.flatten().fieldErrors);
@@ -180,15 +181,20 @@ export async function receivePurchase(id: string) {
   
       await db.runTransaction(async (transaction) => {
         const purchaseRef = db.collection('purchases').doc(id);
+        
+        // **Step 1: Read all product documents first.**
+        const productRefs = purchase.items.map(item => db.collection('products').doc(item.productId));
+        const productDocs = await transaction.getAll(...productRefs);
+        const productMap = new Map(productDocs.map(doc => [doc.id, doc.data() as Product]));
+
+        // **Step 2: Perform all write operations.**
         transaction.update(purchaseRef, { status: 'Received' });
 
         for (const item of purchase.items) {
           const productRef = db.collection('products').doc(item.productId);
-          const productDoc = await transaction.get(productRef);
+          const product = productMap.get(item.productId);
           
-          if (productDoc.exists) {
-            const product = productDoc.data() as Product;
-
+          if (product) {
             // Increment stock
             const stockUpdate = { quantityInStock: FieldValue.increment(item.quantity) };
             
