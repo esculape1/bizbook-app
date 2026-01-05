@@ -45,7 +45,7 @@ const navItems = [
   { href: '/invoices', label: 'Factures', icon: FileText, roles: ['SuperAdmin', 'Admin', 'User'] },
   { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: ['SuperAdmin', 'Admin', 'User'] },
   { href: '/reports', label: 'Rapports', icon: BarChart3, roles: ['SuperAdmin', 'Admin', 'User'] },
-  { href: '/analysis', label: 'Analyse', icon: BrainCircuit, roles: ['SuperAdmin', 'Admin'] },
+  // { href: '/analysis', label: 'Analyse', icon: BrainCircuit, roles: ['SuperAdmin', 'Admin'] },
   { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['SuperAdmin', 'Admin', 'User'] },
 ];
 

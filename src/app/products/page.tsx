@@ -22,7 +22,7 @@ export default async function ProductsPage() {
     getSession(),
   ]);
 
-  const canManageProducts = user?.role === 'SuperAdmin';
+  const canManageProducts = user?.role === 'Admin' || user?.role === 'SuperAdmin';
   const canViewPrices = user?.role === 'SuperAdmin' || user?.role === 'Admin';
 
   return (

@@ -7,7 +7,7 @@ import { getSession } from "@/lib/session";
 import { formatCurrency, cn } from "@/lib/utils";
 import { ExpenseForm } from "./ExpenseForm";
 import type { Expense } from "@/lib/types";
-import { format, subMonths, getDate } from 'date-fns';
+import { format, subMonths, getDate, getYear, getMonth, set } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ExpenseCategoryDetailsDialog } from "./ExpenseCategoryDetailsDialog";
 
@@ -29,12 +29,15 @@ type GroupedExpenses = {
 };
 
 const getFiscalMonthKey = (date: Date): string => {
+  let year = getYear(date);
+  let month = getMonth(date); // 0-11
   if (getDate(date) >= 25) {
-    const nextMonth = new Date(date);
-    nextMonth.setMonth(nextMonth.getMonth() + 1);
-    return format(nextMonth, 'yyyy-MM');
+    const nextMonthDate = new Date(year, month + 1, 1);
+    month = getMonth(nextMonthDate);
+    year = getYear(nextMonthDate);
   }
-  return format(date, 'yyyy-MM');
+  // Format as YYYY-MM
+  return `${year}-${(month + 1).toString().padStart(2, '0')}`;
 };
 
 export default async function ExpensesPage() {
@@ -51,7 +54,9 @@ export default async function ExpensesPage() {
     const monthKey = getFiscalMonthKey(expenseDate);
     
     if (!acc[monthKey]) {
-      const displayDate = new Date(monthKey + '-01');
+      const year = parseInt(monthKey.split('-')[0], 10);
+      const month = parseInt(monthKey.split('-')[1], 10) - 1;
+      const displayDate = set(new Date(), { year, month, date: 1 });
       acc[monthKey] = {
         expensesByCategory: [],
         total: 0,
@@ -103,14 +108,21 @@ export default async function ExpensesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {sortedGroupKeys.map((monthKey, index) => {
                 const group = groupedExpenses[monthKey];
-                const fromDate = format(subMonths(new Date(monthKey + '-25'), 1), 'd MMM', { locale: fr });
-                const toDate = format(new Date(monthKey + '-24'), 'd MMM yyyy', { locale: fr });
+                
+                const year = parseInt(monthKey.split('-')[0], 10);
+                const month = parseInt(monthKey.split('-')[1], 10) -1;
+                
+                let fromDate = set(new Date(), { year, month: month - 1, date: 25 });
+                let toDate = set(new Date(), { year, month, date: 24 });
+                
+                const fromDateDisplay = format(fromDate, 'd MMM', { locale: fr });
+                const toDateDisplay = format(toDate, 'd MMM yyyy', { locale: fr });
 
                 return (
                     <Card key={monthKey} className={cn("flex flex-col", cardColors[index % cardColors.length])}>
                         <CardHeader>
                             <CardTitle className="capitalize text-lg">{group.displayMonth}</CardTitle>
-                            <CardDescription className="text-current/70">Période du {fromDate} au {toDate}</CardDescription>
+                            <CardDescription className="text-current/70">Période du {fromDateDisplay} au {toDateDisplay}</CardDescription>
                         </CardHeader>
                         <CardContent className="flex-grow">
                             <Table>
