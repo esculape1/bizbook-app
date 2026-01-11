@@ -488,11 +488,14 @@ export const getDashboardStats = cache(async () => {
     }
   });
 
-  // Process expenses
+  // Process expenses for the current fiscal year only
   let totalExpenses = 0;
   expensesSnapshot.forEach(doc => {
     const exp = doc.data() as Expense;
-    totalExpenses += exp.amount;
+    const expDate = new Date(exp.date);
+    if (expDate >= fiscalYearStartDate) {
+      totalExpenses += exp.amount;
+    }
   });
   
   // Process clients
@@ -519,4 +522,5 @@ export const getDashboardStats = cache(async () => {
 
     
     
+
 
