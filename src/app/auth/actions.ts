@@ -43,12 +43,12 @@ export async function signIn(prevState: { error: string } | undefined, formData:
         sameSite: 'lax',
     });
 
-    redirect('/');
-
   } catch(error: any) {
       console.error("Erreur serveur pendant la connexion:", error);
       return { error: "Une erreur interne est survenue. Veuillez réessayer."}
   }
+
+  redirect('/');
 }
 
 export async function signOut() {

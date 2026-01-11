@@ -2,7 +2,7 @@
 'use server';
 
 import { getSession } from '@/lib/session';
-import { analyzeBusinessData } from '@/ai/flows/business-analysis-flow';
+// import { analyzeBusinessData } from '@/ai/flows/business-analysis-flow';
 
 export async function askAI(query: string): Promise<{ status: 'success', response: string } | { status: 'error', error: string }> {
   const session = await getSession();
@@ -20,7 +20,9 @@ export async function askAI(query: string): Promise<{ status: 'success', respons
   }
 
   try {
-    const response = await analyzeBusinessData(query);
+    // Temporarily disable AI analysis to fix build
+    // const response = await analyzeBusinessData(query);
+    const response = "La fonctionnalité d'analyse IA est temporairement désactivée pour maintenance.";
     return { status: 'success', response };
   } catch (e: any) {
     console.error("AI analysis failed:", e);
