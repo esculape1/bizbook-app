@@ -283,7 +283,7 @@ LOGIQUE DE RAISONNEMENT OBLIGATOIRE :
             b. **Tu DOIS appeler \`getProductsTool\` pour obtenir la liste complète des produits et trouver le \`purchasePrice\` correspondant à chaque \`item\` en utilisant le \`productId\`.**
             c. Multiplie la \`quantity\` de l'item par son \`purchasePrice\`.
             d. La somme de tous ces coûts est le CMV.
-        3.  Calcule le total des dépenses avec \`getExpensesTool\` (filtré par période).
+        3.  **IMPORTANT :** Calcule le total des dépenses avec \`getExpensesTool\`. Si la période de la question de l'utilisateur n'est pas spécifiée, tu dois **OBLIGATOIREMENT** filtrer les dépenses pour ne prendre en compte que celles de l'exercice fiscal en cours (depuis le 25 décembre de l'année précédente jusqu'à aujourd'hui). Si une période est spécifiée, utilise cette période pour les dépenses.
         4.  **Bénéfice = CA - CMV - Dépenses.**
 
     *   **PRODUIT LE PLUS VENDU (en quantité) :**
