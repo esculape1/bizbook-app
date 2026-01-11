@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { updateSettings } from '@/lib/data';
-import { revalidatePath } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import { getSession } from '@/lib/session';
 import type { Settings } from '@/lib/types';
 
@@ -34,8 +34,7 @@ export async function saveSettings(formData: SettingsFormValues) {
     const validatedData = settingsSchema.parse(formData);
     await updateSettings(validatedData);
     
-    revalidatePath('/settings');
-    revalidatePath('/', 'layout'); // Revalidate the layout to update the logo in the header
+    revalidateTag('settings');
     return { success: true };
   } catch (error) {
     console.error('Failed to save settings:', error);

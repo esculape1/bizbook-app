@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { addExpense, updateExpense as updateExpenseInDB, deleteExpense as deleteExpenseFromDB } from '@/lib/data';
-import { revalidatePath } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import { getSession } from '@/lib/session';
 
 const expenseSchema = z.object({
@@ -34,9 +34,8 @@ export async function createExpense(formData: unknown) {
         ...rest,
         date: date.toISOString(),
     });
-    revalidatePath('/expenses');
-    revalidatePath('/'); // For the dashboard
-    revalidatePath('/reports'); // For the reports
+    revalidateTag('expenses');
+    revalidateTag('dashboard-stats');
     return {}; // Indicates success
   } catch (error) {
     console.error('Failed to create expense:', error);
@@ -66,9 +65,8 @@ export async function updateExpense(id: string, formData: unknown) {
         ...rest,
         date: date.toISOString(),
     });
-    revalidatePath('/expenses');
-    revalidatePath('/'); // For the dashboard
-    revalidatePath('/reports'); // For the reports
+    revalidateTag('expenses');
+    revalidateTag('dashboard-stats');
     return {}; // Indicates success
   } catch (error) {
     console.error('Failed to update expense:', error);
@@ -85,9 +83,8 @@ export async function deleteExpense(id: string) {
     
     try {
         await deleteExpenseFromDB(id);
-        revalidatePath('/expenses');
-        revalidatePath('/');
-        revalidatePath('/reports');
+        revalidateTag('expenses');
+        revalidateTag('dashboard-stats');
         return { success: true };
     } catch (error) {
         console.error('Failed to delete expense:', error);

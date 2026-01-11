@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { addClient, deleteClient as deleteClientFromDB, updateClient as updateClientInDB } from '@/lib/data';
-import { revalidatePath } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import { getSession } from '@/lib/session';
 
 const clientSchema = z.object({
@@ -34,8 +34,8 @@ export async function createClient(data: NewClient) {
 
   try {
     await addClient(validatedFields.data);
-    revalidatePath('/clients');
-    revalidatePath('/invoices');
+    revalidateTag('clients');
+    revalidateTag('invoices');
     return {}; // Indique le succès
   } catch (error) {
     console.error('Failed to create client:', error);
@@ -60,8 +60,8 @@ export async function updateClient(id: string, data: NewClient) {
 
   try {
     await updateClientInDB(id, validatedFields.data);
-    revalidatePath('/clients');
-    revalidatePath('/invoices'); // Client name might be displayed on invoices page
+    revalidateTag('clients');
+    revalidateTag('invoices'); // Client name might be displayed on invoices page
     return {}; // Indique le succès
   } catch (error) {
     console.error('Failed to update client:', error);
@@ -78,7 +78,7 @@ export async function deleteClient(id: string) {
     
   try {
     await deleteClientFromDB(id);
-    revalidatePath('/clients');
+    revalidateTag('clients');
     return { success: true };
   } catch (error) {
     console.error('Failed to delete client:', error);

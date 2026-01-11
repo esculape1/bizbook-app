@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { addQuote, getClients, getProducts, updateQuote as updateQuoteInDB, deleteQuote as deleteQuoteFromDB, getQuoteById, addInvoice, updateProduct, getInvoices } from '@/lib/data';
-import { revalidatePath } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import type { Quote, QuoteItem, InvoiceItem } from '@/lib/types';
 import { getSession } from '@/lib/session';
 
@@ -83,7 +83,7 @@ export async function createQuote(formData: unknown) {
       totalAmount,
       status: 'Draft',
     });
-    revalidatePath('/devis');
+    revalidateTag('quotes');
     return {};
   } catch (error) {
     console.error('Failed to create quote:', error);
@@ -233,13 +233,12 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
         await updateProduct(item.productId, { quantityInStock: newStock });
       }
 
-      revalidatePath('/invoices');
-      revalidatePath('/products');
-      revalidatePath('/');
+      revalidateTag('invoices');
+      revalidateTag('products');
+      revalidateTag('dashboard-stats');
     }
 
-
-    revalidatePath('/devis');
+    revalidateTag('quotes');
     return {};
   } catch (error) {
     console.error('Failed to update quote:', error);
@@ -257,7 +256,7 @@ export async function deleteQuote(id: string) {
     
   try {
     await deleteQuoteFromDB(id);
-    revalidatePath('/devis');
+    revalidateTag('quotes');
     return { success: true };
   } catch (error) {
     console.error('Failed to delete quote:', error);

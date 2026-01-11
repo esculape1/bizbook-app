@@ -11,7 +11,7 @@ import {
   updateProduct,
   getInvoices,
 } from '@/lib/data';
-import { revalidatePath } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import type { InvoiceItem, Invoice, Payment } from '@/lib/types';
 import { randomUUID } from 'crypto';
 import { getSession } from '@/lib/session';
@@ -149,10 +149,10 @@ export async function createInvoice(formData: unknown) {
         await updateProduct(item.productId, { quantityInStock: newStock });
     }
 
-    // 3. Revalidate paths
-    revalidatePath('/invoices');
-    revalidatePath('/'); // For dashboard
-    revalidatePath('/products');
+    // 3. Revalidate tags
+    revalidateTag('invoices');
+    revalidateTag('products');
+    revalidateTag('dashboard-stats');
     return {};
   } catch (error) {
     console.error('Failed to create invoice:', error);
@@ -263,10 +263,9 @@ export async function updateInvoice(id: string, formData: unknown) {
         }
     }
 
-    revalidatePath('/invoices');
-    revalidatePath(`/invoices/${id}`);
-    revalidatePath('/');
-    revalidatePath('/products');
+    revalidateTag('invoices');
+    revalidateTag('products');
+    revalidateTag('dashboard-stats');
     return {};
   } catch (error) {
     console.error('Failed to update invoice:', error);
@@ -302,10 +301,9 @@ export async function cancelInvoice(id: string) {
     // Update invoice status to 'Cancelled' and reset paid amount
     await updateInvoiceInDB(id, { status: 'Cancelled', amountPaid: 0 });
 
-    revalidatePath('/invoices');
-    revalidatePath('/');
-    revalidatePath('/products');
-    revalidatePath(`/invoices/${id}`);
+    revalidateTag('invoices');
+    revalidateTag('products');
+    revalidateTag('dashboard-stats');
     return { success: true };
   } catch (error) {
     console.error("Échec de l'annulation de la facture:", error);
@@ -370,9 +368,8 @@ export async function recordPayment(invoiceId: string, formData: unknown) {
       status: newStatus,
     });
     
-    revalidatePath('/invoices');
-    revalidatePath(`/invoices/${invoiceId}`);
-    revalidatePath('/'); // Dashboard
+    revalidateTag('invoices');
+    revalidateTag('dashboard-stats');
     return {}; // Success
 
   } catch (error) {
@@ -381,5 +378,3 @@ export async function recordPayment(invoiceId: string, formData: unknown) {
     return { message };
   }
 }
-
-    

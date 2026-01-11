@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { addProduct, updateProduct as updateProductInDB, deleteProduct as deleteProductFromDB } from '@/lib/data';
-import { revalidatePath } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import { getSession } from '@/lib/session';
 
 const productSchema = z.object({
@@ -33,9 +33,8 @@ export async function createProduct(formData: unknown) {
 
   try {
     await addProduct(validatedFields.data);
-    revalidatePath('/products');
-    revalidatePath('/'); // For the dashboard low stock table
-    revalidatePath('/invoices'); // Products are needed for new invoices
+    revalidateTag('products');
+    revalidateTag('dashboard-stats');
     return {}; // Indicates success
   } catch (error) {
     console.error('Failed to create product:', error);
@@ -60,9 +59,9 @@ export async function updateProduct(id: string, formData: unknown) {
 
     try {
         await updateProductInDB(id, validatedFields.data);
-        revalidatePath('/products');
-        revalidatePath('/');
-        revalidatePath('/invoices');
+        revalidateTag('products');
+        revalidateTag('dashboard-stats');
+        revalidateTag('invoices');
         return {};
     } catch (error) {
         console.error('Failed to update product:', error);
@@ -79,9 +78,9 @@ export async function deleteProduct(id: string) {
     
     try {
         await deleteProductFromDB(id);
-        revalidatePath('/products');
-        revalidatePath('/');
-        revalidatePath('/invoices');
+        revalidateTag('products');
+        revalidateTag('dashboard-stats');
+        revalidateTag('invoices');
         return { success: true };
     } catch (error) {
         console.error('Failed to delete product:', error);

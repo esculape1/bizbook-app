@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { addSupplier, deleteSupplier as deleteSupplierFromDB, updateSupplier as updateSupplierInDB } from '@/lib/data';
-import { revalidatePath } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import { getSession } from '@/lib/session';
 
 const supplierSchema = z.object({
@@ -32,7 +32,7 @@ export async function createSupplier(data: NewSupplier) {
 
   try {
     await addSupplier(validatedFields.data);
-    revalidatePath('/suppliers');
+    revalidateTag('suppliers');
     return {};
   } catch (error) {
     console.error('Failed to create supplier:', error);
@@ -57,7 +57,7 @@ export async function updateSupplier(id: string, data: NewSupplier) {
 
   try {
     await updateSupplierInDB(id, validatedFields.data);
-    revalidatePath('/suppliers');
+    revalidateTag('suppliers');
     return {};
   } catch (error) {
     console.error('Failed to update supplier:', error);
@@ -74,7 +74,7 @@ export async function deleteSupplier(id: string) {
     
   try {
     await deleteSupplierFromDB(id);
-    revalidatePath('/suppliers');
+    revalidateTag('suppliers');
     return { success: true };
   } catch (error) {
     console.error('Failed to delete supplier:', error);

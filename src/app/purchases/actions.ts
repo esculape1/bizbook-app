@@ -12,7 +12,7 @@ import {
   getPurchaseById,
   updateProduct,
 } from '@/lib/data';
-import { revalidatePath } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import type { PurchaseItem, Purchase, Product } from '@/lib/types';
 import { getSession } from '@/lib/session';
 
@@ -84,8 +84,8 @@ export async function createPurchase(formData: unknown) {
     
     await addPurchase(newPurchaseData);
 
-    revalidatePath('/purchases');
-    revalidatePath('/products');
+    revalidateTag('purchases');
+    revalidateTag('products');
     return {};
   } catch (error) {
     console.error('Failed to create purchase:', error);
@@ -153,7 +153,7 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
     
     await performPurchaseUpdate(id, purchaseUpdateData);
 
-    revalidatePath('/purchases');
+    revalidateTag('purchases');
     return {};
   } catch (error) {
     console.error('Failed to update purchase:', error);
@@ -219,9 +219,9 @@ export async function receivePurchase(id: string) {
         }
       });
   
-      revalidatePath('/purchases');
-      revalidatePath('/products');
-      revalidatePath('/');
+      revalidateTag('purchases');
+      revalidateTag('products');
+      revalidateTag('dashboard-stats');
       return { success: true };
   
     } catch (error) {
@@ -256,9 +256,9 @@ export async function cancelPurchase(id: string) {
     
     await updatePurchaseInDB(id, { status: 'Cancelled' });
 
-    revalidatePath('/purchases');
-    revalidatePath('/products');
-    revalidatePath('/');
+    revalidateTag('purchases');
+    revalidateTag('products');
+    revalidateTag('dashboard-stats');
     return { success: true };
   } catch (error) {
     console.error("Échec de l'annulation de l'achat:", error);
