@@ -14,7 +14,6 @@ import { RecordPaymentButton } from "./RecordPaymentButton";
 import type { Invoice, Client, Product, Settings, User } from "@/lib/types";
 import { ShippingLabelsDialog } from "./ShippingLabelsDialog";
 import { Separator } from "@/components/ui/separator";
-import { CreditCard, FileX, Pencil } from "lucide-react";
 
 type InvoicesListProps = {
     initialInvoices: Invoice[];
@@ -105,9 +104,9 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                             <span className="font-bold text-destructive">{formatCurrency(amountDue > 0 ? amountDue : 0, initialSettings.currency)}</span>
                         </div>
                     </CardContent>
-                    {client && (
+                    {client && canEdit && (
                         <CardFooter className="flex items-center justify-end gap-1 p-2 bg-blue-950/10 border-t mt-auto">
-                            {!isLocked && <ShippingLabelsDialog invoice={invoice} client={client} settings={initialSettings} asTextButton={false} />}
+                            <ShippingLabelsDialog invoice={invoice} client={client} settings={initialSettings} asTextButton={false} />
                             <RecordPaymentButton invoice={invoice} settings={initialSettings} />
                             <EditInvoiceForm invoice={invoice} clients={initialClients} products={initialProducts} settings={initialSettings} />
                             <CancelInvoiceButton id={invoice.id} invoiceNumber={invoice.invoiceNumber} disabled={isLocked} />
@@ -130,7 +129,7 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                     <TableHead>Statut</TableHead>
                     <TableHead className="text-right">Montant Total</TableHead>
                     <TableHead className="text-right">Montant Dû</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    {canEdit && <TableHead className="text-right">Actions</TableHead>}
                 </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -154,13 +153,13 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                     </TableCell>
                     <TableCell className="text-right">{formatCurrency(invoice.totalAmount, initialSettings.currency)}</TableCell>
                     <TableCell className="text-right font-medium text-destructive">{formatCurrency(amountDue > 0 ? amountDue : 0, initialSettings.currency)}</TableCell>
-                    {client && (
+                    {client && canEdit && (
                         <TableCell className="text-right">
                         <div className="flex items-center justify-end">
-                            {!isLocked && <ShippingLabelsDialog invoice={invoice} client={client} settings={initialSettings} asTextButton={false} />}
-                            {canEdit && <RecordPaymentButton invoice={invoice} settings={initialSettings} />}
-                            {canEdit && <EditInvoiceForm invoice={invoice} clients={initialClients} products={initialProducts} settings={initialSettings} />}
-                            {canEdit && <CancelInvoiceButton id={invoice.id} invoiceNumber={invoice.invoiceNumber} disabled={isLocked} />}
+                            <ShippingLabelsDialog invoice={invoice} client={client} settings={initialSettings} asTextButton={false} />
+                            <RecordPaymentButton invoice={invoice} settings={initialSettings} />
+                            <EditInvoiceForm invoice={invoice} clients={initialClients} products={initialProducts} settings={initialSettings} />
+                            <CancelInvoiceButton id={invoice.id} invoiceNumber={invoice.invoiceNumber} disabled={isLocked} />
                         </div>
                         </TableCell>
                     )}

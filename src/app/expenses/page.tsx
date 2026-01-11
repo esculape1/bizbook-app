@@ -7,7 +7,7 @@ import { getSession } from "@/lib/session";
 import { formatCurrency, cn } from "@/lib/utils";
 import { ExpenseForm } from "./ExpenseForm";
 import type { Expense } from "@/lib/types";
-import { format, subMonths, getDate, getYear, getMonth, set } from 'date-fns';
+import { format, getYear, getMonth, set } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ExpenseCategoryDetailsDialog } from "./ExpenseCategoryDetailsDialog";
 
@@ -31,7 +31,8 @@ type GroupedExpenses = {
 const getFiscalMonthKey = (date: Date): string => {
   let year = getYear(date);
   let month = getMonth(date); // 0-11
-  if (getDate(date) >= 25) {
+  // If the date is on or after the 25th, it belongs to the next fiscal month.
+  if (date.getDate() >= 25) {
     const nextMonthDate = new Date(year, month + 1, 1);
     month = getMonth(nextMonthDate);
     year = getYear(nextMonthDate);

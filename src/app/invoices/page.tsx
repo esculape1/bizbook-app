@@ -2,10 +2,12 @@
 import { getInvoices, getClients, getProducts, getSettings } from "@/lib/data";
 import { getSession } from "@/lib/session";
 import InvoicesList from "./InvoicesList";
+import { Loader2 } from "lucide-react";
+import { Suspense } from "react";
 
 export const dynamic = 'force-dynamic';
 
-export default async function InvoicesPage() {
+async function InvoicesDataWrapper() {
     const [invoices, clients, products, settings, user] = await Promise.all([
         getInvoices(),
         getClients(),
@@ -27,5 +29,14 @@ export default async function InvoicesPage() {
             initialSettings={settings} 
             user={user} 
         />
+    );
+}
+
+
+export default async function InvoicesPage() {
+    return (
+        <Suspense fallback={<div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+            <InvoicesDataWrapper />
+        </Suspense>
     );
 }

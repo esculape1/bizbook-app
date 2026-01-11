@@ -182,12 +182,10 @@ export async function receivePurchase(id: string) {
       await db.runTransaction(async (transaction) => {
         const purchaseRef = db.collection('purchases').doc(id);
         
-        // **Step 1: Read all product documents first.**
         const productRefs = purchase.items.map(item => db.collection('products').doc(item.productId));
         const productDocs = await transaction.getAll(...productRefs);
         const productMap = new Map(productDocs.map(doc => [doc.id, doc.data() as Product]));
 
-        // **Step 2: Perform all write operations.**
         transaction.update(purchaseRef, { status: 'Received' });
 
         for (const item of purchase.items) {
@@ -195,10 +193,10 @@ export async function receivePurchase(id: string) {
           const product = productMap.get(item.productId);
           
           if (product) {
-            // Increment stock
-            const stockUpdate = { quantityInStock: FieldValue.increment(item.quantity) };
+            const stockUpdate: { quantityInStock: FirebaseFirestore.FieldValue, purchasePrice?: number } = { 
+                quantityInStock: FieldValue.increment(item.quantity) 
+            };
             
-            // Recalculate average purchase price
             const totalItemsInPurchase = purchase.items.reduce((sum, i) => sum + i.quantity, 0);
             if (totalItemsInPurchase > 0) {
               const landedCostPerUnitInPurchase = purchase.totalAmount / totalItemsInPurchase;
@@ -208,8 +206,8 @@ export async function receivePurchase(id: string) {
               
               if (newTotalStock > 0) {
                 const newAveragePurchasePrice = (oldStockValue + newItemsValue) / newTotalStock;
-                if (isFinite(newAveragePurchasePrice)) {
-                    (stockUpdate as any).purchasePrice = newAveragePurchasePrice;
+                if (isFinite(newAveragePurchasePrice) && newAveragePurchasePrice > 0) {
+                    stockUpdate.purchasePrice = newAveragePurchasePrice;
                 }
               }
             }
@@ -244,14 +242,7 @@ export async function cancelPurchase(id: string) {
     }
     
     if (purchaseToCancel.status === 'Received') {
-      const products = await getProducts();
-      for (const item of purchaseToCancel.items) {
-        const product = products.find(p => p.id === item.productId);
-        if (product) {
-          const newStock = product.quantityInStock - item.quantity;
-          await updateProduct(item.productId, { quantityInStock: newStock });
-        }
-      }
+      return { success: false, message: "Impossible d'annuler un achat déjà réceptionné."}
     }
     
     await updatePurchaseInDB(id, { status: 'Cancelled' });

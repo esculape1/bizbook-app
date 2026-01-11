@@ -2,18 +2,15 @@
 'use server';
 
 import { getSession } from '@/lib/session';
-// import { analyzeBusinessData } from '@/ai/flows/business-analysis-flow';
+import { analyzeBusinessData } from '@/ai/flows/business-analysis-flow';
 
 export async function askAI(query: string): Promise<{ status: 'success', response: string } | { status: 'error', error: string }> {
   const session = await getSession();
   if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { status: 'error', error: 'Action non autorisée.' };
   }
-
-  return { status: 'error', error: "La fonctionnalité d'analyse IA est temporairement désactivée pour maintenance. Veuillez réessayer plus tard." };
   
-  // Explicit check for the API key in the production environment (like Vercel)
-  /* if (process.env.NODE_ENV === 'production' && !process.env.GOOGLE_API_KEY) {
+  if (process.env.NODE_ENV === 'production' && !process.env.GOOGLE_API_KEY) {
     console.error("La variable d'environnement GOOGLE_API_KEY n'est pas définie en production.");
     return { status: 'error', error: "La clé API de l'assistant IA n'est pas configurée sur le serveur. Veuillez l'ajouter dans les variables d'environnement de votre projet sur Vercel." };
   }
@@ -34,5 +31,5 @@ export async function askAI(query: string): Promise<{ status: 'success', respons
     }
     
     return { status: 'error', error: "L'analyse par IA a rencontré une erreur. Veuillez réessayer." };
-  } */
+  }
 }

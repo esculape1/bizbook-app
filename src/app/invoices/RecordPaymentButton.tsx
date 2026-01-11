@@ -21,15 +21,6 @@ import { recordPayment } from './actions';
 import type { Invoice, Settings } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 
-const paymentSchema = z.object({
-  amount: z.coerce.number().positive("Le montant doit être positif."),
-  date: z.date({ required_error: "La date est requise." }),
-  method: z.enum(['Espèces', 'Virement bancaire', 'Chèque', 'Autre'], { required_error: "La méthode est requise." }),
-  notes: z.string().optional(),
-});
-
-type PaymentFormValues = z.infer<typeof paymentSchema>;
-
 type RecordPaymentButtonProps = {
   invoice: Invoice;
   settings: Settings;
@@ -42,10 +33,22 @@ export function RecordPaymentButton({ invoice, settings }: RecordPaymentButtonPr
   
   const amountDue = invoice.totalAmount - (invoice.amountPaid || 0);
 
+  const paymentSchema = z.object({
+    amount: z.coerce
+      .number()
+      .positive("Le montant doit être positif.")
+      .max(amountDue, `Le montant ne peut pas dépasser le solde dû de ${formatCurrency(amountDue, settings.currency)}`),
+    date: z.date({ required_error: "La date est requise." }),
+    method: z.enum(['Espèces', 'Virement bancaire', 'Chèque', 'Autre'], { required_error: "La méthode est requise." }),
+    notes: z.string().optional(),
+  });
+
+  type PaymentFormValues = z.infer<typeof paymentSchema>;
+
   const form = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentSchema),
     defaultValues: {
-      amount: amountDue > 0 ? amountDue : 0,
+      amount: amountDue > 0 ? Number(amountDue.toFixed(2)) : 0,
       date: new Date(),
       method: 'Espèces',
       notes: '',
@@ -82,8 +85,8 @@ export function RecordPaymentButton({ invoice, settings }: RecordPaymentButtonPr
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" disabled={isActionDisabled} title={isActionDisabled ? "Action non disponible" : "Enregistrer un paiement"}>
-          <CreditCard className="h-6 w-6 text-green-600" />
+        <Button variant="ghost" size="icon" disabled={isActionDisabled} title={isActionDisabled ? "Facture soldée ou annulée" : "Enregistrer un paiement"}>
+          <CreditCard className={cn("h-6 w-6", !isActionDisabled && "text-green-600")} />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

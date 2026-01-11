@@ -18,7 +18,7 @@ type NewSupplier = z.infer<typeof supplierSchema>;
 
 export async function createSupplier(data: NewSupplier) {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
   }
 
@@ -43,7 +43,7 @@ export async function createSupplier(data: NewSupplier) {
 
 export async function updateSupplier(id: string, data: NewSupplier) {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
   }
 
@@ -68,7 +68,7 @@ export async function updateSupplier(id: string, data: NewSupplier) {
 
 export async function deleteSupplier(id: string) {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
     return { message: "Action non autorisée." };
   }
     

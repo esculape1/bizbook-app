@@ -45,7 +45,7 @@ const navItems = [
   { href: '/invoices', label: 'Factures', icon: FileText, roles: ['SuperAdmin', 'Admin', 'User'] },
   { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: ['SuperAdmin', 'Admin', 'User'] },
   { href: '/reports', label: 'Rapports', icon: BarChart3, roles: ['SuperAdmin', 'Admin', 'User'] },
-  // { href: '/analysis', label: 'Analyse', icon: BrainCircuit, roles: ['SuperAdmin', 'Admin'] },
+  { href: '/analysis', label: 'Analyse', icon: BrainCircuit, roles: ['SuperAdmin', 'Admin'] },
   { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['SuperAdmin', 'Admin', 'User'] },
 ];
 
@@ -56,7 +56,10 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
 
   const accessibleNavItems = navItems.filter(item => item.roles.includes(userRole));
   
-  const currentPageTitle = accessibleNavItems.find(item => item.href === pathname)?.label || '';
+  const currentPageTitle = accessibleNavItems.find(item => {
+    if (item.href === '/') return pathname === '/';
+    return item.href !== '/' && pathname.startsWith(item.href);
+  })?.label || '';
 
   const Logo = () => (
     settings.logoUrl ? (
@@ -115,7 +118,7 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
                     onClick={() => setSheetOpen(false)}
                     className={cn(
                         "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                        pathname === item.href ? "text-primary bg-muted" : "text-muted-foreground"
+                        (item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)) ? "text-primary bg-muted" : "text-muted-foreground"
                     )}
                     >
                         <item.icon className="h-6 w-6" />

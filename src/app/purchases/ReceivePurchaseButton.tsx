@@ -42,7 +42,7 @@ export function ReceivePurchaseButton({ purchaseId, purchaseNumber, disabled }: 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button size="sm" variant="destructive" className="h-8 text-xs" disabled={disabled}>
+        <Button size="sm" variant="success" className="h-8 text-xs" disabled={disabled}>
           Réceptionner
         </Button>
       </AlertDialogTrigger>
@@ -50,7 +50,7 @@ export function ReceivePurchaseButton({ purchaseId, purchaseNumber, disabled }: 
         <AlertDialogHeader>
           <AlertDialogTitle>Confirmer la réception de l'achat ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Cette action marquera l'achat "{purchaseNumber}" comme reçu et ajoutera les quantités de produits au stock. Cette action est irréversible.
+            Cette action marquera l'achat "{purchaseNumber}" comme reçu et ajoutera les quantités de produits au stock. Le prix d'achat moyen des produits sera recalculé. Cette action est irréversible.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
