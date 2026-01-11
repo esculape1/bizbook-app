@@ -35,7 +35,7 @@ export async function createClient(data: NewClient) {
   try {
     await addClient(validatedFields.data);
     revalidateTag('clients');
-    revalidateTag('invoices');
+    revalidateTag('dashboard-stats');
     return {}; // Indique le succès
   } catch (error) {
     console.error('Failed to create client:', error);
@@ -61,6 +61,7 @@ export async function updateClient(id: string, data: NewClient) {
   try {
     await updateClientInDB(id, validatedFields.data);
     revalidateTag('clients');
+    revalidateTag('dashboard-stats');
     revalidateTag('invoices'); // Client name might be displayed on invoices page
     return {}; // Indique le succès
   } catch (error) {
@@ -79,6 +80,8 @@ export async function deleteClient(id: string) {
   try {
     await deleteClientFromDB(id);
     revalidateTag('clients');
+    revalidateTag('dashboard-stats');
+    revalidateTag('invoices');
     return { success: true };
   } catch (error) {
     console.error('Failed to delete client:', error);

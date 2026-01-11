@@ -86,6 +86,7 @@ export async function createPurchase(formData: unknown) {
 
     revalidateTag('purchases');
     revalidateTag('products');
+    revalidateTag('dashboard-stats');
     return {};
   } catch (error) {
     console.error('Failed to create purchase:', error);

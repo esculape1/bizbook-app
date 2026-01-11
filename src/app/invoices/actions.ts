@@ -182,6 +182,9 @@ export async function updateInvoice(id: string, formData: unknown) {
     if (!originalInvoice) {
         return { message: 'Facture originale non trouvée.' };
     }
+    if (originalInvoice.status === 'Paid' || originalInvoice.status === 'Cancelled') {
+        return { message: 'Les factures payées ou annulées ne peuvent pas être modifiées.' };
+    }
 
     const clients = await getClients();
     const products = await getProducts();
@@ -285,21 +288,23 @@ export async function cancelInvoice(id: string) {
     if (!invoiceToCancel) {
       throw new Error("Facture non trouvée pour l'annulation.");
     }
+
+    if (invoiceToCancel.status === 'Cancelled') {
+        return { success: false, message: 'Cette facture est déjà annulée.' };
+    }
     
-    // Restore stock if the invoice is not already cancelled or paid
-    if (invoiceToCancel.status !== 'Cancelled') {
-      const products = await getProducts();
-      for (const item of invoiceToCancel.items) {
-        const product = products.find(p => p.id === item.productId);
-        if (product) {
-          const newStock = product.quantityInStock + item.quantity;
-          await updateProduct(item.productId, { quantityInStock: newStock });
-        }
+    // Restore stock only if the invoice was not already cancelled
+    const products = await getProducts();
+    for (const item of invoiceToCancel.items) {
+      const product = products.find(p => p.id === item.productId);
+      if (product) {
+        const newStock = product.quantityInStock + item.quantity;
+        await updateProduct(item.productId, { quantityInStock: newStock });
       }
     }
     
     // Update invoice status to 'Cancelled' and reset paid amount
-    await updateInvoiceInDB(id, { status: 'Cancelled', amountPaid: 0 });
+    await updateInvoiceInDB(id, { status: 'Cancelled' });
 
     revalidateTag('invoices');
     revalidateTag('products');
@@ -328,7 +333,25 @@ export async function recordPayment(invoiceId: string, formData: unknown) {
     return { message: "Action non autorisée." };
   }
 
-  const validatedFields = paymentSchema.safeParse(formData);
+  const invoice = await getInvoiceById(invoiceId);
+  if (!invoice) {
+    return { message: 'Facture non trouvée.' };
+  }
+  
+  if (invoice.status === 'Paid' || invoice.status === 'Cancelled') {
+    return { message: 'Impossible d\'enregistrer un paiement sur une facture soldée ou annulée.' };
+  }
+
+  const amountDue = invoice.totalAmount - (invoice.amountPaid || 0);
+
+  const paymentSchemaWithMax = paymentSchema.extend({
+      amount: z.coerce
+          .number()
+          .positive("Le montant doit être positif.")
+          .max(amountDue, `Le montant ne peut pas dépasser le solde dû.`),
+  });
+
+  const validatedFields = paymentSchemaWithMax.safeParse(formData);
 
   if (!validatedFields.success) {
     return {
@@ -338,10 +361,6 @@ export async function recordPayment(invoiceId: string, formData: unknown) {
 
   try {
     const { amount, date, method, notes } = validatedFields.data;
-    const invoice = await getInvoiceById(invoiceId);
-    if (!invoice) {
-      return { message: 'Facture non trouvée.' };
-    }
 
     const newPayment: Payment = {
       id: randomUUID(),
@@ -356,7 +375,8 @@ export async function recordPayment(invoiceId: string, formData: unknown) {
     const newAmountPaid = updatedPayments.reduce((sum, p) => sum + p.amount, 0);
 
     let newStatus: Invoice['status'] = 'Partially Paid';
-    if (newAmountPaid >= invoice.totalAmount) {
+    // Use a small tolerance for floating point comparisons
+    if (newAmountPaid >= invoice.totalAmount - 0.001) {
       newStatus = 'Paid';
     } else if (newAmountPaid <= 0) {
       newStatus = 'Unpaid';

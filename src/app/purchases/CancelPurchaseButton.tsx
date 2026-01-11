@@ -51,7 +51,7 @@ export function CancelPurchaseButton({ id, purchaseNumber, disabled }: { id: str
         <AlertDialogHeader>
           <AlertDialogTitle>Êtes-vous sûr de vouloir annuler cet achat ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Cette action est irréversible. L'achat "{purchaseNumber}" sera marqué comme annulé et le stock sera restauré si l'achat avait été reçu.
+            Cette action est irréversible. L'achat "{purchaseNumber}" sera marqué comme annulé. L'annulation n'est possible que si l'achat n'a pas encore été réceptionné.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

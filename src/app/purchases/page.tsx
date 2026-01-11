@@ -127,7 +127,7 @@ export default async function PurchasesPage() {
                     {purchase.status === 'Pending' && <ReceivePurchaseButton purchaseId={purchase.id} purchaseNumber={purchase.purchaseNumber} disabled={isLocked} />}
                     {purchase.status === 'Received' && <Button size="sm" variant="success" className="h-8 text-xs" disabled>Reçu</Button>}
                     <EditPurchaseForm purchase={purchase} suppliers={suppliers} products={products} settings={settings} />
-                    <CancelPurchaseButton id={purchase.id} purchaseNumber={purchase.purchaseNumber} disabled={isLocked} />
+                    <CancelPurchaseButton id={purchase.id} purchaseNumber={purchase.purchaseNumber} disabled={purchase.status === 'Received' || purchase.status === 'Cancelled'} />
                  </CardFooter>
               )}
             </Card>
@@ -152,7 +152,6 @@ export default async function PurchasesPage() {
             </TableHeader>
             <TableBody>
               {purchases.map((purchase) => {
-                const isLocked = purchase.status !== 'Pending';
                 const itemNames = purchase.items.map(item => `${item.productName} (x${item.quantity})`).join(', ');
                 return (
                 <TableRow key={purchase.id} className={cn(purchase.status === 'Cancelled' && 'bg-muted/50 text-muted-foreground')}>
@@ -171,10 +170,10 @@ export default async function PurchasesPage() {
                   {canEdit && (
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
-                        {purchase.status === 'Pending' && <ReceivePurchaseButton purchaseId={purchase.id} disabled={isLocked} purchaseNumber={purchase.purchaseNumber}/>}
+                        {purchase.status === 'Pending' && <ReceivePurchaseButton purchaseId={purchase.id} purchaseNumber={purchase.purchaseNumber}/>}
                         {purchase.status === 'Received' && <Button size="sm" variant="success" className="h-8 text-xs" disabled>Reçu</Button>}
                         <EditPurchaseForm purchase={purchase} suppliers={suppliers} products={products} settings={settings} />
-                        <CancelPurchaseButton id={purchase.id} purchaseNumber={purchase.purchaseNumber} disabled={isLocked} />
+                        <CancelPurchaseButton id={purchase.id} purchaseNumber={purchase.purchaseNumber} disabled={purchase.status === 'Received' || purchase.status === 'Cancelled'} />
                       </div>
                     </TableCell>
                   )}
