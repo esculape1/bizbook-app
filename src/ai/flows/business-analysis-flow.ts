@@ -4,7 +4,7 @@
  * @fileOverview An AI agent for business data analysis.
  * - analyzeBusinessData - a function that handles business analysis queries.
  */
-/*
+
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 import { getClients, getInvoices, getProducts, getExpenses, getSettings } from '@/lib/data';
@@ -331,14 +331,17 @@ const businessAnalysisFlow = ai.defineFlow(
         
         const llm = googleAI.model('gemini-1.5-flash');
         
-        const response = await ai.generate({
+        const {output} = await ai.generate({
             model: llm,
             prompt: query,
             system: systemPrompt,
             tools: [getInvoicesTool, getExpensesTool, getProductsTool, getClientsTool, getSettingsTool],
+            output: {
+                format: 'text',
+            }
         });
 
-        const textResponse = response.text;
+        const textResponse = output;
         
         if (textResponse) {
           return textResponse;
@@ -352,4 +355,3 @@ const businessAnalysisFlow = ai.defineFlow(
 export async function analyzeBusinessData(query: string): Promise<string> {
     return businessAnalysisFlow(query);
 }
-*/
