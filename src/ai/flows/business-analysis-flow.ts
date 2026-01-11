@@ -5,9 +5,6 @@
  * - analyzeBusinessData - a function that handles business analysis queries.
  */
 
-// This file is temporarily disabled to prevent build errors.
-// Re-enable by uncommenting the code below and in related files.
-/*
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 import { getClients, getInvoices, getProducts, getExpenses, getSettings } from '@/lib/data';
@@ -354,8 +351,4 @@ const businessAnalysisFlow = ai.defineFlow(
 
 export async function analyzeBusinessData(query: string): Promise<string> {
     return businessAnalysisFlow(query);
-}
-*/
-export async function analyzeBusinessData(query: string): Promise<string> {
-    return "La fonctionnalité d'analyse IA est temporairement désactivée pour maintenance.";
 }

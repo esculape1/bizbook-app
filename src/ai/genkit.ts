@@ -1,6 +1,6 @@
 
-// import {genkit} from 'genkit';
-// import {googleAI} from '@genkit-ai/googleai';
+import {genkit} from 'genkit';
+import {googleAI} from '@genkit-ai/googleai';
 
 if (!process.env.GOOGLE_API_KEY) {
   console.warn(
@@ -8,12 +8,10 @@ if (!process.env.GOOGLE_API_KEY) {
   );
 }
 
-// Temporarily disabling AI to fix build issues.
-// export const ai = genkit({
-//   plugins: [
-//     googleAI({
-//       apiKey: process.env.GOOGLE_API_KEY,
-//     }),
-//   ],
-// });
-export const ai: any = {};
+export const ai = genkit({
+  plugins: [
+    googleAI({
+      apiKey: process.env.GOOGLE_API_KEY,
+    }),
+  ],
+});
