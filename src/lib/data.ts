@@ -1,4 +1,5 @@
 
+
 import { db } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User, UserWithPassword } from './types';
@@ -451,15 +452,33 @@ export const getDashboardStats = cache(async () => {
     db.collection('products').get()
   ]);
 
+  // Determine the start date for the fiscal year
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth(); // 0-11
+  
+  // Fiscal year starts on Dec 25. If today is before Dec 25, the fiscal year started last year.
+  // Otherwise, it started this year.
+  const fiscalYearStartYear = currentMonth < 11 || (currentMonth === 11 && now.getDate() < 25) 
+    ? currentYear - 1 
+    : currentYear;
+  const fiscalYearStartDate = new Date(fiscalYearStartYear, 11, 25); // Month is 0-indexed, so 11 is December.
+
   // Process invoices
   let totalRevenue = 0;
   let totalDue = 0;
   let unpaidInvoicesCount = 0;
+  
   invoicesSnapshot.forEach(doc => {
     const inv = doc.data() as Invoice;
-    if (inv.status === 'Paid' || inv.status === 'Partially Paid') {
+    const invDate = new Date(inv.date);
+
+    // Calculate total revenue for the current fiscal year only
+    if ((inv.status === 'Paid' || inv.status === 'Partially Paid') && invDate >= fiscalYearStartDate) {
       totalRevenue += inv.amountPaid || 0;
     }
+    
+    // Calculate total due and unpaid count across all time
     if (inv.status === 'Unpaid' || inv.status === 'Partially Paid') {
       const due = inv.totalAmount - (inv.amountPaid || 0);
       if (due > 0) {
@@ -500,3 +519,4 @@ export const getDashboardStats = cache(async () => {
 
     
     
+
