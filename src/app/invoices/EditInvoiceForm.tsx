@@ -98,7 +98,7 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
   
   const discountAmount = subTotal * (watchedDiscount / 100);
   const totalAfterDiscount = subTotal - discountAmount;
-  const vatAmount = totalAfterDiscount * (vat / 100);
+  const vatAmount = totalAfterDiscount * (watchedVat / 100);
   const totalAmount = totalAfterDiscount + vatAmount;
 
   const handleProductChange = (productId: string, index: number) => {
@@ -368,3 +368,5 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
     </Dialog>
   );
 }
+
+    
