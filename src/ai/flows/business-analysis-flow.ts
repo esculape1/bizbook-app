@@ -4,7 +4,7 @@
  * @fileOverview An AI agent for business data analysis.
  * - analyzeBusinessData - a function that handles business analysis queries.
  */
-
+/*
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 import { getClients, getInvoices, getProducts, getExpenses, getSettings } from '@/lib/data';
@@ -352,3 +352,4 @@ const businessAnalysisFlow = ai.defineFlow(
 export async function analyzeBusinessData(query: string): Promise<string> {
     return businessAnalysisFlow(query);
 }
+*/
