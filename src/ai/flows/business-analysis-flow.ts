@@ -9,7 +9,7 @@ import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 import { getClients, getInvoices, getProducts, getExpenses, getSettings } from '@/lib/data';
 import { isWithinInterval } from 'date-fns';
-import { googleAI } from '@genkit-ai/googleai';
+import { googleAI } from '@genkit-ai/google-genai';
 
 const ClientSchema = z.object({
   id: z.string().nullable().optional(),
