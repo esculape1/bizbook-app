@@ -1,14 +1,14 @@
 
 'use server';
 
-// import { getSession } from '@/lib/session';
-// import { analyzeBusinessData } from '@/ai/flows/business-analysis-flow';
+import { getSession } from '@/lib/session';
+import { analyzeBusinessData } from '@/ai/flows/business-analysis-flow';
 
 export async function askAI(query: string): Promise<{ status: 'success', response: string } | { status: 'error', error: string }> {
-  // const session = await getSession();
-  // if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
-  //   return { status: 'error', error: 'Action non autorisée.' };
-  // }
+  const session = await getSession();
+  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+    return { status: 'error', error: 'Action non autorisée.' };
+  }
   
   if (process.env.NODE_ENV === 'production' && !process.env.GOOGLE_API_KEY) {
     console.error("La variable d'environnement GOOGLE_API_KEY n'est pas définie en production.");
@@ -20,9 +20,9 @@ export async function askAI(query: string): Promise<{ status: 'success', respons
   }
 
   try {
-    // Temporarily disable AI analysis to fix build
-    // const response = await analyzeBusinessData(query);
-    const response = "La fonctionnalité d'analyse IA est temporairement désactivée pour maintenance.";
+    // La fonctionnalité IA est temporairement désactivée.
+    const response = await analyzeBusinessData(query);
+    // const response = "L'analyse IA est en cours de maintenance. Veuillez réessayer plus tard.";
     return { status: 'success', response };
   } catch (e: any) {
     console.error("AI analysis failed:", e);

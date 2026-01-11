@@ -20,7 +20,9 @@ export async function askAI(query: string): Promise<{ status: 'success', respons
   }
 
   try {
+    // La fonctionnalité IA est temporairement désactivée.
     const response = await analyzeBusinessData(query);
+    // const response = "L'analyse IA est en cours de maintenance. Veuillez réessayer plus tard.";
     return { status: 'success', response };
   } catch (e: any) {
     console.error("AI analysis failed:", e);

@@ -5,16 +5,17 @@
  * - analyzeBusinessData - a function that handles business analysis queries.
  */
 
+/*
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 import { getClients, getInvoices, getProducts, getExpenses, getSettings } from '@/lib/data';
 import { isWithinInterval } from 'date-fns';
-import { googleAI } from '@genkit-ai/googleai';
+import { googleAI } from '@genkit-ai/google-genai';
 
 const ClientSchema = z.object({
   id: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
-  email: z.string().nullable().optional(), // Changed from .email() to .string() to be more lenient
+  email: z.string().nullable().optional(),
   phone: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
   ifu: z.string().nullable().optional(),
@@ -259,12 +260,13 @@ Ta mission est de répondre aux questions de l'utilisateur en utilisant les outi
 Tu DOIS utiliser les outils pour obtenir les données. Ne demande jamais à l'utilisateur de te fournir les données.
 Sois concis, précis et professionnel. Réponds toujours en français.
 La date d'aujourd'hui est le ${new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })}. Utilise cette information pour interpréter les questions relatives au temps (ex: "ce mois-ci", "la semaine dernière").
+L'exercice fiscal de l'entreprise commence le 25 décembre de chaque année.
 N'invente jamais d'informations. Si les données ne sont pas disponibles pour répondre à une question, indique-le clairement.
 
 LOGIQUE DE RAISONNEMENT OBLIGATOIRE :
 
 1.  **DÉCODAGE DE LA QUESTION DE L'UTILISATEUR :**
-    *   **Période :** Si la question mentionne une période (ex: "le mois dernier", "cette année", "du 1er janvier au 31 mars"), détermine les dates de début (\`startDate\`) et de fin (\`endDate\`) exactes.
+    *   **Période :** Si la question mentionne une période (ex: "le mois dernier", "cette année", "du 1er janvier au 31 mars"), détermine les dates de début (\`startDate\`) et de fin (\`endDate\`) exactes. Si aucune période n'est spécifiée pour un calcul de rentabilité (comme le bénéfice), tu dois **OBLIGATOIREMENT** utiliser l'exercice fiscal en cours comme période par défaut.
     *   **Client :** Si un nom de client est mentionné (ex: "le client DLG"), tu dois d'abord utiliser \`getClientsTool\` pour trouver l'ID exact de ce client.
     *   **Produit :** Si un nom de produit est mentionné, tu devras utiliser \`getProductsTool\` pour trouver des informations sur ce produit.
 
@@ -277,14 +279,15 @@ LOGIQUE DE RAISONNEMENT OBLIGATOIRE :
         2.  Fais la somme du champ \`totalAmount\` de TOUTES les factures retournées qui ne sont PAS annulées (\`status\` n'est pas 'Cancelled').
 
     *   **BÉNÉFICE :**
-        1.  Calcule le CA (voir ci-dessus).
-        2.  Calcule le Coût des Marchandises Vendues (CMV) :
-            a. Pour chaque facture non annulée, parcours ses \`items\`.
+        1.  Détermine la période. Si non spécifiée, utilise l'exercice fiscal en cours (du 25 décembre de l'année N-1 au 24 décembre de l'année N).
+        2.  Calcule le CA pour cette période.
+        3.  Calcule le Coût des Marchandises Vendues (CMV) pour cette période :
+            a. Pour chaque facture non annulée de la période, parcours ses \`items\`.
             b. **Tu DOIS appeler \`getProductsTool\` pour obtenir la liste complète des produits et trouver le \`purchasePrice\` correspondant à chaque \`item\` en utilisant le \`productId\`.**
             c. Multiplie la \`quantity\` de l'item par son \`purchasePrice\`.
             d. La somme de tous ces coûts est le CMV.
-        3.  Calcule le total des dépenses avec \`getExpensesTool\` (filtré par période).
-        4.  **Bénéfice = CA - CMV - Dépenses.**
+        4.  **IMPORTANT :** Calcule le total des dépenses avec \`getExpensesTool\` en utilisant **exactement la même période** que pour le CA.
+        5.  **Bénéfice = CA - CMV - Dépenses.**
 
     *   **PRODUIT LE PLUS VENDU (en quantité) :**
         1.  Utilise \`getInvoicesTool\` (avec filtre de période/client si besoin).
@@ -329,17 +332,19 @@ const businessAnalysisFlow = ai.defineFlow(
             return "Veuillez fournir une question pour l'analyse.";
         }
         
-        // The 'model' property now needs to be accessed through googleAI.model()
         const llm = googleAI.model('gemini-1.5-flash');
         
-        const response = await ai.generate({
+        const {output} = await ai.generate({
             model: llm,
             prompt: query,
             system: systemPrompt,
             tools: [getInvoicesTool, getExpensesTool, getProductsTool, getClientsTool, getSettingsTool],
+            output: {
+                format: 'text',
+            }
         });
 
-        const textResponse = response.text;
+        const textResponse = output;
         
         if (textResponse) {
           return textResponse;
@@ -349,7 +354,8 @@ const businessAnalysisFlow = ai.defineFlow(
         return "Je n'ai pas pu formuler de réponse finale. Pourriez-vous reformuler votre question ? Il est possible que certaines informations nécessaires, comme le prix d'achat des produits, manquent pour effectuer le calcul demandé.";
     }
 );
-
+*/
 export async function analyzeBusinessData(query: string): Promise<string> {
-    return businessAnalysisFlow(query);
+    // return businessAnalysisFlow(query);
+    return "La fonction d'analyse IA est temporairement désactivée pour résoudre un problème de déploiement. Elle sera bientôt de retour.";
 }
