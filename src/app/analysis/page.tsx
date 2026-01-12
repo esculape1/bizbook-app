@@ -13,7 +13,6 @@ import { Send, Bot, User, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AppLayout } from '@/components/AppLayout';
-import { getSettings } from '@/lib/data';
 import type { User as UserType, Settings } from '@/lib/types';
 // We must not import getSession directly in a client component.
 // Instead, we create a server action or an API route to get session data if needed,
@@ -126,6 +125,7 @@ function AnalysisPageContent() {
 
 // This is now a Server Component that fetches data and passes it to the client component.
 import { getSession } from '@/lib/session';
+import { getSettings } from '@/lib/data';
 import { redirect } from 'next/navigation';
 
 export default async function AnalysisPage() {
