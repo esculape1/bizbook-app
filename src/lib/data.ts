@@ -6,7 +6,7 @@ import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purc
 import { unstable_cache as cache } from 'next/cache';
 
 const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Veuillez vérifier la configuration de Firebase ou vos quotas d'utilisation.";
-const REVALIDATION_TIME = 86400; // 24 heures en secondes
+const REVALIDATION_TIME = 3600; // 1 heure en secondes
 
 // Helper to recursively convert Firestore Timestamps to ISO strings
 function convertTimestamps(data: any): any {
@@ -457,11 +457,11 @@ export const getDashboardStats = cache(async () => {
 
   // Fiscal year starts on Dec 25.
   if (now.getMonth() < 11 || (now.getMonth() === 11 && now.getDate() < 25)) {
-    // We are in the fiscal year that started on Dec 25 of last year.
-    fiscalYearStartDate = new Date(currentYear - 1, 11, 25);
+    // We are in the fiscal year that started on Dec 25 of the previous calendar year.
+    fiscalYearStartDate = new Date(currentYear - 1, 11, 25, 0, 0, 0, 0);
   } else {
-    // We are in the fiscal year that started on Dec 25 of this year.
-    fiscalYearStartDate = new Date(currentYear, 11, 25);
+    // We are in the fiscal year that started on Dec 25 of the current calendar year.
+    fiscalYearStartDate = new Date(currentYear, 11, 25, 0, 0, 0, 0);
   }
 
   let totalRevenue = 0;
@@ -472,10 +472,17 @@ export const getDashboardStats = cache(async () => {
     const inv = doc.data() as Invoice;
     const invDate = new Date(inv.date);
 
-    if ((inv.status === 'Paid' || inv.status === 'Partially Paid') && invDate >= fiscalYearStartDate) {
-      totalRevenue += inv.amountPaid || 0;
+    // Calculate revenue based on payments received within the fiscal year.
+    if (inv.payments && inv.payments.length > 0) {
+      inv.payments.forEach(payment => {
+        const paymentDate = new Date(payment.date);
+        if (paymentDate >= fiscalYearStartDate) {
+          totalRevenue += payment.amount;
+        }
+      });
     }
     
+    // Calculate total due amount for all non-cancelled invoices, regardless of date.
     if (inv.status === 'Unpaid' || inv.status === 'Partially Paid') {
       const due = inv.totalAmount - (inv.amountPaid || 0);
       if (due > 0) {
@@ -517,6 +524,7 @@ export const getDashboardStats = cache(async () => {
 
     
     
+
 
 
 
