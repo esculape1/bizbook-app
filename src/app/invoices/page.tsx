@@ -2,8 +2,8 @@
 import { getInvoices, getClients, getProducts, getSettings } from "@/lib/data";
 import { getSession } from "@/lib/session";
 import InvoicesList from "./InvoicesList";
-import { Loader2 } from "lucide-react";
-import { Suspense } from "react";
+import { AppLayout } from "@/components/AppLayout";
+import { redirect } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
 
@@ -34,9 +34,15 @@ async function InvoicesDataWrapper() {
 
 
 export default async function InvoicesPage() {
+    const [user, settings] = await Promise.all([getSession(), getSettings()]);
+
+    if (!user || !settings) {
+        redirect('/login');
+    }
+
     return (
-        <Suspense fallback={<div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>}>
+        <AppLayout user={user} settings={settings}>
             <InvoicesDataWrapper />
-        </Suspense>
+        </AppLayout>
     );
 }

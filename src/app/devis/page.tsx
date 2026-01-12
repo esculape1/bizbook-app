@@ -12,10 +12,12 @@ import { EditQuoteForm } from "./EditQuoteForm";
 import { DeleteQuoteButton } from "./DeleteQuoteButton";
 import { QuoteViewerDialog } from "./QuoteViewerDialog";
 import { Separator } from "@/components/ui/separator";
+import { AppLayout } from "@/components/AppLayout";
+import { redirect } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
 
-export default async function DevisPage() {
+async function DevisContent() {
   const [quotes, clients, products, settings, user] = await Promise.all([
     getQuotes(),
     getClients(),
@@ -23,6 +25,10 @@ export default async function DevisPage() {
     getSettings(),
     getSession()
   ]);
+
+  if (!user) {
+    return null;
+  }
 
   const canEdit = user?.role === 'Admin' || user?.role === 'SuperAdmin';
 
@@ -48,7 +54,7 @@ export default async function DevisPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <>
       <PageHeader
         title="Proforma"
         actions={canEdit ? <QuoteForm clients={clients} products={products} settings={settings} /> : undefined}
@@ -132,6 +138,21 @@ export default async function DevisPage() {
           </Table>
         </CardContent>
       </Card>
-    </div>
+    </>
+  );
+}
+
+
+export default async function DevisPage() {
+  const [user, settings] = await Promise.all([getSession(), getSettings()]);
+
+  if (!user || !settings) {
+    redirect('/login');
+  }
+
+  return (
+    <AppLayout user={user} settings={settings}>
+      <DevisContent />
+    </AppLayout>
   );
 }

@@ -12,27 +12,34 @@ import { StockInventoryReport } from "./StockInventoryReport";
 import { ProductQrCodeDialog } from "./ProductQrCodeDialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { AppLayout } from "@/components/AppLayout";
+import { redirect } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
 
-export default async function ProductsPage() {
+
+async function ProductsContent() {
   const [products, settings, user] = await Promise.all([
     getProducts(),
     getSettings(),
     getSession(),
   ]);
 
+  if (!user) {
+    return null;
+  }
+
   const canManageProducts = user?.role === 'Admin' || user?.role === 'SuperAdmin';
   const canViewPrices = user?.role === 'SuperAdmin' || user?.role === 'Admin';
 
   return (
-    <div className="flex flex-col h-full gap-6">
+    <>
       <PageHeader
         title="Produits"
         actions={
           <div className="flex items-center gap-2">
             <StockInventoryReport products={products} settings={settings} />
-            {canManageProducts && <div className="hidden md:block"><ProductForm /></div>}
+            {canManageProducts && <ProductForm />}
           </div>
         }
       />
@@ -81,7 +88,6 @@ export default async function ProductsPage() {
                 )
             })}
         </div>
-        {canManageProducts && <div className="mt-6 flex justify-center"><ProductForm /></div>}
       </div>
 
 
@@ -130,6 +136,21 @@ export default async function ProductsPage() {
           </ScrollArea>
         </CardContent>
       </Card>
-    </div>
+    </>
+  );
+}
+
+
+export default async function ProductsPage() {
+  const [user, settings] = await Promise.all([getSession(), getSettings()]);
+
+  if (!user || !settings) {
+    redirect('/login');
+  }
+
+  return (
+    <AppLayout user={user} settings={settings}>
+      <ProductsContent />
+    </AppLayout>
   );
 }

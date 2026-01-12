@@ -55,14 +55,6 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
   const [isSheetOpen, setSheetOpen] = useState(false);
 
   const accessibleNavItems = navItems.filter(item => item.roles.includes(userRole));
-  
-  const currentPageTitle = accessibleNavItems.find(item => {
-    // Exact match for the dashboard
-    if (item.href === '/') return pathname === '/';
-    // For other routes, check if the pathname starts with the href
-    return item.href !== '/' && pathname.startsWith(item.href);
-  })?.label || '';
-
 
   const Logo = () => (
     settings.logoUrl ? (
@@ -75,118 +67,124 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
   );
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/40">
-      <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 z-50">
-        
-        {/* Mobile Menu Trigger & Main navigation for desktop */}
-        <nav className="flex-1 flex items-center gap-6 text-lg font-medium">
-            {/* Desktop Logo & Nav */}
-            <div className="hidden md:flex md:items-center md:gap-5 md:text-sm">
-                <Link href="/" className="flex items-center gap-2 font-semibold text-lg md:text-base">
-                <Logo />
-                <span className="hidden lg:inline-block">BizBook</span>
+    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+      <div className="hidden border-r bg-muted/40 md:block">
+        <div className="flex h-full max-h-screen flex-col gap-2">
+          <div className="flex h-16 items-center border-b px-4 lg:px-6">
+            <Link href="/" className="flex items-center gap-2 font-semibold">
+              <Logo />
+              <span className="">BizBook</span>
+            </Link>
+          </div>
+          <div className="flex-1">
+            <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
+              {accessibleNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                    (item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)) ? "bg-muted text-primary" : ""
+                  )}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
                 </Link>
-                {accessibleNavItems.map((item) => (
-                    <Link
-                        key={item.href}
-                        href={item.href}
-                        className={cn(
-                        "transition-colors hover:text-foreground ml-6",
-                        pathname === item.href ? "text-foreground font-semibold" : "text-muted-foreground"
-                        )}
-                    >
-                        {item.label}
-                    </Link>
-                ))}
-            </div>
-
-            {/* Mobile Menu Trigger */}
-            <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
+              ))}
+            </nav>
+          </div>
+          <div className="mt-auto p-4">
+             <footer className="w-full text-center text-xs text-muted-foreground">
+                <p className="mb-2">© {new Date().getFullYear()} BizBook.</p>
+                <p>By DLG Caverne Consortium</p>
+             </footer>
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-col">
+        <header className="flex h-16 items-center gap-4 border-b bg-muted/40 px-4 lg:px-6">
+          <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="shrink-0 md:hidden">
+              <Button
+                variant="outline"
+                size="icon"
+                className="shrink-0 md:hidden"
+              >
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle navigation menu</span>
-                </Button>
+              </Button>
             </SheetTrigger>
-            <SheetContent side="left">
-                <nav className="grid gap-6 text-lg font-medium">
-                <Link href="/" className="flex items-center gap-2 text-lg font-semibold" onClick={() => setSheetOpen(false)}>
-                    <Logo />
-                    <span>BizBook</span>
+            <SheetContent side="left" className="flex flex-col">
+              <nav className="grid gap-2 text-lg font-medium">
+                <Link
+                  href="#"
+                  className="flex items-center gap-2 text-lg font-semibold mb-4"
+                >
+                  <Logo />
+                  <span >BizBook</span>
                 </Link>
                 {accessibleNavItems.map((item) => (
-                    <Link
+                  <Link
                     key={item.href}
                     href={item.href}
                     onClick={() => setSheetOpen(false)}
                     className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
-                        (item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)) ? "text-primary bg-muted" : "text-muted-foreground"
+                      "mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground",
+                      (item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)) ? "bg-muted text-foreground" : ""
                     )}
-                    >
-                        <item.icon className="h-6 w-6" />
-                        {item.label}
-                    </Link>
+                  >
+                    <item.icon className="h-5 w-5" />
+                    {item.label}
+                  </Link>
                 ))}
-                </nav>
+              </nav>
             </SheetContent>
-            </Sheet>
-        </nav>
-        
-        {/* Right Side: Page Title (Desktop) and User Menu */}
-        <div className="flex items-center gap-4">
-            <h1 className="text-xl font-semibold text-foreground hidden md:block">{currentPageTitle}</h1>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="secondary" size="icon" className="rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={`https://i.pravatar.cc/150?u=${user.email}`} alt={user.name} />
-                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <span className="sr-only">Toggle user menu</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.name}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                        {user.email}
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground pt-1 font-semibold">
-                        Rôle: {user.role}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Link href="/settings" className="w-full">Paramètres</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <form action={signOut} className="w-full">
-                    <button type="submit" className="flex items-center w-full">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Déconnexion</span>
-                    </button>
-                  </form>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
-
-      </header>
-      <main className="flex-1 flex flex-col min-h-0 p-4 lg:p-6">
-        {children}
-      </main>
-      <footer className="w-full p-4 text-center text-xs text-muted-foreground bg-background/90 backdrop-blur-sm">
-        <p className="mb-2">© {new Date().getFullYear()} BizBook. Conçu et développé par DLG Caverne Consortium.</p>
-        <div className="flex flex-col items-center justify-center gap-y-1 sm:flex-row sm:gap-x-2">
-            <span>Email: dlgbiomed@gmail.com</span>
-            <span className="hidden sm:inline">|</span>
-            <span>Tél: +226 25 46 55 12 / +226 70 15 06 99</span>
-        </div>
-    </footer>
+          </Sheet>
+          <div className="w-full flex-1">
+            {/* On pourrait mettre un champ de recherche ici si besoin */}
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="icon" className="rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={`https://i.pravatar.cc/150?u=${user.email}`} alt={user.name} />
+                  <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <span className="sr-only">Toggle user menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">{user.name}</p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                      {user.email}
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground pt-1 font-semibold">
+                      Rôle: {user.role}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/settings">Paramètres</Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <form action={signOut} className="w-full">
+                  <button type="submit" className="flex items-center w-full">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Déconnexion</span>
+                  </button>
+                </form>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </header>
+        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 min-h-0 overflow-auto">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

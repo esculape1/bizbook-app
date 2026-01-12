@@ -14,10 +14,13 @@ import { PackageSearch } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ReceivePurchaseButton } from "./ReceivePurchaseButton";
 import { Button } from "@/components/ui/button";
+import { AppLayout } from "@/components/AppLayout";
+import { redirect } from "next/navigation";
+
 
 export const dynamic = 'force-dynamic';
 
-export default async function PurchasesPage() {
+async function PurchasesContent() {
   const [purchases, suppliers, products, settings, user] = await Promise.all([
     getPurchases(),
     getSuppliers(),
@@ -25,6 +28,10 @@ export default async function PurchasesPage() {
     getSettings(),
     getSession()
   ]);
+
+  if (!user) {
+    return null; // or a loading/error state
+  }
 
   const canEdit = user?.role === 'Admin' || user?.role === 'SuperAdmin';
 
@@ -61,39 +68,24 @@ export default async function PurchasesPage() {
 
 
   return (
-    <div className="flex flex-col gap-6">
-       <div className="hidden md:flex flex-col md:flex-row justify-between items-start gap-4">
-        <div className="flex-1">
-            <PageHeader title="Achats" />
-        </div>
-        <div className="flex items-center gap-2 w-full md:w-auto">
+    <>
+      <PageHeader
+        title="Achats"
+        actions={
+          <div className="flex items-center gap-2">
             {totalPendingAmount > 0 && (
-                <div className="flex-1 md:flex-none p-3 rounded-lg bg-gradient-to-r from-lime-200 via-lime-300 to-lime-400 text-lime-900 shadow-md flex items-center gap-3">
-                    <PackageSearch className="h-6 w-6" />
-                    <div className="text-right">
-                        <div className="text-sm font-medium">Achats en attente</div>
-                        <div className="text-lg font-bold">{formatCurrency(totalPendingAmount, settings.currency)}</div>
-                    </div>
-                </div>
+              <div className="hidden md:flex p-2 rounded-lg bg-gradient-to-r from-lime-200 via-lime-300 to-lime-400 text-lime-900 shadow-sm items-center gap-2">
+                  <PackageSearch className="h-5 w-5" />
+                  <div className="text-right">
+                      <div className="text-xs font-medium">Achats en attente</div>
+                      <div className="text-base font-bold">{formatCurrency(totalPendingAmount, settings.currency)}</div>
+                  </div>
+              </div>
             )}
             {canEdit && <PurchaseForm suppliers={suppliers} products={products} settings={settings} />}
-        </div>
-      </div>
-
-       {/* Mobile Header */}
-      <div className="md:hidden flex flex-col gap-4">
-        <h2 className="text-3xl font-bold tracking-tight text-center">Achats</h2>
-        {totalPendingAmount > 0 && (
-            <div className="w-full p-3 rounded-lg bg-gradient-to-r from-lime-200 via-lime-300 to-lime-400 text-lime-900 shadow-md flex items-center gap-3">
-                <PackageSearch className="h-6 w-6" />
-                <div className="flex-1 text-right">
-                    <div className="text-sm font-medium">Achats en attente</div>
-                    <div className="text-lg font-bold">{formatCurrency(totalPendingAmount, settings.currency)}</div>
-                </div>
-            </div>
-        )}
-        {canEdit && <div className="self-center"><PurchaseForm suppliers={suppliers} products={products} settings={settings} /></div>}
-      </div>
+          </div>
+        }
+      />
       
       {/* Mobile View */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
@@ -183,6 +175,21 @@ export default async function PurchasesPage() {
           </Table>
         </CardContent>
       </Card>
-    </div>
+    </>
+  );
+}
+
+
+export default async function PurchasesPage() {
+  const [user, settings] = await Promise.all([getSession(), getSettings()]);
+
+  if (!user || !settings) {
+    redirect('/login');
+  }
+
+  return (
+    <AppLayout user={user} settings={settings}>
+      <PurchasesContent />
+    </AppLayout>
   );
 }

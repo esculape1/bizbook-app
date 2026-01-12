@@ -57,17 +57,11 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
     ];
 
     return (
-        <div className="flex flex-col gap-6">
-        <div className="md:hidden flex flex-col items-center gap-4 mb-4">
-            <h2 className="text-3xl font-bold tracking-tight">Factures</h2>
-            {canEdit && <InvoiceForm clients={initialClients} products={initialProducts} settings={initialSettings} />}
-        </div>
-        <div className="hidden md:block">
-            <PageHeader
-                title="Factures"
-                actions={canEdit ? <InvoiceForm clients={initialClients} products={initialProducts} settings={initialSettings} /> : undefined}
-            />
-        </div>
+        <>
+        <PageHeader
+            title="Factures"
+            actions={canEdit ? <InvoiceForm clients={initialClients} products={initialProducts} settings={initialSettings} /> : undefined}
+        />
         
         {/* Mobile View */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
@@ -169,6 +163,6 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
             </Table>
             </CardContent>
         </Card>
-        </div>
+        </>
     );
 }

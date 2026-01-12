@@ -12,8 +12,12 @@ import type { ChatMessage } from '@/lib/types';
 import { Send, Bot, User, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getSession } from '@/lib/session';
+import { AppLayout } from '@/components/AppLayout';
+import { getSettings } from '@/lib/data';
+import type { User as UserType, Settings } from '@/lib/types';
 
-export default function AnalysisPage() {
+function AnalysisPageContent() {
   const [conversation, setConversation] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isPending, startTransition] = useTransition();
@@ -51,7 +55,7 @@ export default function AnalysisPage() {
   };
 
   return (
-    <div className="flex flex-col h-full max-h-[calc(100vh-8rem)]">
+    <div className="flex flex-col h-full">
       <PageHeader title="Analyse IA" />
       <Card className="flex-1 flex flex-col">
         <CardContent className="flex-1 p-4 space-y-4 overflow-y-auto">
@@ -115,4 +119,33 @@ export default function AnalysisPage() {
       </Card>
     </div>
   );
+}
+
+export default function AnalysisPage() {
+    const [user, setUser] = useState<UserType | null>(null);
+    const [settings, setSettings] = useState<Settings | null>(null);
+
+    useEffect(() => {
+        async function fetchData() {
+            const session = await getSession();
+            const appSettings = await getSettings();
+            setUser(session);
+            setSettings(appSettings);
+        }
+        fetchData();
+    }, []);
+
+    if (!user || !settings) {
+        return (
+            <div className="flex justify-center items-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
+    
+    return (
+        <AppLayout user={user} settings={settings}>
+            <AnalysisPageContent />
+        </AppLayout>
+    );
 }

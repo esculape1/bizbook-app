@@ -18,6 +18,7 @@ export default async function Home() {
 
     const settings = await getSettings();
 
+    // The check for settings is important. If it fails, something is wrong with the DB connection.
     if (!settings) {
         return (
             <div className="flex h-screen items-center justify-center">

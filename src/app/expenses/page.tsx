@@ -10,6 +10,8 @@ import type { Expense } from "@/lib/types";
 import { format, getYear, getMonth, set } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ExpenseCategoryDetailsDialog } from "./ExpenseCategoryDetailsDialog";
+import { AppLayout } from "@/components/AppLayout";
+import { redirect } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
 
@@ -41,12 +43,16 @@ const getFiscalMonthKey = (date: Date): string => {
   return `${year}-${(month + 1).toString().padStart(2, '0')}`;
 };
 
-export default async function ExpensesPage() {
+async function ExpensesContent() {
   const [expenses, settings, user] = await Promise.all([
     getExpenses(),
     getSettings(),
     getSession()
   ]);
+
+  if (!user) {
+    return null;
+  }
 
   const canEdit = user?.role === 'Admin' || user?.role === 'SuperAdmin';
 
@@ -93,7 +99,7 @@ export default async function ExpensesPage() {
 
 
   return (
-    <div className="flex flex-col gap-6">
+    <>
       <PageHeader
         title="Dépenses"
         actions={canEdit ? <ExpenseForm currency={settings.currency} /> : undefined}
@@ -160,6 +166,20 @@ export default async function ExpensesPage() {
             })}
         </div>
       )}
-    </div>
+    </>
+  );
+}
+
+export default async function ExpensesPage() {
+  const [user, settings] = await Promise.all([getSession(), getSettings()]);
+
+  if (!user || !settings) {
+    redirect('/login');
+  }
+
+  return (
+    <AppLayout user={user} settings={settings}>
+      <ExpensesContent />
+    </AppLayout>
   );
 }
