@@ -444,7 +444,6 @@ export async function updateSettings(settingsData: Partial<Settings>): Promise<S
 export const getDashboardStats = cache(async () => {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
   
-  // Use Promise.all to fetch all data concurrently.
   const [invoicesSnapshot, expensesSnapshot, clientsSnapshot, productsSnapshot] = await Promise.all([
     db.collection('invoices').get(),
     db.collection('expenses').get(),
@@ -452,19 +451,19 @@ export const getDashboardStats = cache(async () => {
     db.collection('products').get()
   ]);
 
-  // Determine the start date for the fiscal year
   const now = new Date();
   const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth(); // 0-11
-  
-  // Fiscal year starts on Dec 25. If today is before Dec 25, the fiscal year started last year.
-  // Otherwise, it started this year.
-  const fiscalYearStartYear = currentMonth < 11 || (currentMonth === 11 && now.getDate() < 25) 
-    ? currentYear - 1 
-    : currentYear;
-  const fiscalYearStartDate = new Date(fiscalYearStartYear, 11, 25); // Month is 0-indexed, so 11 is December.
+  let fiscalYearStartDate: Date;
 
-  // Process invoices
+  // Fiscal year starts on Dec 25.
+  if (now.getMonth() < 11 || (now.getMonth() === 11 && now.getDate() < 25)) {
+    // We are in the fiscal year that started on Dec 25 of last year.
+    fiscalYearStartDate = new Date(currentYear - 1, 11, 25);
+  } else {
+    // We are in the fiscal year that started on Dec 25 of this year.
+    fiscalYearStartDate = new Date(currentYear, 11, 25);
+  }
+
   let totalRevenue = 0;
   let totalDue = 0;
   let unpaidInvoicesCount = 0;
@@ -473,12 +472,10 @@ export const getDashboardStats = cache(async () => {
     const inv = doc.data() as Invoice;
     const invDate = new Date(inv.date);
 
-    // Calculate total revenue for the current fiscal year only
     if ((inv.status === 'Paid' || inv.status === 'Partially Paid') && invDate >= fiscalYearStartDate) {
       totalRevenue += inv.amountPaid || 0;
     }
     
-    // Calculate total due and unpaid count across all time
     if (inv.status === 'Unpaid' || inv.status === 'Partially Paid') {
       const due = inv.totalAmount - (inv.amountPaid || 0);
       if (due > 0) {
@@ -488,7 +485,6 @@ export const getDashboardStats = cache(async () => {
     }
   });
 
-  // Process expenses for the current fiscal year only
   let totalExpenses = 0;
   expensesSnapshot.forEach(doc => {
     const exp = doc.data() as Expense;
@@ -498,7 +494,6 @@ export const getDashboardStats = cache(async () => {
     }
   });
   
-  // Process clients
   let activeClients = 0;
   clientsSnapshot.forEach(doc => {
     const client = doc.data() as Client;
@@ -522,6 +517,7 @@ export const getDashboardStats = cache(async () => {
 
     
     
+
 
 
 
