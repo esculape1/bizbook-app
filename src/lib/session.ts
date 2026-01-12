@@ -8,6 +8,7 @@ const SESSION_COOKIE_NAME = 'session';
 export async function getSession(): Promise<User | null> {
   const sessionCookie = cookies().get(SESSION_COOKIE_NAME);
 
+  // If the cookie doesn't exist or its value is an empty string, there's no session.
   if (!sessionCookie?.value) {
     return null;
   }

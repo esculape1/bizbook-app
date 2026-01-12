@@ -57,9 +57,12 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
   const accessibleNavItems = navItems.filter(item => item.roles.includes(userRole));
   
   const currentPageTitle = accessibleNavItems.find(item => {
+    // Exact match for the dashboard
     if (item.href === '/') return pathname === '/';
+    // For other routes, check if the pathname starts with the href
     return item.href !== '/' && pathname.startsWith(item.href);
   })?.label || '';
+
 
   const Logo = () => (
     settings.logoUrl ? (
