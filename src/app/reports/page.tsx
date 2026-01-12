@@ -4,6 +4,7 @@ import { ReportGenerator } from './ReportGenerator';
 import { AppLayout } from '@/components/AppLayout';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
+import { PageHeader } from '@/components/PageHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +25,7 @@ export default async function ReportsPage() {
   }
 
   return (
-    <AppLayout user={user} settings={settings}>
+    <AppLayout user={user} settings={settings} pageHeader={<PageHeader title="Rapports" />}>
       <ReportsContent />
     </AppLayout>
   );

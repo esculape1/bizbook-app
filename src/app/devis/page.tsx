@@ -26,7 +26,7 @@ async function DevisContent() {
     getSession()
   ]);
 
-  if (!user) {
+  if (!user || !settings) {
     return null;
   }
 
@@ -55,11 +55,6 @@ async function DevisContent() {
 
   return (
     <>
-      <PageHeader
-        title="Proforma"
-        actions={canEdit ? <QuoteForm clients={clients} products={products} settings={settings} /> : undefined}
-      />
-
       {/* Mobile View */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
         {quotes.map((quote) => {
@@ -144,14 +139,25 @@ async function DevisContent() {
 
 
 export default async function DevisPage() {
-  const [user, settings] = await Promise.all([getSession(), getSettings()]);
+  const [user, settings, clients, products] = await Promise.all([
+    getSession(), 
+    getSettings(),
+    getClients(),
+    getProducts(),
+  ]);
 
   if (!user || !settings) {
     redirect('/login');
   }
+  
+  const canEdit = user.role === 'Admin' || user.role === 'SuperAdmin';
 
   return (
-    <AppLayout user={user} settings={settings}>
+    <AppLayout 
+      user={user} 
+      settings={settings}
+      pageHeader={<PageHeader title="Proforma" actions={canEdit ? <QuoteForm clients={clients} products={products} settings={settings} /> : undefined} />}
+    >
       <DevisContent />
     </AppLayout>
   );

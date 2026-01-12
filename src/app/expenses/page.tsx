@@ -50,7 +50,7 @@ async function ExpensesContent() {
     getSession()
   ]);
 
-  if (!user) {
+  if (!user || !settings) {
     return null;
   }
 
@@ -100,11 +100,6 @@ async function ExpensesContent() {
 
   return (
     <>
-      <PageHeader
-        title="Dépenses"
-        actions={canEdit ? <ExpenseForm currency={settings.currency} /> : undefined}
-      />
-
       {sortedGroupKeys.length === 0 ? (
         <Card>
             <CardContent className="pt-6 text-center text-muted-foreground">
@@ -177,8 +172,14 @@ export default async function ExpensesPage() {
     redirect('/login');
   }
 
+  const canEdit = user?.role === 'Admin' || user?.role === 'SuperAdmin';
+
   return (
-    <AppLayout user={user} settings={settings}>
+    <AppLayout 
+      user={user} 
+      settings={settings}
+      pageHeader={<PageHeader title="Dépenses" actions={canEdit ? <ExpenseForm currency={settings.currency} /> : undefined} />}
+    >
       <ExpensesContent />
     </AppLayout>
   );

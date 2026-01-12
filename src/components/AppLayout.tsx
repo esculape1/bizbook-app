@@ -49,7 +49,17 @@ const navItems = [
   { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['SuperAdmin', 'Admin', 'User'] },
 ];
 
-export function AppLayout({ children, user, settings }: { children: ReactNode, user: User, settings: AppSettings }) {
+export function AppLayout({ 
+  children, 
+  user, 
+  settings,
+  pageHeader,
+}: { 
+  children: ReactNode, 
+  user: User, 
+  settings: AppSettings,
+  pageHeader?: ReactNode,
+}) {
   const pathname = usePathname();
   const userRole = user?.role || 'User';
   const [isSheetOpen, setSheetOpen] = useState(false);
@@ -140,9 +150,9 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
               </nav>
             </SheetContent>
           </Sheet>
-          <div className="w-full flex-1">
-            {/* On pourrait mettre un champ de recherche ici si besoin */}
-          </div>
+          
+          <div className="flex-1">{pageHeader}</div>
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">
@@ -181,7 +191,7 @@ export function AppLayout({ children, user, settings }: { children: ReactNode, u
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 min-h-0 overflow-auto">
+        <main className="flex flex-1 flex-col gap-6 p-4 lg:p-6 min-h-0 overflow-auto">
           {children}
         </main>
       </div>

@@ -4,6 +4,7 @@ import { SettingsForm } from './SettingsForm';
 import { getSession } from '@/lib/session';
 import { AppLayout } from '@/components/AppLayout';
 import { redirect } from 'next/navigation';
+import { PageHeader } from '@/components/PageHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +26,7 @@ export default async function SettingsPage() {
   }
 
   return (
-    <AppLayout user={user} settings={settings}>
+    <AppLayout user={user} settings={settings} pageHeader={<PageHeader title="Paramètres" />}>
       <SettingsContent />
     </AppLayout>
   );

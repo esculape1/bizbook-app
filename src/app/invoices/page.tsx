@@ -4,6 +4,8 @@ import { getSession } from "@/lib/session";
 import InvoicesList from "./InvoicesList";
 import { AppLayout } from "@/components/AppLayout";
 import { redirect } from "next/navigation";
+import { PageHeader } from "@/components/PageHeader";
+import { InvoiceForm } from "./InvoiceForm";
 
 export const dynamic = 'force-dynamic';
 
@@ -34,14 +36,25 @@ async function InvoicesDataWrapper() {
 
 
 export default async function InvoicesPage() {
-    const [user, settings] = await Promise.all([getSession(), getSettings()]);
+    const [user, settings, clients, products] = await Promise.all([
+      getSession(), 
+      getSettings(),
+      getClients(),
+      getProducts()
+    ]);
 
     if (!user || !settings) {
         redirect('/login');
     }
+    
+    const canEdit = user.role === 'Admin' || user.role === 'SuperAdmin';
 
     return (
-        <AppLayout user={user} settings={settings}>
+        <AppLayout 
+          user={user} 
+          settings={settings}
+          pageHeader={<PageHeader title="Factures" actions={canEdit ? <InvoiceForm clients={clients} products={products} settings={settings} /> : undefined} />}
+        >
             <InvoicesDataWrapper />
         </AppLayout>
     );

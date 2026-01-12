@@ -34,16 +34,6 @@ async function ProductsContent() {
 
   return (
     <>
-      <PageHeader
-        title="Produits"
-        actions={
-          <div className="flex items-center gap-2">
-            <StockInventoryReport products={products} settings={settings} />
-            {canManageProducts && <ProductForm />}
-          </div>
-        }
-      />
-      
       {/* Mobile View */}
       <div className="md:hidden">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -142,14 +132,31 @@ async function ProductsContent() {
 
 
 export default async function ProductsPage() {
-  const [user, settings] = await Promise.all([getSession(), getSettings()]);
+  const [user, settings, products] = await Promise.all([
+    getSession(), 
+    getSettings(),
+    getProducts()
+  ]);
 
   if (!user || !settings) {
     redirect('/login');
   }
+  
+  const canManageProducts = user.role === 'Admin' || user.role === 'SuperAdmin';
+  
+  const pageActions = (
+    <div className="flex items-center gap-2">
+      <StockInventoryReport products={products} settings={settings} />
+      {canManageProducts && <ProductForm />}
+    </div>
+  );
 
   return (
-    <AppLayout user={user} settings={settings}>
+    <AppLayout 
+      user={user} 
+      settings={settings}
+      pageHeader={<PageHeader title="Produits" actions={pageActions} />}
+    >
       <ProductsContent />
     </AppLayout>
   );

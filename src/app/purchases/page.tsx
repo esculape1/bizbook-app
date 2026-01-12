@@ -29,15 +29,11 @@ async function PurchasesContent() {
     getSession()
   ]);
 
-  if (!user) {
+  if (!user || !settings) {
     return null; // or a loading/error state
   }
 
   const canEdit = user?.role === 'Admin' || user?.role === 'SuperAdmin';
-
-  const totalPendingAmount = purchases
-    .filter(p => p.status === 'Pending')
-    .reduce((sum, p) => sum + p.totalAmount, 0);
 
   const getStatusVariant = (status: Purchase['status']): "success" | "warning" | "destructive" | "outline" => {
     switch (status) {
@@ -69,24 +65,6 @@ async function PurchasesContent() {
 
   return (
     <>
-      <PageHeader
-        title="Achats"
-        actions={
-          <div className="flex items-center gap-2">
-            {totalPendingAmount > 0 && (
-              <div className="hidden md:flex p-2 rounded-lg bg-gradient-to-r from-lime-200 via-lime-300 to-lime-400 text-lime-900 shadow-sm items-center gap-2">
-                  <PackageSearch className="h-5 w-5" />
-                  <div className="text-right">
-                      <div className="text-xs font-medium">Achats en attente</div>
-                      <div className="text-base font-bold">{formatCurrency(totalPendingAmount, settings.currency)}</div>
-                  </div>
-              </div>
-            )}
-            {canEdit && <PurchaseForm suppliers={suppliers} products={products} settings={settings} />}
-          </div>
-        }
-      />
-      
       {/* Mobile View */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
         {purchases.map((purchase, index) => {
@@ -181,14 +159,41 @@ async function PurchasesContent() {
 
 
 export default async function PurchasesPage() {
-  const [user, settings] = await Promise.all([getSession(), getSettings()]);
+  const [user, settings, suppliers, products, purchases] = await Promise.all([
+    getSession(), 
+    getSettings(),
+    getSuppliers(),
+    getProducts(),
+    getPurchases()
+  ]);
 
   if (!user || !settings) {
     redirect('/login');
   }
+  
+  const canEdit = user.role === 'Admin' || user.role === 'SuperAdmin';
+  
+  const totalPendingAmount = purchases
+    .filter(p => p.status === 'Pending')
+    .reduce((sum, p) => sum + p.totalAmount, 0);
+
+  const pageActions = (
+    <div className="flex items-center gap-2">
+      {totalPendingAmount > 0 && (
+        <div className="hidden md:flex p-2 rounded-lg bg-gradient-to-r from-lime-200 via-lime-300 to-lime-400 text-lime-900 shadow-sm items-center gap-2">
+            <PackageSearch className="h-5 w-5" />
+            <div className="text-right">
+                <div className="text-xs font-medium">Achats en attente</div>
+                <div className="text-base font-bold">{formatCurrency(totalPendingAmount, settings.currency)}</div>
+            </div>
+        </div>
+      )}
+      {canEdit && <PurchaseForm suppliers={suppliers} products={products} settings={settings} />}
+    </div>
+  );
 
   return (
-    <AppLayout user={user} settings={settings}>
+    <AppLayout user={user} settings={settings} pageHeader={<PageHeader title="Achats" actions={pageActions} />}>
       <PurchasesContent />
     </AppLayout>
   );
