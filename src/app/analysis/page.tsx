@@ -12,10 +12,13 @@ import type { ChatMessage } from '@/lib/types';
 import { Send, Bot, User, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { getSession } from '@/lib/session';
 import { AppLayout } from '@/components/AppLayout';
 import { getSettings } from '@/lib/data';
 import type { User as UserType, Settings } from '@/lib/types';
+// We must not import getSession directly in a client component.
+// Instead, we create a server action or an API route to get session data if needed,
+// but for this case, we can pass it down from a parent server component.
+// The main `AnalysisPage` will handle fetching server data.
 
 function AnalysisPageContent() {
   const [conversation, setConversation] = useState<ChatMessage[]>([]);
@@ -121,26 +124,18 @@ function AnalysisPageContent() {
   );
 }
 
-export default function AnalysisPage() {
-    const [user, setUser] = useState<UserType | null>(null);
-    const [settings, setSettings] = useState<Settings | null>(null);
+// This is now a Server Component that fetches data and passes it to the client component.
+import { getSession } from '@/lib/session';
+import { redirect } from 'next/navigation';
 
-    useEffect(() => {
-        async function fetchData() {
-            const session = await getSession();
-            const appSettings = await getSettings();
-            setUser(session);
-            setSettings(appSettings);
-        }
-        fetchData();
-    }, []);
+export default async function AnalysisPage() {
+    const [user, settings] = await Promise.all([
+      getSession(),
+      getSettings()
+    ]);
 
     if (!user || !settings) {
-        return (
-            <div className="flex justify-center items-center h-full">
-                <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-        );
+        redirect('/login');
     }
     
     return (

@@ -6,7 +6,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { getSettings } from "@/lib/data";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
-import { ClientForm } from "./clients/ClientForm";
+import { ClientForm } from "./ClientForm";
 
 export const dynamic = 'force-dynamic';
 
