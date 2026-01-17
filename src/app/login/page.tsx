@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -12,7 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { auth } from '@/lib/firebase-client';
 import { verifyAndCreateSession } from '../auth/actions';
-import { InternationalPhoneInput } from 'react-international-phone';
+import InternationalPhoneInput from 'react-international-phone';
 import 'react-international-phone/style.css';
 
 // This function needs to be declared to be accessible by RecaptchaVerifier
@@ -20,6 +19,7 @@ declare global {
   interface Window {
     recaptchaVerifier: RecaptchaVerifier;
     confirmationResult: ConfirmationResult;
+    grecaptcha: any;
   }
 }
 
@@ -71,9 +71,9 @@ export default function LoginPage() {
         setError("Échec de l'envoi du code. Vérifiez le numéro ou réessayez. (" + err.code + ")");
         
         // In case of error, reset the reCAPTCHA so the user can try again.
-        if (typeof grecaptcha !== 'undefined' && grecaptcha.reset && window.recaptchaVerifier) {
+        if (typeof window.grecaptcha !== 'undefined' && window.grecaptcha.reset && window.recaptchaVerifier) {
             window.recaptchaVerifier.render().then(widgetId => {
-                grecaptcha.reset(widgetId);
+                window.grecaptcha.reset(widgetId);
             });
         }
         setLoading(false);
