@@ -40,7 +40,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
           console.warn('Could not read stylesheet for printing', e);
         }
       });
-      printWindow?.document.write('</head><body>');
+      printWindow?.document.write('<body class="p-4 md:p-8">');
       printWindow?.document.write(content.innerHTML);
       printWindow?.document.write('</body></html>');
       printWindow?.document.close();

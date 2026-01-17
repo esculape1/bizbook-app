@@ -31,9 +31,6 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
           display: none; /* Hide subsequent pages in normal view */
         }
         @media print {
-          .printable-area .page-container {
-            display: block !important; /* Show all pages for printing */
-          }
           @page {
             size: A4;
             margin: 0;
@@ -55,7 +52,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
           return (
             <div
               key={pageIndex}
-              className="page-container bg-white relative mx-auto w-full md:max-w-[210mm]"
+              className="page-container bg-white relative mx-auto w-full max-w-[210mm]"
               style={{
                 minHeight: '297mm',
                 display: 'flex',

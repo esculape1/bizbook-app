@@ -21,13 +21,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
   return (
     <>
       <style>{`
-        .printable-area .page-container:not(:first-child) {
-          display: none; /* Hide subsequent pages in normal view */
-        }
         @media print {
-          .printable-area .page-container {
-            display: block !important; /* Show all pages for printing */
-          }
           @page {
             size: A4;
             margin: 0;
@@ -49,7 +43,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
           return (
             <div
               key={pageIndex}
-              className="page-container bg-white relative mx-auto w-full md:max-w-[210mm]"
+              className="page-container bg-white relative mx-auto w-full max-w-[210mm]"
               style={{
                 minHeight: '297mm',
                 display: 'flex',

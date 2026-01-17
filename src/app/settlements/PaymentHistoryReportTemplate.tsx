@@ -31,7 +31,7 @@ export function PaymentHistoryReportTemplate({ history, client, settings }: Temp
           }
         }
       `}</style>
-      <div id="payment-history-report-content" className="printable-area bg-white text-black font-sans text-[10pt] w-full md:max-w-[210mm] mx-auto" style={{ minHeight: '297mm', padding: '14mm' }}>
+      <div id="payment-history-report-content" className="printable-area bg-white text-black font-sans text-[10pt] w-full max-w-[210mm] mx-auto p-[14mm]">
         <header className="flex justify-between items-start mb-8 pb-4 border-b">
           <div>
             {settings.logoUrl && (
@@ -86,7 +86,7 @@ export function PaymentHistoryReportTemplate({ history, client, settings }: Temp
           </table>
         </main>
         
-        <footer className="absolute bottom-[14mm] left-[14mm] right-[14mm] text-center text-xs text-gray-500 pt-4 border-t">
+        <footer className="text-center text-xs text-gray-500 mt-12 pt-4 border-t">
           <p>Merci pour votre confiance.</p>
           <p>{settings.companyName} - {settings.companyAddress}</p>
         </footer>
