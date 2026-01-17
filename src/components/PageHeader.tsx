@@ -8,8 +8,8 @@ type PageHeaderProps = {
 
 export function PageHeader({ title, actions }: PageHeaderProps) {
   return (
-    <div className="flex w-full flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
-      <h1 className="shrink-0 text-lg font-semibold md:text-2xl">{title}</h1>
+    <div className="flex w-full flex-col items-stretch gap-2 md:flex-row md:items-center md:justify-end">
+      {/* The title h1 element has been removed as per user request to avoid redundancy */}
       {actions && <div className="flex w-full flex-col items-stretch gap-2 md:w-auto md:flex-row md:items-center">{actions}</div>}
     </div>
   );
