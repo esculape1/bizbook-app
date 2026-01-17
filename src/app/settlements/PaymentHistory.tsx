@@ -39,7 +39,29 @@ export function PaymentHistory({ history, client, settings }: PaymentHistoryProp
         <PaymentHistoryReportDialog history={history} client={client} settings={settings} />
       </CardHeader>
       <CardContent>
-        <div className="border rounded-md max-h-[600px] overflow-auto">
+        {/* Mobile View */}
+        <div className="md:hidden space-y-3 max-h-[600px] overflow-y-auto">
+          {history.map((item, index) => (
+            <div key={`${item.payment.id}-${index}`} className="rounded-lg border bg-card text-card-foreground p-3 text-sm">
+              <div className="flex justify-between items-center mb-2">
+                <Link href={`/invoices/${item.invoiceId}`} className="font-semibold text-primary hover:underline">
+                  {item.invoiceNumber}
+                </Link>
+                <div className="font-bold text-emerald-900">
+                  {formatCurrency(item.payment.amount, settings.currency)}
+                </div>
+              </div>
+              <div className="text-xs text-muted-foreground space-y-1">
+                <p><strong>Date:</strong> {format(new Date(item.payment.date), 'dd/MM/yyyy')}</p>
+                <p><strong>Méthode:</strong> {item.payment.method}</p>
+                {item.payment.notes && <p><strong>Notes:</strong> {item.payment.notes}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* Desktop View */}
+        <div className="hidden md:block border rounded-md max-h-[600px] overflow-auto">
           <Table>
             <TableHeader className="sticky top-0 bg-muted/50 z-10">
               <TableRow>

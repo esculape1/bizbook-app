@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useTransition, useEffect, useMemo } from 'react';
@@ -194,7 +195,40 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="border rounded-md max-h-[500px] overflow-auto">
+                    {/* Mobile View */}
+                    <div className="md:hidden">
+                        <div className="flex items-center justify-end px-1 pb-2">
+                            <Button variant="link" size="sm" onClick={handleSelectAll} disabled={invoices.length === 0}>
+                                {selectedInvoiceIds.size > 0 && selectedInvoiceIds.size === invoices.length ? 'Tout Désélectionner' : 'Tout Sélectionner'}
+                            </Button>
+                        </div>
+                        <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                        {invoices.length > 0 ? invoices.map(invoice => {
+                            const due = invoice.totalAmount - invoice.amountPaid;
+                            return (
+                            <div key={invoice.id} data-state={selectedInvoiceIds.has(invoice.id) ? "selected" : "unselected"} className="flex items-center gap-4 rounded-lg border bg-card text-card-foreground p-3 data-[state=selected]:bg-primary/10" onClick={() => handleInvoiceSelect(invoice.id)}>
+                                <Checkbox
+                                checked={selectedInvoiceIds.has(invoice.id)}
+                                onCheckedChange={() => handleInvoiceSelect(invoice.id)}
+                                aria-label={`Sélectionner la facture ${invoice.invoiceNumber}`}
+                                />
+                                <div className="flex-1">
+                                <p className="font-medium">{invoice.invoiceNumber}</p>
+                                <p className="text-sm text-muted-foreground">{format(new Date(invoice.date), 'dd/MM/yyyy')}</p>
+                                </div>
+                                <div className="text-right font-semibold text-destructive">
+                                {formatCurrency(due, settings.currency)}
+                                </div>
+                            </div>
+                            );
+                        }) : (
+                            <p className="text-center text-muted-foreground py-10">Aucune facture impayée pour ce client.</p>
+                        )}
+                        </div>
+                    </div>
+
+                    {/* Desktop View */}
+                    <div className="hidden md:block border rounded-md max-h-[500px] overflow-auto">
                     <Table>
                         <TableHeader className="sticky top-0 bg-muted/50 z-10">
                         <TableRow>
@@ -203,6 +237,7 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
                                 checked={selectedInvoiceIds.size > 0 && selectedInvoiceIds.size === invoices.length}
                                 onCheckedChange={handleSelectAll}
                                 aria-label="Tout sélectionner"
+                                disabled={invoices.length === 0}
                             />
                             </TableHead>
                             <TableHead>N° Facture</TableHead>
@@ -214,11 +249,10 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
                         {invoices.length > 0 ? invoices.map(invoice => {
                             const due = invoice.totalAmount - invoice.amountPaid;
                             return (
-                            <TableRow key={invoice.id} data-state={selectedInvoiceIds.has(invoice.id) && "selected"}>
+                            <TableRow key={invoice.id} data-state={selectedInvoiceIds.has(invoice.id) && "selected"} onClick={() => handleInvoiceSelect(invoice.id)} className="cursor-pointer">
                                 <TableCell>
                                 <Checkbox
                                     checked={selectedInvoiceIds.has(invoice.id)}
-                                    onCheckedChange={() => handleInvoiceSelect(invoice.id)}
                                     aria-label={`Sélectionner la facture ${invoice.invoiceNumber}`}
                                 />
                                 </TableCell>
