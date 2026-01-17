@@ -29,7 +29,6 @@ export default async function SettlementsPage() {
       user={user}
       settings={settings}
     >
-      <h1 className="text-2xl font-bold">Règlements</h1>
       <SettlementsClientPage clients={clients} settings={settings} />
     </AppLayout>
   );
