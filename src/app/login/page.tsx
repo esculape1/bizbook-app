@@ -14,7 +14,10 @@ import { auth } from '@/lib/firebase-client';
 import { verifyAndCreateSession } from '../auth/actions';
 import 'react-international-phone/style.css';
 
-const InternationalPhoneInput = dynamic(() => import('react-international-phone'), {
+// Using dynamic import with ssr: false is the correct approach for a client-side library
+// that is not SSR-compatible. The explicit .then(mod => mod.default) tells Next.js
+// how to find the component within the loaded library, fixing the error.
+const InternationalPhoneInput = dynamic(() => import('react-international-phone').then(mod => mod.default), {
     ssr: false,
     loading: () => <Input placeholder="+226 XX XX XX XX" disabled className="h-[38px]"/>,
 });
