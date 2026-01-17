@@ -18,7 +18,6 @@ import {
   FileClock,
   Briefcase,
   ShoppingCart,
-  BrainCircuit,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -45,7 +44,6 @@ const navItems = [
   { href: '/invoices', label: 'Factures', icon: FileText, roles: ['SuperAdmin', 'Admin', 'User'] },
   { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: ['SuperAdmin', 'Admin', 'User'] },
   { href: '/reports', label: 'Rapports', icon: BarChart3, roles: ['SuperAdmin', 'Admin', 'User'] },
-  { href: '/analysis', label: 'Analyse', icon: BrainCircuit, roles: ['SuperAdmin', 'Admin'] },
   { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['SuperAdmin', 'Admin', 'User'] },
 ];
 
@@ -151,7 +149,7 @@ export function AppLayout({
             </SheetContent>
           </Sheet>
           
-          <div className="flex-1">{pageHeader}</div>
+          <div className="w-full flex-1">{pageHeader}</div>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

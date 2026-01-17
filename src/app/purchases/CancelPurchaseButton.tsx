@@ -17,8 +17,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import type { Purchase, User } from '@/lib/types';
 
-export function CancelPurchaseButton({ id, purchaseNumber, disabled }: { id: string, purchaseNumber: string, disabled?: boolean }) {
+
+export function CancelPurchaseButton({ id, purchaseNumber, purchaseStatus, userRole }: { id: string, purchaseNumber: string, purchaseStatus: Purchase['status'], userRole: User['role'] }) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
@@ -40,10 +42,12 @@ export function CancelPurchaseButton({ id, purchaseNumber, disabled }: { id: str
     });
   };
 
+  const isCancelDisabled = userRole !== 'SuperAdmin' && (purchaseStatus === 'Received' || purchaseStatus === 'Cancelled');
+
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="icon" disabled={disabled} title="Annuler l'achat">
+        <Button variant="ghost" size="icon" disabled={isCancelDisabled} title="Annuler l'achat">
           <FileX className="h-4 w-4 text-destructive" />
         </Button>
       </AlertDialogTrigger>

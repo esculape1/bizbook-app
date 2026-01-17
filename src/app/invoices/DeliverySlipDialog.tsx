@@ -52,7 +52,7 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
           Bordereau de Livraison
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl p-0">
+      <DialogContent className="w-[95vw] sm:max-w-4xl p-0">
         <div className="p-6">
             <DialogHeader>
             <DialogTitle>Bordereau de Livraison - {`BL-${invoice.invoiceNumber}`}</DialogTitle>

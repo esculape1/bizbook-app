@@ -54,7 +54,7 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
           <Eye className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl p-0">
+      <DialogContent className="w-[95vw] sm:max-w-4xl p-0">
         <div className="p-6">
             <DialogHeader>
             <DialogTitle>Aperçu de la Proforma - {quote.quoteNumber}</DialogTitle>

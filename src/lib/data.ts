@@ -222,7 +222,7 @@ export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>): Pr
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
     const quotesCol = db.collection('quotes');
     
-    const currentYear = new Date().getFullYear();
+    const currentYear = 2026;
     const prefix = `PRO${currentYear}`;
 
     const q = quotesCol
@@ -355,7 +355,7 @@ export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'purchaseN
 
     const newPurchaseData: Omit<Purchase, 'id'> = {
         ...purchaseData,
-        purchaseNumber: `ACH2024-${(latestPurchaseNumber + 1).toString().padStart(3, '0')}`,
+        purchaseNumber: `ACH2026-${(latestPurchaseNumber + 1).toString().padStart(3, '0')}`,
     };
     const docRef = await purchasesCol.add(newPurchaseData);
     return { id: docRef.id, ...newPurchaseData };
@@ -471,15 +471,10 @@ export const getDashboardStats = cache(async () => {
   invoicesSnapshot.forEach(doc => {
     const inv = doc.data() as Invoice;
     const invDate = new Date(inv.date);
-
-    // Calculate revenue based on payments received within the fiscal year.
-    if (inv.payments && inv.payments.length > 0) {
-      inv.payments.forEach(payment => {
-        const paymentDate = new Date(payment.date);
-        if (paymentDate >= fiscalYearStartDate) {
-          totalRevenue += payment.amount;
-        }
-      });
+    
+    // Calculate revenue based on non-cancelled invoices within the fiscal year.
+    if (inv.status !== 'Cancelled' && invDate >= fiscalYearStartDate) {
+        totalRevenue += inv.totalAmount;
     }
     
     // Calculate total due amount for all non-cancelled invoices, regardless of date.
@@ -524,6 +519,7 @@ export const getDashboardStats = cache(async () => {
 
     
     
+
 
 
 

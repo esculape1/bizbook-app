@@ -1,12 +1,10 @@
 
 'use client';
 
-import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatCurrency } from "@/lib/utils";
-import { InvoiceForm } from "./InvoiceForm";
 import Link from "next/link";
 import { EditInvoiceForm } from "./EditInvoiceForm";
 import { CancelInvoiceButton } from "./DeleteInvoiceButton";
@@ -58,11 +56,6 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
 
     return (
         <>
-        <PageHeader
-            title="Factures"
-            actions={canEdit ? <InvoiceForm clients={initialClients} products={initialProducts} settings={initialSettings} /> : undefined}
-        />
-        
         {/* Mobile View */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
             {initialInvoices.map((invoice, index) => {

@@ -18,7 +18,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from "@/hooks/use-toast";
 import { updatePurchase } from './actions';
-import type { Supplier, Product, Settings, Purchase } from '@/lib/types';
+import type { Supplier, Product, Settings, Purchase, User } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const purchaseItemSchema = z.object({
@@ -45,9 +45,10 @@ type EditPurchaseFormProps = {
   suppliers: Supplier[];
   products: Product[];
   settings: Settings;
+  userRole: User['role'];
 };
 
-export function EditPurchaseForm({ purchase, suppliers, products, settings }: EditPurchaseFormProps) {
+export function EditPurchaseForm({ purchase, suppliers, products, settings, userRole }: EditPurchaseFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -104,7 +105,7 @@ export function EditPurchaseForm({ purchase, suppliers, products, settings }: Ed
     });
   };
   
-  const isEditDisabled = purchase.status !== 'Pending';
+  const isEditDisabled = userRole !== 'SuperAdmin' && purchase.status !== 'Pending';
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

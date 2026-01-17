@@ -1,4 +1,5 @@
 
+
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,7 +10,7 @@ import { PurchaseForm } from "./PurchaseForm";
 import { EditPurchaseForm } from "./EditPurchaseForm";
 import { CancelPurchaseButton } from "./CancelPurchaseButton";
 import { getSession } from "@/lib/session";
-import type { Purchase } from "@/lib/types";
+import type { Purchase, User } from "@/lib/types";
 import { PackageSearch } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { ReceivePurchaseButton } from "./ReceivePurchaseButton";
@@ -20,16 +21,15 @@ import { redirect } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
 
-async function PurchasesContent() {
-  const [purchases, suppliers, products, settings, user] = await Promise.all([
+async function PurchasesContent({ user }: { user: User }) {
+  const [purchases, suppliers, products, settings] = await Promise.all([
     getPurchases(),
     getSuppliers(),
     getProducts(),
     getSettings(),
-    getSession()
   ]);
 
-  if (!user || !settings) {
+  if (!settings) {
     return null; // or a loading/error state
   }
 
@@ -68,7 +68,6 @@ async function PurchasesContent() {
       {/* Mobile View */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
         {purchases.map((purchase, index) => {
-           const isLocked = purchase.status !== 'Pending';
            const itemNames = purchase.items.map(item => `${item.productName} (x${item.quantity})`).join(', ');
            const cardColorClass = purchase.status === 'Cancelled' ? 'bg-muted/50 text-muted-foreground' : cardColors[index % cardColors.length];
 
@@ -94,10 +93,10 @@ async function PurchasesContent() {
               </CardContent>
               {canEdit && (
                  <CardFooter className="flex items-center justify-end gap-1 p-2 bg-blue-950/10 border-t mt-auto">
-                    {purchase.status === 'Pending' && <ReceivePurchaseButton purchaseId={purchase.id} purchaseNumber={purchase.purchaseNumber} disabled={isLocked} />}
+                    {purchase.status === 'Pending' && <ReceivePurchaseButton purchaseId={purchase.id} purchaseNumber={purchase.purchaseNumber} />}
                     {purchase.status === 'Received' && <Button size="sm" variant="success" className="h-8 text-xs" disabled>Reçu</Button>}
-                    <EditPurchaseForm purchase={purchase} suppliers={suppliers} products={products} settings={settings} />
-                    <CancelPurchaseButton id={purchase.id} purchaseNumber={purchase.purchaseNumber} disabled={purchase.status === 'Received' || purchase.status === 'Cancelled'} />
+                    <EditPurchaseForm purchase={purchase} suppliers={suppliers} products={products} settings={settings} userRole={user.role} />
+                    <CancelPurchaseButton id={purchase.id} purchaseNumber={purchase.purchaseNumber} purchaseStatus={purchase.status} userRole={user.role} />
                  </CardFooter>
               )}
             </Card>
@@ -142,8 +141,8 @@ async function PurchasesContent() {
                       <div className="flex items-center justify-end gap-1">
                         {purchase.status === 'Pending' && <ReceivePurchaseButton purchaseId={purchase.id} purchaseNumber={purchase.purchaseNumber}/>}
                         {purchase.status === 'Received' && <Button size="sm" variant="success" className="h-8 text-xs" disabled>Reçu</Button>}
-                        <EditPurchaseForm purchase={purchase} suppliers={suppliers} products={products} settings={settings} />
-                        <CancelPurchaseButton id={purchase.id} purchaseNumber={purchase.purchaseNumber} disabled={purchase.status === 'Received' || purchase.status === 'Cancelled'} />
+                        <EditPurchaseForm purchase={purchase} suppliers={suppliers} products={products} settings={settings} userRole={user.role} />
+                        <CancelPurchaseButton id={purchase.id} purchaseNumber={purchase.purchaseNumber} purchaseStatus={purchase.status} userRole={user.role} />
                       </div>
                     </TableCell>
                   )}
@@ -194,7 +193,7 @@ export default async function PurchasesPage() {
 
   return (
     <AppLayout user={user} settings={settings} pageHeader={<PageHeader title="Achats" actions={pageActions} />}>
-      <PurchasesContent />
+      <PurchasesContent user={user} />
     </AppLayout>
   );
 }

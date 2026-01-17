@@ -1,4 +1,5 @@
 
+
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -25,7 +26,7 @@ async function ProductsContent() {
     getSession(),
   ]);
 
-  if (!user) {
+  if (!user || !settings) {
     return null;
   }
 
@@ -145,7 +146,7 @@ export default async function ProductsPage() {
   const canManageProducts = user.role === 'Admin' || user.role === 'SuperAdmin';
   
   const pageActions = (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
       <StockInventoryReport products={products} settings={settings} />
       {canManageProducts && <ProductForm />}
     </div>

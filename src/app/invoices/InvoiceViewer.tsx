@@ -78,9 +78,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
         <Card className="shadow-lg overflow-hidden">
             <CardContent className="p-0 md:p-6 bg-gray-100 flex justify-center">
                 <div className="w-full max-w-full overflow-x-auto">
-                    <div className="mx-auto" style={{ width: '210mm' }}>
-                        {renderTemplate()}
-                    </div>
+                    {renderTemplate()}
                 </div>
             </CardContent>
         </Card>

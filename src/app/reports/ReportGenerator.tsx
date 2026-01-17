@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -75,7 +74,6 @@ export function ReportGenerator({ clients, settings }: ReportGeneratorProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Rapports" />
       <Card>
         <CardContent className="pt-6 space-y-4">
           <div className="flex flex-col md:flex-row items-center gap-4 p-4 border rounded-lg bg-muted/50">

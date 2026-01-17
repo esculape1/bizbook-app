@@ -2,11 +2,9 @@
 'use client';
 
 import type { Client, User } from '@/lib/types';
-import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ClientForm } from "./ClientForm";
 import { DeleteClientButton } from "./DeleteClientButton";
 import { EditClientButton } from "./EditClientButton";
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -27,11 +25,6 @@ export default function ClientsList({ clients, userRole }: { clients: Client[], 
 
   return (
     <div className="flex flex-col h-full gap-6">
-      <PageHeader
-        title="Clients"
-        actions={canEdit ? <ClientForm /> : undefined}
-      />
-
       {/* Mobile View - Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:hidden">
         {clients.map((client, index) => (

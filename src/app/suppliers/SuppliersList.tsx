@@ -2,10 +2,8 @@
 'use client';
 
 import type { Supplier, User } from '@/lib/types';
-import { PageHeader } from "@/components/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { SupplierForm } from "./SupplierForm";
 import { DeleteSupplierButton } from "./DeleteSupplierButton";
 import { EditSupplierButton } from "./EditSupplierButton";
 import { Mail, MapPin, Phone, User as UserIcon } from 'lucide-react';
@@ -26,11 +24,6 @@ export default function SuppliersList({ suppliers, userRole }: { suppliers: Supp
 
   return (
     <div className="flex flex-col h-full gap-6">
-      <PageHeader
-        title="Fournisseurs"
-        actions={canEdit ? <SupplierForm /> : undefined}
-      />
-      
       {/* Mobile View - Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:hidden">
         {suppliers.map((supplier, index) => (

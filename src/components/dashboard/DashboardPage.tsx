@@ -1,4 +1,5 @@
 
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SalesChart } from "@/components/dashboard/SalesChart";
@@ -49,6 +50,18 @@ export default async function DashboardPage() {
     )
   }
 
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  let fiscalYearStartDate: Date;
+
+  if (now.getMonth() < 11 || (now.getMonth() === 11 && now.getDate() < 25)) {
+    fiscalYearStartDate = new Date(currentYear - 1, 11, 25, 0, 0, 0, 0);
+  } else {
+    fiscalYearStartDate = new Date(currentYear, 11, 25, 0, 0, 0, 0);
+  }
+
+  const invoicesForFiscalYear = invoices.filter(inv => new Date(inv.date) >= fiscalYearStartDate);
+
   return (
     <div className="flex flex-col gap-6">
       <div className="relative flex flex-col md:flex-row justify-between items-center gap-4 border rounded-lg p-4 bg-gradient-to-r from-primary/5 via-card to-primary/5 shadow-inner">
@@ -67,14 +80,14 @@ export default async function DashboardPage() {
           title="Chiffre d'affaires" 
           value={formatCurrency(stats.totalRevenue, settings.currency)} 
           icon={<DollarSign />} 
-          description="Total des paiements reçus"
+          description="Total facturé (exercice en cours)"
           className="bg-green-500/10 text-green-700 border-green-500/20"
         />
         <StatCard 
           title="Total Dépenses" 
           value={formatCurrency(stats.totalExpenses, settings.currency)} 
           icon={<Wallet />}
-          description="Total des dépenses enregistrées"
+          description="Dépenses (exercice en cours)"
           className="bg-red-500/10 text-red-700 border-red-500/20"
         />
         <StatCard 
@@ -103,10 +116,10 @@ export default async function DashboardPage() {
         <div className="lg:col-span-2">
             <Card className="bg-muted/30 h-full">
                 <CardHeader className="text-center">
-                    <CardTitle>Aperçu des Ventes</CardTitle>
+                    <CardTitle>Aperçu des Ventes (Exercice en cours)</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <SalesChart invoices={invoices} products={products} currency={settings.currency} />
+                    <SalesChart invoices={invoicesForFiscalYear} products={products} currency={settings.currency} />
                 </CardContent>
             </Card>
         </div>

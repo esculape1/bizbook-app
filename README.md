@@ -1,5 +1,5 @@
  
-d# **BizBook : Pilotez votre entreprise avec une simplicité déconcertante**
+# **BizBook : Pilotez votre entreprise avec une simplicité déconcertante**
 
 Oubliez la complexité des feuilles de calcul et les logiciels de gestion archaïques. BizBook est la solution tout-en-un conçue pour les entrepreneurs, artisans et PME qui veulent se concentrer sur leur métier, pas sur la paperasse. Notre mission : vous offrir des outils puissants, centralisés dans une interface intuitive et agréable à utiliser.
 
@@ -44,7 +44,5 @@ Chaque aspect de votre gestion commerciale a sa place dans une navigation logiqu
 *   **Dépenses :** Gardez une trace de chaque sortie d'argent. Qu'il s'agisse de carburant, de salaires ou de loyer, chaque dépense est enregistrée pour une vision claire de votre rentabilité.
 
 *   **Rapports :** Prenez des décisions basées sur des données, pas des suppositions. Générez des rapports financiers détaillés sur n'importe quelle période, pour un client spécifique ou pour toute votre activité, et exportez-les en PDF.
-
-*   **Analyse (IA) :** Votre analyste financier personnel. Posez-lui des questions en langage naturel ("Quel est mon bénéfice du mois dernier ?", "Quel client me rapporte le plus ?") et obtenez des réponses claires et instantanées.
 
 *   **Paramètres :** Façonnez BizBook à l'image de votre entreprise. Configurez les informations de votre société, votre logo, la devise, les formats de numéros de facture et bien plus encore pour une expérience entièrement personnalisée.

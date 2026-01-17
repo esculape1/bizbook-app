@@ -186,7 +186,7 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
       
       // Get the next sequential invoice number
       const allInvoices = await getInvoices();
-      const currentYear = new Date().getFullYear().toString();
+      const currentYear = 2026;
       const yearPrefix = `FACT-${currentYear}-`;
 
       const latestInvoiceForYear = allInvoices
