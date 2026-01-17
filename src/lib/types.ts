@@ -180,3 +180,9 @@ export type ChatMessage = {
   role: 'user' | 'assistant';
   content: string;
 };
+
+export type PaymentHistoryItem = {
+  invoiceId: string;
+  invoiceNumber: string;
+  payment: Payment;
+};

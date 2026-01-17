@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { getInvoices } from '@/lib/data';
 import { revalidateTag } from 'next/cache';
 import { getSession } from '@/lib/session';
-import type { Invoice, Payment } from '@/lib/types';
+import type { Invoice, Payment, PaymentHistoryItem } from '@/lib/types';
 import { randomUUID } from 'crypto';
 import { db } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
@@ -18,6 +18,27 @@ export async function getUnpaidInvoicesForClient(clientId: string): Promise<Invo
     )
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }
+
+export async function getPaymentHistoryForClient(clientId: string): Promise<PaymentHistoryItem[]> {
+  const allInvoices = await getInvoices();
+  const clientInvoices = allInvoices.filter(inv => inv.clientId === clientId && inv.payments.length > 0);
+
+  const paymentHistory: PaymentHistoryItem[] = [];
+
+  clientInvoices.forEach(invoice => {
+    invoice.payments.forEach(payment => {
+      paymentHistory.push({
+        invoiceId: invoice.id,
+        invoiceNumber: invoice.invoiceNumber,
+        payment: payment,
+      });
+    });
+  });
+
+  // Sort by payment date, most recent first
+  return paymentHistory.sort((a, b) => new Date(b.payment.date).getTime() - new Date(a.payment.date).getTime());
+}
+
 
 const settlementPayloadSchema = z.object({
   clientId: z.string(),
@@ -107,6 +128,7 @@ export async function processMultipleInvoicePayments(payload: SettlementPayload)
 
     revalidateTag('invoices');
     revalidateTag('dashboard-stats');
+    revalidateTag('settlements'); // Revalidate this page too
 
     return { success: true };
 

@@ -17,12 +17,13 @@ import { cn, formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useToast } from "@/hooks/use-toast";
-import { getUnpaidInvoicesForClient, processMultipleInvoicePayments } from './actions';
-import type { Client, Invoice, Settings } from '@/lib/types';
+import { getUnpaidInvoicesForClient, processMultipleInvoicePayments, getPaymentHistoryForClient } from './actions';
+import type { Client, Invoice, Settings, PaymentHistoryItem } from '@/lib/types';
 import { ClientPicker } from '@/components/ClientPicker';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
+import { PaymentHistory } from './PaymentHistory';
 
 const settlementSchema = z.object({
   paymentAmount: z.coerce.number().positive("Le montant doit être positif."),
@@ -36,6 +37,7 @@ type SettlementFormValues = z.infer<typeof settlementSchema>;
 export function SettlementsClientPage({ clients, settings }: { clients: Client[], settings: Settings }) {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryItem[]>([]);
   const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<Set<string>>(new Set());
   const [isFetchingInvoices, startFetchingInvoices] = useTransition();
   const [isProcessing, startProcessing] = useTransition();
@@ -54,13 +56,18 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
   useEffect(() => {
     if (selectedClient) {
       startFetchingInvoices(async () => {
-        const unpaidInvoices = await getUnpaidInvoicesForClient(selectedClient.id);
+        const [unpaidInvoices, history] = await Promise.all([
+          getUnpaidInvoicesForClient(selectedClient.id),
+          getPaymentHistoryForClient(selectedClient.id),
+        ]);
         setInvoices(unpaidInvoices);
+        setPaymentHistory(history);
         setSelectedInvoiceIds(new Set());
         form.setValue('paymentAmount', 0);
       });
     } else {
       setInvoices([]);
+      setPaymentHistory([]);
       setSelectedInvoiceIds(new Set());
       form.setValue('paymentAmount', 0);
     }
@@ -127,17 +134,21 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
           title: "Règlement enregistré",
           description: "Le paiement a été appliqué avec succès.",
         });
-        // Refetch invoices for the client
+        // Refetch invoices and history for the client
         startFetchingInvoices(async () => {
-          const unpaidInvoices = await getUnpaidInvoicesForClient(selectedClient.id);
-          setInvoices(unpaidInvoices);
-          setSelectedInvoiceIds(new Set());
-          form.reset({
-            paymentAmount: 0,
-            paymentDate: new Date(),
-            paymentMethod: 'Espèces',
-            paymentNotes: '',
-          });
+            const [unpaidInvoices, history] = await Promise.all([
+                getUnpaidInvoicesForClient(selectedClient.id),
+                getPaymentHistoryForClient(selectedClient.id),
+            ]);
+            setInvoices(unpaidInvoices);
+            setPaymentHistory(history);
+            setSelectedInvoiceIds(new Set());
+            form.reset({
+                paymentAmount: 0,
+                paymentDate: new Date(),
+                paymentMethod: 'Espèces',
+                paymentNotes: '',
+            });
         });
       } else {
         toast({
@@ -151,7 +162,6 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
 
   return (
     <div className="space-y-6">
-       <h1 className="text-2xl font-bold">Règlements</h1>
       <Card>
         <CardHeader>
           <CardTitle>Nouvel Encaissement</CardTitle>
@@ -173,151 +183,158 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
       )}
 
       {selectedClient && !isFetchingInvoices && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Factures pour {selectedClient.name}</CardTitle>
-                <div className="flex justify-between items-center text-sm text-muted-foreground">
-                  <span>Solde total dû: <span className="font-bold text-destructive">{formatCurrency(totalDueForAll, settings.currency)}</span></span>
-                  <span>Sélection: <span className="font-bold text-primary">{formatCurrency(totalDueOnSelected, settings.currency)}</span></span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="border rounded-md max-h-[500px] overflow-auto">
-                  <Table>
-                    <TableHeader className="sticky top-0 bg-muted/50 z-10">
-                      <TableRow>
-                        <TableHead className="w-[50px]">
-                          <Checkbox
-                            checked={selectedInvoiceIds.size > 0 && selectedInvoiceIds.size === invoices.length}
-                            onCheckedChange={handleSelectAll}
-                            aria-label="Tout sélectionner"
-                          />
-                        </TableHead>
-                        <TableHead>N° Facture</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead className="text-right">Montant Dû</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {invoices.length > 0 ? invoices.map(invoice => {
-                        const due = invoice.totalAmount - invoice.amountPaid;
-                        return (
-                          <TableRow key={invoice.id} data-state={selectedInvoiceIds.has(invoice.id) && "selected"}>
-                            <TableCell>
-                              <Checkbox
-                                checked={selectedInvoiceIds.has(invoice.id)}
-                                onCheckedChange={() => handleInvoiceSelect(invoice.id)}
-                                aria-label={`Sélectionner la facture ${invoice.invoiceNumber}`}
-                              />
-                            </TableCell>
-                            <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                            <TableCell>{format(new Date(invoice.date), 'dd/MM/yyyy')}</TableCell>
-                            <TableCell className="text-right font-semibold">{formatCurrency(due, settings.currency)}</TableCell>
-                          </TableRow>
-                        );
-                      }) : (
+        <>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <div className="lg:col-span-2">
+                <Card>
+                <CardHeader>
+                    <CardTitle>Factures pour {selectedClient.name}</CardTitle>
+                    <div className="flex justify-between items-center text-sm text-muted-foreground">
+                    <span>Solde total dû: <span className="font-bold text-destructive">{formatCurrency(totalDueForAll, settings.currency)}</span></span>
+                    <span>Sélection: <span className="font-bold text-primary">{formatCurrency(totalDueOnSelected, settings.currency)}</span></span>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div className="border rounded-md max-h-[500px] overflow-auto">
+                    <Table>
+                        <TableHeader className="sticky top-0 bg-muted/50 z-10">
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center h-24">Aucune facture impayée pour ce client.</TableCell>
+                            <TableHead className="w-[50px]">
+                            <Checkbox
+                                checked={selectedInvoiceIds.size > 0 && selectedInvoiceIds.size === invoices.length}
+                                onCheckedChange={handleSelectAll}
+                                aria-label="Tout sélectionner"
+                            />
+                            </TableHead>
+                            <TableHead>N° Facture</TableHead>
+                            <TableHead>Date</TableHead>
+                            <TableHead className="text-right">Montant Dû</TableHead>
                         </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                        </TableHeader>
+                        <TableBody>
+                        {invoices.length > 0 ? invoices.map(invoice => {
+                            const due = invoice.totalAmount - invoice.amountPaid;
+                            return (
+                            <TableRow key={invoice.id} data-state={selectedInvoiceIds.has(invoice.id) && "selected"}>
+                                <TableCell>
+                                <Checkbox
+                                    checked={selectedInvoiceIds.has(invoice.id)}
+                                    onCheckedChange={() => handleInvoiceSelect(invoice.id)}
+                                    aria-label={`Sélectionner la facture ${invoice.invoiceNumber}`}
+                                />
+                                </TableCell>
+                                <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
+                                <TableCell>{format(new Date(invoice.date), 'dd/MM/yyyy')}</TableCell>
+                                <TableCell className="text-right font-semibold">{formatCurrency(due, settings.currency)}</TableCell>
+                            </TableRow>
+                            );
+                        }) : (
+                            <TableRow>
+                            <TableCell colSpan={4} className="text-center h-24">Aucune facture impayée pour ce client.</TableCell>
+                            </TableRow>
+                        )}
+                        </TableBody>
+                    </Table>
+                    </div>
+                </CardContent>
+                </Card>
+            </div>
 
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Enregistrer le Paiement</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="paymentAmount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Montant à encaisser</FormLabel>
-                          <FormControl>
-                            <Input type="number" step="0.01" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                     <FormField
+            <div>
+                <Card>
+                <CardHeader>
+                    <CardTitle>Enregistrer le Paiement</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField
                         control={form.control}
-                        name="paymentDate"
+                        name="paymentAmount"
                         render={({ field }) => (
-                          <FormItem className="flex flex-col">
-                            <FormLabel>Date du paiement</FormLabel>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <FormControl>
-                                  <Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
-                                    {field.value ? (format(field.value, 'PPP', { locale: fr })) : (<span>Choisir une date</span>)}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                  </Button>
-                                </FormControl>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
-                              </PopoverContent>
-                            </Popover>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="paymentMethod"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Méthode de paiement</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Sélectionner une méthode" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="Espèces">Espèces</SelectItem>
-                                <SelectItem value="Virement bancaire">Virement bancaire</SelectItem>
-                                <SelectItem value="Chèque">Chèque</SelectItem>
-                                <SelectItem value="Autre">Autre</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="paymentNotes"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Notes (optionnel)</FormLabel>
+                            <FormItem>
+                            <FormLabel>Montant à encaisser</FormLabel>
                             <FormControl>
-                              <Textarea placeholder="Ex: Réf. de transaction" {...field} />
+                                <Input type="number" step="0.01" {...field} />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
+                            </FormItem>
                         )}
-                      />
-                    <Button type="submit" className="w-full" disabled={isProcessing || selectedInvoiceIds.size === 0}>
-                      {isProcessing ? 'Enregistrement...' : 'Valider le règlement'}
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+                        />
+                        <FormField
+                            control={form.control}
+                            name="paymentDate"
+                            render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                                <FormLabel>Date du paiement</FormLabel>
+                                <Popover>
+                                <PopoverTrigger asChild>
+                                    <FormControl>
+                                    <Button variant={"outline"} className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                                        {field.value ? (format(field.value, 'PPP', { locale: fr })) : (<span>Choisir une date</span>)}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                    </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                                </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="paymentMethod"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Méthode de paiement</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                    <SelectTrigger>
+                                    <SelectValue placeholder="Sélectionner une méthode" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value="Espèces">Espèces</SelectItem>
+                                    <SelectItem value="Virement bancaire">Virement bancaire</SelectItem>
+                                    <SelectItem value="Chèque">Chèque</SelectItem>
+                                    <SelectItem value="Autre">Autre</SelectItem>
+                                </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="paymentNotes"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Notes (optionnel)</FormLabel>
+                                <FormControl>
+                                <Textarea placeholder="Ex: Réf. de transaction" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <Button type="submit" className="w-full" disabled={isProcessing || selectedInvoiceIds.size === 0}>
+                        {isProcessing ? 'Enregistrement...' : 'Valider le règlement'}
+                        </Button>
+                    </form>
+                    </Form>
+                </CardContent>
+                </Card>
+            </div>
+            </div>
+            <PaymentHistory 
+                history={paymentHistory} 
+                client={selectedClient} 
+                settings={settings}
+            />
+        </>
       )}
     </div>
   );

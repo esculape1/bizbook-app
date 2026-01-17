@@ -1,0 +1,73 @@
+
+'use client';
+
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { formatCurrency } from '@/lib/utils';
+import type { PaymentHistoryItem, Client, Settings } from '@/lib/types';
+import { format } from 'date-fns';
+import { PaymentHistoryReportDialog } from './PaymentHistoryReportDialog';
+import Link from 'next/link';
+
+type PaymentHistoryProps = {
+  history: PaymentHistoryItem[];
+  client: Client;
+  settings: Settings;
+};
+
+export function PaymentHistory({ history, client, settings }: PaymentHistoryProps) {
+  if (history.length === 0) {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Historique des Règlements</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-sm text-muted-foreground text-center py-8">Aucun paiement enregistré pour ce client.</p>
+            </CardContent>
+        </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <CardTitle>Historique des Règlements</CardTitle>
+          <CardDescription>Liste de tous les paiements enregistrés pour {client.name}.</CardDescription>
+        </div>
+        <PaymentHistoryReportDialog history={history} client={client} settings={settings} />
+      </CardHeader>
+      <CardContent>
+        <div className="border rounded-md max-h-[600px] overflow-auto">
+          <Table>
+            <TableHeader className="sticky top-0 bg-muted/50 z-10">
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Facture N°</TableHead>
+                <TableHead>Méthode</TableHead>
+                <TableHead>Notes</TableHead>
+                <TableHead className="text-right">Montant</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {history.map((item, index) => (
+                <TableRow key={`${item.payment.id}-${index}`}>
+                  <TableCell>{format(new Date(item.payment.date), 'dd/MM/yyyy')}</TableCell>
+                  <TableCell>
+                    <Link href={`/invoices/${item.invoiceId}`} className="text-primary hover:underline">
+                      {item.invoiceNumber}
+                    </Link>
+                  </TableCell>
+                  <TableCell>{item.payment.method}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{item.payment.notes}</TableCell>
+                  <TableCell className="text-right font-semibold">{formatCurrency(item.payment.amount, settings.currency)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
