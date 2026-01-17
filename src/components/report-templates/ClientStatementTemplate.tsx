@@ -35,7 +35,7 @@ export function ClientStatementTemplate({ data, client, settings }: { data: Repo
           }
         }
       `}</style>
-      <div id="client-statement-content" className="printable-area bg-white text-black font-sans text-[10pt]" style={{ width: '210mm', minHeight: '297mm', padding: '14mm' }}>
+      <div id="client-statement-content" className="printable-area bg-white text-black font-sans text-[10pt] w-full md:max-w-[210mm] mx-auto" style={{ minHeight: '297mm', padding: '14mm' }}>
         <header className="flex justify-between items-start mb-8 pb-4 border-b">
           <div>
             {settings.logoUrl && (
