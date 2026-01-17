@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
-import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User, UserWithPassword } from './types';
+import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User } from './types';
 import { unstable_cache as cache } from 'next/cache';
 
 const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Veuillez vérifier la configuration de Firebase ou vos quotas d'utilisation.";
@@ -20,12 +20,7 @@ function convertTimestamps(data: any): any {
     const newObj: { [key: string]: any } = {};
     for (const key in data) {
       if (Object.prototype.hasOwnProperty.call(data, key)) {
-          // Explicitly include the password field if it exists
-          if (key === 'password') {
-              newObj[key] = data[key];
-          } else {
-              newObj[key] = convertTimestamps(data[key]);
-          }
+          newObj[key] = convertTimestamps(data[key]);
       }
     }
     return newObj;
@@ -38,41 +33,12 @@ function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
         return null as T;
     }
     const data = doc.data()!;
-    let convertedData = convertTimestamps(data);
-
-    // Ensure password field is retained if it exists, as it's not a timestamp
-    if (data.password) {
-        convertedData.password = data.password;
-    }
-
+    const convertedData = convertTimestamps(data);
     return { id: doc.id, ...convertedData } as T;
 }
 
 
 // USERS
-// This function should NOT be cached.
-export async function getUserByEmail(email: string): Promise<User | null> {
-    if (!db) {
-        console.error(DB_UNAVAILABLE_ERROR);
-        throw new Error(DB_UNAVAILABLE_ERROR);
-    }
-    try {
-        const usersCol = db.collection('users');
-        const q = usersCol.where('email', '==', email).limit(1);
-        const userSnapshot = await q.get();
-
-        if (userSnapshot.empty) {
-            return null;
-        }
-        
-        return docToObject<User>(userSnapshot.docs[0]);
-
-    } catch (error) {
-        console.error(`Impossible de récupérer l'utilisateur avec l'email ${email}:`, error);
-        throw error;
-    }
-}
-
 export async function getUserByPhoneNumber(phone: string): Promise<User | null> {
     if (!db) {
         console.error(DB_UNAVAILABLE_ERROR);
@@ -541,6 +507,7 @@ export const getDashboardStats = cache(async () => {
 
     
     
+
 
 
 

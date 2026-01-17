@@ -8,12 +8,6 @@ export type User = {
   role: 'SuperAdmin' | 'Admin' | 'User';
 };
 
-// This type is used for database interactions where the password might be included.
-// It should NEVER be sent to the client.
-export type UserWithPassword = User & {
-  password?: string;
-};
-
 export type Client = {
   id: string;
   name: string;
