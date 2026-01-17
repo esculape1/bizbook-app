@@ -8,9 +8,9 @@ type PageHeaderProps = {
 
 export function PageHeader({ title, actions }: PageHeaderProps) {
   return (
-    <div className="flex items-center justify-between w-full">
-      <h1 className="text-lg font-semibold md:text-2xl truncate">{title}</h1>
-      {actions && <div className="flex items-center gap-2 ml-4 shrink-0">{actions}</div>}
+    <div className="flex w-full flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <h1 className="shrink-0 text-lg font-semibold md:text-2xl">{title}</h1>
+      {actions && <div className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center">{actions}</div>}
     </div>
   );
 }

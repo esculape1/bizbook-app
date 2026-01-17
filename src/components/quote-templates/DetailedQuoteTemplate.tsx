@@ -53,8 +53,9 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
           const emptyRowsCount = isLastPage ? ITEMS_PER_PAGE - pageItems.length : 0;
 
           return (
-            <div key={pageIndex} className="page-container bg-white relative" style={{
-              width: '210mm',
+            <div key={pageIndex} className="page-container bg-white relative mx-auto" style={{
+              width: '100%',
+              maxWidth: '210mm',
               minHeight: '297mm',
               display: 'flex',
               flexDirection: 'column',

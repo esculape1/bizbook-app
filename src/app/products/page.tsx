@@ -146,10 +146,10 @@ export default async function ProductsPage() {
   const canManageProducts = user.role === 'Admin' || user.role === 'SuperAdmin';
   
   const pageActions = (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+    <>
       <StockInventoryReport products={products} settings={settings} />
       {canManageProducts && <ProductForm />}
-    </div>
+    </>
   );
 
   return (
