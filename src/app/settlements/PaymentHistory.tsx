@@ -3,7 +3,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatCurrency } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import type { PaymentHistoryItem, Client, Settings } from '@/lib/types';
 import { format } from 'date-fns';
 import { PaymentHistoryReportDialog } from './PaymentHistoryReportDialog';
@@ -30,11 +30,11 @@ export function PaymentHistory({ history, client, settings }: PaymentHistoryProp
   }
 
   return (
-    <Card>
+    <Card className="bg-emerald-500/10 border-emerald-500/20 text-emerald-800">
       <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <CardTitle>Historique des Règlements</CardTitle>
-          <CardDescription>Liste de tous les paiements enregistrés pour {client.name}.</CardDescription>
+          <CardDescription className="text-current/70">Liste de tous les paiements enregistrés pour {client.name}.</CardDescription>
         </div>
         <PaymentHistoryReportDialog history={history} client={client} settings={settings} />
       </CardHeader>

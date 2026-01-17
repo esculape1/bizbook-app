@@ -186,10 +186,10 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
         <>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             <div className="lg:col-span-2">
-                <Card>
+                <Card className="bg-amber-500/10 border-amber-500/20 text-amber-800">
                 <CardHeader>
                     <CardTitle>Factures pour {selectedClient.name}</CardTitle>
-                    <div className="flex justify-between items-center text-sm text-muted-foreground">
+                    <div className="flex justify-between items-center text-sm text-current/70">
                     <span>Solde total dû: <span className="font-bold text-destructive">{formatCurrency(totalDueForAll, settings.currency)}</span></span>
                     <span>Sélection: <span className="font-bold text-primary">{formatCurrency(totalDueOnSelected, settings.currency)}</span></span>
                     </div>
@@ -241,7 +241,7 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
             </div>
 
             <div>
-                <Card>
+                <Card className="bg-sky-500/10 border-sky-500/20 text-sky-800">
                 <CardHeader>
                     <CardTitle>Enregistrer le Paiement</CardTitle>
                 </CardHeader>
