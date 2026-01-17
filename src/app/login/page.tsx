@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
@@ -24,9 +24,8 @@ const PhoneInput = dynamic(() => import('react-international-phone').then(mod =>
 // This function needs to be declared to be accessible by RecaptchaVerifier
 declare global {
   interface Window {
-    recaptchaVerifier: RecaptchaVerifier;
-    confirmationResult: ConfirmationResult;
-    grecaptcha: any;
+    recaptchaVerifier?: RecaptchaVerifier;
+    confirmationResult?: ConfirmationResult;
   }
 }
 
@@ -36,42 +35,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showOtpInput, setShowOtpInput] = useState(false);
-  const [recaptchaReady, setRecaptchaReady] = useState(false);
   const router = useRouter();
-
-  useEffect(() => {
-    // This effect sets up the reCAPTCHA verifier when the component mounts.
-    try {
-      if (!window.recaptchaVerifier && auth) {
-          window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-              'size': 'invisible',
-              'callback': () => {
-                  // reCAPTCHA solved.
-              },
-              'expired-callback': () => {
-                // Response expired. Ask user to solve reCAPTCHA again.
-                setRecaptchaReady(false);
-                setError("La vérification a expiré. Veuillez réessayer.");
-              }
-          });
-          // Render the reCAPTCHA and set the ready state
-          window.recaptchaVerifier.render().then(() => {
-            setRecaptchaReady(true);
-          }).catch((err) => {
-            console.error("Erreur de rendu reCAPTCHA:", err);
-            setError("Impossible d'afficher le reCAPTCHA. Vérifiez votre connexion.");
-            setRecaptchaReady(false);
-          });
-      } else if (window.recaptchaVerifier) {
-        // If it already exists, assume it's ready.
-        setRecaptchaReady(true);
-      }
-    } catch (e: any) {
-        console.error("Erreur de configuration reCAPTCHA:", e);
-        setError("Impossible d'initialiser le reCAPTCHA. Veuillez rafraîchir la page.");
-        setRecaptchaReady(false);
-    }
-  }, []);
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,24 +49,23 @@ export default function LoginPage() {
     }
     
     try {
-        const appVerifier = window.recaptchaVerifier;
+        // Create a new verifier for each attempt. This is more robust.
+        const appVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            'size': 'invisible',
+        });
+        
         const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
+        
+        // Store verifier and result on window to pass them to the next step
+        window.recaptchaVerifier = appVerifier;
         window.confirmationResult = confirmationResult;
+
         setShowOtpInput(true);
-        setLoading(false);
         setError("Code envoyé ! Veuillez vérifier vos SMS.");
     } catch (err: any) {
         console.error("Erreur détaillée lors de l'envoi de l'OTP:", err);
         setError("Échec de l'envoi du code. Vérifiez le numéro ou réessayez. (" + err.code + ")");
-        
-        // In case of error, reset the reCAPTCHA so the user can try again.
-        if (typeof window.grecaptcha !== 'undefined' && window.grecaptcha.reset && window.recaptchaVerifier) {
-            window.recaptchaVerifier.render().then(widgetId => {
-                if (widgetId !== undefined) {
-                    window.grecaptcha.reset(widgetId);
-                }
-            });
-        }
+    } finally {
         setLoading(false);
     }
   };
@@ -148,6 +111,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4">
+      {/* This container is ESSENTIAL for the invisible reCAPTCHA to work */}
       <div id="recaptcha-container"></div>
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="text-center space-y-4 pt-8">
@@ -179,9 +143,9 @@ export default function LoginPage() {
                     inputClassName="w-full"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading || !recaptchaReady}>
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {!recaptchaReady && !loading ? 'Initialisation...' : (loading ? 'Envoi en cours...' : 'Envoyer le code')}
+                {loading ? 'Envoi en cours...' : 'Envoyer le code'}
               </Button>
             </form>
           ) : (
