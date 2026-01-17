@@ -5,7 +5,6 @@ import { getSession } from "@/lib/session";
 import { AppLayout } from "@/components/AppLayout";
 import { getSettings } from "@/lib/data";
 import { redirect } from "next/navigation";
-import { PageHeader } from "@/components/PageHeader";
 import { SupplierForm } from "./SupplierForm";
 
 export const dynamic = 'force-dynamic';
@@ -27,8 +26,11 @@ export default async function SuppliersPage() {
     <AppLayout 
       user={user} 
       settings={settings}
-      pageHeader={<PageHeader title="Fournisseurs" actions={canEdit ? <SupplierForm /> : undefined} />}
     >
+        <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Fournisseurs</h1>
+            {canEdit ? <SupplierForm /> : undefined}
+        </div>
       <SuppliersList suppliers={suppliers} userRole={user?.role} />
     </AppLayout>
   );

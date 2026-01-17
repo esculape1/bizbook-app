@@ -1,5 +1,4 @@
 
-import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { getExpenses, getSettings } from "@/lib/data";
@@ -178,8 +177,11 @@ export default async function ExpensesPage() {
     <AppLayout 
       user={user} 
       settings={settings}
-      pageHeader={<PageHeader title="Dépenses" actions={canEdit ? <ExpenseForm currency={settings.currency} /> : undefined} />}
     >
+       <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Dépenses</h1>
+            {canEdit ? <ExpenseForm currency={settings.currency} /> : undefined}
+        </div>
       <ExpensesContent />
     </AppLayout>
   );

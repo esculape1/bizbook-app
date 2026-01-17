@@ -1,6 +1,4 @@
 
-
-import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getProducts, getSettings } from "@/lib/data";
@@ -145,19 +143,18 @@ export default async function ProductsPage() {
   
   const canManageProducts = user.role === 'Admin' || user.role === 'SuperAdmin';
   
-  const pageActions = (
-    <>
-      <StockInventoryReport products={products} settings={settings} />
-      {canManageProducts && <ProductForm />}
-    </>
-  );
-
   return (
     <AppLayout 
       user={user} 
       settings={settings}
-      pageHeader={<PageHeader title="Produits" actions={pageActions} />}
     >
+        <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Produits</h1>
+            <div className="flex items-center gap-2">
+                 <StockInventoryReport products={products} settings={settings} />
+                {canManageProducts && <ProductForm />}
+            </div>
+        </div>
       <ProductsContent />
     </AppLayout>
   );

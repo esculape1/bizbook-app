@@ -18,6 +18,7 @@ import {
   FileClock,
   Briefcase,
   ShoppingCart,
+  CreditCard,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -42,6 +43,7 @@ const navItems = [
   { href: '/products', label: 'Produits', icon: Box, roles: ['SuperAdmin', 'Admin', 'User'] },
   { href: '/devis', label: 'Proforma', icon: FileClock, roles: ['SuperAdmin', 'Admin', 'User'] },
   { href: '/invoices', label: 'Factures', icon: FileText, roles: ['SuperAdmin', 'Admin', 'User'] },
+  { href: '/settlements', label: 'Règlements', icon: CreditCard, roles: ['SuperAdmin', 'Admin'] },
   { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: ['SuperAdmin', 'Admin', 'User'] },
   { href: '/reports', label: 'Rapports', icon: BarChart3, roles: ['SuperAdmin', 'Admin', 'User'] },
   { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['SuperAdmin', 'Admin', 'User'] },
@@ -51,12 +53,10 @@ export function AppLayout({
   children, 
   user, 
   settings,
-  pageHeader,
 }: { 
   children: ReactNode, 
   user: User, 
   settings: AppSettings,
-  pageHeader?: ReactNode,
 }) {
   const pathname = usePathname();
   const userRole = user?.role || 'User';
@@ -149,7 +149,9 @@ export function AppLayout({
             </SheetContent>
           </Sheet>
           
-          <div className="flex-1 min-w-0">{pageHeader}</div>
+          <div className="w-full flex-1">
+             {/* Le titre a été enlevé pour un design plus épuré */}
+          </div>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

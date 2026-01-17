@@ -4,7 +4,6 @@ import { SettingsForm } from './SettingsForm';
 import { getSession } from '@/lib/session';
 import { AppLayout } from '@/components/AppLayout';
 import { redirect } from 'next/navigation';
-import { PageHeader } from '@/components/PageHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +12,10 @@ async function SettingsContent() {
     getSettings(),
     getSession()
   ]);
+
+  if (!settings) {
+      return null; // Or some error/loading state
+  }
 
   return <SettingsForm initialSettings={settings} userRole={user?.role} />;
 }
@@ -26,7 +29,8 @@ export default async function SettingsPage() {
   }
 
   return (
-    <AppLayout user={user} settings={settings} pageHeader={<PageHeader title="Paramètres" />}>
+    <AppLayout user={user} settings={settings}>
+        <h1 className="text-2xl font-bold">Paramètres</h1>
       <SettingsContent />
     </AppLayout>
   );

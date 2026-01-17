@@ -8,7 +8,6 @@ import { cn, formatCurrency } from "@/lib/utils";
 import Link from "next/link";
 import { EditInvoiceForm } from "./EditInvoiceForm";
 import { CancelInvoiceButton } from "./DeleteInvoiceButton";
-import { RecordPaymentButton } from "./RecordPaymentButton";
 import type { Invoice, Client, Product, Settings, User } from "@/lib/types";
 import { ShippingLabelsDialog } from "./ShippingLabelsDialog";
 import { Separator } from "@/components/ui/separator";
@@ -94,7 +93,6 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                     {client && canEdit && (
                         <CardFooter className="flex items-center justify-end gap-1 p-2 bg-blue-950/10 border-t mt-auto">
                             <ShippingLabelsDialog invoice={invoice} client={client} settings={initialSettings} asTextButton={false} />
-                            <RecordPaymentButton invoice={invoice} settings={initialSettings} />
                             <EditInvoiceForm invoice={invoice} clients={initialClients} products={initialProducts} settings={initialSettings} />
                             <CancelInvoiceButton id={invoice.id} invoiceNumber={invoice.invoiceNumber} disabled={isLocked} />
                         </CardFooter>
@@ -144,7 +142,6 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                         <TableCell className="text-right">
                         <div className="flex items-center justify-end">
                             <ShippingLabelsDialog invoice={invoice} client={client} settings={initialSettings} asTextButton={false} />
-                            <RecordPaymentButton invoice={invoice} settings={initialSettings} />
                             <EditInvoiceForm invoice={invoice} clients={initialClients} products={initialProducts} settings={initialSettings} />
                             <CancelInvoiceButton id={invoice.id} invoiceNumber={invoice.invoiceNumber} disabled={isLocked} />
                         </div>

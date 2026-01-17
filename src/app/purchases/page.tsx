@@ -1,6 +1,5 @@
 
 
-import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getPurchases, getSuppliers, getProducts, getSettings } from "@/lib/data";
@@ -176,23 +175,23 @@ export default async function PurchasesPage() {
     .filter(p => p.status === 'Pending')
     .reduce((sum, p) => sum + p.totalAmount, 0);
 
-  const pageActions = (
-    <div className="flex items-center gap-2">
-      {totalPendingAmount > 0 && (
-        <div className="hidden md:flex p-2 rounded-lg bg-gradient-to-r from-lime-200 via-lime-300 to-lime-400 text-lime-900 shadow-sm items-center gap-2">
-            <PackageSearch className="h-5 w-5" />
-            <div className="text-right">
-                <div className="text-xs font-medium">Achats en attente</div>
-                <div className="text-base font-bold">{formatCurrency(totalPendingAmount, settings.currency)}</div>
+  return (
+    <AppLayout user={user} settings={settings}>
+        <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Achats</h1>
+            <div className="flex items-center gap-2">
+                {totalPendingAmount > 0 && (
+                    <div className="hidden md:flex p-2 rounded-lg bg-gradient-to-r from-lime-200 via-lime-300 to-lime-400 text-lime-900 shadow-sm items-center gap-2">
+                        <PackageSearch className="h-5 w-5" />
+                        <div className="text-right">
+                            <div className="text-xs font-medium">Achats en attente</div>
+                            <div className="text-base font-bold">{formatCurrency(totalPendingAmount, settings.currency)}</div>
+                        </div>
+                    </div>
+                )}
+                {canEdit && <PurchaseForm suppliers={suppliers} products={products} settings={settings} />}
             </div>
         </div>
-      )}
-      {canEdit && <PurchaseForm suppliers={suppliers} products={products} settings={settings} />}
-    </div>
-  );
-
-  return (
-    <AppLayout user={user} settings={settings} pageHeader={<PageHeader title="Achats" actions={pageActions} />}>
       <PurchasesContent user={user} />
     </AppLayout>
   );

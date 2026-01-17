@@ -12,8 +12,7 @@ import {
   getInvoices,
 } from '@/lib/data';
 import { revalidateTag } from 'next/cache';
-import type { InvoiceItem, Invoice, Payment } from '@/lib/types';
-import { randomUUID } from 'crypto';
+import type { InvoiceItem, Invoice } from '@/lib/types';
 import { getSession } from '@/lib/session';
 
 const invoiceItemSchemaForCreate = z.object({
@@ -317,84 +316,5 @@ export async function cancelInvoice(id: string) {
       success: false,
       message,
     };
-  }
-}
-
-const paymentSchema = z.object({
-  amount: z.coerce.number().positive("Le montant doit être positif."),
-  date: z.date(),
-  method: z.enum(['Espèces', 'Virement bancaire', 'Chèque', 'Autre']),
-  notes: z.string().optional(),
-});
-
-export async function recordPayment(invoiceId: string, formData: unknown) {
-  const session = await getSession();
-  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
-    return { message: "Action non autorisée." };
-  }
-
-  const invoice = await getInvoiceById(invoiceId);
-  if (!invoice) {
-    return { message: 'Facture non trouvée.' };
-  }
-  
-  if (invoice.status === 'Paid' || invoice.status === 'Cancelled') {
-    return { message: 'Impossible d\'enregistrer un paiement sur une facture soldée ou annulée.' };
-  }
-
-  const amountDue = invoice.totalAmount - (invoice.amountPaid || 0);
-
-  const paymentSchemaWithMax = paymentSchema.extend({
-      amount: z.coerce
-          .number()
-          .positive("Le montant doit être positif.")
-          .max(amountDue, `Le montant ne peut pas dépasser le solde dû.`),
-  });
-
-  const validatedFields = paymentSchemaWithMax.safeParse(formData);
-
-  if (!validatedFields.success) {
-    return {
-      message: 'Certains champs sont invalides. Impossible d\'enregistrer le paiement.',
-    };
-  }
-
-  try {
-    const { amount, date, method, notes } = validatedFields.data;
-
-    const newPayment: Payment = {
-      id: randomUUID(),
-      date: date.toISOString(),
-      amount,
-      method,
-      notes: notes || '',
-    };
-
-    const existingPayments = invoice.payments || [];
-    const updatedPayments = [...existingPayments, newPayment];
-    const newAmountPaid = updatedPayments.reduce((sum, p) => sum + p.amount, 0);
-
-    let newStatus: Invoice['status'] = 'Partially Paid';
-    // Use a small tolerance for floating point comparisons
-    if (newAmountPaid >= invoice.totalAmount - 0.001) {
-      newStatus = 'Paid';
-    } else if (newAmountPaid <= 0) {
-      newStatus = 'Unpaid';
-    }
-
-    await updateInvoiceInDB(invoiceId, {
-      amountPaid: newAmountPaid,
-      payments: updatedPayments,
-      status: newStatus,
-    });
-    
-    revalidateTag('invoices');
-    revalidateTag('dashboard-stats');
-    return {}; // Success
-
-  } catch (error) {
-    console.error('Failed to record payment:', error);
-    const message = error instanceof Error ? error.message : 'Erreur de la base de données: Impossible d\'enregistrer le paiement.';
-    return { message };
   }
 }
