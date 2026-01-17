@@ -36,22 +36,40 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showOtpInput, setShowOtpInput] = useState(false);
+  const [recaptchaReady, setRecaptchaReady] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     // This effect sets up the reCAPTCHA verifier when the component mounts.
     try {
-      if (!window.recaptchaVerifier) {
+      if (!window.recaptchaVerifier && auth) {
           window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
               'size': 'invisible',
-              'callback': (response: any) => {
-                  // reCAPTCHA solved, allow signInWithPhoneNumber.
+              'callback': () => {
+                  // reCAPTCHA solved.
+              },
+              'expired-callback': () => {
+                // Response expired. Ask user to solve reCAPTCHA again.
+                setRecaptchaReady(false);
+                setError("La vérification a expiré. Veuillez réessayer.");
               }
           });
+          // Render the reCAPTCHA and set the ready state
+          window.recaptchaVerifier.render().then(() => {
+            setRecaptchaReady(true);
+          }).catch((err) => {
+            console.error("Erreur de rendu reCAPTCHA:", err);
+            setError("Impossible d'afficher le reCAPTCHA. Vérifiez votre connexion.");
+            setRecaptchaReady(false);
+          });
+      } else if (window.recaptchaVerifier) {
+        // If it already exists, assume it's ready.
+        setRecaptchaReady(true);
       }
     } catch (e: any) {
-        console.error("Error setting up reCAPTCHA", e);
+        console.error("Erreur de configuration reCAPTCHA:", e);
         setError("Impossible d'initialiser le reCAPTCHA. Veuillez rafraîchir la page.");
+        setRecaptchaReady(false);
     }
   }, []);
 
@@ -74,13 +92,15 @@ export default function LoginPage() {
         setLoading(false);
         setError("Code envoyé ! Veuillez vérifier vos SMS.");
     } catch (err: any) {
-        console.error("Erreur lors de l'envoi de l'OTP:", err);
+        console.error("Erreur détaillée lors de l'envoi de l'OTP:", err);
         setError("Échec de l'envoi du code. Vérifiez le numéro ou réessayez. (" + err.code + ")");
         
         // In case of error, reset the reCAPTCHA so the user can try again.
         if (typeof window.grecaptcha !== 'undefined' && window.grecaptcha.reset && window.recaptchaVerifier) {
             window.recaptchaVerifier.render().then(widgetId => {
-                window.grecaptcha.reset(widgetId);
+                if (widgetId !== undefined) {
+                    window.grecaptcha.reset(widgetId);
+                }
             });
         }
         setLoading(false);
@@ -159,9 +179,9 @@ export default function LoginPage() {
                     inputClassName="w-full"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full" disabled={loading || !recaptchaReady}>
                 {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {loading ? 'Envoi en cours...' : 'Envoyer le code'}
+                {!recaptchaReady && !loading ? 'Initialisation...' : (loading ? 'Envoi en cours...' : 'Envoyer le code')}
               </Button>
             </form>
           ) : (
