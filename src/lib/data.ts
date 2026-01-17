@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
-import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User } from './types';
+import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User, UserWithPassword } from './types';
 import { unstable_cache as cache } from 'next/cache';
 
 const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Veuillez vérifier la configuration de Firebase ou vos quotas d'utilisation.";
@@ -39,24 +39,24 @@ function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
 
 
 // USERS
-export async function getUserByPhoneNumber(phone: string): Promise<User | null> {
+export async function getUserByEmail(email: string): Promise<UserWithPassword | null> {
     if (!db) {
         console.error(DB_UNAVAILABLE_ERROR);
         throw new Error(DB_UNAVAILABLE_ERROR);
     }
     try {
         const usersCol = db.collection('users');
-        const q = usersCol.where('phone', '==', phone).limit(1);
+        const q = usersCol.where('email', '==', email).limit(1);
         const userSnapshot = await q.get();
 
         if (userSnapshot.empty) {
             return null;
         }
         
-        return docToObject<User>(userSnapshot.docs[0]);
+        return docToObject<UserWithPassword>(userSnapshot.docs[0]);
 
     } catch (error) {
-        console.error(`Impossible de récupérer l'utilisateur avec le numéro de téléphone ${phone}:`, error);
+        console.error(`Impossible de récupérer l'utilisateur avec l'email ${email}:`, error);
         throw error;
     }
 }
@@ -507,6 +507,7 @@ export const getDashboardStats = cache(async () => {
 
     
     
+
 
 
 

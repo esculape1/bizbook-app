@@ -1,140 +1,29 @@
 'use client';
 
-import { useState, useEffect, useRef }from 'react';
-import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
+import { useFormState, useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
-import { auth } from '@/lib/firebase-client';
-import { verifyAndCreateSession } from '../auth/actions';
-import 'react-international-phone/style.css';
+import { signIn } from '../auth/actions';
 
-const PhoneInput = dynamic(() => import('react-international-phone').then((mod) => mod.PhoneInput), {
-    ssr: false,
-    loading: () => <Input placeholder="+226 XX XX XX XX" disabled className="h-[38px]"/>,
-});
-
-declare global {
-  interface Window {
-    confirmationResult?: ConfirmationResult;
-  }
+function LoginButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" className="w-full" disabled={pending}>
+      {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+      {pending ? 'Connexion...' : 'Se connecter'}
+    </Button>
+  );
 }
 
 export default function LoginPage() {
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [showOtpInput, setShowOtpInput] = useState(false);
-  const router = useRouter();
-
-  const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
-
-  // Function to clean up the reCAPTCHA widget
-  const cleanupRecaptcha = () => {
-    if (recaptchaVerifierRef.current) {
-      recaptchaVerifierRef.current.clear();
-      const widget = document.getElementById('recaptcha-container');
-      if (widget) widget.innerHTML = "";
-    }
-  };
-
-  useEffect(() => {
-    // Cleanup on component unmount
-    return () => cleanupRecaptcha();
-  }, []);
-
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
-    console.log("Tentative d'envoi de l'OTP au numéro :", phone);
-
-    if (!phone) {
-        setError("Veuillez saisir un numéro de téléphone.");
-        setLoading(false);
-        return;
-    }
-    
-    try {
-      // Cleanup previous instance before creating a new one
-      cleanupRecaptcha();
-
-      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'invisible',
-        'callback': (response: any) => {
-          console.log("reCAPTCHA résolu avec succès.");
-        },
-        'expired-callback': () => {
-          console.warn("reCAPTCHA a expiré. Veuillez réessayer.");
-          setError("La vérification a expiré. Veuillez réessayer.");
-        }
-      });
-      
-      recaptchaVerifierRef.current = verifier;
-
-      console.log("reCAPTCHA Verifier créé. Appel de signInWithPhoneNumber...");
-      const confirmationResult = await signInWithPhoneNumber(auth, phone, verifier);
-      console.log("signInWithPhoneNumber a réussi.");
-      
-      window.confirmationResult = confirmationResult;
-
-      setShowOtpInput(true);
-      setError("Code envoyé ! Veuillez vérifier vos SMS.");
-    } catch (err: any) {
-        console.error("Erreur détaillée lors de l'envoi de l'OTP:", err);
-        setError(`Échec de l'envoi du code. Vérifiez le numéro ou réessayez. (${err.code})`);
-    } finally {
-        setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
-    
-    if (!otp || otp.length !== 6) {
-        setError("Veuillez saisir un code à 6 chiffres.");
-        setLoading(false);
-        return;
-    }
-
-    try {
-      const confirmationResult = window.confirmationResult;
-      if (!confirmationResult) {
-          throw new Error("La vérification a expiré. Veuillez renvoyer le code.");
-      }
-      const result = await confirmationResult.confirm(otp);
-      const user = result.user;
-      const idToken = await user.getIdToken();
-      
-      const sessionResult = await verifyAndCreateSession(idToken);
-      
-      if (sessionResult.success) {
-        router.push('/');
-        router.refresh();
-      } else {
-        setError(sessionResult.error || "La connexion a échoué après vérification.");
-        setLoading(false);
-      }
-
-    } catch (err: any) {
-        console.error("Erreur lors de la vérification de l'OTP:", err);
-        setError(`Code invalide ou expiré. Veuillez réessayer. (${err.code})`);
-        setLoading(false);
-    }
-  };
-
+  const [state, formAction] = useFormState(signIn, undefined);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4">
-      <div id="recaptcha-container"></div>
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="text-center space-y-4 pt-8">
             <div className="flex justify-center">
@@ -142,60 +31,40 @@ export default function LoginPage() {
             </div>
             <div>
                 <CardTitle className="text-2xl">Bienvenue sur BizBook</CardTitle>
-                <CardDescription>Connectez-vous avec votre numéro de téléphone</CardDescription>
+                <CardDescription>Connectez-vous avec votre email et mot de passe</CardDescription>
             </div>
         </CardHeader>
         <CardContent className="p-8">
-          {error && (
-              <Alert variant={error.includes("envoyé") ? "default" : "destructive"} className="mb-4">
+          {state?.message && (
+              <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>{error.includes("envoyé") ? "Information" : "Erreur"}</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
+                <AlertTitle>Erreur de connexion</AlertTitle>
+                <AlertDescription>{state.message}</AlertDescription>
               </Alert>
             )}
 
-          {!showOtpInput ? (
-            <form onSubmit={handleSendOtp} className="space-y-6">
+          <form action={formAction} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="phone">Numéro de téléphone</Label>
-                <PhoneInput
-                    value={phone}
-                    onChange={(newPhone) => setPhone(newPhone)}
-                    defaultCountry="bf"
-                    inputClassName="w-full"
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="nom@exemple.com"
+                  required
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                {loading ? 'Envoi en cours...' : 'Envoyer le code'}
-              </Button>
+               <div className="space-y-2">
+                <Label htmlFor="password">Mot de passe</Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                />
+              </div>
+              <LoginButton />
             </form>
-          ) : (
-            <form onSubmit={handleVerifyOtp} className="space-y-6">
-                <div className="space-y-2">
-                    <Label htmlFor="otp">Code de vérification</Label>
-                    <Input
-                        id="otp"
-                        name="otp"
-                        type="text"
-                        inputMode="numeric"
-                        autoComplete="one-time-code"
-                        placeholder="_ _ _ _ _ _"
-                        required
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        maxLength={6}
-                    />
-                </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    {loading ? 'Vérification...' : 'Se connecter'}
-                </Button>
-                <Button variant="link" onClick={() => { cleanupRecaptcha(); setShowOtpInput(false); setError(null); }} className="w-full">
-                    Changer de numéro
-                </Button>
-            </form>
-          )}
         </CardContent>
       </Card>
       <footer className="w-full p-4 mt-6 text-center text-xs text-muted-foreground">

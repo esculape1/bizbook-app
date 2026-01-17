@@ -8,6 +8,10 @@ export type User = {
   role: 'SuperAdmin' | 'Admin' | 'User';
 };
 
+export type UserWithPassword = User & {
+  password?: string;
+};
+
 export type Client = {
   id: string;
   name: string;

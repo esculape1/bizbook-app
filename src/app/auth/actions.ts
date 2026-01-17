@@ -4,24 +4,31 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import type { User } from '@/lib/types';
-import { getUserByPhoneNumber } from '@/lib/data';
-import { admin } from '@/lib/firebase-admin';
+import { getUserByEmail } from '@/lib/data';
 
-export async function verifyAndCreateSession(idToken: string) {
+export type State = {
+  message?: string;
+};
+
+export async function signIn(prevState: State | undefined, formData: FormData) {
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+
+  if (!email || !password) {
+    return { message: 'Email et mot de passe sont requis.' };
+  }
+
   try {
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    
-    if (!decodedToken.phone_number) {
-      return { success: false, error: 'Le jeton d\'authentification est invalide ou ne contient pas de numéro de téléphone.' };
+    const userRecord = await getUserByEmail(email);
+
+    if (!userRecord) {
+      return { message: 'Aucun utilisateur trouvé avec cet email.' };
     }
     
-    const phoneNumber = decodedToken.phone_number;
-    
-    const userRecord = await getUserByPhoneNumber(phoneNumber);
-    
-    if (!userRecord) {
-      console.log(`Tentative de connexion échouée: Aucun utilisateur trouvé pour le numéro ${phoneNumber}`);
-      return { success: false, error: 'Ce numéro de téléphone n\'est pas autorisé à accéder à cette application.' };
+    // IMPORTANT: Ceci est une comparaison en texte clair et N'EST PAS SÉCURISÉ.
+    // C'est une mesure temporaire. À remplacer par une comparaison de hash de mot de passe (ex: avec bcrypt).
+    if (userRecord.password !== password) {
+      return { message: 'Mot de passe incorrect.' };
     }
     
     const authenticatedUser: User = {
@@ -43,12 +50,12 @@ export async function verifyAndCreateSession(idToken: string) {
         sameSite: 'lax',
     });
     
-    return { success: true };
-
   } catch(error: any) {
-      console.error("Erreur serveur pendant la vérification du jeton:", error);
-      return { success: false, error: "Une erreur interne est survenue. Veuillez réessayer."}
+      console.error("Erreur serveur pendant la connexion:", error);
+      return { message: "Une erreur interne est survenue. Veuillez réessayer."}
   }
+
+  redirect('/');
 }
 
 export async function signOut() {
