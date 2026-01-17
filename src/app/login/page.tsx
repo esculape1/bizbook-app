@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,8 +12,13 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { auth } from '@/lib/firebase-client';
 import { verifyAndCreateSession } from '../auth/actions';
-import InternationalPhoneInput from 'react-international-phone';
 import 'react-international-phone/style.css';
+
+const InternationalPhoneInput = dynamic(() => import('react-international-phone'), {
+    ssr: false,
+    loading: () => <Input placeholder="+226 XX XX XX XX" disabled className="h-[38px]"/>,
+});
+
 
 // This function needs to be declared to be accessible by RecaptchaVerifier
 declare global {
