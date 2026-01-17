@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useTransition, useEffect, useMemo } from 'react';
@@ -184,8 +183,8 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
 
       {selectedClient && !isFetchingInvoices && (
         <>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            <div className="lg:col-span-2">
+            <div className="flex flex-col lg:flex-row gap-6 items-start">
+              <div className="w-full lg:flex-[2]">
                 <Card className="bg-amber-500/10 border-amber-500/20 text-amber-800">
                 <CardHeader>
                     <CardTitle>Factures pour {selectedClient.name}</CardTitle>
@@ -238,9 +237,9 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
                     </div>
                 </CardContent>
                 </Card>
-            </div>
+              </div>
 
-            <div>
+              <div className="w-full lg:flex-1">
                 <Card className="bg-sky-500/10 border-sky-500/20 text-sky-800">
                 <CardHeader>
                     <CardTitle>Enregistrer le Paiement</CardTitle>
@@ -327,7 +326,7 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
                     </Form>
                 </CardContent>
                 </Card>
-            </div>
+              </div>
             </div>
             <PaymentHistory 
                 history={paymentHistory} 
