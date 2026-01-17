@@ -47,15 +47,17 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
           const emptyRowsCount = isLastPage ? ITEMS_PER_PAGE - pageItems.length : 0;
 
           return (
-            <div key={pageIndex} className="page-container bg-white relative mx-auto" style={{
-              width: '100%',
-              maxWidth: '210mm',
-              minHeight: '297mm',
-              display: 'flex',
-              flexDirection: 'column',
-              boxSizing: 'border-box',
-              padding: '14mm 10mm 20mm 10mm',
-            }}>
+            <div
+              key={pageIndex}
+              className="page-container bg-white relative mx-auto w-full md:max-w-[210mm]"
+              style={{
+                minHeight: '297mm',
+                display: 'flex',
+                flexDirection: 'column',
+                boxSizing: 'border-box',
+                padding: '14mm 10mm 20mm 10mm',
+              }}
+            >
               {/* Blue sidebar */}
               <div className="absolute top-0 left-0 h-full w-[8mm] bg-[#002060]"></div>
               

@@ -67,7 +67,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
 
   return (
     <div className="space-y-4">
-        <div className="flex w-full flex-col items-stretch justify-center gap-2 sm:flex-row sm:items-center">
+        <div className="flex w-full flex-col items-stretch justify-center gap-2 md:flex-row md:items-center">
             <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} asTextButton />
             <DeliverySlipDialog invoice={invoice} client={client} settings={settings} />
             <Button onClick={handlePrint}>
