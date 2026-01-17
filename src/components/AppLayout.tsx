@@ -149,7 +149,7 @@ export function AppLayout({
             </SheetContent>
           </Sheet>
           
-          <div className="w-full flex-1">{pageHeader}</div>
+          <div className="flex-1 min-w-0">{pageHeader}</div>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

@@ -55,7 +55,7 @@ export function CancelPurchaseButton({ id, purchaseNumber, purchaseStatus, userR
         <AlertDialogHeader>
           <AlertDialogTitle>Êtes-vous sûr de vouloir annuler cet achat ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Cette action est irréversible. L'achat "{purchaseNumber}" sera marqué comme annulé. L'annulation n'est possible que si l'achat n'a pas encore été réceptionné.
+            Cette action est irréversible. L'achat "{purchaseNumber}" sera marqué comme annulé. Le SuperAdmin peut annuler un achat même s'il a été réceptionné, mais cette action ne modifiera pas le stock.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

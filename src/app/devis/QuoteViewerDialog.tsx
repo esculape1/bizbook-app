@@ -60,7 +60,7 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
             <DialogTitle>Aperçu de la Proforma - {quote.quoteNumber}</DialogTitle>
             </DialogHeader>
         </div>
-        <div className="max-h-[70vh] overflow-y-auto bg-gray-50">
+        <div className="max-h-[70vh] overflow-auto bg-gray-50">
             <DetailedQuoteTemplate quote={quote} client={client} settings={settings} />
         </div>
         <DialogFooter className="p-6 bg-white border-t">

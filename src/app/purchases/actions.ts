@@ -125,7 +125,9 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
     ]);
     
     if (!originalPurchase) return { message: 'Achat original non trouvé.' };
-    if (originalPurchase.status !== 'Pending') return { message: 'Seuls les achats "En attente" peuvent être modifiés.' };
+    if (session?.role !== 'SuperAdmin' && originalPurchase.status !== 'Pending') {
+      return { message: 'Seuls les achats "En attente" peuvent être modifiés.' };
+    }
 
     const supplier = suppliers.find(c => c.id === supplierId);
     if (!supplier) return { message: 'Fournisseur non trouvé.' };
@@ -242,7 +244,7 @@ export async function cancelPurchase(id: string) {
       throw new Error("Achat non trouvé pour l'annulation.");
     }
     
-    if (purchaseToCancel.status === 'Received') {
+    if (purchaseToCancel.status === 'Received' && session?.role !== 'SuperAdmin') {
       return { success: false, message: "Impossible d'annuler un achat déjà réceptionné."}
     }
     

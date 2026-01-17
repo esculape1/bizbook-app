@@ -58,7 +58,7 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
             <DialogTitle>Bordereau de Livraison - {`BL-${invoice.invoiceNumber}`}</DialogTitle>
             </DialogHeader>
         </div>
-        <div className="max-h-[70vh] overflow-y-auto bg-gray-50">
+        <div className="max-h-[70vh] overflow-auto bg-gray-50">
             <DeliverySlipTemplate invoice={invoice} client={client} settings={settings} />
         </div>
         <DialogFooter className="p-6 bg-white border-t">
