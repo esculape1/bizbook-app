@@ -4,31 +4,31 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import type { User } from '@/lib/types';
-import { getUserByEmail } from '@/lib/data';
-import { getSession } from '@/lib/session';
+import { getUserByPhoneNumber } from '@/lib/data';
+import { admin } from '@/lib/firebase-admin';
 
-export async function signIn(prevState: { error: string } | undefined, formData: FormData) {
-  const email = (formData.get('email') as string || '').trim().toLowerCase();
-  const password = (formData.get('password') as string || '').trim();
-
-  if (!email || !password) {
-    return { error: 'Email et mot de passe sont requis.' };
-  }
-  
+export async function verifyAndCreateSession(idToken: string) {
   try {
-    const userRecord = await getUserByEmail(email);
-
-    if (!userRecord) {
-      console.log(`Tentative de connexion échouée: Aucun utilisateur trouvé pour l'email ${email}`);
-      return { error: 'Email ou mot de passe incorrect.' };
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    
+    if (!decodedToken.phone_number) {
+      return { success: false, error: 'Le jeton d\'authentification est invalide ou ne contient pas de numéro de téléphone.' };
     }
-
-    // Le système est simplifié pour ne pas vérifier le mot de passe,
-    // se fiant à la présence de l'utilisateur.
+    
+    const phoneNumber = decodedToken.phone_number;
+    
+    const userRecord = await getUserByPhoneNumber(phoneNumber);
+    
+    if (!userRecord) {
+      console.log(`Tentative de connexion échouée: Aucun utilisateur trouvé pour le numéro ${phoneNumber}`);
+      return { success: false, error: 'Ce numéro de téléphone n\'est pas autorisé à accéder à cette application.' };
+    }
+    
     const authenticatedUser: User = {
         id: userRecord.id,
         name: userRecord.name,
         email: userRecord.email,
+        phone: userRecord.phone,
         role: userRecord.role || 'User',
     };
 
@@ -42,13 +42,13 @@ export async function signIn(prevState: { error: string } | undefined, formData:
         path: '/',
         sameSite: 'lax',
     });
+    
+    return { success: true };
 
   } catch(error: any) {
-      console.error("Erreur serveur pendant la connexion:", error);
-      return { error: "Une erreur interne est survenue. Veuillez réessayer."}
+      console.error("Erreur serveur pendant la vérification du jeton:", error);
+      return { success: false, error: "Une erreur interne est survenue. Veuillez réessayer."}
   }
-
-  redirect('/');
 }
 
 export async function signOut() {

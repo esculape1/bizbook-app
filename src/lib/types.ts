@@ -4,6 +4,7 @@ export type User = {
   id: string; // This is the Firestore document ID
   name: string;
   email: string;
+  phone?: string;
   role: 'SuperAdmin' | 'Admin' | 'User';
 };
 

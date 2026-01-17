@@ -30,4 +30,4 @@ if (!admin.apps.length) {
 db = admin.firestore();
 
 
-export { db };
+export { db, admin };

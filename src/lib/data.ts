@@ -73,6 +73,28 @@ export async function getUserByEmail(email: string): Promise<User | null> {
     }
 }
 
+export async function getUserByPhoneNumber(phone: string): Promise<User | null> {
+    if (!db) {
+        console.error(DB_UNAVAILABLE_ERROR);
+        throw new Error(DB_UNAVAILABLE_ERROR);
+    }
+    try {
+        const usersCol = db.collection('users');
+        const q = usersCol.where('phone', '==', phone).limit(1);
+        const userSnapshot = await q.get();
+
+        if (userSnapshot.empty) {
+            return null;
+        }
+        
+        return docToObject<User>(userSnapshot.docs[0]);
+
+    } catch (error) {
+        console.error(`Impossible de récupérer l'utilisateur avec le numéro de téléphone ${phone}:`, error);
+        throw error;
+    }
+}
+
 
 // CLIENTS
 export const getClients = cache(
@@ -519,6 +541,7 @@ export const getDashboardStats = cache(async () => {
 
     
     
+
 
 
 
