@@ -35,14 +35,24 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
         @media print {
           @page {
             size: A4;
-            margin: 0;
+            margin: 5mm 0 0 0;
           }
-          body {
+          html, body {
+            width: 210mm;
+            height: 99.5%;
+            overflow: hidden;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
+          .page-container {
+            overflow: hidden;
+            height: 100%;
+          }
            .page-container:not(:last-child) {
              page-break-after: always;
+          }
+          .no-break {
+            page-break-inside: avoid;
           }
         }
       `}</style>
@@ -56,16 +66,21 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
               key={pageIndex}
               className="page-container bg-white relative mx-auto w-full max-w-[210mm]"
               style={{
-                height: '297mm',
-                maxHeight: '297mm',
-                overflow: 'hidden',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
                 boxSizing: 'border-box',
-                padding: '10mm 10mm 5mm 10mm',
+                padding: '10mm',
               }}
             >
               <div className="absolute top-0 left-0 h-full w-[8mm] bg-[#002060]"></div>
               
-              <div style={{ paddingLeft: '5mm' }}>
+              <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  flexGrow: 1,
+                  paddingLeft: '5mm', // Space for the blue bar
+                }}>
                 <header className="mb-4">
                   <div className="flex justify-between items-start">
                       <div className="w-2/3">
@@ -109,7 +124,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                    </div>
                 </header>
                 
-                <main>
+                <main className="flex-grow flex flex-col">
                   <table className="w-full border-collapse text-xs">
                     <thead className="bg-[#002060] text-white">
                       <tr>
@@ -143,8 +158,8 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                   </table>
 
                   {isLastPage && (
-                    <div style={{ pageBreakInside: 'avoid' }}>
-                        <div className="flex justify-end text-xs mt-1">
+                    <div className="no-break mt-2">
+                        <div className="flex justify-end text-xs">
                             <div className="w-3/5 space-y-1">
                                 <table className="w-full border-collapse text-xs">
                                     <tbody>
@@ -162,7 +177,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                                         </tr>
                                         <tr className="border border-gray-400 font-semibold">
                                             <td className="p-1 pr-2 whitespace-nowrap">TOTAL TTC:</td>
-                                            <td className="p-1 text-right whitespace-nowrap">{formatCurrency(quote.totalAmount, settings.currency)}</td>
+                                            <td className="p-1 text-right font-semibold whitespace-nowrap">{formatCurrency(quote.totalAmount, settings.currency)}</td>
                                         </tr>
                                         <tr className="border border-gray-400">
                                             <td className="p-1 pr-2 font-bold text-black whitespace-nowrap">RETENUE {retenue}%:</td>
@@ -177,7 +192,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                             </div>
                         </div>
                         
-                        <div className="flex justify-between items-end mt-4 text-xs">
+                        <div className="flex justify-between items-baseline mt-4 text-xs">
                            <div className="w-2/5 text-center">
                                <div className="mt-12 border-b-2 border-gray-400"></div>
                                <p className="font-bold mt-1">{settings.managerName}</p>
@@ -190,11 +205,11 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                     </div>
                   )}
                 </main>
-              </div>
               
-              <div className="absolute text-center text-gray-700 text-[7pt] border-t-2 border-[#002060] pt-1" style={{ bottom: '5mm', left: '10mm', right: '10mm', margin: 0 }}>
+              <footer className="absolute text-center text-gray-700 text-[7pt] border-t-2 border-[#002060] pt-1" style={{ bottom: '5mm', left: '10mm', right: '10mm' }}>
                  <p className="leading-tight">Ouagadougou secteur 07 RCCM: BF-OUA-01-2023-B12-07959 IFU: 00205600T</p>
                  <p className="leading-tight">CMF N° 10001-010614200107 Tel: 25465512 / 70150699 / 76778393 E-mail: dlgbiomed@gmail.com</p>
+              </footer>
               </div>
             </div>
           );

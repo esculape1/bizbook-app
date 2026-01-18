@@ -35,14 +35,24 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
         @media print {
           @page {
             size: A4;
-            margin: 0;
+            margin: 5mm 0 0 0;
           }
-          body {
+          html, body {
+            width: 210mm;
+            height: 99.5%;
+            overflow: hidden;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
+          .page-container {
+            overflow: hidden;
+            height: 100%;
+          }
           .page-container:not(:last-child) {
              page-break-after: always;
+          }
+          .no-break {
+            page-break-inside: avoid;
           }
         }
       `}</style>
@@ -56,16 +66,21 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
               key={pageIndex}
               className="page-container bg-white relative mx-auto w-full max-w-[210mm]"
               style={{
-                height: '297mm',
-                maxHeight: '297mm',
-                overflow: 'hidden',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
                 boxSizing: 'border-box',
-                padding: '10mm 10mm 5mm 10mm',
+                padding: '10mm',
               }}
             >
               <div className="absolute top-0 left-0 h-full w-[8mm] bg-[#002060]"></div>
               
-              <div style={{ paddingLeft: '5mm' }}>
+              <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  flexGrow: 1,
+                  paddingLeft: '5mm', // Space for the blue bar
+              }}>
                 <header className="mb-4">
                   <div className="flex justify-between items-start">
                       <div className="w-2/3">
@@ -109,42 +124,43 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                   </div>
                 </header>
                 
-                <main>
-                  <table className="w-full border-collapse text-xs">
-                    <thead className="bg-[#002060] text-white">
-                      <tr>
-                        <th className="py-1 px-2 text-left font-bold w-[15%] border-r border-white whitespace-nowrap">REFERENCE</th>
-                        <th className="py-1 px-2 text-left font-bold w-[45%] border-r border-white">DESIGNATION</th>
-                        <th className="py-1 px-2 text-right font-bold w-[15%] border-r border-white whitespace-nowrap">PRIX U.</th>
-                        <th className="py-1 px-2 text-center font-bold w-[10%] border-r border-white">Qté</th>
-                        <th className="py-1 px-2 text-right font-bold w-[15%] whitespace-nowrap">TOTAL</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pageItems.map((item, index) => (
-                        <tr key={index} className="border-b border-gray-400">
-                          <td className="py-1 px-2 border-l border-r border-gray-400 align-middle whitespace-nowrap">{item.reference}</td>
-                          <td className="py-1 px-2 border-r border-gray-400 align-middle font-bold">{item.productName}</td>
-                          <td className="py-1 px-2 border-r border-gray-400 text-right align-middle whitespace-nowrap">{formatCurrency(item.unitPrice, settings.currency)}</td>
-                          <td className="py-1 px-2 border-r border-gray-400 text-center align-middle whitespace-nowrap">{item.quantity}</td>
-                          <td className="py-1 px-2 border-r border-gray-400 text-right align-middle font-semibold whitespace-nowrap">{formatCurrency(item.total, settings.currency)}</td>
+                <main className="flex-grow flex flex-col">
+                    <table className="w-full border-collapse text-xs">
+                      <thead className="bg-[#002060] text-white">
+                        <tr>
+                          <th className="py-1 px-2 text-left font-bold w-[15%] border-r border-white whitespace-nowrap">REFERENCE</th>
+                          <th className="py-1 px-2 text-left font-bold w-[45%] border-r border-white">DESIGNATION</th>
+                          <th className="py-1 px-2 text-right font-bold w-[15%] border-r border-white whitespace-nowrap">PRIX U.</th>
+                          <th className="py-1 px-2 text-center font-bold w-[10%] border-r border-white">Qté</th>
+                          <th className="py-1 px-2 text-right font-bold w-[15%] whitespace-nowrap">TOTAL</th>
                         </tr>
-                      ))}
-                      {isLastPage && emptyRowsCount > 0 && Array.from({ length: emptyRowsCount }).map((_, index) => (
-                        <tr key={`empty-${index}`} className="border-b border-gray-400">
-                          <td className="py-1 px-2 border-l border-r border-gray-400">&nbsp;</td>
-                          <td className="py-1 px-2 border-r border-gray-400"></td>
-                          <td className="py-1 px-2 border-r border-gray-400"></td>
-                          <td className="py-1 px-2 border-r border-gray-400"></td>
-                          <td className="py-1 px-2 border-r border-gray-400"></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  
-                  {isLastPage && (
-                    <div style={{ pageBreakInside: 'avoid' }}>
-                        <div className="flex justify-end text-xs mt-1">
+                      </thead>
+                      <tbody>
+                        {pageItems.map((item, index) => (
+                          <tr key={index} className="border-b border-gray-400">
+                            <td className="py-1 px-2 border-l border-r border-gray-400 align-middle whitespace-nowrap">{item.reference}</td>
+                            <td className="py-1 px-2 border-r border-gray-400 align-middle font-bold">{item.productName}</td>
+                            <td className="py-1 px-2 border-r border-gray-400 text-right align-middle whitespace-nowrap">{formatCurrency(item.unitPrice, settings.currency)}</td>
+                            <td className="py-1 px-2 border-r border-gray-400 text-center align-middle whitespace-nowrap">{item.quantity}</td>
+                            <td className="py-1 px-2 border-r border-gray-400 text-right align-middle font-semibold whitespace-nowrap">{formatCurrency(item.total, settings.currency)}</td>
+                          </tr>
+                        ))}
+                        {isLastPage && emptyRowsCount > 0 && Array.from({ length: emptyRowsCount }).map((_, index) => (
+                          <tr key={`empty-${index}`} className="border-b border-gray-400">
+                            <td className="py-1 px-2 border-l border-r border-gray-400">&nbsp;</td>
+                            <td className="py-1 px-2 border-r border-gray-400"></td>
+                            <td className="py-1 px-2 border-r border-gray-400"></td>
+                            <td className="py-1 px-2 border-r border-gray-400"></td>
+                            <td className="py-1 px-2 border-r border-gray-400"></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                </main>
+                
+                {isLastPage && (
+                    <div className="no-break mt-2">
+                        <div className="flex justify-end text-xs">
                           <div className="w-3/5 space-y-1">
                             <table className="w-full border-collapse text-xs">
                               <tbody>
@@ -177,24 +193,23 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                           </div>
                         </div>
 
-                        <div className="flex justify-between items-end mt-4 text-xs">
+                        <div className="flex justify-between items-baseline mt-4 text-xs">
                             <div className="w-2/5 text-center">
                                 <div className="mt-12 border-b-2 border-gray-400"></div>
                                 <p className="font-bold mt-1">{settings.managerName}</p>
                             </div>
-                            <div className="w-3/5 pl-4">
+                           <div className="w-3/5 pl-4">
                                 <p className="font-semibold">Arrêtée la présente facture définitive à la somme de :</p>
                                 <p className="italic">{totalInWordsString}</p>
-                            </div>
+                           </div>
                         </div>
                     </div>
                   )}
-                </main>
-              </div>
-              
-              <div className="absolute text-center text-gray-700 text-[7pt] border-t-2 border-[#002060] pt-1" style={{ bottom: '5mm', left: '10mm', right: '10mm', margin: 0 }}>
-                  <p className="leading-tight">Ouagadougou secteur 07 RCCM: BF-OUA-01-2023-B12-07959 IFU: 00205600T</p>
-                  <p className="leading-tight">CMF N° 10001-010614200107 Tel: 25465512 / 70150699 / 76778393 E-mail: dlgbiomed@gmail.com</p>
+
+                <footer className="absolute text-center text-gray-700 text-[7pt] border-t-2 border-[#002060] pt-1" style={{ bottom: '5mm', left: '10mm', right: '10mm' }}>
+                    <p className="leading-tight">Ouagadougou secteur 07 RCCM: BF-OUA-01-2023-B12-07959 IFU: 00205600T</p>
+                    <p className="leading-tight">CMF N° 10001-010614200107 Tel: 25465512 / 70150699 / 76778393 E-mail: dlgbiomed@gmail.com</p>
+                </footer>
               </div>
             </div>
           );
