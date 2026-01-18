@@ -122,9 +122,9 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                    </div>
                 </header>
                 
-                <main className="flex-grow flex flex-col">
+                <main className="flex-grow">
                   {/* Items Table */}
-                  <div className="flex-grow">
+                  <div>
                     <table className="w-full border-collapse text-xs">
                       <thead className="bg-[#002060] text-white">
                         <tr>
@@ -145,7 +145,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                             <td className="py-1 px-2 border-r border-gray-400 text-right align-middle font-semibold">{formatCurrency(item.total, settings.currency)}</td>
                           </tr>
                         ))}
-                        {Array.from({ length: emptyRowsCount }).map((_, index) => (
+                        {emptyRowsCount > 0 && Array.from({ length: emptyRowsCount }).map((_, index) => (
                           <tr key={`empty-${index}`} className="border-b border-gray-400">
                             <td className="py-1 px-2 border-l border-r border-gray-400">&nbsp;</td>
                             <td className="py-1 px-2 border-r border-gray-400"></td>
@@ -160,7 +160,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                 </main>
                 
                 {/* Footer */}
-                <div className="pt-2 mt-auto">
+                <div className="pt-2" style={{ marginTop: 'auto', pageBreakInside: 'avoid' }}>
                     {isLastPage && (
                       <>
                         <div className="flex justify-between items-start text-xs">
