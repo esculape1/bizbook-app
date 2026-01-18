@@ -9,7 +9,7 @@ import Image from 'next/image';
 export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: Invoice, client: Client, settings: Settings }) {
   const deliverySlipNumber = `BL-${invoice.invoiceNumber}`;
   
-  const ITEMS_PER_PAGE = 15;
+  const ITEMS_PER_PAGE = 13;
   const pages = [];
   for (let i = 0; i < invoice.items.length; i += ITEMS_PER_PAGE) {
     pages.push(invoice.items.slice(i, i + ITEMS_PER_PAGE));

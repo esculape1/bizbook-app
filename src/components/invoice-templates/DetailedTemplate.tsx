@@ -15,7 +15,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
     setTotalInWordsString(numberToWordsFr(invoice.totalAmount, settings.currency));
   }, [invoice.totalAmount, settings.currency]);
 
-  const ITEMS_PER_PAGE = 16;
+  const ITEMS_PER_PAGE = 14;
   const pages = [];
   for (let i = 0; i < invoice.items.length; i += ITEMS_PER_PAGE) {
     pages.push(invoice.items.slice(i, i + ITEMS_PER_PAGE));
