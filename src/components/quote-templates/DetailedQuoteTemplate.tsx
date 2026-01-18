@@ -160,43 +160,45 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                 </main>
 
                 {/* Page Footer */}
-                <div className="pt-2" style={{ marginTop: 'auto', pageBreakInside: 'avoid' }}>
+                <div className="pt-2" style={{ marginTop: 'auto' }}>
                     {isLastPage && (
-                      <>
-                        <div className="flex justify-between items-start text-xs">
-                           <div className="w-3/5 pr-4">
-                              <p className="font-semibold">Arrêtée la présente proforma à la somme de :</p>
-                              <p className="italic">{totalInWordsString}</p>
+                      <div className="flex justify-between items-start text-xs" style={{ pageBreakInside: 'avoid' }}>
+                          {/* Left Column: Signature */}
+                          <div className="w-2/5 pt-8 text-center">
+                              <p className="font-bold">{settings.managerName}</p>
                           </div>
-                          <div className="w-2/5">
-                            <table className="w-full border-collapse text-xs">
-                                <tbody>
-                                  <tr className="border border-gray-400">
-                                      <td className="p-1 pr-2 font-bold">SOUS-TOTAL:</td>
-                                      <td className="p-1 text-right font-semibold">{formatCurrency(quote.subTotal, settings.currency)}</td>
-                                  </tr>
-                                   <tr className="border border-gray-400">
-                                      <td className="p-1 pr-2 font-bold">REMISE {quote.discount}%:</td>
-                                      <td className="p-1 text-right font-semibold">{formatCurrency(quote.discountAmount, settings.currency)}</td>
-                                  </tr>
-                                  <tr className="border border-gray-400">
-                                      <td className="p-1 pr-2 font-bold">TVA {quote.vat}%:</td>
-                                      <td className="p-1 text-right font-semibold">{formatCurrency(quote.vatAmount, settings.currency)}</td>
-                                  </tr>
-                                  <tr className="border border-gray-400 bg-gray-200 font-bold">
-                                      <td className="p-1 pr-2">TOTAL TTC:</td>
-                                      <td className="p-1 text-right">{formatCurrency(quote.totalAmount, settings.currency)}</td>
-                                  </tr>
-                                </tbody>
-                            </table>
+
+                          {/* Right Column: Totals and Words */}
+                          <div className="w-3/5 space-y-2">
+                              {/* Totals Table */}
+                              <table className="w-full border-collapse text-xs">
+                                  <tbody>
+                                      <tr className="border border-gray-400">
+                                          <td className="p-1 pr-2 font-bold">SOUS-TOTAL:</td>
+                                          <td className="p-1 text-right font-semibold">{formatCurrency(quote.subTotal, settings.currency)}</td>
+                                      </tr>
+                                      <tr className="border border-gray-400">
+                                          <td className="p-1 pr-2 font-bold">REMISE {quote.discount}%:</td>
+                                          <td className="p-1 text-right font-semibold">{formatCurrency(quote.discountAmount, settings.currency)}</td>
+                                      </tr>
+                                      <tr className="border border-gray-400">
+                                          <td className="p-1 pr-2 font-bold">TVA {quote.vat}%:</td>
+                                          <td className="p-1 text-right font-semibold">{formatCurrency(quote.vatAmount, settings.currency)}</td>
+                                      </tr>
+                                      <tr className="border border-gray-400 bg-gray-200 font-bold">
+                                          <td className="p-1 pr-2">TOTAL TTC:</td>
+                                          <td className="p-1 text-right">{formatCurrency(quote.totalAmount, settings.currency)}</td>
+                                      </tr>
+                                  </tbody>
+                              </table>
+
+                              {/* Amount in Words (below totals) */}
+                              <div className="pt-1">
+                                  <p className="font-semibold">Arrêtée la présente proforma à la somme de :</p>
+                                  <p className="italic">{totalInWordsString}</p>
+                              </div>
                           </div>
-                        </div>
-                        <div className="flex justify-end items-end text-xs mt-4">
-                            <div className="w-2/5 text-center">
-                                <p className="font-bold">{settings.managerName}</p>
-                            </div>
-                        </div>
-                      </>
+                      </div>
                     )}
                     <div className="text-center text-gray-700 text-[8pt] border-t-2 border-[#002060] pt-1 mt-2">
                        <p>{settings.companyAddress} RCCM: {settings.companyRccm} IFU: {settings.companyIfu}</p>
