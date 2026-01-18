@@ -15,7 +15,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
     setTotalInWordsString(numberToWordsFr(quote.totalAmount, settings.currency));
   }, [quote.totalAmount, settings.currency]);
 
-  const ITEMS_PER_PAGE = 14;
+  const ITEMS_PER_PAGE = 13;
   const pages = [];
   for (let i = 0; i < quote.items.length; i += ITEMS_PER_PAGE) {
     pages.push(quote.items.slice(i, i + ITEMS_PER_PAGE));
