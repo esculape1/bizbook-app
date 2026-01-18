@@ -124,7 +124,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                   </div>
                 </header>
                 
-                <main className="flex-grow flex flex-col">
+                <main className="flex flex-col">
                     <table className="w-full border-collapse text-xs">
                       <thead className="bg-[#002060] text-white">
                         <tr>
@@ -159,7 +159,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                 </main>
                 
                 {isLastPage && (
-                    <div className="no-break mt-2">
+                    <div className="no-break mt-4">
                         <div className="flex justify-end text-xs">
                           <div className="w-3/5 space-y-1">
                             <table className="w-full border-collapse text-xs">
@@ -186,7 +186,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                                 </tr>
                                 <tr className="border border-gray-400 bg-gray-200 font-bold">
                                   <td className="p-1 pr-2 whitespace-nowrap">NET A PAYER:</td>
-                                  <td className="p-1 text-right whitespace-nowrap">{formatCurrency(netAPayer, settings.currency)}</td>
+                                  <td className="p-1 text-right font-semibold whitespace-nowrap">{formatCurrency(netAPayer, settings.currency)}</td>
                                 </tr>
                               </tbody>
                             </table>
@@ -206,7 +206,9 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                     </div>
                   )}
 
-                <footer className="absolute text-center text-gray-700 text-[7pt] border-t-2 border-[#002060] pt-1" style={{ bottom: '5mm', left: '10mm', right: '10mm' }}>
+                <div className="flex-grow" />
+
+                <footer className="text-center text-gray-700 text-[7pt] border-t-2 border-[#002060] pt-1 mt-4">
                     <p className="leading-tight">Ouagadougou secteur 07 RCCM: BF-OUA-01-2023-B12-07959 IFU: 00205600T</p>
                     <p className="leading-tight">CMF N° 10001-010614200107 Tel: 25465512 / 70150699 / 76778393 E-mail: dlgbiomed@gmail.com</p>
                 </footer>
