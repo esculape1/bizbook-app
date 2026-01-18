@@ -15,7 +15,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
     setTotalInWordsString(numberToWordsFr(invoice.totalAmount, settings.currency));
   }, [invoice.totalAmount, settings.currency]);
 
-  const ITEMS_PER_PAGE = 12;
+  const ITEMS_PER_PAGE = 14;
   const pages = [];
   for (let i = 0; i < invoice.items.length; i += ITEMS_PER_PAGE) {
     pages.push(invoice.items.slice(i, i + ITEMS_PER_PAGE));
@@ -157,47 +157,46 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                       </tbody>
                     </table>
                   </div>
-
-                  {isLastPage && (
-                    <div className="flex justify-between items-start text-xs mt-4">
-                        <div className="w-3/5">
-                            <table className="w-full border-collapse mb-2">
-                                <tbody>
-                                  <tr className="border border-gray-400">
-                                      <td className="p-1 pr-4 font-bold">MONTANT TOTAL HORS TAXE:</td>
-                                      <td className="p-1 text-right font-semibold">{formatCurrency(invoice.subTotal, settings.currency)}</td>
-                                  </tr>
-                                   <tr className="border border-gray-400">
-                                      <td className="p-1 pr-4 font-bold">REMISE {invoice.discount}%:</td>
-                                      <td className="p-1 text-right font-semibold">{formatCurrency(invoice.discountAmount, settings.currency)}</td>
-                                  </tr>
-                                  <tr className="border border-gray-400">
-                                      <td className="p-1 pr-4 font-bold">TVA {invoice.vat}%:</td>
-                                      <td className="p-1 text-right font-semibold">{formatCurrency(invoice.vatAmount, settings.currency)}</td>
-                                  </tr>
-                                  <tr className="border border-gray-400 bg-gray-200 font-bold">
-                                      <td className="p-1 pr-4">MONTANT TOTAL TTC:</td>
-                                      <td className="p-1 text-right">{formatCurrency(invoice.totalAmount, settings.currency)}</td>
-                                  </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                  )}
                 </main>
                 
                 {/* Footer */}
                 <footer className="pt-2 mt-auto">
                     {isLastPage && (
-                        <div className="flex justify-between items-end text-xs">
-                             <div className="w-3/5">
-                                <p className="font-semibold">Arrêtée la présente facture définitive à la somme de :</p>
-                                <p className="italic">{totalInWordsString}</p>
-                            </div>
+                      <>
+                        <div className="flex justify-between items-start text-xs">
+                          <div className="w-3/5 pr-4">
+                              <p className="font-semibold">Arrêtée la présente facture définitive à la somme de :</p>
+                              <p className="italic">{totalInWordsString}</p>
+                          </div>
+                          <div className="w-2/5">
+                            <table className="w-full border-collapse text-xs">
+                                <tbody>
+                                  <tr className="border border-gray-400">
+                                      <td className="p-1 pr-2 font-bold">SOUS-TOTAL:</td>
+                                      <td className="p-1 text-right font-semibold">{formatCurrency(invoice.subTotal, settings.currency)}</td>
+                                  </tr>
+                                   <tr className="border border-gray-400">
+                                      <td className="p-1 pr-2 font-bold">REMISE {invoice.discount}%:</td>
+                                      <td className="p-1 text-right font-semibold">{formatCurrency(invoice.discountAmount, settings.currency)}</td>
+                                  </tr>
+                                  <tr className="border border-gray-400">
+                                      <td className="p-1 pr-2 font-bold">TVA {invoice.vat}%:</td>
+                                      <td className="p-1 text-right font-semibold">{formatCurrency(invoice.vatAmount, settings.currency)}</td>
+                                  </tr>
+                                  <tr className="border border-gray-400 bg-gray-200 font-bold">
+                                      <td className="p-1 pr-2">TOTAL TTC:</td>
+                                      <td className="p-1 text-right">{formatCurrency(invoice.totalAmount, settings.currency)}</td>
+                                  </tr>
+                                </tbody>
+                            </table>
+                          </div>
+                        </div>
+                        <div className="flex justify-end items-end text-xs mt-8">
                             <div className="w-2/5 text-center">
                                 <p className="font-bold">{settings.managerName}</p>
                             </div>
                         </div>
+                      </>
                     )}
                     
                     <div className="text-center text-gray-700 text-[8pt] border-t-2 border-[#002060] pt-1 mt-4">
