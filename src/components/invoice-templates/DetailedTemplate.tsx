@@ -166,63 +166,55 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                   </div>
                 </main>
                 
-                {/* Footer */}
-                <footer className="mt-auto">
-                    {isLastPage && (
-                      <div style={{ pageBreakInside: 'avoid', marginTop: '1rem' }}>
-                        <div className="flex justify-between items-start text-xs">
-                            {/* Left Column: Signature */}
-                            <div className="w-2/5 pt-8 text-center">
-                                <p className="font-bold">{settings.managerName}</p>
-                            </div>
-
-                            {/* Right Column: Totals and Words */}
-                            <div className="w-3/5 space-y-1">
-                                {/* Totals Table */}
-                                <table className="w-full border-collapse text-xs">
-                                    <tbody>
-                                        <tr className="border border-gray-400">
-                                            <td className="p-1 pr-2 font-bold">SOUS-TOTAL:</td>
-                                            <td className="p-1 text-right font-semibold">{formatCurrency(invoice.subTotal, settings.currency)}</td>
-                                        </tr>
-                                        <tr className="border border-gray-400">
-                                            <td className="p-1 pr-2 font-bold">REMISE {invoice.discount}%:</td>
-                                            <td className="p-1 text-right font-semibold">{formatCurrency(invoice.discountAmount, settings.currency)}</td>
-                                        </tr>
-                                        <tr className="border border-gray-400">
-                                            <td className="p-1 pr-2 font-bold">TVA {invoice.vat}%:</td>
-                                            <td className="p-1 text-right font-semibold">{formatCurrency(invoice.vatAmount, settings.currency)}</td>
-                                        </tr>
-                                       <tr className="border border-gray-400 font-semibold">
-                                          <td className="p-1 pr-2">TOTAL TTC:</td>
-                                          <td className="p-1 text-right">{formatCurrency(invoice.totalAmount, settings.currency)}</td>
-                                      </tr>
-                                      <tr className="border border-gray-400">
-                                          <td className="p-1 pr-2 font-bold text-red-600">RETENUE A LA SOURCE {retenue}%:</td>
-                                          <td className="p-1 text-right font-semibold text-red-600">-{formatCurrency(retenueAmount, settings.currency)}</td>
-                                      </tr>
-                                      <tr className="border border-gray-400 bg-gray-200 font-bold">
-                                          <td className="p-1 pr-2">NET A PAYER:</td>
-                                          <td className="p-1 text-right">{formatCurrency(netAPayer, settings.currency)}</td>
-                                      </tr>
-                                  </tbody>
-                                </table>
-
-                                {/* Amount in Words (below totals) */}
-                                <div className="pt-2">
-                                    <p className="font-semibold">Arrêtée la présente facture définitive à la somme de :</p>
-                                    <p className="italic">{totalInWordsString}</p>
-                                </div>
+                {/* Footer Section */}
+                {isLastPage && (
+                  <div style={{ pageBreakInside: 'avoid' }} className="mt-4">
+                    <div className="flex justify-between items-end text-xs">
+                        <div className="w-2/5 text-center">
+                            <p className="font-bold">{settings.managerName}</p>
+                        </div>
+                        <div className="w-3/5 space-y-1">
+                            <table className="w-full border-collapse text-xs">
+                                <tbody>
+                                    <tr className="border border-gray-400">
+                                        <td className="p-1 pr-2 font-bold">SOUS-TOTAL:</td>
+                                        <td className="p-1 text-right font-semibold">{formatCurrency(invoice.subTotal, settings.currency)}</td>
+                                    </tr>
+                                    <tr className="border border-gray-400">
+                                        <td className="p-1 pr-2 font-bold">REMISE {invoice.discount}%:</td>
+                                        <td className="p-1 text-right font-semibold">{formatCurrency(invoice.discountAmount, settings.currency)}</td>
+                                    </tr>
+                                    <tr className="border border-gray-400">
+                                        <td className="p-1 pr-2 font-bold">TVA {invoice.vat}%:</td>
+                                        <td className="p-1 text-right font-semibold">{formatCurrency(invoice.vatAmount, settings.currency)}</td>
+                                    </tr>
+                                    <tr className="border border-gray-400 font-semibold">
+                                      <td className="p-1 pr-2">TOTAL TTC:</td>
+                                      <td className="p-1 text-right">{formatCurrency(invoice.totalAmount, settings.currency)}</td>
+                                    </tr>
+                                    <tr className="border border-gray-400">
+                                        <td className="p-1 pr-2 font-bold">RETENUE {retenue}%:</td>
+                                        <td className="p-1 text-right font-semibold">-{formatCurrency(retenueAmount, settings.currency)}</td>
+                                    </tr>
+                                    <tr className="border border-gray-400 bg-gray-200 font-bold">
+                                        <td className="p-1 pr-2">NET A PAYER:</td>
+                                        <td className="p-1 text-right">{formatCurrency(netAPayer, settings.currency)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                             <div className="pt-2">
+                                <p className="font-semibold">Arrêtée la présente facture définitive à la somme de :</p>
+                                <p className="italic">{totalInWordsString}</p>
                             </div>
                         </div>
-                      </div>
-                    )}
-                    
-                    <div className="text-center text-gray-700 text-[8pt] border-t-2 border-[#002060] pt-1 mt-4">
-                        <p>{settings.companyAddress} RCCM: {settings.companyRccm} IFU: {settings.companyIfu}</p>
-                        <p>CMF N° 10001-010614200107 Tel: {settings.companyPhone} E-mail: dlgbiomed@gmail.com</p>
                     </div>
-                </footer>
+                  </div>
+                )}
+                
+                <div className="text-center text-gray-700 text-[8pt] border-t-2 border-[#002060] pt-1 mt-auto">
+                    <p>Ouagadougou secteur 07 RCCM: BF-OUA-01-2023-B12-07959 IFU: 00205600T</p>
+                    <p>CMF N° 10001-010614200107 Tel: 25465512 / 70150699 / 76778393 E-mail: dlgbiomed@gmail.com</p>
+                </div>
               </div>
             </div>
           );
