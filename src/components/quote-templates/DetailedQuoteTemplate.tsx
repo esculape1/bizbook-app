@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { Quote, Client, Settings } from '@/lib/types';
@@ -57,23 +56,23 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
               key={pageIndex}
               className="page-container bg-white relative mx-auto w-full max-w-[210mm]"
               style={{
-                minHeight: '297mm', // Full A4 height
+                height: '297mm',
+                maxHeight: '297mm',
+                overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
                 boxSizing: 'border-box',
-                padding: '14mm 10mm 20mm 10mm',
+                padding: '14mm 10mm 10mm 10mm',
               }}
             >
-              {/* Blue sidebar */}
               <div className="absolute top-0 left-0 h-full w-[8mm] bg-[#002060]"></div>
               
               <div style={{
                   display: 'flex',
                   flexDirection: 'column',
+                  paddingLeft: '5mm', 
                   flexGrow: 1,
-                  paddingLeft: '5mm', // Space from blue bar
               }}>
-                {/* Header */}
                 <header className="mb-4">
                   <div className="flex justify-between items-start">
                       <div className="w-2/3">
@@ -117,7 +116,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                    </div>
                 </header>
                 
-                <main className="flex-grow">
+                <main>
                   <table className="w-full border-collapse text-xs">
                     <thead className="bg-[#002060] text-white">
                       <tr>
@@ -152,39 +151,43 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                 </main>
 
                 {isLastPage && (
-                    <footer className="pt-2 mt-auto" style={{ flexShrink: 0, pageBreakInside: 'avoid' }}>
-                        <div className="flex justify-end text-xs">
-                            <div className="w-3/5 space-y-1">
-                                <table className="w-full border-collapse text-xs">
-                                    <tbody>
-                                        <tr className="border border-gray-400">
-                                            <td className="p-1 pr-2 font-bold whitespace-nowrap">SOUS-TOTAL:</td>
-                                            <td className="p-1 text-right font-semibold whitespace-nowrap">{formatCurrency(quote.subTotal, settings.currency)}</td>
-                                        </tr>
-                                        <tr className="border border-gray-400">
-                                            <td className="p-1 pr-2 font-bold whitespace-nowrap">REMISE {quote.discount}%:</td>
-                                            <td className="p-1 text-right font-semibold whitespace-nowrap">{formatCurrency(quote.discountAmount, settings.currency)}</td>
-                                        </tr>
-                                        <tr className="border border-gray-400">
-                                            <td className="p-1 pr-2 font-bold whitespace-nowrap">TVA {quote.vat}%:</td>
-                                            <td className="p-1 text-right font-semibold whitespace-nowrap">{formatCurrency(quote.vatAmount, settings.currency)}</td>
-                                        </tr>
-                                        <tr className="border border-gray-400 font-semibold">
-                                            <td className="p-1 pr-2 whitespace-nowrap">TOTAL TTC:</td>
-                                            <td className="p-1 text-right whitespace-nowrap">{formatCurrency(quote.totalAmount, settings.currency)}</td>
-                                        </tr>
-                                        <tr className="border border-gray-400">
-                                            <td className="p-1 pr-2 font-bold text-black whitespace-nowrap">RETENUE {retenue}%:</td>
-                                            <td className="p-1 text-right font-semibold whitespace-nowrap">-{formatCurrency(retenueAmount, settings.currency)}</td>
-                                        </tr>
-                                        <tr className="border border-gray-400 bg-gray-200 font-bold">
-                                            <td className="p-1 pr-2 whitespace-nowrap">NET A PAYER:</td>
-                                            <td className="p-1 text-right whitespace-nowrap">{formatCurrency(netAPayer, settings.currency)}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                  <>
+                    <div className="flex justify-end text-xs mt-4" style={{ pageBreakInside: 'avoid' }}>
+                        <div className="w-3/5 space-y-1">
+                            <table className="w-full border-collapse text-xs">
+                                <tbody>
+                                    <tr className="border border-gray-400">
+                                        <td className="p-1 pr-2 font-bold whitespace-nowrap">SOUS-TOTAL:</td>
+                                        <td className="p-1 text-right font-semibold whitespace-nowrap">{formatCurrency(quote.subTotal, settings.currency)}</td>
+                                    </tr>
+                                    <tr className="border border-gray-400">
+                                        <td className="p-1 pr-2 font-bold whitespace-nowrap">REMISE {quote.discount}%:</td>
+                                        <td className="p-1 text-right font-semibold whitespace-nowrap">{formatCurrency(quote.discountAmount, settings.currency)}</td>
+                                    </tr>
+                                    <tr className="border border-gray-400">
+                                        <td className="p-1 pr-2 font-bold whitespace-nowrap">TVA {quote.vat}%:</td>
+                                        <td className="p-1 text-right font-semibold whitespace-nowrap">{formatCurrency(quote.vatAmount, settings.currency)}</td>
+                                    </tr>
+                                    <tr className="border border-gray-400 font-semibold">
+                                        <td className="p-1 pr-2 whitespace-nowrap">TOTAL TTC:</td>
+                                        <td className="p-1 text-right whitespace-nowrap">{formatCurrency(quote.totalAmount, settings.currency)}</td>
+                                    </tr>
+                                    <tr className="border border-gray-400">
+                                        <td className="p-1 pr-2 font-bold text-black whitespace-nowrap">RETENUE {retenue}%:</td>
+                                        <td className="p-1 text-right font-semibold whitespace-nowrap">-{formatCurrency(retenueAmount, settings.currency)}</td>
+                                    </tr>
+                                    <tr className="border border-gray-400 bg-gray-200 font-bold">
+                                        <td className="p-1 pr-2 whitespace-nowrap">NET A PAYER:</td>
+                                        <td className="p-1 text-right whitespace-nowrap">{formatCurrency(netAPayer, settings.currency)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
+                    </div>
+
+                    <div style={{ flexGrow: 1 }}></div>
+
+                    <footer style={{ flexShrink: 0, pageBreakInside: 'avoid' }}>
                         <div className="flex justify-between items-baseline mt-4 text-xs">
                            <div className="w-2/5 text-center">
                                <div className="mt-12 border-b-2 border-gray-400"></div>
@@ -196,12 +199,13 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                            </div>
                         </div>
                     </footer>
+                  </>
                 )}
               </div>
               
               <div className="absolute text-center text-gray-700 text-[7pt] border-t-2 border-[#002060] pt-1" style={{ bottom: '10mm', left: '10mm', right: '10mm', margin: 0 }}>
-                 <p>Ouagadougou secteur 07 RCCM: BF-OUA-01-2023-B12-07959 IFU: 00205600T</p>
-                 <p>CMF N° 10001-010614200107 Tel: 25465512 / 70150699 / 76778393 E-mail: dlgbiomed@gmail.com</p>
+                 <p className="leading-tight">Ouagadougou secteur 07 RCCM: BF-OUA-01-2023-B12-07959 IFU: 00205600T</p>
+                 <p className="leading-tight">CMF N° 10001-010614200107 Tel: 25465512 / 70150699 / 76778393 E-mail: dlgbiomed@gmail.com</p>
               </div>
             </div>
           );
