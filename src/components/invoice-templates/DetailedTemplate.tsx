@@ -191,7 +191,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                             </table>
                           </div>
                         </div>
-                        <div className="flex justify-end items-end text-xs mt-8">
+                        <div className="flex justify-end items-end text-xs mt-4">
                             <div className="w-2/5 text-center">
                                 <p className="font-bold">{settings.managerName}</p>
                             </div>
@@ -199,7 +199,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                       </>
                     )}
                     
-                    <div className="text-center text-gray-700 text-[8pt] border-t-2 border-[#002060] pt-1 mt-4">
+                    <div className="text-center text-gray-700 text-[8pt] border-t-2 border-[#002060] pt-1 mt-2">
                         <p>{settings.companyAddress} RCCM: {settings.companyRccm} IFU: {settings.companyIfu}</p>
                         <p>CMF N° 10001-010614200107 Tel: {settings.companyPhone} E-mail: dlgbiomed@gmail.com</p>
                     </div>
