@@ -35,7 +35,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
         @media print {
           @page {
             size: A4;
-            margin: 5mm 0 0 0;
+            margin: 0;
           }
           html, body {
             width: 210mm;
@@ -66,7 +66,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
               key={pageIndex}
               className="page-container bg-white relative mx-auto w-full max-w-[210mm]"
               style={{
-                height: '100%',
+                minHeight: '297mm',
                 display: 'flex',
                 flexDirection: 'column',
                 boxSizing: 'border-box',

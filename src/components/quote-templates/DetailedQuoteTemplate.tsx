@@ -35,7 +35,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
         @media print {
           @page {
             size: A4;
-            margin: 5mm 0 0 0;
+            margin: 0;
           }
           html, body {
             width: 210mm;
@@ -66,7 +66,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
               key={pageIndex}
               className="page-container bg-white relative mx-auto w-full max-w-[210mm]"
               style={{
-                height: '100%',
+                minHeight: '297mm',
                 display: 'flex',
                 flexDirection: 'column',
                 boxSizing: 'border-box',
@@ -156,8 +156,9 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                       ))}
                     </tbody>
                   </table>
+                </main>
 
-                  {isLastPage && (
+                {isLastPage && (
                     <div className="no-break mt-2">
                         <div className="flex justify-end text-xs">
                             <div className="w-3/5 space-y-1">
@@ -204,7 +205,6 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                         </div>
                     </div>
                   )}
-                </main>
               
               <footer className="absolute text-center text-gray-700 text-[7pt] border-t-2 border-[#002060] pt-1" style={{ bottom: '5mm', left: '10mm', right: '10mm' }}>
                  <p className="leading-tight">Ouagadougou secteur 07 RCCM: BF-OUA-01-2023-B12-07959 IFU: 00205600T</p>
