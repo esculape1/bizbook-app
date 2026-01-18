@@ -9,11 +9,17 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 
 export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quote, client: Client, settings: Settings }) {
+  const netAPayer = quote.netAPayer ?? quote.totalAmount;
+  const retenue = quote.retenue ?? 0;
+  const retenueAmount = quote.retenueAmount ?? 0;
+
   const [totalInWordsString, setTotalInWordsString] = useState('Chargement...');
 
   useEffect(() => {
-    setTotalInWordsString(numberToWordsFr(quote.netAPayer, settings.currency));
-  }, [quote.netAPayer, settings.currency]);
+    if (typeof netAPayer === 'number') {
+      setTotalInWordsString(numberToWordsFr(netAPayer, settings.currency));
+    }
+  }, [netAPayer, settings.currency]);
 
   const ITEMS_PER_PAGE = 12;
   const pages = [];
@@ -160,9 +166,9 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                 </main>
 
                 {/* Page Footer */}
-                <div style={{ marginTop: 'auto' }}>
+                <footer className="mt-auto">
                     {isLastPage && (
-                      <div style={{ marginTop: '1cm', pageBreakInside: 'avoid' }}>
+                      <div style={{ pageBreakInside: 'avoid', marginTop: '1rem' }}>
                         <div className="flex justify-between items-start text-xs">
                             {/* Left Column: Signature */}
                             <div className="w-2/5 pt-8 text-center">
@@ -191,12 +197,12 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                                             <td className="p-1 text-right">{formatCurrency(quote.totalAmount, settings.currency)}</td>
                                         </tr>
                                         <tr className="border border-gray-400">
-                                            <td className="p-1 pr-2 font-bold text-red-600">RETENUE A LA SOURCE {quote.retenue}%:</td>
-                                            <td className="p-1 text-right font-semibold text-red-600">-{formatCurrency(quote.retenueAmount, settings.currency)}</td>
+                                            <td className="p-1 pr-2 font-bold text-red-600">RETENUE A LA SOURCE {retenue}%:</td>
+                                            <td className="p-1 text-right font-semibold text-red-600">-{formatCurrency(retenueAmount, settings.currency)}</td>
                                         </tr>
                                         <tr className="border border-gray-400 bg-gray-200 font-bold">
                                             <td className="p-1 pr-2">NET A PAYER:</td>
-                                            <td className="p-1 text-right">{formatCurrency(quote.netAPayer, settings.currency)}</td>
+                                            <td className="p-1 text-right">{formatCurrency(netAPayer, settings.currency)}</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -214,7 +220,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                        <p>{settings.companyAddress} RCCM: {settings.companyRccm} IFU: {settings.companyIfu}</p>
                        <p>CMF N° 10001-010614200107 Tel: {settings.companyPhone} E-mail: dlgbiomed@gmail.com</p>
                   </div>
-                </div>
+                </footer>
               </div>
             </div>
           );
