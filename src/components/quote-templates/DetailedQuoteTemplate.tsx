@@ -160,7 +160,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                 </main>
 
                 {/* Page Footer */}
-                <footer className="pt-2 mt-auto">
+                <div className="pt-2 mt-auto">
                     {isLastPage && (
                       <>
                         <div className="flex justify-between items-start text-xs">
@@ -202,7 +202,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                        <p>{settings.companyAddress} RCCM: {settings.companyRccm} IFU: {settings.companyIfu}</p>
                        <p>CMF N° 10001-010614200107 Tel: {settings.companyPhone} E-mail: dlgbiomed@gmail.com</p>
                   </div>
-                </footer>
+                </div>
               </div>
             </div>
           );

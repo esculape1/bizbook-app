@@ -160,7 +160,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                 </main>
                 
                 {/* Footer */}
-                <footer className="pt-2 mt-auto">
+                <div className="pt-2 mt-auto">
                     {isLastPage && (
                       <>
                         <div className="flex justify-between items-start text-xs">
@@ -203,7 +203,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                         <p>{settings.companyAddress} RCCM: {settings.companyRccm} IFU: {settings.companyIfu}</p>
                         <p>CMF N° 10001-010614200107 Tel: {settings.companyPhone} E-mail: dlgbiomed@gmail.com</p>
                     </div>
-                </footer>
+                </div>
               </div>
             </div>
           );
