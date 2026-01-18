@@ -33,6 +33,7 @@ const createInvoiceSchema = z.object({
   items: z.array(invoiceItemSchemaForCreate),
   vat: z.coerce.number(),
   discount: z.coerce.number(),
+  retenue: z.coerce.number().min(0).default(0),
 });
 
 const updateInvoiceItemSchema = z.object({
@@ -53,6 +54,7 @@ const updateInvoiceSchema = z.object({
     items: z.array(updateInvoiceItemSchema),
     vat: z.coerce.number(),
     discount: z.coerce.number(),
+    retenue: z.coerce.number().min(0).default(0),
 });
 
 
@@ -72,7 +74,7 @@ export async function createInvoice(formData: unknown) {
   }
 
   try {
-    const { invoiceNumberSuffix, clientId, clientName, date, dueDate, items, vat, discount } = validatedFields.data;
+    const { invoiceNumberSuffix, clientId, clientName, date, dueDate, items, vat, discount, retenue } = validatedFields.data;
     
     const [products, allInvoices] = await Promise.all([
         getProducts(),
@@ -120,6 +122,8 @@ export async function createInvoice(formData: unknown) {
     const totalAfterDiscount = subTotal - discountAmount;
     const vatAmount = totalAfterDiscount * (vat / 100);
     const totalAmount = totalAfterDiscount + vatAmount;
+    const retenueAmount = totalAfterDiscount * (retenue / 100);
+    const netAPayer = totalAmount - retenueAmount;
 
 
     // 1. Create invoice
@@ -136,6 +140,9 @@ export async function createInvoice(formData: unknown) {
       discount,
       discountAmount,
       totalAmount,
+      retenue,
+      retenueAmount,
+      netAPayer,
       status: 'Unpaid',
       amountPaid: 0,
       payments: [],
@@ -175,7 +182,7 @@ export async function updateInvoice(id: string, formData: unknown) {
   }
 
   try {
-    const { clientId, date, dueDate, items, vat, discount, invoiceNumber } = validatedFields.data;
+    const { clientId, date, dueDate, items, vat, discount, invoiceNumber, retenue } = validatedFields.data;
     
     const originalInvoice = await getInvoiceById(id);
     if (!originalInvoice) {
@@ -237,6 +244,8 @@ export async function updateInvoice(id: string, formData: unknown) {
     const totalAfterDiscount = subTotal - discountAmount;
     const vatAmount = totalAfterDiscount * (vat / 100);
     const totalAmount = totalAfterDiscount + vatAmount;
+    const retenueAmount = totalAfterDiscount * (retenue / 100);
+    const netAPayer = totalAmount - retenueAmount;
 
     // Retain original status, as it's not editable from this form anymore
     const status = originalInvoice.status;
@@ -254,6 +263,9 @@ export async function updateInvoice(id: string, formData: unknown) {
       discount,
       discountAmount,
       totalAmount,
+      retenue,
+      retenueAmount,
+      netAPayer,
     }
 
     await updateInvoiceInDB(id, invoiceData);

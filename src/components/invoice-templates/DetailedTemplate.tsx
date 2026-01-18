@@ -12,10 +12,10 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
   const [totalInWordsString, setTotalInWordsString] = useState('Chargement...');
 
   useEffect(() => {
-    setTotalInWordsString(numberToWordsFr(invoice.totalAmount, settings.currency));
-  }, [invoice.totalAmount, settings.currency]);
+    setTotalInWordsString(numberToWordsFr(invoice.netAPayer, settings.currency));
+  }, [invoice.netAPayer, settings.currency]);
 
-  const ITEMS_PER_PAGE = 14;
+  const ITEMS_PER_PAGE = 12;
   const pages = [];
   for (let i = 0; i < invoice.items.length; i += ITEMS_PER_PAGE) {
     pages.push(invoice.items.slice(i, i + ITEMS_PER_PAGE));
@@ -160,16 +160,17 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                 </main>
                 
                 {/* Footer */}
-                <div className="pt-2" style={{ marginTop: 'auto' }}>
-                    {isLastPage && (
-                      <div className="flex justify-between items-start text-xs" style={{ pageBreakInside: 'avoid' }}>
+                <div style={{ marginTop: 'auto' }}>
+                  {isLastPage && (
+                    <div style={{ marginTop: '1cm', pageBreakInside: 'avoid' }}>
+                      <div className="flex justify-between items-start text-xs">
                           {/* Left Column: Signature */}
                           <div className="w-2/5 pt-8 text-center">
                               <p className="font-bold">{settings.managerName}</p>
                           </div>
 
                           {/* Right Column: Totals and Words */}
-                          <div className="w-3/5 space-y-2">
+                          <div className="w-3/5 space-y-1">
                               {/* Totals Table */}
                               <table className="w-full border-collapse text-xs">
                                   <tbody>
@@ -185,21 +186,30 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                                           <td className="p-1 pr-2 font-bold">TVA {invoice.vat}%:</td>
                                           <td className="p-1 text-right font-semibold">{formatCurrency(invoice.vatAmount, settings.currency)}</td>
                                       </tr>
-                                      <tr className="border border-gray-400 bg-gray-200 font-bold">
+                                       <tr className="border border-gray-400 font-semibold">
                                           <td className="p-1 pr-2">TOTAL TTC:</td>
                                           <td className="p-1 text-right">{formatCurrency(invoice.totalAmount, settings.currency)}</td>
+                                      </tr>
+                                      <tr className="border border-gray-400">
+                                          <td className="p-1 pr-2 font-bold text-red-600">RETENUE A LA SOURCE {invoice.retenue}%:</td>
+                                          <td className="p-1 text-right font-semibold text-red-600">-{formatCurrency(invoice.retenueAmount, settings.currency)}</td>
+                                      </tr>
+                                      <tr className="border border-gray-400 bg-gray-200 font-bold">
+                                          <td className="p-1 pr-2">NET A PAYER:</td>
+                                          <td className="p-1 text-right">{formatCurrency(invoice.netAPayer, settings.currency)}</td>
                                       </tr>
                                   </tbody>
                               </table>
 
                               {/* Amount in Words (below totals) */}
-                              <div className="pt-1">
+                              <div className="pt-2">
                                   <p className="font-semibold">Arrêtée la présente facture définitive à la somme de :</p>
                                   <p className="italic">{totalInWordsString}</p>
                               </div>
                           </div>
                       </div>
-                    )}
+                    </div>
+                  )}
                     
                     <div className="text-center text-gray-700 text-[8pt] border-t-2 border-[#002060] pt-1 mt-4">
                         <p>{settings.companyAddress} RCCM: {settings.companyRccm} IFU: {settings.companyIfu}</p>

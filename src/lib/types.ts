@@ -101,6 +101,9 @@ export type Quote = {
   discount: number; // as a percentage
   discountAmount: number;
   totalAmount: number;
+  retenue: number; // as a percentage
+  retenueAmount: number;
+  netAPayer: number;
   status: 'Draft' | 'Sent' | 'Accepted' | 'Declined';
 };
 
@@ -126,6 +129,9 @@ export type Invoice = {
   discount: number; // as a percentage
   discountAmount: number;
   totalAmount: number;
+  retenue: number; // as a percentage
+  retenueAmount: number;
+  netAPayer: number;
   status: 'Paid' | 'Unpaid' | 'Partially Paid' | 'Cancelled';
   amountPaid: number;
   payments: Payment[];

@@ -38,6 +38,7 @@ const quoteSchema = z.object({
   items: z.array(quoteItemSchema).min(1, "Ajoutez au moins un produit."),
   vat: z.coerce.number().min(0).default(0),
   discount: z.coerce.number().min(0).default(0),
+  retenue: z.coerce.number().min(0).default(0),
   status: z.enum(['Draft', 'Sent', 'Accepted', 'Declined']),
 });
 
@@ -61,6 +62,7 @@ export function EditQuoteForm({ quote, clients, products, settings }: EditQuoteF
       ...quote,
       date: new Date(quote.date),
       expiryDate: new Date(quote.expiryDate),
+      retenue: quote.retenue || 0,
     },
   });
 
@@ -72,6 +74,7 @@ export function EditQuoteForm({ quote, clients, products, settings }: EditQuoteF
   const watchedItems = useWatch({ control: form.control, name: 'items' });
   const watchedDiscount = useWatch({ control: form.control, name: 'discount' });
   const watchedVat = useWatch({ control: form.control, name: 'vat' });
+  const watchedRetenue = useWatch({ control: form.control, name: 'retenue' });
 
   const subTotal = watchedItems.reduce((acc, item, index) => {
     const calculatedTotal = (item.unitPrice || 0) * (item.quantity || 0);
@@ -86,6 +89,8 @@ export function EditQuoteForm({ quote, clients, products, settings }: EditQuoteF
   const totalAfterDiscount = subTotal - discountAmount;
   const vatAmount = totalAfterDiscount * (watchedVat / 100);
   const totalAmount = totalAfterDiscount + vatAmount;
+  const retenueAmount = totalAfterDiscount * (watchedRetenue / 100);
+  const netAPayer = totalAmount - retenueAmount;
 
   const handleProductSelect = (product: Product, index: number) => {
     update(index, {
@@ -300,7 +305,7 @@ export function EditQuoteForm({ quote, clients, products, settings }: EditQuoteF
               </div>
               
               <div className="flex flex-col md:flex-row justify-between items-start gap-8">
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 w-full md:w-64">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 w-full md:w-auto">
                       <FormField
                           control={form.control}
                           name="discount"
@@ -325,8 +330,20 @@ export function EditQuoteForm({ quote, clients, products, settings }: EditQuoteF
                           </FormItem>
                           )}
                       />
+                      <FormField
+                          control={form.control}
+                          name="retenue"
+                          render={({ field }) => (
+                          <FormItem>
+                              <FormLabel>Retenue (%)</FormLabel>
+                              <FormControl>
+                              <Input type="number" {...field} />
+                              </FormControl>
+                          </FormItem>
+                          )}
+                      />
                   </div>
-                  <div className="w-full md:w-[280px] space-y-2 text-sm bg-muted/50 p-4 rounded-md">
+                  <div className="w-full md:w-[280px] space-y-1 text-sm bg-muted/50 p-4 rounded-md">
                       <div className="flex justify-between">
                           <span>Sous-total:</span>
                           <span>{formatCurrency(subTotal, settings.currency)}</span>
@@ -339,9 +356,17 @@ export function EditQuoteForm({ quote, clients, products, settings }: EditQuoteF
                           <span>TVA ({watchedVat}%):</span>
                           <span>+{formatCurrency(vatAmount, settings.currency)}</span>
                       </div>
-                      <div className="flex justify-between font-bold text-base border-t pt-2 mt-2">
-                          <span>Total:</span>
+                       <div className="flex justify-between font-semibold">
+                          <span>Total TTC:</span>
                           <span>{formatCurrency(totalAmount, settings.currency)}</span>
+                      </div>
+                      <div className="flex justify-between text-destructive">
+                          <span>Retenue ({watchedRetenue}%):</span>
+                          <span>-{formatCurrency(retenueAmount, settings.currency)}</span>
+                      </div>
+                      <div className="flex justify-between font-bold text-base border-t pt-2 mt-2">
+                          <span>Net à Payer:</span>
+                          <span>{formatCurrency(netAPayer, settings.currency)}</span>
                       </div>
                   </div>
               </div>

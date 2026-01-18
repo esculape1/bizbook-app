@@ -24,6 +24,7 @@ const quoteSchema = z.object({
   items: z.array(quoteItemSchema).min(1, "Ajoutez au moins un produit."),
   vat: z.coerce.number().min(0).default(0),
   discount: z.coerce.number().min(0).default(0),
+  retenue: z.coerce.number().min(0).default(0),
 });
 
 const updateQuoteSchema = quoteSchema.extend({
@@ -46,7 +47,7 @@ export async function createQuote(formData: unknown) {
   }
   
   try {
-    const { clientId, clientName, date, expiryDate, items, vat, discount } = validatedFields.data;
+    const { clientId, clientName, date, expiryDate, items, vat, discount, retenue } = validatedFields.data;
     
     const products = await getProducts();
 
@@ -68,6 +69,8 @@ export async function createQuote(formData: unknown) {
     const totalAfterDiscount = subTotal - discountAmount;
     const vatAmount = totalAfterDiscount * (vat / 100);
     const totalAmount = totalAfterDiscount + vatAmount;
+    const retenueAmount = totalAfterDiscount * (retenue / 100);
+    const netAPayer = totalAmount - retenueAmount;
 
     await addQuote({
       clientId,
@@ -81,6 +84,9 @@ export async function createQuote(formData: unknown) {
       discount,
       discountAmount,
       totalAmount,
+      retenue,
+      retenueAmount,
+      netAPayer,
       status: 'Draft',
     });
     revalidateTag('quotes');
@@ -108,7 +114,7 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
   }
   
   try {
-    const { clientId, date, expiryDate, items, vat, discount, status } = validatedFields.data;
+    const { clientId, date, expiryDate, items, vat, discount, status, retenue } = validatedFields.data;
     
     const originalQuote = await getQuoteById(id);
     if (!originalQuote) {
@@ -155,6 +161,8 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
     const totalAfterDiscount = subTotal - discountAmount;
     const vatAmount = totalAfterDiscount * (vat / 100);
     const totalAmount = totalAfterDiscount + vatAmount;
+    const retenueAmount = totalAfterDiscount * (retenue / 100);
+    const netAPayer = totalAmount - retenueAmount;
 
     await updateQuoteInDB(id, {
       quoteNumber,
@@ -169,6 +177,9 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
       discount,
       discountAmount,
       totalAmount,
+      retenue,
+      retenueAmount,
+      netAPayer,
       status,
     });
 
@@ -221,6 +232,9 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
         discount,
         discountAmount,
         totalAmount,
+        retenue,
+        retenueAmount,
+        netAPayer,
         status: 'Unpaid',
         amountPaid: 0,
         payments: [],
