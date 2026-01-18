@@ -60,8 +60,9 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
               key={pageIndex}
               className="page-container bg-white relative mx-auto w-full max-w-[210mm]"
               style={{
-                minHeight: '297mm',
-                padding: '14mm 10mm 25mm 10mm',
+                height: '297mm',
+                overflow: 'hidden',
+                padding: '14mm 10mm 20mm 10mm',
                 boxSizing: 'border-box',
                 position: 'relative',
               }}
@@ -69,7 +70,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
               {/* Blue sidebar */}
               <div className="absolute top-0 left-0 h-full w-[8mm] bg-[#002060]"></div>
               
-              <div style={{ paddingLeft: '5mm' }}>
+              <div style={{ paddingLeft: '5mm', height: '100%', display: 'flex', flexDirection: 'column' }}>
                 {/* Header */}
                 <header className="mb-4">
                   <div className="flex justify-between items-start">
@@ -114,7 +115,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                   </div>
                 </header>
                 
-                <main>
+                <main className="flex-grow">
                   <div>
                     <table className="w-full border-collapse text-xs">
                       <thead className="bg-[#002060] text-white">
@@ -151,45 +152,48 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                 </main>
                 
                 {isLastPage && (
-                  <div style={{ pageBreakInside: 'avoid' }} className="mt-4">
-                    <div className="flex justify-between items-start text-xs">
-                      <div className="w-2/5 text-center">
-                        <p className="font-bold pt-8">{settings.managerName}</p>
-                      </div>
-                      <div className="w-3/5 space-y-1">
-                        <table className="w-full border-collapse text-xs" style={{ pageBreakInside: 'avoid' }}>
-                            <tbody>
-                                <tr className="border border-gray-400">
-                                    <td className="p-1 pr-2 font-bold">SOUS-TOTAL:</td>
-                                    <td className="p-1 text-right font-semibold">{formatCurrency(invoice.subTotal, settings.currency)}</td>
-                                </tr>
-                                <tr className="border border-gray-400">
-                                    <td className="p-1 pr-2 font-bold">REMISE {invoice.discount}%:</td>
-                                    <td className="p-1 text-right font-semibold">{formatCurrency(invoice.discountAmount, settings.currency)}</td>
-                                </tr>
-                                <tr className="border border-gray-400">
-                                    <td className="p-1 pr-2 font-bold">TVA {invoice.vat}%:</td>
-                                    <td className="p-1 text-right font-semibold">{formatCurrency(invoice.vatAmount, settings.currency)}</td>
-                                </tr>
-                                <tr className="border border-gray-400 font-semibold">
-                                  <td className="p-1 pr-2">TOTAL TTC:</td>
-                                  <td className="p-1 text-right">{formatCurrency(invoice.totalAmount, settings.currency)}</td>
-                                </tr>
-                                <tr className="border border-gray-400">
-                                    <td className="p-1 pr-2 font-bold">RETENUE {retenue}%:</td>
-                                    <td className="p-1 text-right font-semibold">-{formatCurrency(retenueAmount, settings.currency)}</td>
-                                </tr>
-                                <tr className="border border-gray-400 bg-gray-200 font-bold">
-                                    <td className="p-1 pr-2">NET A PAYER:</td>
-                                    <td className="p-1 text-right">{formatCurrency(netAPayer, settings.currency)}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div className="pt-2">
+                  <div className="mt-auto pt-2">
+                    <div className="flex justify-end text-xs" style={{ pageBreakInside: 'avoid' }}>
+                        <div className="w-3/5 space-y-1">
+                            <table className="w-full border-collapse text-xs">
+                                <tbody>
+                                    <tr className="border border-gray-400">
+                                        <td className="p-1 pr-2 font-bold">SOUS-TOTAL:</td>
+                                        <td className="p-1 text-right font-semibold">{formatCurrency(invoice.subTotal, settings.currency)}</td>
+                                    </tr>
+                                    <tr className="border border-gray-400">
+                                        <td className="p-1 pr-2 font-bold">REMISE {invoice.discount}%:</td>
+                                        <td className="p-1 text-right font-semibold">{formatCurrency(invoice.discountAmount, settings.currency)}</td>
+                                    </tr>
+                                    <tr className="border border-gray-400">
+                                        <td className="p-1 pr-2 font-bold">TVA {invoice.vat}%:</td>
+                                        <td className="p-1 text-right font-semibold">{formatCurrency(invoice.vatAmount, settings.currency)}</td>
+                                    </tr>
+                                    <tr className="border border-gray-400 font-semibold">
+                                      <td className="p-1 pr-2">TOTAL TTC:</td>
+                                      <td className="p-1 text-right">{formatCurrency(invoice.totalAmount, settings.currency)}</td>
+                                    </tr>
+                                    <tr className="border border-gray-400">
+                                        <td className="p-1 pr-2 font-bold">RETENUE {retenue}%:</td>
+                                        <td className="p-1 text-right font-semibold">-{formatCurrency(retenueAmount, settings.currency)}</td>
+                                    </tr>
+                                    <tr className="border border-gray-400 bg-gray-200 font-bold">
+                                        <td className="p-1 pr-2">NET A PAYER:</td>
+                                        <td className="p-1 text-right">{formatCurrency(netAPayer, settings.currency)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div className="flex justify-between items-end mt-2 text-xs" style={{ pageBreakInside: 'avoid' }}>
+                        <div className="w-2/5 text-center">
+                            <div className="mt-8 border-b-2 border-gray-400"></div>
+                            <p className="font-bold mt-1">{settings.managerName}</p>
+                        </div>
+                        <div className="w-3/5 pl-4">
                             <p className="font-semibold">Arrêtée la présente facture définitive à la somme de :</p>
                             <p className="italic">{totalInWordsString}</p>
                         </div>
-                      </div>
                     </div>
                   </div>
                 )}
@@ -199,11 +203,11 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
                 className="text-center text-gray-700" 
                 style={{
                   position: 'absolute',
-                  bottom: '10mm',
+                  bottom: '5mm',
                   left: '10mm',
                   right: '10mm',
                   paddingLeft: '5mm',
-                  fontSize: '8pt'
+                  fontSize: '7pt'
                 }}
               >
                 <div className="border-t-2 border-[#002060] pt-1">
