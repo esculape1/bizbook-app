@@ -135,7 +135,7 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
     });
   };
   
-  const isEditDisabled = false; // Temporairement déverrouillé: invoice.status === 'Cancelled' || invoice.status === 'Paid';
+  const isEditDisabled = invoice.status === 'Cancelled' || invoice.status === 'Paid';
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
