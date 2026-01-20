@@ -188,9 +188,9 @@ export async function updateInvoice(id: string, formData: unknown) {
     if (!originalInvoice) {
         return { message: 'Facture originale non trouvée.' };
     }
-    if (originalInvoice.status === 'Paid' || originalInvoice.status === 'Cancelled') {
-        return { message: 'Les factures payées ou annulées ne peuvent pas être modifiées.' };
-    }
+    // if (originalInvoice.status === 'Paid' || originalInvoice.status === 'Cancelled') {
+    //     return { message: 'Les factures payées ou annulées ne peuvent pas être modifiées.' };
+    // }
 
     const clients = await getClients();
     const products = await getProducts();
