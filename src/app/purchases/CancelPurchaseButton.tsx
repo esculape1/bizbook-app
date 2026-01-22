@@ -42,7 +42,7 @@ export function CancelPurchaseButton({ id, purchaseNumber, purchaseStatus, userR
     });
   };
 
-  const isCancelDisabled = userRole !== 'SuperAdmin' && (purchaseStatus === 'Received' || purchaseStatus === 'Cancelled');
+  const isCancelDisabled = purchaseStatus === 'Cancelled';
 
   return (
     <AlertDialog>
@@ -55,7 +55,7 @@ export function CancelPurchaseButton({ id, purchaseNumber, purchaseStatus, userR
         <AlertDialogHeader>
           <AlertDialogTitle>Êtes-vous sûr de vouloir annuler cet achat ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Cette action est irréversible. L'achat "{purchaseNumber}" sera marqué comme annulé. Le SuperAdmin peut annuler un achat même s'il a été réceptionné, mais cette action ne modifiera pas le stock.
+            Cette action est irréversible. L'achat "{purchaseNumber}" sera marqué comme annulé. Les administrateurs peuvent annuler un achat même s'il a été réceptionné, mais cette action ne modifiera pas le stock.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

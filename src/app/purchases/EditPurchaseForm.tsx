@@ -105,7 +105,7 @@ export function EditPurchaseForm({ purchase, suppliers, products, settings, user
     });
   };
   
-  const isEditDisabled = userRole !== 'SuperAdmin' && purchase.status !== 'Pending';
+  const isEditDisabled = purchase.status === 'Cancelled';
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

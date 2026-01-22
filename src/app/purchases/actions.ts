@@ -125,8 +125,8 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
     ]);
     
     if (!originalPurchase) return { message: 'Achat original non trouvé.' };
-    if (session?.role !== 'SuperAdmin' && originalPurchase.status !== 'Pending') {
-      return { message: 'Seuls les achats "En attente" peuvent être modifiés.' };
+    if (originalPurchase.status === 'Cancelled') {
+      return { message: 'Les achats annulés ne peuvent pas être modifiés.' };
     }
 
     const supplier = suppliers.find(c => c.id === supplierId);
@@ -243,9 +243,9 @@ export async function cancelPurchase(id: string) {
     if (!purchaseToCancel) {
       throw new Error("Achat non trouvé pour l'annulation.");
     }
-    
-    if (purchaseToCancel.status === 'Received' && session?.role !== 'SuperAdmin') {
-      return { success: false, message: "Impossible d'annuler un achat déjà réceptionné."}
+
+    if (purchaseToCancel.status === 'Cancelled') {
+      return { success: false, message: 'Cet achat est déjà annulé.' };
     }
     
     await updatePurchaseInDB(id, { status: 'Cancelled' });
@@ -257,6 +257,9 @@ export async function cancelPurchase(id: string) {
   } catch (error) {
     console.error("Échec de l'annulation de l'achat:", error);
     const message = error instanceof Error ? error.message : "Erreur DB: Impossible d'annuler l'achat.";
-    return { success: false, message };
+    return {
+      success: false,
+      message,
+    };
   }
 }
