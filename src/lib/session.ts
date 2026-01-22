@@ -15,9 +15,18 @@ export async function getSession(): Promise<User | null> {
 
   try {
     const sessionData = JSON.parse(sessionCookie.value);
+
+    // Check for expiration
+    if (!sessionData.expiresAt || sessionData.expiresAt < Date.now()) {
+      cookies().delete(SESSION_COOKIE_NAME);
+      return null;
+    }
+
     // Basic validation to ensure the object has the expected shape
     if (sessionData && sessionData.id && sessionData.name && sessionData.email && sessionData.role) {
-      return sessionData as User;
+       // We can destructure to ensure we only return the User part
+      const { id, name, email, phone, role } = sessionData;
+      return { id, name, email, phone, role };
     }
     // The parsed data is not a valid user object, so we treat it as no session.
     return null;

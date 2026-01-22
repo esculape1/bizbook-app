@@ -63,11 +63,15 @@ export async function signIn(prevState: State | undefined, formData: FormData) {
         role: userRecord.role || ROLES.USER,
     };
 
-    const sessionData = JSON.stringify(authenticatedUser);
-    const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
+    const expiresInMs = 60 * 60 * 24 * 5 * 1000; // 5 days in milliseconds
+    const sessionPayload = {
+      ...authenticatedUser,
+      expiresAt: Date.now() + expiresInMs,
+    };
+    const sessionData = JSON.stringify(sessionPayload);
 
     cookies().set('session', sessionData, {
-        maxAge: expiresIn,
+        maxAge: expiresInMs / 1000, // maxAge is in seconds
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         path: '/',
