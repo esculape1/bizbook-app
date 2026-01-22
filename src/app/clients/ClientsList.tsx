@@ -6,13 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { DeleteClientButton } from "./DeleteClientButton";
-import { EditClientButton } from "./EditClientButton";
+import { ClientFormDialog } from "./ClientFormDialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Mail, MapPin, Phone } from 'lucide-react';
+import { Mail, MapPin, Phone, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ROLES, CLIENT_STATUS } from '@/lib/constants';
+import { Button } from '@/components/ui/button';
 
 export default function ClientsList({ clients, userRole }: { clients: Client[], userRole: User['role'] | undefined }) {
-  const canEdit = userRole === 'Admin' || userRole === 'SuperAdmin';
+  const canEdit = userRole === ROLES.ADMIN || userRole === ROLES.SUPER_ADMIN;
   
   const cardColors = [
       "bg-sky-500/10 border-sky-500/20 text-sky-800",
@@ -35,7 +37,7 @@ export default function ClientsList({ clients, userRole }: { clients: Client[], 
                       <CardTitle className="text-lg">{client.name}</CardTitle>
                       <CardDescription className="text-current/70">{client.taxRegime || 'Statut fiscal non spécifié'}</CardDescription>
                   </div>
-                  <Badge variant={client.status === 'Active' ? 'success' : 'outline'} className="ml-2 shrink-0">
+                  <Badge variant={client.status === CLIENT_STATUS.ACTIVE ? 'success' : 'outline'} className="ml-2 shrink-0">
                       {client.status}
                   </Badge>
               </div>
@@ -49,7 +51,11 @@ export default function ClientsList({ clients, userRole }: { clients: Client[], 
             </CardContent>
             {canEdit && (
                 <div className="flex items-center justify-end p-2 border-t mt-auto">
-                    <EditClientButton client={client} />
+                    <ClientFormDialog client={client}>
+                      <Button variant="ghost" size="icon">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </ClientFormDialog>
                     <DeleteClientButton id={client.id} name={client.name} />
                 </div>
             )}
@@ -83,14 +89,18 @@ export default function ClientsList({ clients, userRole }: { clients: Client[], 
                         <TableCell>{client.ifu}</TableCell>
                         <TableCell>{client.rccm}</TableCell>
                         <TableCell>
-                          <Badge variant={client.status === 'Active' ? 'success' : 'outline'}>
+                          <Badge variant={client.status === CLIENT_STATUS.ACTIVE ? 'success' : 'outline'}>
                             {client.status}
                           </Badge>
                         </TableCell>
                         {canEdit && (
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end">
-                              <EditClientButton client={client} />
+                              <ClientFormDialog client={client}>
+                                <Button variant="ghost" size="icon">
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              </ClientFormDialog>
                               <DeleteClientButton id={client.id} name={client.name} />
                             </div>
                           </TableCell>

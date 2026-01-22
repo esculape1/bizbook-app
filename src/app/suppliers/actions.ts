@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { addSupplier, deleteSupplier as deleteSupplierFromDB, updateSupplier as updateSupplierInDB } from '@/lib/data';
 import { revalidateTag } from 'next/cache';
 import { getSession } from '@/lib/session';
+import { ROLES } from '@/lib/constants';
 
 const supplierSchema = z.object({
   name: z.string().min(1, { message: "Le nom est requis." }),
@@ -18,7 +19,7 @@ type NewSupplier = z.infer<typeof supplierSchema>;
 
 export async function createSupplier(data: NewSupplier) {
   const session = await getSession();
-  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
     return { message: "Action non autorisée." };
   }
 
@@ -43,7 +44,7 @@ export async function createSupplier(data: NewSupplier) {
 
 export async function updateSupplier(id: string, data: NewSupplier) {
   const session = await getSession();
-  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
     return { message: "Action non autorisée." };
   }
 
@@ -68,7 +69,7 @@ export async function updateSupplier(id: string, data: NewSupplier) {
 
 export async function deleteSupplier(id: string) {
   const session = await getSession();
-  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
     return { message: "Action non autorisée." };
   }
     

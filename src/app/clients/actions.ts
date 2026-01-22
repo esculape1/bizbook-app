@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { addClient, deleteClient as deleteClientFromDB, updateClient as updateClientInDB } from '@/lib/data';
 import { revalidateTag } from 'next/cache';
 import { getSession } from '@/lib/session';
+import { ROLES } from '@/lib/constants';
 
 const clientSchema = z.object({
   name: z.string().min(1, { message: "Le nom est requis." }),
@@ -20,7 +21,7 @@ type NewClient = z.infer<typeof clientSchema>;
 
 export async function createClient(data: NewClient) {
   const session = await getSession();
-  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
     return { message: "Action non autorisée." };
   }
 
@@ -46,7 +47,7 @@ export async function createClient(data: NewClient) {
 
 export async function updateClient(id: string, data: NewClient) {
   const session = await getSession();
-  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
     return { message: "Action non autorisée." };
   }
 
@@ -73,7 +74,7 @@ export async function updateClient(id: string, data: NewClient) {
 
 export async function deleteClient(id: string) {
   const session = await getSession();
-  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
     return { message: "Action non autorisée." };
   }
     

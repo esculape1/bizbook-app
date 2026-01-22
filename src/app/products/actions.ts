@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { addProduct, updateProduct as updateProductInDB, deleteProduct as deleteProductFromDB } from '@/lib/data';
 import { revalidateTag } from 'next/cache';
 import { getSession } from '@/lib/session';
+import { ROLES } from '@/lib/constants';
 
 const productSchema = z.object({
   name: z.string().min(1, { message: "Le nom est requis." }),
@@ -19,7 +20,7 @@ const productSchema = z.object({
 
 export async function createProduct(formData: unknown) {
   const session = await getSession();
-  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
     return { message: "Action non autorisée. Seuls les administrateurs peuvent créer des produits." };
   }
 
@@ -45,7 +46,7 @@ export async function createProduct(formData: unknown) {
 
 export async function updateProduct(id: string, formData: unknown) {
     const session = await getSession();
-    if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+    if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
       return { message: "Action non autorisée. Seuls les administrateurs peuvent modifier les produits." };
     }
     
@@ -72,7 +73,7 @@ export async function updateProduct(id: string, formData: unknown) {
 
 export async function deleteProduct(id: string) {
     const session = await getSession();
-    if (session?.role !== 'SuperAdmin') {
+    if (session?.role !== ROLES.SUPER_ADMIN) {
       return { message: "Action non autorisée. Seul le SuperAdmin peut supprimer des produits." };
     }
     

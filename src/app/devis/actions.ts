@@ -4,8 +4,9 @@
 import { z } from 'zod';
 import { addQuote, getClients, getProducts, updateQuote as updateQuoteInDB, deleteQuote as deleteQuoteFromDB, getQuoteById, addInvoice, updateProduct, getInvoices } from '@/lib/data';
 import { revalidateTag } from 'next/cache';
-import type { Quote, QuoteItem, InvoiceItem } from '@/lib/types';
+import type { QuoteItem, InvoiceItem } from '@/lib/types';
 import { getSession } from '@/lib/session';
+import { QUOTE_STATUS, ROLES } from '@/lib/constants';
 
 const quoteItemSchema = z.object({
   productId: z.string().min(1, "Produit requis"),
@@ -28,13 +29,13 @@ const quoteSchema = z.object({
 });
 
 const updateQuoteSchema = quoteSchema.extend({
-    status: z.enum(['Draft', 'Sent', 'Accepted', 'Declined']),
+    status: z.nativeEnum(QUOTE_STATUS),
 });
 
 
 export async function createQuote(formData: unknown) {
   const session = await getSession();
-  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
     return { message: "Action non autorisée." };
   }
 
@@ -87,7 +88,7 @@ export async function createQuote(formData: unknown) {
       retenue,
       retenueAmount,
       netAPayer,
-      status: 'Draft',
+      status: QUOTE_STATUS.DRAFT,
     });
     revalidateTag('quotes');
     return {};
@@ -100,7 +101,7 @@ export async function createQuote(formData: unknown) {
 
 export async function updateQuote(id: string, quoteNumber: string, formData: unknown) {
   const session = await getSession();
-  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
     return { message: "Action non autorisée." };
   }
 
@@ -130,7 +131,7 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
     }
 
     // Pre-emptive stock check if status is changing to 'Accepted'
-    if (status === 'Accepted' && originalQuote.status !== 'Accepted') {
+    if (status === QUOTE_STATUS.ACCEPTED && originalQuote.status !== QUOTE_STATUS.ACCEPTED) {
       for (const item of items) {
           const product = products.find(p => p.id === item.productId);
           if (!product) {
@@ -184,7 +185,7 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
     });
 
     // Create invoice if status changed to 'Accepted'
-    if (status === 'Accepted' && originalQuote.status !== 'Accepted') {
+    if (status === QUOTE_STATUS.ACCEPTED && originalQuote.status !== QUOTE_STATUS.ACCEPTED) {
       // Use the unit prices from the accepted quote, not the default product prices
       const invoiceItems: InvoiceItem[] = quoteItems.map(item => ({ 
           productId: item.productId,
@@ -264,7 +265,7 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
 
 export async function deleteQuote(id: string) {
   const session = await getSession();
-  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
     return { message: "Action non autorisée." };
   }
     

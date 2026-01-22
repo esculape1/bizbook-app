@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import type { User } from '@/lib/types';
 import { getUserByEmail } from '@/lib/data';
+import bcrypt from 'bcrypt';
+import { ROLES } from '@/lib/constants';
 
 export type State = {
   message?: string;
@@ -25,9 +27,11 @@ export async function signIn(prevState: State | undefined, formData: FormData) {
       return { message: 'Aucun utilisateur trouvé avec cet email.' };
     }
     
-    // IMPORTANT: Ceci est une comparaison en texte clair et N'EST PAS SÉCURISÉ.
-    // C'est une mesure temporaire. À remplacer par une comparaison de hash de mot de passe (ex: avec bcrypt).
-    if (userRecord.password !== password) {
+    // Passwords in DB are expected to be hashed. If not, this will fail.
+    // This is the secure way forward.
+    const passwordMatch = userRecord.password ? await bcrypt.compare(password, userRecord.password) : false;
+
+    if (!passwordMatch) {
       return { message: 'Mot de passe incorrect.' };
     }
     
@@ -36,7 +40,7 @@ export async function signIn(prevState: State | undefined, formData: FormData) {
         name: userRecord.name,
         email: userRecord.email,
         phone: userRecord.phone,
-        role: userRecord.role || 'User',
+        role: userRecord.role || ROLES.USER,
     };
 
     const sessionData = JSON.stringify(authenticatedUser);

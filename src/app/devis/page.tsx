@@ -7,13 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { QuoteForm } from "./QuoteForm";
 import { formatCurrency, cn } from "@/lib/utils";
 import { getSession } from "@/lib/session";
-import type { Quote } from "@/lib/types";
+import type { Quote, QuoteStatus } from "@/lib/types";
 import { EditQuoteForm } from "./EditQuoteForm";
 import { DeleteQuoteButton } from "./DeleteQuoteButton";
 import { QuoteViewerDialog } from "./QuoteViewerDialog";
 import { Separator } from "@/components/ui/separator";
 import { AppLayout } from "@/components/AppLayout";
 import { redirect } from "next/navigation";
+import { ROLES, QUOTE_STATUS, QUOTE_STATUS_TRANSLATIONS } from "@/lib/constants";
 
 export const dynamic = 'force-dynamic';
 
@@ -30,27 +31,20 @@ async function DevisContent() {
     return null;
   }
 
-  const canEdit = user?.role === 'Admin' || user?.role === 'SuperAdmin';
+  const canEdit = user?.role === ROLES.ADMIN || user?.role === ROLES.SUPER_ADMIN;
 
-  const getStatusVariant = (status: 'Draft' | 'Sent' | 'Accepted' | 'Declined'): "outline" | "default" | "success" | "destructive" => {
+  const getStatusVariant = (status: QuoteStatus): "outline" | "default" | "success" | "destructive" => {
     switch (status) {
-      case 'Accepted':
+      case QUOTE_STATUS.ACCEPTED:
         return 'success';
-      case 'Declined':
+      case QUOTE_STATUS.DECLINED:
         return 'destructive';
-      case 'Sent':
+      case QUOTE_STATUS.SENT:
         return 'default';
-      case 'Draft':
+      case QUOTE_STATUS.DRAFT:
       default:
         return 'outline';
     }
-  }
-
-  const statusTranslations = {
-    Draft: 'Brouillon',
-    Sent: 'Envoyé',
-    Accepted: 'Accepté',
-    Declined: 'Refusé',
   }
 
   return (
@@ -67,7 +61,7 @@ async function DevisContent() {
                       <CardTitle>{quote.quoteNumber}</CardTitle>
                       <CardDescription>{quote.clientName}</CardDescription>
                     </div>
-                    <Badge variant={getStatusVariant(quote.status)}>{statusTranslations[quote.status]}</Badge>
+                    <Badge variant={getStatusVariant(quote.status)}>{QUOTE_STATUS_TRANSLATIONS[quote.status]}</Badge>
                   </div>
               </CardHeader>
               <CardContent className="flex-grow space-y-2 text-sm">
@@ -114,7 +108,7 @@ async function DevisContent() {
                   <TableCell>{new Date(quote.date).toLocaleDateString('fr-FR')}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusVariant(quote.status)}>
-                      {statusTranslations[quote.status]}
+                      {QUOTE_STATUS_TRANSLATIONS[quote.status]}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">{formatCurrency(quote.totalAmount, settings.currency)}</TableCell>
@@ -150,7 +144,7 @@ export default async function DevisPage() {
     redirect('/login');
   }
   
-  const canEdit = user.role === 'Admin' || user.role === 'SuperAdmin';
+  const canEdit = user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN;
 
   return (
     <AppLayout 

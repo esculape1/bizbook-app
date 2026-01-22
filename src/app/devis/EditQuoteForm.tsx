@@ -21,6 +21,7 @@ import { updateQuote } from './actions';
 import type { Client, Product, Settings, Quote } from '@/lib/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ProductPicker } from '@/components/ProductPicker';
+import { QUOTE_STATUS, QUOTE_STATUS_TRANSLATIONS } from '@/lib/constants';
 
 const quoteItemSchema = z.object({
   productId: z.string().min(1, "Produit requis"),
@@ -39,7 +40,7 @@ const quoteSchema = z.object({
   vat: z.coerce.number().min(0).default(0),
   discount: z.coerce.number().min(0).default(0),
   retenue: z.coerce.number().min(0).default(0),
-  status: z.enum(['Draft', 'Sent', 'Accepted', 'Declined']),
+  status: z.nativeEnum(QUOTE_STATUS),
 });
 
 type QuoteFormValues = z.infer<typeof quoteSchema>;
@@ -122,14 +123,7 @@ export function EditQuoteForm({ quote, clients, products, settings }: EditQuoteF
     });
   };
   
-  const statusTranslations = {
-    Draft: 'Brouillon',
-    Sent: 'Envoyé',
-    Accepted: 'Accepté',
-    Declined: 'Refusé',
-  }
-  
-  const isEditDisabled = quote.status === 'Accepted' || quote.status === 'Declined';
+  const isEditDisabled = quote.status === QUOTE_STATUS.ACCEPTED || quote.status === QUOTE_STATUS.DECLINED;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -227,7 +221,7 @@ export function EditQuoteForm({ quote, clients, products, settings }: EditQuoteF
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Object.entries(statusTranslations).map(([key, value]) => (
+                          {Object.entries(QUOTE_STATUS_TRANSLATIONS).map(([key, value]) => (
                               <SelectItem key={key} value={key as Quote['status']}>{value}</SelectItem>
                           ))}
                         </SelectContent>

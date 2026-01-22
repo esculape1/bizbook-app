@@ -5,13 +5,15 @@ import type { Supplier, User } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DeleteSupplierButton } from "./DeleteSupplierButton";
-import { EditSupplierButton } from "./EditSupplierButton";
-import { Mail, MapPin, Phone, User as UserIcon } from 'lucide-react';
+import { SupplierFormDialog } from "./SupplierFormDialog";
+import { Mail, MapPin, Phone, User as UserIcon, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import { ROLES } from '@/lib/constants';
 
 export default function SuppliersList({ suppliers, userRole }: { suppliers: Supplier[], userRole: User['role'] | undefined }) {
-  const canEdit = userRole === 'Admin' || userRole === 'SuperAdmin';
+  const canEdit = userRole === ROLES.ADMIN || userRole === ROLES.SUPER_ADMIN;
   
   const cardColors = [
       "bg-sky-500/10 border-sky-500/20 text-sky-800",
@@ -39,7 +41,11 @@ export default function SuppliersList({ suppliers, userRole }: { suppliers: Supp
             </CardContent>
             {canEdit && (
                 <div className="flex items-center justify-end p-2 border-t mt-auto">
-                    <EditSupplierButton supplier={supplier} />
+                    <SupplierFormDialog supplier={supplier}>
+                      <Button variant="ghost" size="icon">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </SupplierFormDialog>
                     <DeleteSupplierButton id={supplier.id} name={supplier.name} />
                 </div>
             )}
@@ -74,7 +80,11 @@ export default function SuppliersList({ suppliers, userRole }: { suppliers: Supp
                       {canEdit && (
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end">
-                            <EditSupplierButton supplier={supplier} />
+                            <SupplierFormDialog supplier={supplier}>
+                              <Button variant="ghost" size="icon">
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                            </SupplierFormDialog>
                             <DeleteSupplierButton id={supplier.id} name={supplier.name} />
                           </div>
                         </TableCell>

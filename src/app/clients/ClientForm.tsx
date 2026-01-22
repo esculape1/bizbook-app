@@ -1,207 +1,67 @@
+'use server';
 
-'use client';
+import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import type { User } from '@/lib/types';
+import { getUserByEmail } from '@/lib/data';
+import bcrypt from 'bcrypt';
+import { ROLES } from '@/lib/constants';
 
-import { useState, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { PlusCircle } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
-import { createClient } from './actions';
-import { useToast } from "@/hooks/use-toast";
+export type State = {
+  message?: string;
+};
 
-const clientSchema = z.object({
-  name: z.string().min(1, { message: "Le nom est requis." }),
-  email: z.string().email({ message: "Email invalide." }).or(z.literal('')).optional(),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  ifu: z.string().optional(),
-  rccm: z.string().optional(),
-  taxRegime: z.string().optional(),
-});
+export async function signIn(prevState: State | undefined, formData: FormData) {
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
 
-type ClientFormValues = z.infer<typeof clientSchema>;
+  if (!email || !password) {
+    return { message: 'Email et mot de passe sont requis.' };
+  }
 
-export function ClientForm() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
-  const { toast } = useToast();
+  try {
+    const userRecord = await getUserByEmail(email);
 
-  const form = useForm<ClientFormValues>({
-    resolver: zodResolver(clientSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      address: '',
-      ifu: '',
-      rccm: '',
-      taxRegime: '',
-    },
-  });
+    if (!userRecord) {
+      return { message: 'Aucun utilisateur trouvé avec cet email.' };
+    }
+    
+    // Passwords in DB are expected to be hashed. If not, this will fail.
+    // This is the secure way forward.
+    const passwordMatch = userRecord.password ? await bcrypt.compare(password, userRecord.password) : false;
 
-  const onSubmit = (data: ClientFormValues) => {
-    startTransition(async () => {
-      const result = await createClient(data);
-      if (result?.message) {
-        toast({
-          variant: "destructive",
-          title: "Erreur lors de la création",
-          description: result.message,
-        });
-      } else {
-        toast({
-          title: "Client ajouté",
-          description: "Le nouveau client a été enregistré avec succès.",
-        });
-        form.reset();
-        setIsOpen(false);
-      }
+    if (!passwordMatch) {
+      return { message: 'Mot de passe incorrect.' };
+    }
+    
+    const authenticatedUser: User = {
+        id: userRecord.id,
+        name: userRecord.name,
+        email: userRecord.email,
+        phone: userRecord.phone,
+        role: userRecord.role || ROLES.USER,
+    };
+
+    const sessionData = JSON.stringify(authenticatedUser);
+    const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
+
+    cookies().set('session', sessionData, {
+        maxAge: expiresIn,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+        sameSite: 'lax',
     });
-  };
+    
+  } catch(error: any) {
+      console.error("Erreur serveur pendant la connexion:", error);
+      return { message: "Une erreur interne est survenue. Veuillez réessayer."}
+  }
 
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button onClick={() => setIsOpen(true)}>
-          <PlusCircle className="mr-2" />
-          Ajouter un client
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] flex flex-col max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle>Ajouter un nouveau client</DialogTitle>
-        </DialogHeader>
-        <div className="flex-1 overflow-y-auto px-1">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nom / Entreprise</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nom du client" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email (Optionnel)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="email@exemple.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                      control={form.control}
-                      name="phone"
-                      render={({ field }) => (
-                      <FormItem>
-                          <FormLabel>Contact (Optionnel)</FormLabel>
-                          <FormControl>
-                          <Input placeholder="Numéro de téléphone" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                      </FormItem>
-                      )}
-                  />
-                  <FormField
-                      control={form.control}
-                      name="taxRegime"
-                      render={({ field }) => (
-                      <FormItem>
-                          <FormLabel>Régime Fiscal (Optionnel)</FormLabel>
-                          <FormControl>
-                          <Input placeholder="Régime fiscal" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                      </FormItem>
-                      )}
-                  />
-              </div>
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Adresse / Localisation (Optionnel)</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Adresse complète du client" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="ifu"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>N° IFU (Optionnel)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Numéro IFU" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="rccm"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>N° RCCM (Optionnel)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Numéro RCCM" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </form>
-          </Form>
-        </div>
-        <DialogFooter className="border-t pt-4 px-6 pb-6">
-          <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>
-            Annuler
-          </Button>
-          <Button onClick={form.handleSubmit(onSubmit)} disabled={isPending}>
-            {isPending ? 'Enregistrement...' : 'Enregistrer le client'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+  redirect('/');
+}
+
+export async function signOut() {
+  cookies().delete('session');
+  redirect('/login');
 }

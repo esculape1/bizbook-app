@@ -7,9 +7,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/utils';
 import type { Expense, Settings } from '@/lib/types';
-import { EditExpenseButton } from './EditExpenseButton';
+import { ExpenseFormDialog } from './ExpenseFormDialog';
 import { DeleteExpenseButton } from './DeleteExpenseButton';
-import { MoreVertical } from 'lucide-react';
+import { MoreVertical, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -59,7 +59,11 @@ export function ExpenseCategoryDetailsDialog({ expenses, category, displayMonth,
                     <TableCell className="text-right">{formatCurrency(expense.amount, settings.currency)}</TableCell>
                     <TableCell>
                         <div className="flex items-center justify-end">
-                            <EditExpenseButton expense={expense} currency={settings.currency} />
+                            <ExpenseFormDialog expense={expense} currency={settings.currency}>
+                                <Button variant="ghost" size="icon" title="Modifier la dépense">
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                            </ExpenseFormDialog>
                             <DeleteExpenseButton id={expense.id} description={expense.description} />
                         </div>
                     </TableCell>

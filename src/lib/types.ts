@@ -1,11 +1,25 @@
 
 
+import {
+  Role,
+  ClientStatus,
+  QuoteStatus,
+  InvoiceStatus,
+  PurchaseStatus,
+  PaymentMethod,
+  Currency,
+  InvoiceTemplate,
+  InvoiceNumberFormat,
+  ExpenseCategory
+} from './constants';
+
+
 export type User = {
   id: string; // This is the Firestore document ID
   name: string;
   email: string;
   phone?: string;
-  role: 'SuperAdmin' | 'Admin' | 'User';
+  role: Role;
 };
 
 export type UserWithPassword = User & {
@@ -22,7 +36,7 @@ export type Client = {
   rccm?: string;
   taxRegime?: string;
   registrationDate: string;
-  status: 'Active' | 'Inactive';
+  status: ClientStatus;
 };
 
 export type Supplier = {
@@ -84,7 +98,7 @@ export type Purchase = {
   premierVersement: number;
   deuxiemeVersement: number;
   totalAmount: number;
-  status: 'Pending' | 'Received' | 'Cancelled';
+  status: PurchaseStatus;
 };
 
 export type Quote = {
@@ -104,14 +118,14 @@ export type Quote = {
   retenue: number; // as a percentage
   retenueAmount: number;
   netAPayer: number;
-  status: 'Draft' | 'Sent' | 'Accepted' | 'Declined';
+  status: QuoteStatus;
 };
 
 export type Payment = {
   id: string;
   date: string;
   amount: number;
-  method: 'Espèces' | 'Virement bancaire' | 'Chèque' | 'Autre';
+  method: PaymentMethod;
   notes?: string;
 };
 
@@ -132,7 +146,7 @@ export type Invoice = {
   retenue: number; // as a percentage
   retenueAmount: number;
   netAPayer: number;
-  status: 'Paid' | 'Unpaid' | 'Partially Paid' | 'Cancelled';
+  status: InvoiceStatus;
   amountPaid: number;
   payments: Payment[];
 };
@@ -142,7 +156,7 @@ export type Expense = {
   date: string;
   description: string;
   amount: number;
-  category: string;
+  category: ExpenseCategory;
 };
 
 export type Settings = {
@@ -153,10 +167,10 @@ export type Settings = {
   companyPhone: string;
   companyIfu: string;
   companyRccm: string;
-  currency: 'EUR' | 'USD' | 'GBP' | 'XOF';
+  currency: Currency;
   logoUrl?: string | null;
-  invoiceNumberFormat: 'PREFIX-YEAR-NUM' | 'YEAR-NUM' | 'PREFIX-NUM';
-  invoiceTemplate: 'modern' | 'classic' | 'simple' | 'detailed';
+  invoiceNumberFormat: InvoiceNumberFormat;
+  invoiceTemplate: InvoiceTemplate;
 };
 
 export type ReportData = {

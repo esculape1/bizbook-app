@@ -3,8 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getProducts, getSettings } from "@/lib/data";
 import { cn, formatCurrency } from "@/lib/utils";
-import { ProductForm } from "./ProductForm";
-import { EditProductButton } from "./EditProductButton";
+import { ProductFormDialog } from "./ProductFormDialog";
 import { DeleteProductButton } from "./DeleteProductButton";
 import { getSession } from "@/lib/session";
 import { StockInventoryReport } from "./StockInventoryReport";
@@ -13,6 +12,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { AppLayout } from "@/components/AppLayout";
 import { redirect } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { PlusCircle, Pencil } from "lucide-react";
+import { ROLES } from "@/lib/constants";
 
 export const dynamic = 'force-dynamic';
 
@@ -28,8 +30,8 @@ async function ProductsContent() {
     return null;
   }
 
-  const canManageProducts = user?.role === 'Admin' || user?.role === 'SuperAdmin';
-  const canViewPrices = user?.role === 'SuperAdmin' || user?.role === 'Admin';
+  const canManageProducts = user?.role === ROLES.ADMIN || user?.role === ROLES.SUPER_ADMIN;
+  const canViewPrices = user?.role === ROLES.SUPER_ADMIN || user?.role === ROLES.ADMIN;
 
   return (
     <>
@@ -69,7 +71,11 @@ async function ProductsContent() {
                     {canManageProducts && (
                       <CardFooter className="flex items-center justify-end p-2 bg-blue-950/10 border-t mt-auto">
                           <ProductQrCodeDialog product={product} settings={settings} />
-                          <EditProductButton product={product} />
+                          <ProductFormDialog product={product}>
+                            <Button variant="ghost" size="icon">
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          </ProductFormDialog>
                           <DeleteProductButton id={product.id} name={product.name} />
                       </CardFooter>
                     )}
@@ -113,7 +119,13 @@ async function ProductsContent() {
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end">
                             <ProductQrCodeDialog product={product} settings={settings} />
-                            {canManageProducts && <EditProductButton product={product} />}
+                            {canManageProducts && (
+                              <ProductFormDialog product={product}>
+                                <Button variant="ghost" size="icon">
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              </ProductFormDialog>
+                            )}
                             {canManageProducts && <DeleteProductButton id={product.id} name={product.name} />}
                           </div>
                         </TableCell>
@@ -141,7 +153,7 @@ export default async function ProductsPage() {
     redirect('/login');
   }
   
-  const canManageProducts = user.role === 'Admin' || user.role === 'SuperAdmin';
+  const canManageProducts = user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN;
   
   return (
     <AppLayout 
@@ -152,7 +164,14 @@ export default async function ProductsPage() {
             <h1 className="text-2xl font-bold">Produits</h1>
             <div className="flex items-center gap-2">
                  <StockInventoryReport products={products} settings={settings} />
-                {canManageProducts && <ProductForm />}
+                {canManageProducts && (
+                  <ProductFormDialog>
+                    <Button>
+                      <PlusCircle className="mr-2" />
+                      Ajouter un produit
+                    </Button>
+                  </ProductFormDialog>
+                )}
             </div>
         </div>
       <ProductsContent />

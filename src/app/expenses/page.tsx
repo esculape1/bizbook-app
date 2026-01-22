@@ -4,13 +4,16 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { getExpenses, getSettings } from "@/lib/data";
 import { getSession } from "@/lib/session";
 import { formatCurrency, cn } from "@/lib/utils";
-import { ExpenseForm } from "./ExpenseForm";
+import { ExpenseFormDialog } from "./ExpenseFormDialog";
 import type { Expense } from "@/lib/types";
 import { format, getYear, getMonth, set } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ExpenseCategoryDetailsDialog } from "./ExpenseCategoryDetailsDialog";
 import { AppLayout } from "@/components/AppLayout";
 import { redirect } from "next/navigation";
+import { ROLES } from "@/lib/constants";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
 
@@ -53,7 +56,7 @@ async function ExpensesContent() {
     return null;
   }
 
-  const canEdit = user?.role === 'Admin' || user?.role === 'SuperAdmin';
+  const canEdit = user?.role === ROLES.ADMIN || user?.role === ROLES.SUPER_ADMIN;
 
   const groupedExpenses = expenses.reduce((acc, expense) => {
     const expenseDate = new Date(expense.date);
@@ -171,7 +174,7 @@ export default async function ExpensesPage() {
     redirect('/login');
   }
 
-  const canEdit = user?.role === 'Admin' || user?.role === 'SuperAdmin';
+  const canEdit = user?.role === ROLES.ADMIN || user?.role === ROLES.SUPER_ADMIN;
 
   return (
     <AppLayout 
@@ -180,7 +183,14 @@ export default async function ExpensesPage() {
     >
        <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">Dépenses</h1>
-            {canEdit ? <ExpenseForm currency={settings.currency} /> : undefined}
+            {canEdit ? (
+              <ExpenseFormDialog currency={settings.currency}>
+                <Button>
+                  <PlusCircle className="mr-2" />
+                  Ajouter une dépense
+                </Button>
+              </ExpenseFormDialog>
+            ) : undefined}
         </div>
       <ExpensesContent />
     </AppLayout>
