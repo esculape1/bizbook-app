@@ -34,19 +34,20 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import type { User, Settings as AppSettings } from '@/lib/types';
 import { signOut } from '@/app/auth/actions';
+import { ROLES } from '@/lib/constants';
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['SuperAdmin', 'Admin', 'User'] },
-  { href: '/clients', label: 'Clients', icon: Users, roles: ['SuperAdmin', 'Admin', 'User'] },
-  { href: '/suppliers', label: 'Fournisseurs', icon: Briefcase, roles: ['SuperAdmin', 'Admin', 'User'] },
-  { href: '/purchases', label: 'Achats', icon: ShoppingCart, roles: ['SuperAdmin', 'Admin', 'User'] },
-  { href: '/products', label: 'Produits', icon: Box, roles: ['SuperAdmin', 'Admin', 'User'] },
-  { href: '/devis', label: 'Proforma', icon: FileClock, roles: ['SuperAdmin', 'Admin', 'User'] },
-  { href: '/invoices', label: 'Factures', icon: FileText, roles: ['SuperAdmin', 'Admin', 'User'] },
-  { href: '/settlements', label: 'Règlements', icon: CreditCard, roles: ['SuperAdmin', 'Admin'] },
-  { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: ['SuperAdmin', 'Admin', 'User'] },
-  { href: '/reports', label: 'Rapports', icon: BarChart3, roles: ['SuperAdmin', 'Admin', 'User'] },
-  { href: '/settings', label: 'Paramètres', icon: Settings, roles: ['SuperAdmin', 'Admin', 'User'] },
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
+  { href: '/clients', label: 'Clients', icon: Users, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
+  { href: '/suppliers', label: 'Fournisseurs', icon: Briefcase, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
+  { href: '/purchases', label: 'Achats', icon: ShoppingCart, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
+  { href: '/products', label: 'Produits', icon: Box, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
+  { href: '/devis', label: 'Proforma', icon: FileClock, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
+  { href: '/invoices', label: 'Factures', icon: FileText, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
+  { href: '/settlements', label: 'Règlements', icon: CreditCard, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN] },
+  { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
+  { href: '/reports', label: 'Rapports', icon: BarChart3, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
+  { href: '/settings', label: 'Paramètres', icon: Settings, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
 ];
 
 export function AppLayout({ 
@@ -59,7 +60,7 @@ export function AppLayout({
   settings: AppSettings,
 }) {
   const pathname = usePathname();
-  const userRole = user?.role || 'User';
+  const userRole = user?.role || ROLES.USER;
   const [isSheetOpen, setSheetOpen] = useState(false);
 
   const accessibleNavItems = navItems.filter(item => item.roles.includes(userRole));

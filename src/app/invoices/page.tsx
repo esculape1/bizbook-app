@@ -5,6 +5,7 @@ import InvoicesList from "./InvoicesList";
 import { AppLayout } from "@/components/AppLayout";
 import { redirect } from "next/navigation";
 import { InvoiceForm } from "./InvoiceForm";
+import { ROLES } from "@/lib/constants";
 
 export const dynamic = 'force-dynamic';
 
@@ -46,7 +47,7 @@ export default async function InvoicesPage() {
         redirect('/login');
     }
     
-    const canEdit = user.role === 'Admin' || user.role === 'SuperAdmin';
+    const canEdit = user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN;
 
     return (
         <AppLayout 
