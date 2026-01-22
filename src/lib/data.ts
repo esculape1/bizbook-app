@@ -61,6 +61,12 @@ export async function getUserByEmail(email: string): Promise<UserWithPassword | 
     }
 }
 
+export async function updateUserPassword(userId: string, hashedPassword: string): Promise<void> {
+  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+  const userDocRef = db.collection('users').doc(userId);
+  await userDocRef.update({ password: hashedPassword });
+}
+
 
 // CLIENTS
 export const getClients = cache(
@@ -507,6 +513,7 @@ export const getDashboardStats = cache(async () => {
 
     
     
+
 
 
 
