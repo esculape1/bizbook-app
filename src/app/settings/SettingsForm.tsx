@@ -15,6 +15,7 @@ import { saveSettings, type SettingsFormValues } from './actions';
 import type { Settings, User } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { z } from 'zod';
+import { ROLES } from '@/lib/constants';
 
 // Define the form schema directly in the client component to avoid server-code imports.
 const formSchema = z.object({
@@ -39,7 +40,7 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
   const [logoPreview, setLogoPreview] = useState<string | null | undefined>(initialSettings.logoUrl);
   const [logoError, setLogoError] = useState<string | null>(null);
 
-  const canEdit = userRole === 'Admin';
+  const canEdit = userRole === ROLES.ADMIN;
 
   const form = useForm<SettingsClientFormValues>({
     resolver: zodResolver(formSchema),

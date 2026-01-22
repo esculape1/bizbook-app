@@ -14,6 +14,7 @@ import {
 import { revalidateTag } from 'next/cache';
 import type { InvoiceItem, Invoice } from '@/lib/types';
 import { getSession } from '@/lib/session';
+import { ROLES } from '@/lib/constants';
 
 const invoiceItemSchemaForCreate = z.object({
   productId: z.string(),
@@ -60,7 +61,7 @@ const updateInvoiceSchema = z.object({
 
 export async function createInvoice(formData: unknown) {
   const session = await getSession();
-  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
     return { message: "Action non autorisée." };
   }
 
@@ -169,7 +170,7 @@ export async function createInvoice(formData: unknown) {
 
 export async function updateInvoice(id: string, formData: unknown) {
   const session = await getSession();
-  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
     return { message: "Action non autorisée." };
   }
 
@@ -290,7 +291,7 @@ export async function updateInvoice(id: string, formData: unknown) {
 
 export async function cancelInvoice(id: string) {
   const session = await getSession();
-  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
     return { message: "Action non autorisée." };
   }
 

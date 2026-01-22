@@ -11,6 +11,7 @@ import { CancelInvoiceButton } from "./DeleteInvoiceButton";
 import type { Invoice, Client, Product, Settings, User } from "@/lib/types";
 import { ShippingLabelsDialog } from "./ShippingLabelsDialog";
 import { Separator } from "@/components/ui/separator";
+import { ROLES } from "@/lib/constants";
 
 type InvoicesListProps = {
     initialInvoices: Invoice[];
@@ -21,7 +22,7 @@ type InvoicesListProps = {
 };
 
 export default function InvoicesList({ initialInvoices, initialClients, initialProducts, initialSettings, user }: InvoicesListProps) {
-    const canEdit = user?.role === 'Admin' || user?.role === 'SuperAdmin';
+    const canEdit = user?.role === ROLES.ADMIN || user?.role === ROLES.SUPER_ADMIN;
 
     const getStatusVariant = (status: Invoice['status']): "success" | "warning" | "destructive" | "outline" => {
         switch (status) {

@@ -16,6 +16,7 @@ import { ReceivePurchaseButton } from "./ReceivePurchaseButton";
 import { Button } from "@/components/ui/button";
 import { AppLayout } from "@/components/AppLayout";
 import { redirect } from "next/navigation";
+import { ROLES } from "@/lib/constants";
 
 
 export const dynamic = 'force-dynamic';
@@ -32,7 +33,7 @@ async function PurchasesContent({ user }: { user: User }) {
     return null; // or a loading/error state
   }
 
-  const canEdit = user?.role === 'Admin' || user?.role === 'SuperAdmin';
+  const canEdit = user?.role === ROLES.ADMIN || user?.role === ROLES.SUPER_ADMIN;
 
   const getStatusVariant = (status: Purchase['status']): "success" | "warning" | "destructive" | "outline" => {
     switch (status) {
@@ -169,7 +170,7 @@ export default async function PurchasesPage() {
     redirect('/login');
   }
   
-  const canEdit = user.role === 'Admin' || user.role === 'SuperAdmin';
+  const canEdit = user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN;
   
   const totalPendingAmount = purchases
     .filter(p => p.status === 'Pending')

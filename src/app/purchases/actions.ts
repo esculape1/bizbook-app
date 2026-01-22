@@ -15,6 +15,7 @@ import {
 import { revalidateTag } from 'next/cache';
 import type { PurchaseItem, Purchase, Product } from '@/lib/types';
 import { getSession } from '@/lib/session';
+import { ROLES } from '@/lib/constants';
 
 const purchaseItemSchema = z.object({
   productId: z.string().min(1, "Produit requis"),
@@ -35,7 +36,7 @@ const purchaseSchema = z.object({
 
 export async function createPurchase(formData: unknown) {
   const session = await getSession();
-  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
     return { message: "Action non autorisée." };
   }
 
@@ -103,7 +104,7 @@ async function performPurchaseUpdate(id: string, purchaseData: Partial<Omit<Purc
 
 export async function updatePurchase(id: string, purchaseNumber: string, formData: unknown) {
   const session = await getSession();
-  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
     return { message: "Action non autorisée." };
   }
 
@@ -167,7 +168,7 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
 
 export async function receivePurchase(id: string) {
     const session = await getSession();
-    if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+    if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
       return { message: "Action non autorisée." };
     }
   
@@ -234,7 +235,7 @@ export async function receivePurchase(id: string) {
 
 export async function cancelPurchase(id: string) {
   const session = await getSession();
-  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
     return { message: "Action non autorisée." };
   }
 

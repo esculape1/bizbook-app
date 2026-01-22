@@ -9,6 +9,7 @@ import type { Invoice, Payment, PaymentHistoryItem } from '@/lib/types';
 import { randomUUID } from 'crypto';
 import { db } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { ROLES } from '@/lib/constants';
 
 export async function getUnpaidInvoicesForClient(clientId: string): Promise<Invoice[]> {
   const allInvoices = await getInvoices();
@@ -53,7 +54,7 @@ type SettlementPayload = z.infer<typeof settlementPayloadSchema>;
 
 export async function processMultipleInvoicePayments(payload: SettlementPayload): Promise<{ success: boolean; message?: string }> {
   const session = await getSession();
-  if (session?.role !== 'Admin' && session?.role !== 'SuperAdmin') {
+  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
     return { success: false, message: "Action non autorisée." };
   }
 

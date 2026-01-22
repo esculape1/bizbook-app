@@ -6,6 +6,7 @@ import { updateSettings } from '@/lib/data';
 import { revalidateTag } from 'next/cache';
 import { getSession } from '@/lib/session';
 import type { Settings } from '@/lib/types';
+import { ROLES } from '@/lib/constants';
 
 // This schema is for server-side validation only. It is NOT exported to the client.
 const settingsSchema = z.object({
@@ -26,7 +27,7 @@ export type SettingsFormValues = z.infer<typeof settingsSchema>;
 
 export async function saveSettings(formData: SettingsFormValues) {
   const session = await getSession();
-  if (session?.role !== 'Admin') {
+  if (session?.role !== ROLES.ADMIN) {
     return { success: false, message: "Action non autorisée." };
   }
   
