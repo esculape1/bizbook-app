@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { QuoteForm } from "./QuoteForm";
 import { formatCurrency, cn } from "@/lib/utils";
 import { getSession } from "@/lib/session";
-import type { Quote, QuoteStatus } from "@/lib/types";
+import type { Quote } from "@/lib/types";
 import { EditQuoteForm } from "./EditQuoteForm";
 import { DeleteQuoteButton } from "./DeleteQuoteButton";
 import { QuoteViewerDialog } from "./QuoteViewerDialog";
@@ -33,7 +33,7 @@ async function DevisContent() {
 
   const canEdit = user?.role === ROLES.ADMIN || user?.role === ROLES.SUPER_ADMIN;
 
-  const getStatusVariant = (status: QuoteStatus): "outline" | "default" | "success" | "destructive" => {
+  const getStatusVariant = (status: Quote['status']): "outline" | "default" | "success" | "destructive" => {
     switch (status) {
       case QUOTE_STATUS.ACCEPTED:
         return 'success';
