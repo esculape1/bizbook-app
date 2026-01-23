@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
@@ -20,6 +19,12 @@ const cardColors = [
   "bg-violet-100 border-violet-200 text-violet-900 dark:bg-violet-900/40 dark:border-violet-800 dark:text-violet-200",
   "bg-teal-100 border-teal-200 text-teal-900 dark:bg-teal-900/40 dark:border-teal-800 dark:text-teal-200",
 ];
+
+type OrderPortalProps = {
+  client: Client;
+  products: Product[];
+  settings: Settings;
+};
 
 export function OrderPortal({ client, products, settings }: OrderPortalProps) {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
