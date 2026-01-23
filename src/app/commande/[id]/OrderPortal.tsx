@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
@@ -6,10 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency, cn } from '@/lib/utils';
-import { Minus, Plus, Search, Send, ShoppingCart } from 'lucide-react';
+import { Minus, Plus, Search, Send, ShoppingCart, Trash2 } from 'lucide-react';
 import { submitClientOrder } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const cardColors = [
   "bg-sky-500/10 border-sky-500/20 text-sky-800",
@@ -20,16 +24,13 @@ const cardColors = [
   "bg-teal-500/10 border-teal-500/20 text-teal-800",
 ];
 
-type OrderPortalProps = {
-  client: Client;
-  products: Product[];
-  settings: Settings;
-};
+type EnrichedProduct = Product & { quantity: number; total: number };
 
-export function OrderPortal({ client, products, settings }: OrderPortalProps) {
+export function OrderPortal({ client, products, settings }: { client: Client; products: Product[]; settings: Settings; }) {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [isPending, startTransition] = useTransition();
+  const [isSheetOpen, setSheetOpen] = useState(false);
   const { toast } = useToast();
 
   const handleQuantityChange = (productId: string, change: number) => {
@@ -43,10 +44,16 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
       return { ...prev, [productId]: newQuantity };
     });
   };
+  
+  const handleRemoveItem = (productId: string) => {
+    setQuantities(prev => {
+        const { [productId]: _, ...rest } = prev;
+        return rest;
+    });
+  };
 
   const handleQuantityInputChange = (productId: string, value: string) => {
     const newQuantity = parseInt(value, 10);
-    // Allow setting quantity to 0 by typing
     if (!isNaN(newQuantity) && newQuantity >= 0) {
       setQuantities(prev => {
         if (newQuantity === 0) {
@@ -56,7 +63,6 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
         return { ...prev, [productId]: newQuantity };
       });
     } else if (value === '') {
-      // When user clears the input, remove from quantities
       setQuantities(prev => {
         const { [productId]: _, ...rest } = prev;
         return rest;
@@ -72,14 +78,27 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
     );
   }, [products, searchTerm]);
 
-  const orderItems = useMemo(() => {
-    return Object.entries(quantities).map(([productId, quantity]) => {
-      return { productId, quantity };
-    });
-  }, [quantities]);
+  const orderItems = useMemo((): EnrichedProduct[] => {
+    return Object.entries(quantities)
+      .map(([productId, quantity]) => {
+        const product = products.find(p => p.id === productId);
+        if (!product || quantity <= 0) return null;
+        return {
+          ...product,
+          quantity,
+          total: product.unitPrice * quantity,
+        };
+      })
+      .filter((item): item is EnrichedProduct => item !== null)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [quantities, products]);
 
-  const totalItemsInCart = Object.values(quantities).reduce((sum, q) => sum + q, 0);
-
+  const { totalItemsInCart, orderTotal } = useMemo(() => {
+    const totalItems = orderItems.reduce((sum, item) => sum + item.quantity, 0);
+    const totalAmount = orderItems.reduce((sum, item) => sum + item.total, 0);
+    return { totalItemsInCart: totalItems, orderTotal: totalAmount };
+  }, [orderItems]);
+  
   const handleSubmit = () => {
     if (orderItems.length === 0) {
       toast({
@@ -91,9 +110,10 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
     }
 
     startTransition(async () => {
+      const payloadItems = orderItems.map(item => ({ productId: item.id, quantity: item.quantity }));
       const result = await submitClientOrder({
         clientId: client.id,
-        items: orderItems,
+        items: payloadItems,
       });
 
       if (result.success) {
@@ -103,6 +123,7 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
         });
         setQuantities({});
         setSearchTerm('');
+        setSheetOpen(false);
       } else {
         toast({
           variant: 'destructive',
@@ -210,19 +231,77 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
         )}
       </div>
       
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm border-t">
-        <div className="max-w-4xl mx-auto">
-          <Button 
-            className="w-full text-lg h-16 shadow-lg" 
-            size="lg"
-            onClick={handleSubmit} 
-            disabled={isPending || totalItemsInCart === 0}
-          >
-            <Send className="mr-3 h-5 w-5" />
-            {isPending ? 'Envoi en cours...' : `Envoyer la commande (${totalItemsInCart} articles)`}
-          </Button>
-        </div>
-      </div>
+      <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
+        <SheetTrigger asChild>
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm border-t">
+                <div className="max-w-4xl mx-auto">
+                <Button 
+                    className="w-full text-lg h-16 shadow-lg" 
+                    size="lg"
+                    disabled={totalItemsInCart === 0}
+                >
+                    <ShoppingCart className="mr-3 h-5 w-5" />
+                    Voir mon panier ({totalItemsInCart}) - {formatCurrency(orderTotal, settings.currency)}
+                </Button>
+                </div>
+            </div>
+        </SheetTrigger>
+        <SheetContent className="sm:max-w-lg w-full flex flex-col">
+            <SheetHeader>
+                <SheetTitle>Résumé de votre commande</SheetTitle>
+                <SheetDescription>Vérifiez vos articles avant de confirmer.</SheetDescription>
+            </SheetHeader>
+            <div className="flex-1 overflow-y-auto -mx-6 px-6">
+                {orderItems.length > 0 ? (
+                    <div className="divide-y">
+                        {orderItems.map(item => (
+                            <div key={item.id} className="flex items-center gap-4 py-4">
+                                <div className="flex-1 space-y-1">
+                                    <p className="font-medium">{item.name}</p>
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-1 border rounded-md">
+                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleQuantityChange(item.id, -1)}><Minus className="h-3 w-3" /></Button>
+                                            <span className="w-6 text-center text-sm font-medium">{item.quantity}</span>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleQuantityChange(item.id, 1)}><Plus className="h-3 w-3" /></Button>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground">{formatCurrency(item.unitPrice, settings.currency)} / unité</p>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <p className="font-semibold">{formatCurrency(item.total, settings.currency)}</p>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 mt-1 text-destructive" onClick={() => handleRemoveItem(item.id)}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center">
+                        <ShoppingCart className="h-16 w-16 text-muted-foreground" />
+                        <p className="mt-4 text-muted-foreground">Votre panier est vide.</p>
+                    </div>
+                )}
+            </div>
+            <SheetFooter className="border-t -mx-6 px-6 pt-6">
+                <div className="w-full space-y-4">
+                    <div className="flex justify-between font-bold text-lg">
+                        <span>Total</span>
+                        <span>{formatCurrency(orderTotal, settings.currency)}</span>
+                    </div>
+                     <Button 
+                        className="w-full text-lg h-14" 
+                        size="lg"
+                        onClick={handleSubmit} 
+                        disabled={isPending || orderItems.length === 0}
+                    >
+                        <Send className="mr-3 h-5 w-5" />
+                        {isPending ? 'Envoi en cours...' : 'Confirmer et envoyer'}
+                    </Button>
+                </div>
+            </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
