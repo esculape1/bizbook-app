@@ -227,18 +227,18 @@ export async function updateInvoice(id: string, formData: unknown) {
     for (const item of items) {
         const product = products.find(p => p.id === item.productId)!;
         
-        if (item.unitPrice < (product.purchasePrice ?? 0)) {
+        if (item.unitPrice < item.purchasePrice) {
             throw new Error(`Le prix de vente pour ${product.name} ne peut être inférieur au prix d'achat.`);
         }
         
         invoiceItems.push({
             productId: item.productId,
-            productName: product.name,
-            reference: product.reference,
+            productName: item.productName,
+            reference: item.reference,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             total: item.quantity * item.unitPrice,
-            purchasePrice: product.purchasePrice ?? 0,
+            purchasePrice: item.purchasePrice,
         });
     }
 

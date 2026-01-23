@@ -127,9 +127,10 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
           </div>
         </CardHeader>
         <CardContent>
-            <div id="report-summary-cards" className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div id="report-summary-cards" className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <StatCard title="Chiffre d'Affaires (Ventes)" value={formatCurrency(data.summary.grossSales, currency)} className="bg-green-500/10 text-green-800" />
-                <StatCard title="Dépenses" value={formatCurrency(data.summary.totalExpenses, currency)} className="bg-orange-500/10 text-orange-800" />
+                <StatCard title="Coût Marchandises" value={formatCurrency(data.summary.costOfGoodsSold, currency)} className="bg-orange-500/10 text-orange-800" />
+                <StatCard title="Dépenses" value={formatCurrency(data.summary.totalExpenses, currency)} className="bg-red-500/10 text-red-800" />
                 <StatCard title="Bénéfice Net" value={formatCurrency(data.summary.netProfit, currency)} className="bg-blue-500/10 text-blue-800" />
             </div>
         </CardContent>
@@ -160,10 +161,11 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
             </div>
         </header>
 
-        <div className="grid gap-4 grid-cols-3" style={{ breakInside: 'avoid-page' }}>
-            <StatCard title="Chiffre d'Affaires (Ventes)" value={formatCurrency(data.summary.grossSales, currency)} className="bg-green-500/10 text-green-800" />
-            <StatCard title="Dépenses" value={formatCurrency(data.summary.totalExpenses, currency)} className="bg-orange-500/10 text-orange-800" />
-            <StatCard title="Bénéfice Net" value={formatCurrency(data.summary.netProfit, currency)} className="bg-blue-500/10 text-blue-800" />
+        <div className="grid gap-4 grid-cols-4" style={{ breakInside: 'avoid-page' }}>
+            <StatCard title="Chiffre d'Affaires (Ventes)" value={formatCurrency(data.summary.grossSales, currency)} className="bg-green-100 border-green-200 text-green-800" />
+            <StatCard title="Coût Marchandises" value={formatCurrency(data.summary.costOfGoodsSold, currency)} className="bg-orange-100 border-orange-200 text-orange-800" />
+            <StatCard title="Dépenses" value={formatCurrency(data.summary.totalExpenses, currency)} className="bg-red-100 border-red-200 text-red-800" />
+            <StatCard title="Bénéfice Net" value={formatCurrency(data.summary.netProfit, currency)} className="bg-blue-100 border-blue-200 text-blue-800" />
         </div>
 
         {data.allInvoices.length > 0 && (
