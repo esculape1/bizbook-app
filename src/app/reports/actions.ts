@@ -57,7 +57,7 @@ export async function generateReport(
 
         const totalExpenses = expensesInPeriod.reduce((sum, exp) => sum + exp.amount, 0);
 
-        const productSales: { [productName: string]: { productName: string; quantitySold: number; totalValue: number; } } = {};
+        const productSales: { [key: string]: { productName: string, productNameForDisplay: string, quantitySold: number, totalValue: number } } = {};
         let costOfGoodsSold = 0;
 
         activeInvoices.forEach(inv => {
@@ -67,24 +67,29 @@ export async function generateReport(
                 const itemCost = item.purchasePrice ?? product?.purchasePrice ?? 0;
                 costOfGoodsSold += itemCost * item.quantity;
                 
-                if (!productSales[item.productName]) {
-                    productSales[item.productName] = { 
-                        productName: item.productName, 
+                // Use a compound key to differentiate items with the same name but different prices/units
+                const uniqueKey = `${item.productName}::${item.unitPrice}`;
+                
+                if (!productSales[uniqueKey]) {
+                    productSales[uniqueKey] = { 
+                        productName: item.productName, // Keep original name for stock lookup
+                        productNameForDisplay: `${item.productName} (PU: ${item.unitPrice})`, 
                         quantitySold: 0, 
                         totalValue: 0,
                     };
                 }
-                productSales[item.productName].quantitySold += item.quantity;
-                productSales[item.productName].totalValue += item.total;
+                productSales[uniqueKey].quantitySold += item.quantity;
+                productSales[uniqueKey].totalValue += item.total;
             });
         });
         
         const finalProductSales = Object.values(productSales).map(sale => {
-            const anItemOfThisSale = activeInvoices.flatMap(inv => inv.items).find(i => i.productName === sale.productName);
-            const currentProduct = anItemOfThisSale ? allProducts.find(p => p.id === anItemOfThisSale.productId) : undefined;
-            
+            // Find the current product by its original name to get current stock level
+            const currentProduct = allProducts.find(p => p.name === sale.productName);
             return {
-                ...sale,
+                productName: sale.productNameForDisplay,
+                quantitySold: sale.quantitySold,
+                totalValue: sale.totalValue,
                 quantityInStock: currentProduct?.quantityInStock ?? 'N/A'
             };
         });

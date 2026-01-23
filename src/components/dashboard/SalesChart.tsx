@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell } from "recharts"
@@ -25,20 +26,25 @@ type SalesChartProps = {
 }
 
 export function SalesChart({ invoices, currency }: SalesChartProps) {
-    const salesByProductName: { [name: string]: number } = {};
+    const salesByProductAndPrice: { [key: string]: { name: string; revenue: number } } = {};
 
     invoices
         .filter(inv => inv.status !== 'Cancelled')
         .flatMap(inv => inv.items)
         .forEach(item => {
-            if (!salesByProductName[item.productName]) {
-                salesByProductName[item.productName] = 0;
+            // Create a unique name for display based on product name and unit price
+            const displayName = `${item.productName} (${formatCurrency(item.unitPrice, currency)})`;
+            
+            if (!salesByProductAndPrice[displayName]) {
+                salesByProductAndPrice[displayName] = {
+                    name: displayName,
+                    revenue: 0,
+                };
             }
-            salesByProductName[item.productName] += item.total;
+            salesByProductAndPrice[displayName].revenue += item.total;
         });
 
-    const salesData = Object.entries(salesByProductName)
-        .map(([name, revenue]) => ({ name, revenue }))
+    const salesData = Object.values(salesByProductAndPrice)
         .filter(p => p.revenue > 0)
         .sort((a, b) => b.revenue - a.revenue)
         .slice(0, 15); // Show top 15 products to keep the chart readable
