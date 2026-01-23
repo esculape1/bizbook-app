@@ -57,32 +57,38 @@ export async function generateReport(
 
         const totalExpenses = expensesInPeriod.reduce((sum, exp) => sum + exp.amount, 0);
 
-        const productSales: { [key: string]: { productName: string; quantitySold: number; totalValue: number; quantityInStock: number; } } = {};
-        
+        const productSales: { [productName: string]: { productName: string; quantitySold: number; totalValue: number; } } = {};
         let costOfGoodsSold = 0;
 
         activeInvoices.forEach(inv => {
             inv.items.forEach(item => {
                 const product = allProducts.find(p => p.id === item.productId);
                 
-                // Use the purchase price stored with the invoice item for accuracy.
-                // For older invoices, fall back to the product's current purchase price.
                 const itemCost = item.purchasePrice ?? product?.purchasePrice ?? 0;
                 costOfGoodsSold += itemCost * item.quantity;
                 
-                if (!productSales[item.productId]) {
-                    productSales[item.productId] = { 
+                if (!productSales[item.productName]) {
+                    productSales[item.productName] = { 
                         productName: item.productName, 
                         quantitySold: 0, 
                         totalValue: 0,
-                        quantityInStock: product?.quantityInStock ?? 0 
                     };
                 }
-                productSales[item.productId].quantitySold += item.quantity;
-                productSales[item.productId].totalValue += item.total;
+                productSales[item.productName].quantitySold += item.quantity;
+                productSales[item.productName].totalValue += item.total;
             });
         });
         
+        const finalProductSales = Object.values(productSales).map(sale => {
+            const anItemOfThisSale = activeInvoices.flatMap(inv => inv.items).find(i => i.productName === sale.productName);
+            const currentProduct = anItemOfThisSale ? allProducts.find(p => p.id === anItemOfThisSale.productId) : undefined;
+            
+            return {
+                ...sale,
+                quantityInStock: currentProduct?.quantityInStock ?? 'N/A'
+            };
+        });
+
         const grossProfit = grossSales - costOfGoodsSold;
         const netProfit = grossProfit - totalExpenses;
 
@@ -98,7 +104,7 @@ export async function generateReport(
               netProfit: netProfit,
               totalUnpaid,
           },
-          productSales: Object.values(productSales).sort((a, b) => b.quantitySold - a.quantitySold),
+          productSales: finalProductSales.sort((a, b) => b.quantitySold - a.quantitySold),
           allInvoices: invoicesInPeriod,
           expenses: expensesInPeriod,
         };

@@ -189,7 +189,7 @@ export type ReportData = {
     productName: string;
     quantitySold: number;
     totalValue: number;
-    quantityInStock: number;
+    quantityInStock: number | string;
   }[];
   allInvoices: Invoice[];
   expenses: Expense[];

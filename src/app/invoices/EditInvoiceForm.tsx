@@ -78,7 +78,8 @@ export function EditInvoiceForm({ invoice, clients, products, settings }: EditIn
         const product = products.find(p => p.id === item.productId);
         return {
           ...item,
-          purchasePrice: product?.purchasePrice ?? 0,
+          // Prioritize the stored purchase price. Fallback to current product's price only if not present.
+          purchasePrice: item.purchasePrice ?? product?.purchasePrice ?? 0,
         }
       }),
     },

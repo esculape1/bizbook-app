@@ -3,7 +3,7 @@
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell } from "recharts"
 import { ChartConfig, ChartContainer, ChartTooltipContent } from "@/components/ui/chart"
 import { formatCurrency } from "@/lib/utils"
-import type { Settings, Invoice, Product } from "@/lib/types"
+import type { Settings, Invoice } from "@/lib/types"
 
 const chartConfig = {
   revenue: {
@@ -21,23 +21,27 @@ const chartColors = [
 
 type SalesChartProps = {
     invoices: Invoice[];
-    products: Product[];
     currency: Settings['currency'];
 }
 
-export function SalesChart({ invoices, products, currency }: SalesChartProps) {
-    const salesData = products.map(product => {
-        const productSales = invoices
-            .filter(inv => inv.status !== 'Cancelled')
-            .flatMap(inv => inv.items)
-            .filter(item => item.productId === product.id)
-            .reduce((sum, item) => sum + item.total, 0);
-        
-        return {
-            name: product.name,
-            revenue: productSales,
-        }
-    }).filter(p => p.revenue > 0);
+export function SalesChart({ invoices, currency }: SalesChartProps) {
+    const salesByProductName: { [name: string]: number } = {};
+
+    invoices
+        .filter(inv => inv.status !== 'Cancelled')
+        .flatMap(inv => inv.items)
+        .forEach(item => {
+            if (!salesByProductName[item.productName]) {
+                salesByProductName[item.productName] = 0;
+            }
+            salesByProductName[item.productName] += item.total;
+        });
+
+    const salesData = Object.entries(salesByProductName)
+        .map(([name, revenue]) => ({ name, revenue }))
+        .filter(p => p.revenue > 0)
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 15); // Show top 15 products to keep the chart readable
 
   return (
     <ChartContainer config={chartConfig} className="h-80 w-full">
@@ -49,7 +53,8 @@ export function SalesChart({ invoices, products, currency }: SalesChartProps) {
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => value.slice(0, 10) + '...'}
+                tickFormatter={(value) => value.length > 15 ? value.slice(0, 15) + '...' : value}
+                interval={0}
             />
             <YAxis
                 stroke="hsl(var(--muted-foreground))"
