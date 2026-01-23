@@ -12,8 +12,6 @@ import { submitClientOrder } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 const cardColors = [
   "bg-sky-500/10 border-sky-500/20 text-sky-800",
@@ -253,23 +251,23 @@ export function OrderPortal({ client, products, settings }: { client: Client; pr
             </SheetHeader>
             <div className="flex-1 overflow-y-auto -mx-6 px-6">
                 {orderItems.length > 0 ? (
-                    <div className="divide-y">
-                        {orderItems.map(item => (
-                            <div key={item.id} className="flex items-center gap-4 py-4">
+                    <div className="space-y-4 py-4">
+                        {orderItems.map((item, index) => (
+                            <div key={item.id} className={cn("flex items-center gap-4 p-4 rounded-lg", cardColors[index % cardColors.length])}>
                                 <div className="flex-1 space-y-1">
-                                    <p className="font-medium">{item.name}</p>
+                                    <p className="font-bold text-current">{item.name}</p>
                                     <div className="flex items-center gap-4">
-                                        <div className="flex items-center gap-1 border rounded-md">
-                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleQuantityChange(item.id, -1)}><Minus className="h-3 w-3" /></Button>
-                                            <span className="w-6 text-center text-sm font-medium">{item.quantity}</span>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleQuantityChange(item.id, 1)}><Plus className="h-3 w-3" /></Button>
+                                        <div className="flex items-center gap-1 bg-white/60 rounded-md">
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleQuantityChange(item.id, -1)}><Minus className="h-3 w-3" /></Button>
+                                            <span className="w-6 text-center text-sm font-bold text-current">{item.quantity}</span>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-primary" onClick={() => handleQuantityChange(item.id, 1)}><Plus className="h-3 w-3" /></Button>
                                         </div>
-                                        <p className="text-sm text-muted-foreground">{formatCurrency(item.unitPrice, settings.currency)} / unité</p>
+                                        <p className="text-sm text-current/80">{formatCurrency(item.unitPrice, settings.currency)} / unité</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="font-semibold">{formatCurrency(item.total, settings.currency)}</p>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 mt-1 text-destructive" onClick={() => handleRemoveItem(item.id)}>
+                                    <p className="font-semibold text-current">{formatCurrency(item.total, settings.currency)}</p>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 mt-1 text-destructive/80 hover:text-destructive" onClick={() => handleRemoveItem(item.id)}>
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </div>
