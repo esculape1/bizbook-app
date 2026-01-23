@@ -1,5 +1,4 @@
 
-
 import {
   Role,
   ClientStatus,
@@ -204,4 +203,24 @@ export type PaymentHistoryItem = {
   invoiceId: string;
   invoiceNumber: string;
   payment: Payment;
+};
+
+// Types for the new Client Order Portal feature
+export type ClientOrderItem = {
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number; // Price at the time of order
+  total: number;
+};
+
+export type ClientOrder = {
+  id: string;
+  orderNumber: string;
+  clientId: string;
+  clientName: string;
+  date: string;
+  items: ClientOrderItem[];
+  totalAmount: number;
+  status: 'Pending' | 'Processed' | 'Cancelled';
 };

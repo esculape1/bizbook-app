@@ -1,7 +1,8 @@
+
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const publicRoutes = ['/login', '/signup'];
+const publicRoutes = ['/login', '/signup', '/commande'];
 const SESSION_COOKIE_NAME = 'session';
 
 export async function middleware(request: NextRequest) {
@@ -12,8 +13,8 @@ export async function middleware(request: NextRequest) {
 
   // If user is on a public route
   if (isPublicRoute) {
-    // If they have a session, redirect them to the dashboard
-    if (sessionCookie) {
+    // If they have a session, redirect them to the dashboard, unless it's the order page
+    if (sessionCookie && !pathname.startsWith('/commande')) {
       return NextResponse.redirect(new URL('/', request.url));
     }
     // Otherwise, allow them to access the public route
@@ -27,6 +28,23 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);
+  }
+  
+  // If the cookie is malformed or expired, our getSession logic will handle it, but here we can add a check too.
+  try {
+    const sessionData = JSON.parse(sessionCookie.value);
+    if (!sessionData.expiresAt || sessionData.expiresAt < Date.now()) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/login';
+        // Clear the invalid cookie
+        url.cookies.delete(SESSION_COOKIE_NAME);
+        return NextResponse.redirect(url);
+    }
+  } catch(e) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      url.cookies.delete(SESSION_COOKIE_NAME);
+      return NextResponse.redirect(url);
   }
 
   // If user has a session, allow access

@@ -8,10 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { DeleteClientButton } from "./DeleteClientButton";
 import { ClientFormDialog } from "./ClientFormDialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Mail, MapPin, Phone, Pencil } from 'lucide-react';
+import { Mail, MapPin, Phone, Pencil, QrCode } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ROLES, CLIENT_STATUS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
+import { ClientQRCodeDialog } from './ClientQRCodeDialog';
 
 export default function ClientsList({ clients, userRole }: { clients: Client[], userRole: User['role'] | undefined }) {
   const canEdit = userRole === ROLES.ADMIN || userRole === ROLES.SUPER_ADMIN;
@@ -51,8 +52,13 @@ export default function ClientsList({ clients, userRole }: { clients: Client[], 
             </CardContent>
             {canEdit && (
                 <div className="flex items-center justify-end p-2 border-t mt-auto">
+                    <ClientQRCodeDialog client={client}>
+                      <Button variant="ghost" size="icon" title="Générer QR Code de commande">
+                        <QrCode className="h-4 w-4" />
+                      </Button>
+                    </ClientQRCodeDialog>
                     <ClientFormDialog client={client}>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" title="Modifier le client">
                         <Pencil className="h-4 w-4" />
                       </Button>
                     </ClientFormDialog>
@@ -96,8 +102,13 @@ export default function ClientsList({ clients, userRole }: { clients: Client[], 
                         {canEdit && (
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end">
+                              <ClientQRCodeDialog client={client}>
+                                <Button variant="ghost" size="icon" title="Générer QR Code de commande">
+                                  <QrCode className="h-4 w-4" />
+                                </Button>
+                              </ClientQRCodeDialog>
                               <ClientFormDialog client={client}>
-                                <Button variant="ghost" size="icon">
+                                <Button variant="ghost" size="icon" title="Modifier le client">
                                   <Pencil className="h-4 w-4" />
                                 </Button>
                               </ClientFormDialog>
