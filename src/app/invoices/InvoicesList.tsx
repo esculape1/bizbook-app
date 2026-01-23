@@ -22,7 +22,7 @@ type InvoicesListProps = {
 };
 
 export default function InvoicesList({ initialInvoices, initialClients, initialProducts, initialSettings, user }: InvoicesListProps) {
-    const canEdit = user?.role === ROLES.ADMIN || user?.role === ROLES.SUPER_ADMIN;
+    const canManageInvoices = user?.role === ROLES.SUPER_ADMIN || user?.role === ROLES.ADMIN || user?.role === ROLES.USER;
 
     const getStatusVariant = (status: Invoice['status']): "success" | "warning" | "destructive" | "outline" => {
         switch (status) {
@@ -91,7 +91,7 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                             <span className="font-bold text-destructive">{formatCurrency(amountDue > 0 ? amountDue : 0, initialSettings.currency)}</span>
                         </div>
                     </CardContent>
-                    {client && canEdit && (
+                    {client && canManageInvoices && (
                         <CardFooter className="flex items-center justify-end gap-1 p-2 bg-blue-950/10 border-t mt-auto">
                             <ShippingLabelsDialog invoice={invoice} client={client} settings={initialSettings} asTextButton={false} />
                             <EditInvoiceForm invoice={invoice} clients={initialClients} products={initialProducts} settings={initialSettings} />
@@ -115,7 +115,7 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                     <TableHead>Statut</TableHead>
                     <TableHead className="text-right">Montant Total</TableHead>
                     <TableHead className="text-right">Montant Dû</TableHead>
-                    {canEdit && <TableHead className="text-right">Actions</TableHead>}
+                    {canManageInvoices && <TableHead className="text-right">Actions</TableHead>}
                 </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -139,7 +139,7 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                     </TableCell>
                     <TableCell className="text-right">{formatCurrency(invoice.totalAmount, initialSettings.currency)}</TableCell>
                     <TableCell className="text-right font-medium text-destructive">{formatCurrency(amountDue > 0 ? amountDue : 0, initialSettings.currency)}</TableCell>
-                    {client && canEdit && (
+                    {client && canManageInvoices && (
                         <TableCell className="text-right">
                         <div className="flex items-center justify-end">
                             <ShippingLabelsDialog invoice={invoice} client={client} settings={initialSettings} asTextButton={false} />

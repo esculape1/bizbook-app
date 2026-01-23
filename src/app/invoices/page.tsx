@@ -48,7 +48,7 @@ export default async function InvoicesPage() {
         redirect('/login');
     }
     
-    const canEdit = user.role === ROLES.SUPER_ADMIN || user.role === ROLES.USER;
+    const canManageInvoices = user.role === ROLES.SUPER_ADMIN || user.role === ROLES.ADMIN || user.role === ROLES.USER;
 
     return (
         <AppLayout 
@@ -56,7 +56,7 @@ export default async function InvoicesPage() {
           settings={settings}
         >
           <PageHeader>
-            {canEdit ? <InvoiceForm clients={clients} products={products} settings={settings} /> : undefined}
+            {canManageInvoices ? <InvoiceForm clients={clients} products={products} settings={settings} /> : undefined}
           </PageHeader>
           <InvoicesDataWrapper />
         </AppLayout>

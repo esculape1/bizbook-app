@@ -61,7 +61,8 @@ const updateInvoiceSchema = z.object({
 
 export async function createInvoice(formData: unknown) {
   const session = await getSession();
-  if (session?.role !== ROLES.SUPER_ADMIN && session?.role !== ROLES.USER) {
+  const allowedRoles = [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER];
+  if (!session || !allowedRoles.includes(session.role)) {
     return { message: "Action non autorisée." };
   }
 
@@ -171,7 +172,8 @@ export async function createInvoice(formData: unknown) {
 
 export async function updateInvoice(id: string, formData: unknown) {
   const session = await getSession();
-  if (session?.role !== ROLES.SUPER_ADMIN && session?.role !== ROLES.USER) {
+  const allowedRoles = [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER];
+  if (!session || !allowedRoles.includes(session.role)) {
     return { message: "Action non autorisée." };
   }
 
@@ -293,7 +295,8 @@ export async function updateInvoice(id: string, formData: unknown) {
 
 export async function cancelInvoice(id: string) {
   const session = await getSession();
-  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
+  const allowedRoles = [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER];
+  if (!session || !allowedRoles.includes(session.role)) {
     return { message: "Action non autorisée." };
   }
 
