@@ -209,6 +209,7 @@ export type PaymentHistoryItem = {
 export type ClientOrderItem = {
   productId: string;
   productName: string;
+  reference: string;
   quantity: number;
   unitPrice: number; // Price at the time of order
   total: number;

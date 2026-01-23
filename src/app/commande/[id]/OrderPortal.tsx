@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
-import { MinusCircle, PlusCircle, Search, ShoppingCart, Send } from 'lucide-react';
+import { MinusCircle, PlusCircle, Search, Send } from 'lucide-react';
 import { submitClientOrder } from './actions';
 import { useToast } from '@/hooks/use-toast';
 
@@ -46,16 +46,16 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
 
   const orderItems = useMemo(() => {
     return Object.entries(quantities).map(([productId, quantity]) => {
-      const product = products.find(p => p.id === productId);
+      // The server action only needs the ID and quantity for security.
+      // The rest of the data (name, price) will be fetched on the server.
       return {
         productId,
-        productName: product?.name || 'Inconnu',
         quantity,
       };
     });
-  }, [quantities, products]);
+  }, [quantities]);
 
-  const totalItemsInCart = orderItems.reduce((sum, item) => sum + item.quantity, 0);
+  const totalItemsInCart = Object.values(quantities).reduce((sum, q) => sum + q, 0);
 
   const handleSubmit = () => {
     if (orderItems.length === 0) {
