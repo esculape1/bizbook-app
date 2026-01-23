@@ -16,7 +16,7 @@ export async function getSession(): Promise<User | null> {
     const sessionData = JSON.parse(sessionCookie.value);
 
     // Validate the session data structure and expiration.
-    // If anything is wrong, delete the cookie and return null.
+    // If anything is wrong, the session is considered invalid.
     if (
       !sessionData.expiresAt ||
       sessionData.expiresAt < Date.now() ||
@@ -25,7 +25,9 @@ export async function getSession(): Promise<User | null> {
       !sessionData.email ||
       !sessionData.role
     ) {
-      cookies().delete(SESSION_COOKIE_NAME);
+      // Don't delete the cookie here. The middleware is responsible for that.
+      // Just return null to signify an invalid session.
+      console.warn("Session cookie found but it is invalid or expired.");
       return null;
     }
 
@@ -34,9 +36,9 @@ export async function getSession(): Promise<User | null> {
     return { id, name, email, phone, role };
     
   } catch (error) {
-    // If parsing fails, the cookie is invalid. Log the error and clear it.
-    console.error("Failed to parse session cookie, deleting it:", error);
-    cookies().delete(SESSION_COOKIE_NAME);
+    // If parsing fails, the cookie is malformed and thus invalid.
+    console.error("Failed to parse session cookie:", error);
+    // Don't delete the cookie here. The middleware will handle it.
     return null;
   }
 }
