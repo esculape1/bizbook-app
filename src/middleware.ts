@@ -2,45 +2,61 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const publicRoutes = ['/login', '/signup', '/commande'];
 const SESSION_COOKIE_NAME = 'session';
+const publicRoutes = ['/login', '/signup', '/commande'];
+
+// This function checks if a route is public or starts with a public prefix
+function isPublicRoute(pathname: string) {
+  if (publicRoutes.includes(pathname)) {
+    return true;
+  }
+  for (const route of publicRoutes) {
+    if (pathname.startsWith(route + '/')) {
+      return true;
+    }
+  }
+  return false;
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // 1. Get the session cookie
   const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
-
-  // 1. Helper function to check session validity from the cookie
-  const isSessionValid = () => {
-    if (!sessionCookie?.value) {
-      return false;
-    }
-    try {
-      const sessionData = JSON.parse(sessionCookie.value);
-      // More robust check
-      return !!(sessionData?.expiresAt && sessionData.expiresAt > Date.now() && sessionData.id);
-    } catch {
-      return false;
-    }
-  };
-
-  const valid = isSessionValid();
-  const isPublic = publicRoutes.some(route => pathname.startsWith(route));
-
-  // If session is invalid and the route is protected, redirect to login
-  if (!valid && !isPublic) {
-    const response = NextResponse.redirect(new URL('/login', request.url));
-    // Always attempt to clear a potentially bad cookie when redirecting to login
-    response.cookies.delete(SESSION_COOKIE_NAME);
-    return response;
+  let sessionData;
+  try {
+    sessionData = sessionCookie ? JSON.parse(sessionCookie.value) : null;
+  } catch {
+    sessionData = null;
   }
 
-  // If session is valid and the user tries to access a public route (like login), redirect to dashboard
-  // Exception for /commande which can be accessed while logged in.
-  if (valid && isPublic && !pathname.startsWith('/commande')) {
-    return NextResponse.redirect(new URL('/', request.url));
+  // 2. Determine session validity
+  const isSessionValid = sessionData?.expiresAt && sessionData.expiresAt > Date.now() && sessionData.id;
+
+  // 3. Check if the current route is public
+  const isRoutePublic = isPublicRoute(pathname);
+
+  // 4. Handle invalid sessions
+  if (!isSessionValid) {
+    // If the route is protected, redirect to login and clear any bad cookie
+    if (!isRoutePublic) {
+      const response = NextResponse.redirect(new URL('/login', request.url));
+      response.cookies.delete(SESSION_COOKIE_NAME, { path: '/' });
+      return response;
+    }
+    // If the route is public, do nothing and let the user access it
+    return NextResponse.next();
   }
-  
-  // Otherwise, allow the request to proceed
+
+  // 5. Handle valid sessions
+  if (isSessionValid) {
+    // If the user is on a public-only route (like login), redirect them to the dashboard
+    if (pathname === '/login' || pathname === '/signup') {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+  }
+
+  // 6. For all other cases, allow the request to proceed
   return NextResponse.next();
 }
 
