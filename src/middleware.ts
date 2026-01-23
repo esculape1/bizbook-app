@@ -20,43 +20,35 @@ function isPublicRoute(pathname: string) {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  // 1. Get the session cookie
   const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
+  
   let sessionData;
   try {
     sessionData = sessionCookie ? JSON.parse(sessionCookie.value) : null;
-  } catch {
+  } catch (error) {
     sessionData = null;
   }
-
-  // 2. Determine session validity
+  
   const isSessionValid = sessionData?.expiresAt && sessionData.expiresAt > Date.now() && sessionData.id;
-
-  // 3. Check if the current route is public
   const isRoutePublic = isPublicRoute(pathname);
 
-  // 4. Handle invalid sessions
-  if (!isSessionValid) {
-    // If the route is protected, redirect to login and clear any bad cookie
-    if (!isRoutePublic) {
-      const response = NextResponse.redirect(new URL('/login', request.url));
-      response.cookies.delete(SESSION_COOKIE_NAME, { path: '/' });
-      return response;
-    }
-    // If the route is public, do nothing and let the user access it
-    return NextResponse.next();
+  // Scenario 1: User has an invalid session but is trying to access a protected route.
+  // Action: Redirect to login and clear the bad cookie.
+  if (!isSessionValid && !isRoutePublic) {
+    const response = NextResponse.redirect(new URL('/login', request.url));
+    // Corrected line: The delete method expects only one argument (the cookie name).
+    response.cookies.delete(SESSION_COOKIE_NAME);
+    return response;
   }
 
-  // 5. Handle valid sessions
-  if (isSessionValid) {
-    // If the user is on a public-only route (like login), redirect them to the dashboard
-    if (pathname === '/login' || pathname === '/signup') {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
+  // Scenario 2: User has a valid session but is on a public-only page like login/signup.
+  // Action: Redirect to the dashboard.
+  if (isSessionValid && (pathname === '/login' || pathname === '/signup')) {
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
-  // 6. For all other cases, allow the request to proceed
+  // Scenario 3: All other cases (valid session on protected route, invalid session on public route, etc.)
+  // Action: Allow the request to proceed.
   return NextResponse.next();
 }
 
