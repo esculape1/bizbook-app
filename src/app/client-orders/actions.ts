@@ -7,6 +7,7 @@ import { getSession } from '@/lib/session';
 import { ROLES, CLIENT_ORDER_STATUS } from '@/lib/constants';
 import { revalidateTag } from 'next/cache';
 import type { ClientOrder, InvoiceItem } from '@/lib/types';
+import { FieldValue } from 'firebase-admin/firestore';
 
 export async function convertOrderToInvoice(orderId: string): Promise<{ success: boolean; message?: string }> {
   const session = await getSession();

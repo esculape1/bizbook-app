@@ -82,7 +82,7 @@ export async function createInvoice(formData: unknown) {
         getInvoices(),
     ]);
 
-    const currentYear = 2026;
+    const currentYear = new Date().getFullYear();
     const invoiceNumber = `FACT-${currentYear}-${invoiceNumberSuffix}`;
 
     // Check for duplicate invoice number
