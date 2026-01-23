@@ -14,23 +14,20 @@ export default async function Home() {
     const user = await getSession();
     
     if (!user) {
-        redirect('/login');
+        return redirect('/login');
     }
 
     // Redirect users to their specific "home" page based on their role
     if (user.role === ROLES.ADMIN) {
         redirect('/purchases');
-    }
-    if (user.role === ROLES.USER) {
+    } else if (user.role === ROLES.USER) {
         redirect('/invoices');
-    }
-    
-    // Only SuperAdmins can see the dashboard
-    if (user.role !== ROLES.SUPER_ADMIN) {
-        // As a fallback, redirect non-super-admins who somehow land here
+    } else if (user.role !== ROLES.SUPER_ADMIN) {
+        // As a fallback for any other roles, redirect to login
         redirect('/login');
     }
 
+    // From here, only SuperAdmins can continue.
     const settings = await getSettings();
 
     // The check for settings is important. If it fails, something is wrong with the DB connection.
