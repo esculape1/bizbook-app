@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -7,11 +6,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { formatCurrency, cn } from '@/lib/utils';
-import { CheckCheck, Clock, FileSignature, Loader2 } from 'lucide-react';
+import { CheckCheck, Clock, FileSignature, Loader2, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { convertOrderToInvoice } from './actions';
 import { Badge } from '@/components/ui/badge';
 import { CLIENT_ORDER_STATUS, CLIENT_ORDER_STATUS_TRANSLATIONS } from '@/lib/constants';
+import { CancelClientOrderButton } from './CancelClientOrderButton';
 
 type ClientOrdersListProps = {
   orders: ClientOrder[];
@@ -69,6 +69,7 @@ function ConvertButton({ orderId }: { orderId: string }) {
 export function ClientOrdersList({ orders, settings }: ClientOrdersListProps) {
   const pendingOrders = orders.filter(o => o.status === CLIENT_ORDER_STATUS.PENDING);
   const processedOrders = orders.filter(o => o.status === CLIENT_ORDER_STATUS.PROCESSED);
+  const cancelledOrders = orders.filter(o => o.status === CLIENT_ORDER_STATUS.CANCELLED);
 
   const getStatusVariant = (status: ClientOrder['status']): "success" | "warning" | "destructive" | "outline" => {
     switch (status) {
@@ -77,6 +78,7 @@ export function ClientOrdersList({ orders, settings }: ClientOrdersListProps) {
       case 'Pending':
         return 'warning';
       case 'Cancelled':
+        return 'destructive';
       default:
         return 'outline';
     }
@@ -125,8 +127,9 @@ export function ClientOrdersList({ orders, settings }: ClientOrdersListProps) {
                                 </AccordionItem>
                             </Accordion>
                         </CardContent>
-                        <CardFooter>
+                        <CardFooter className="flex items-center justify-between">
                             <ConvertButton orderId={order.id} />
+                            <CancelClientOrderButton orderId={order.id} orderNumber={order.orderNumber} />
                         </CardFooter>
                     </Card>
                 )) : (
@@ -135,23 +138,48 @@ export function ClientOrdersList({ orders, settings }: ClientOrdersListProps) {
             </div>
         </div>
         <div>
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2"><CheckCheck className="text-emerald-500" /> Commandes traitées</h2>
-            <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
-                 {processedOrders.length > 0 ? processedOrders.map((order) => (
-                    <Card key={order.id} className="bg-muted/60">
-                        <CardHeader className="p-4">
-                             <div className="flex justify-between items-center">
-                                <div>
-                                    <p className="font-semibold">{order.orderNumber}</p>
-                                    <p className="text-xs text-muted-foreground">{order.clientName}</p>
-                                </div>
-                                <Badge variant={getStatusVariant(order.status)}>{CLIENT_ORDER_STATUS_TRANSLATIONS[order.status]}</Badge>
-                            </div>
-                        </CardHeader>
-                    </Card>
-                 )) : (
-                    <p className="text-muted-foreground text-center py-8">Aucune commande traitée pour le moment.</p>
-                 )}
+            <h2 className="text-xl font-semibold mb-4">Historique des Commandes</h2>
+            <div className="space-y-8">
+                <div>
+                    <h3 className="text-lg font-medium mb-2 flex items-center gap-2"><CheckCheck className="text-emerald-500" /> Commandes traitées</h3>
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                         {processedOrders.length > 0 ? processedOrders.map((order) => (
+                            <Card key={order.id} className="bg-muted/60">
+                                <CardHeader className="p-4">
+                                     <div className="flex justify-between items-center">
+                                        <div>
+                                            <p className="font-semibold">{order.orderNumber}</p>
+                                            <p className="text-xs text-muted-foreground">{order.clientName}</p>
+                                        </div>
+                                        <Badge variant={getStatusVariant(order.status)}>{CLIENT_ORDER_STATUS_TRANSLATIONS[order.status]}</Badge>
+                                    </div>
+                                </CardHeader>
+                            </Card>
+                         )) : (
+                            <p className="text-muted-foreground text-center py-8">Aucune commande traitée pour le moment.</p>
+                         )}
+                    </div>
+                </div>
+                <div>
+                    <h3 className="text-lg font-medium mb-2 flex items-center gap-2"><XCircle className="text-destructive" /> Commandes annulées</h3>
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                        {cancelledOrders.length > 0 ? cancelledOrders.map((order) => (
+                           <Card key={order.id} className="bg-muted/60 opacity-80">
+                               <CardHeader className="p-4">
+                                    <div className="flex justify-between items-center">
+                                       <div>
+                                           <p className="font-semibold text-muted-foreground line-through">{order.orderNumber}</p>
+                                           <p className="text-xs text-muted-foreground">{order.clientName}</p>
+                                       </div>
+                                       <Badge variant={getStatusVariant(order.status)}>{CLIENT_ORDER_STATUS_TRANSLATIONS[order.status]}</Badge>
+                                   </div>
+                               </CardHeader>
+                           </Card>
+                        )) : (
+                           <p className="text-muted-foreground text-center py-8">Aucune commande annulée.</p>
+                        )}
+                   </div>
+                </div>
             </div>
         </div>
     </div>

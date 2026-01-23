@@ -112,3 +112,36 @@ export async function convertOrderToInvoice(orderId: string): Promise<{ success:
     return { success: false, message };
   }
 }
+
+export async function cancelClientOrder(orderId: string): Promise<{ success: boolean; message?: string }> {
+  const session = await getSession();
+  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
+    return { success: false, message: "Action non autorisée." };
+  }
+
+  try {
+    if (!db) throw new Error("La connexion à la base de données a échoué.");
+    
+    const orderRef = db.collection('clientOrders').doc(orderId);
+    const orderDoc = await orderRef.get();
+    if (!orderDoc.exists) {
+      return { success: false, message: "Commande non trouvée." };
+    }
+
+    const orderData = orderDoc.data() as ClientOrder;
+    if (orderData.status !== CLIENT_ORDER_STATUS.PENDING) {
+      return { success: false, message: `Cette commande ne peut pas être annulée car son statut est "${orderData.status}".` };
+    }
+
+    await updateClientOrder(orderId, { status: CLIENT_ORDER_STATUS.CANCELLED });
+    
+    revalidateTag('client-orders');
+
+    return { success: true };
+
+  } catch (error) {
+    console.error('Failed to cancel client order:', error);
+    const message = error instanceof Error ? error.message : "Une erreur interne est survenue.";
+    return { success: false, message };
+  }
+}
