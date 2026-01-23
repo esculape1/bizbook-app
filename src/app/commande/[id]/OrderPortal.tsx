@@ -12,19 +12,13 @@ import { submitClientOrder } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 
-type OrderPortalProps = {
-  client: Client;
-  products: Product[];
-  settings: Settings;
-};
-
 const cardColors = [
-  "bg-sky-500/10 border-sky-500/20 text-sky-800 dark:text-sky-300",
-  "bg-emerald-500/10 border-emerald-500/20 text-emerald-800 dark:text-emerald-300",
-  "bg-amber-500/10 border-amber-500/20 text-amber-800 dark:text-amber-300",
-  "bg-rose-500/10 border-rose-500/20 text-rose-800 dark:text-rose-300",
-  "bg-violet-500/10 border-violet-500/20 text-violet-800 dark:text-violet-300",
-  "bg-teal-500/10 border-teal-500/20 text-teal-800 dark:text-teal-300",
+  "bg-sky-100 border-sky-200 text-sky-900 dark:bg-sky-900/40 dark:border-sky-800 dark:text-sky-200",
+  "bg-emerald-100 border-emerald-200 text-emerald-900 dark:bg-emerald-900/40 dark:border-emerald-800 dark:text-emerald-200",
+  "bg-amber-100 border-amber-200 text-amber-900 dark:bg-amber-900/40 dark:border-amber-800 dark:text-amber-200",
+  "bg-rose-100 border-rose-200 text-rose-900 dark:bg-rose-900/40 dark:border-rose-800 dark:text-rose-200",
+  "bg-violet-100 border-violet-200 text-violet-900 dark:bg-violet-900/40 dark:border-violet-800 dark:text-violet-200",
+  "bg-teal-100 border-teal-200 text-teal-900 dark:bg-teal-900/40 dark:border-teal-800 dark:text-teal-200",
 ];
 
 export function OrderPortal({ client, products, settings }: OrderPortalProps) {
@@ -106,9 +100,11 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
             </div>
           )}
           <div>
-            <CardTitle className="text-2xl">Portail de Commande Express</CardTitle>
-            <CardDescription className="text-lg text-foreground">
+            <CardTitle className="text-3xl">
               Bonjour, <span className="font-bold text-primary">{client.name}</span>
+            </CardTitle>
+            <CardDescription className="text-lg text-muted-foreground">
+              Portail de Commande Express
             </CardDescription>
           </div>
         </CardHeader>
@@ -127,18 +123,25 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProducts.map((product, index) => (
-          <Card key={product.id} className={cn("flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1", cardColors[index % cardColors.length])}>
+          <Card 
+            key={product.id} 
+            className={cn(
+              "flex flex-col justify-between transition-all duration-300",
+              cardColors[index % cardColors.length],
+              quantities[product.id] > 0 ? 'ring-2 ring-primary ring-offset-background scale-105 shadow-2xl' : 'hover:shadow-lg hover:-translate-y-1'
+            )}
+          >
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">{product.name}</CardTitle>
-              <CardDescription className="text-xs text-current/70">Réf: {product.reference}</CardDescription>
+              <CardTitle className="text-base font-bold">{product.name}</CardTitle>
+              <CardDescription className="text-xs text-current/80">Réf: {product.reference}</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="font-bold text-lg text-current">{formatCurrency(product.unitPrice, settings.currency)}</p>
+              <p className="font-extrabold text-xl text-current">{formatCurrency(product.unitPrice, settings.currency)}</p>
             </CardContent>
             <CardFooter>
-              <div className="flex items-center gap-3 w-full justify-center bg-background/50 rounded-full p-1">
+              <div className="flex items-center gap-3 w-full justify-center bg-background/50 rounded-full p-1 shadow-inner">
                 <Button 
                   variant="ghost" 
                   size="icon" 
