@@ -10,6 +10,7 @@ import { formatCurrency } from "@/lib/utils";
 import { OverdueInvoicesTable } from "@/components/dashboard/OverdueInvoicesTable";
 import { DateTimeDisplay } from "@/components/dashboard/DateTimeDisplay";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import type { Product, Invoice } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -119,7 +120,7 @@ export default async function DashboardPage() {
                     <CardTitle>Aperçu des Ventes (Exercice en cours)</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <SalesChart invoices={invoicesForFiscalYear} products={products} currency={settings.currency} />
+                    <SalesChart invoices={invoicesForFiscalYear} currency={settings.currency} />
                 </CardContent>
             </Card>
         </div>
