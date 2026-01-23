@@ -12,7 +12,7 @@ import { EditQuoteForm } from "./EditQuoteForm";
 import { DeleteQuoteButton } from "./DeleteQuoteButton";
 import { QuoteViewerDialog } from "./QuoteViewerDialog";
 import { Separator } from "@/components/ui/separator";
-import { AppLayout } from "@/components/AppLayout";
+import { AppLayout } from "@/app/AppLayout";
 import { redirect } from "next/navigation";
 import { ROLES, QUOTE_STATUS, QUOTE_STATUS_TRANSLATIONS } from "@/lib/constants";
 
@@ -31,7 +31,7 @@ async function DevisContent() {
     return null;
   }
 
-  const canEdit = user?.role === ROLES.ADMIN || user?.role === ROLES.SUPER_ADMIN;
+  const canEdit = user?.role === ROLES.SUPER_ADMIN || user?.role === ROLES.USER;
 
   const getStatusVariant = (status: Quote['status']): "outline" | "default" | "success" | "destructive" => {
     switch (status) {
@@ -144,7 +144,7 @@ export default async function DevisPage() {
     redirect('/login');
   }
   
-  const canEdit = user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN;
+  const canEdit = user.role === ROLES.SUPER_ADMIN || user.role === ROLES.USER;
 
   return (
     <AppLayout 

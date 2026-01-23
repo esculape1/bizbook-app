@@ -27,7 +27,7 @@ export type SettingsFormValues = z.infer<typeof settingsSchema>;
 
 export async function saveSettings(formData: SettingsFormValues) {
   const session = await getSession();
-  if (session?.role !== ROLES.ADMIN) {
+  if (session?.role !== ROLES.SUPER_ADMIN) {
     return { success: false, message: "Action non autorisée." };
   }
   

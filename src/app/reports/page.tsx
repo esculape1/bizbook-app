@@ -1,9 +1,10 @@
 
 import { getClients, getSettings } from '@/lib/data';
 import { ReportGenerator } from './ReportGenerator';
-import { AppLayout } from '@/components/AppLayout';
+import { AppLayout } from '@/app/AppLayout';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
+import { ROLES } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +26,10 @@ export default async function ReportsPage() {
 
   if (!user || !settings) {
     redirect('/login');
+  }
+
+  if (user.role !== ROLES.SUPER_ADMIN) {
+    redirect('/');
   }
 
   return (

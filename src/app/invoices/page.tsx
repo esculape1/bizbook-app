@@ -2,7 +2,7 @@
 import { getInvoices, getClients, getProducts, getSettings } from "@/lib/data";
 import { getSession } from "@/lib/session";
 import InvoicesList from "./InvoicesList";
-import { AppLayout } from "@/components/AppLayout";
+import { AppLayout } from "@/app/AppLayout";
 import { redirect } from "next/navigation";
 import { InvoiceForm } from "./InvoiceForm";
 import { ROLES } from "@/lib/constants";
@@ -47,7 +47,7 @@ export default async function InvoicesPage() {
         redirect('/login');
     }
     
-    const canEdit = user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN;
+    const canEdit = user.role === ROLES.SUPER_ADMIN || user.role === ROLES.USER;
 
     return (
         <AppLayout 

@@ -1,7 +1,7 @@
 
 import { getClientOrders, getSettings } from "@/lib/data";
 import { getSession } from "@/lib/session";
-import { AppLayout } from "@/components/AppLayout";
+import { AppLayout } from "@/app/AppLayout";
 import { redirect } from "next/navigation";
 import { ClientOrdersList } from "./ClientOrdersList";
 import { ROLES } from "@/lib/constants";
@@ -19,8 +19,7 @@ export default async function ClientOrdersPage() {
     redirect('/login');
   }
 
-  // Protect route for Admins and SuperAdmins
-  const canAccess = user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN;
+  const canAccess = user.role === ROLES.SUPER_ADMIN || user.role === ROLES.USER;
   if (!canAccess) {
     redirect('/');
   }

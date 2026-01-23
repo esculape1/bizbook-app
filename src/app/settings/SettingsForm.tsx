@@ -40,7 +40,7 @@ export function SettingsForm({ initialSettings, userRole }: { initialSettings: S
   const [logoPreview, setLogoPreview] = useState<string | null | undefined>(initialSettings.logoUrl);
   const [logoError, setLogoError] = useState<string | null>(null);
 
-  const canEdit = userRole === ROLES.ADMIN;
+  const canEdit = userRole === ROLES.SUPER_ADMIN;
 
   const form = useForm<SettingsClientFormValues>({
     resolver: zodResolver(formSchema),

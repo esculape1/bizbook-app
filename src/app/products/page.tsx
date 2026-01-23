@@ -10,7 +10,7 @@ import { StockInventoryReport } from "./StockInventoryReport";
 import { ProductQrCodeDialog } from "./ProductQrCodeDialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { AppLayout } from "@/components/AppLayout";
+import { AppLayout } from "@/app/AppLayout";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Pencil } from "lucide-react";
@@ -30,8 +30,8 @@ async function ProductsContent() {
     return null;
   }
 
-  const canManageProducts = user?.role === ROLES.ADMIN || user?.role === ROLES.SUPER_ADMIN;
-  const canViewPrices = user?.role === ROLES.SUPER_ADMIN || user?.role === ROLES.ADMIN;
+  const canManageProducts = user?.role === ROLES.SUPER_ADMIN || user?.role === ROLES.ADMIN || user?.role === ROLES.USER;
+  const canViewPrices = user?.role === ROLES.SUPER_ADMIN || user?.role === ROLES.ADMIN || user?.role === ROLES.USER;
 
   return (
     <>
@@ -153,7 +153,7 @@ export default async function ProductsPage() {
     redirect('/login');
   }
   
-  const canManageProducts = user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN;
+  const canManageProducts = user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN || user.role === ROLES.USER;
   
   return (
     <AppLayout 

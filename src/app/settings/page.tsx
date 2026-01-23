@@ -2,8 +2,9 @@
 import { getSettings } from '@/lib/data';
 import { SettingsForm } from './SettingsForm';
 import { getSession } from '@/lib/session';
-import { AppLayout } from '@/components/AppLayout';
+import { AppLayout } from '@/app/AppLayout';
 import { redirect } from 'next/navigation';
+import { ROLES } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +27,10 @@ export default async function SettingsPage() {
 
   if (!user || !settings) {
     redirect('/login');
+  }
+
+  if (user.role !== ROLES.SUPER_ADMIN) {
+    redirect('/');
   }
 
   return (

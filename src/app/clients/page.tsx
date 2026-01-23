@@ -2,7 +2,7 @@
 import { getClients } from "@/lib/data";
 import ClientsList from "./ClientsList";
 import { getSession } from "@/lib/session";
-import { AppLayout } from "@/components/AppLayout";
+import { AppLayout } from "@/app/AppLayout";
 import { getSettings } from "@/lib/data";
 import { redirect } from "next/navigation";
 import { ClientFormDialog } from "./ClientFormDialog";
@@ -23,7 +23,7 @@ export default async function ClientsPage() {
     redirect('/login');
   }
 
-  const canEdit = user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN;
+  const canEdit = user.role === ROLES.SUPER_ADMIN || user.role === ROLES.USER;
 
   return (
     <AppLayout 

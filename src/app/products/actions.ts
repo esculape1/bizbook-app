@@ -20,8 +20,8 @@ const productSchema = z.object({
 
 export async function createProduct(formData: unknown) {
   const session = await getSession();
-  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
-    return { message: "Action non autorisée. Seuls les administrateurs peuvent créer des produits." };
+  if (session?.role !== ROLES.SUPER_ADMIN && session?.role !== ROLES.ADMIN && session?.role !== ROLES.USER) {
+    return { message: "Action non autorisée." };
   }
 
   const validatedFields = productSchema.safeParse(formData);
@@ -46,8 +46,8 @@ export async function createProduct(formData: unknown) {
 
 export async function updateProduct(id: string, formData: unknown) {
     const session = await getSession();
-    if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
-      return { message: "Action non autorisée. Seuls les administrateurs peuvent modifier les produits." };
+    if (session?.role !== ROLES.SUPER_ADMIN && session?.role !== ROLES.ADMIN && session?.role !== ROLES.USER) {
+      return { message: "Action non autorisée." };
     }
     
     const validatedFields = productSchema.safeParse(formData);

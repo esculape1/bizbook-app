@@ -1,8 +1,8 @@
 
 export const ROLES = {
-  SUPER_ADMIN: 'SuperAdmin',
-  ADMIN: 'Admin',
-  USER: 'User',
+  SUPER_ADMIN: 'SuperAdmin', // Accès total
+  ADMIN: 'Admin',           // Rôle "Finance/Achats" : Fournisseurs, Achats, Dépenses, Règlements
+  USER: 'User',             // Rôle "Ventes" : Clients, Devis, Commandes, Facturation
 } as const;
 
 export type Role = typeof ROLES[keyof typeof ROLES];

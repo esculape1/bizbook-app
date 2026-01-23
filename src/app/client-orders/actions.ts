@@ -11,7 +11,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 
 export async function convertOrderToInvoice(orderId: string): Promise<{ success: boolean; message?: string }> {
   const session = await getSession();
-  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
+  if (session?.role !== ROLES.SUPER_ADMIN && session?.role !== ROLES.USER) {
     return { success: false, message: "Action non autorisée." };
   }
 
@@ -123,7 +123,7 @@ export async function convertOrderToInvoice(orderId: string): Promise<{ success:
 
 export async function cancelClientOrder(orderId: string): Promise<{ success: boolean; message?: string }> {
   const session = await getSession();
-  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
+  if (session?.role !== ROLES.SUPER_ADMIN && session?.role !== ROLES.USER) {
     return { success: false, message: "Action non autorisée." };
   }
 

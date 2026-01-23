@@ -4,8 +4,9 @@ import { AlertTriangle } from 'lucide-react';
 import { getSession } from '@/lib/session';
 import { getSettings } from '@/lib/data';
 import { redirect } from 'next/navigation';
-import { AppLayout } from '@/components/AppLayout';
+import { AppLayout } from '@/app/AppLayout';
 import DashboardPage from '@/components/dashboard/DashboardPage';
+import { ROLES } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +14,20 @@ export default async function Home() {
     const user = await getSession();
     
     if (!user) {
+        redirect('/login');
+    }
+
+    // Redirect users to their specific "home" page based on their role
+    if (user.role === ROLES.ADMIN) {
+        redirect('/purchases');
+    }
+    if (user.role === ROLES.USER) {
+        redirect('/invoices');
+    }
+    
+    // Only SuperAdmins can see the dashboard
+    if (user.role !== ROLES.SUPER_ADMIN) {
+        // As a fallback, redirect non-super-admins who somehow land here
         redirect('/login');
     }
 
