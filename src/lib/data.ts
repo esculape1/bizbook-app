@@ -185,6 +185,14 @@ export async function deleteProduct(id: string): Promise<void> {
     await productDocRef.delete();
 }
 
+export async function getProductsForOrderPortal(): Promise<Product[]> {
+    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+    const productsCol = db.collection('products');
+    const q = productsCol.orderBy('name');
+    const productSnapshot = await q.get();
+    return productSnapshot.docs.map(doc => docToObject<Product>(doc));
+}
+
 // QUOTES
 export const getQuotes = cache(
   async (): Promise<Quote[]> => {
@@ -542,6 +550,7 @@ export const getDashboardStats = cache(async () => {
 
     
     
+
 
 
 
