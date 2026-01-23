@@ -60,6 +60,21 @@ export const PURCHASE_STATUS_TRANSLATIONS: { [key in PurchaseStatus]: string } =
     [PURCHASE_STATUS.CANCELLED]: 'Annulé',
 };
 
+export const CLIENT_ORDER_STATUS = {
+  PENDING: 'Pending',
+  PROCESSED: 'Processed',
+  CANCELLED: 'Cancelled',
+} as const;
+
+export type ClientOrderStatus = typeof CLIENT_ORDER_STATUS[keyof typeof CLIENT_ORDER_STATUS];
+
+export const CLIENT_ORDER_STATUS_TRANSLATIONS: { [key in ClientOrderStatus]: string } = {
+    [CLIENT_ORDER_STATUS.PENDING]: 'En attente',
+    [CLIENT_ORDER_STATUS.PROCESSED]: 'Traité',
+    [CLIENT_ORDER_STATUS.CANCELLED]: 'Annulé',
+};
+
+
 export const PAYMENT_METHODS = {
   CASH: 'Espèces',
   TRANSFER: 'Virement bancaire',

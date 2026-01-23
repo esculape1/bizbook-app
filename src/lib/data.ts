@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
-import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User, UserWithPassword } from './types';
+import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User, UserWithPassword, ClientOrder } from './types';
 import { unstable_cache as cache } from 'next/cache';
 
 const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Veuillez vérifier la configuration de Firebase ou vos quotas d'utilisation.";
@@ -393,6 +393,24 @@ export async function deleteExpense(id: string): Promise<void> {
   await expenseDocRef.delete();
 }
 
+// CLIENT ORDERS
+export const getClientOrders = cache(
+  async (): Promise<ClientOrder[]> => {
+    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+    const ordersCol = db.collection('clientOrders');
+    const q = ordersCol.orderBy('date', 'desc');
+    const orderSnapshot = await q.get();
+    return orderSnapshot.docs.map(doc => docToObject<ClientOrder>(doc));
+  },
+  ['client-orders'],
+  { revalidate: REVALIDATION_TIME, tags: ['client-orders'] }
+);
+
+export async function updateClientOrder(id: string, data: Partial<Omit<ClientOrder, 'id'>>): Promise<void> {
+  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+  await db.collection('clientOrders').doc(id).set(data, { merge: true });
+}
+
 // SETTINGS
 const defaultSettings: Settings = {
   companyName: 'BizBook Inc.',
@@ -513,6 +531,7 @@ export const getDashboardStats = cache(async () => {
 
     
     
+
 
 
 

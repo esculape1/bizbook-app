@@ -6,16 +6,26 @@ import type { Client, Product, Settings } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { formatCurrency } from '@/lib/utils';
-import { MinusCircle, PlusCircle, Search, Send } from 'lucide-react';
+import { formatCurrency, cn } from '@/lib/utils';
+import { Minus, Plus, Search, Send, ShoppingCart } from 'lucide-react';
 import { submitClientOrder } from './actions';
 import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
 
 type OrderPortalProps = {
   client: Client;
   products: Product[];
   settings: Settings;
 };
+
+const cardColors = [
+  "bg-sky-500/10 border-sky-500/20 text-sky-800 dark:text-sky-300",
+  "bg-emerald-500/10 border-emerald-500/20 text-emerald-800 dark:text-emerald-300",
+  "bg-amber-500/10 border-amber-500/20 text-amber-800 dark:text-amber-300",
+  "bg-rose-500/10 border-rose-500/20 text-rose-800 dark:text-rose-300",
+  "bg-violet-500/10 border-violet-500/20 text-violet-800 dark:text-violet-300",
+  "bg-teal-500/10 border-teal-500/20 text-teal-800 dark:text-teal-300",
+];
 
 export function OrderPortal({ client, products, settings }: OrderPortalProps) {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -27,7 +37,6 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
     setQuantities(prev => {
       const currentQuantity = prev[productId] || 0;
       const newQuantity = Math.max(0, currentQuantity + change);
-      // If new quantity is 0, we can remove it from the state to keep it clean
       if (newQuantity === 0) {
         const { [productId]: _, ...rest } = prev;
         return rest;
@@ -46,12 +55,7 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
 
   const orderItems = useMemo(() => {
     return Object.entries(quantities).map(([productId, quantity]) => {
-      // The server action only needs the ID and quantity for security.
-      // The rest of the data (name, price) will be fetched on the server.
-      return {
-        productId,
-        quantity,
-      };
+      return { productId, quantity };
     });
   }, [quantities]);
 
@@ -91,67 +95,84 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-4 space-y-6 pb-24">
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-2xl">Portail de Commande Express</CardTitle>
-          <CardDescription className="text-lg">
-            Bonjour, <span className="font-bold text-primary">{client.name}</span>
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Rechercher un produit par nom ou référence..."
-              className="pl-10 w-full"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+    <div className="max-w-4xl mx-auto p-4 space-y-6 pb-28">
+      <Card className="shadow-lg border-primary/20 bg-gradient-to-br from-primary/10 via-background to-background">
+        <CardHeader className="flex flex-row items-center gap-4">
+          {settings.logoUrl ? (
+            <Image src={settings.logoUrl} alt="Logo" width={48} height={48} className="rounded-md" data-ai-hint="logo"/>
+          ) : (
+             <div className="p-3 rounded-lg bg-primary/20 text-primary">
+                <ShoppingCart className="h-6 w-6"/>
+            </div>
+          )}
+          <div>
+            <CardTitle className="text-2xl">Portail de Commande Express</CardTitle>
+            <CardDescription className="text-lg text-foreground">
+              Bonjour, <span className="font-bold text-primary">{client.name}</span>
+            </CardDescription>
           </div>
-        </CardContent>
+        </CardHeader>
       </Card>
       
-      <div className="space-y-3">
-        {filteredProducts.map(product => (
-          <Card key={product.id} className="flex items-center p-3">
-            <div className="flex-1">
-              <p className="font-semibold">{product.name}</p>
-              <p className="text-sm text-muted-foreground">Réf: {product.reference}</p>
-              <p className="font-bold text-primary">{formatCurrency(product.unitPrice, settings.currency)}</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="text-destructive rounded-full" 
-                onClick={() => handleQuantityChange(product.id, -1)}
-                disabled={!quantities[product.id]}
-              >
-                <MinusCircle />
-              </Button>
-              <span className="font-bold text-xl w-8 text-center">{quantities[product.id] || 0}</span>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="text-primary rounded-full" 
-                onClick={() => handleQuantityChange(product.id, 1)}
-              >
-                <PlusCircle />
-              </Button>
-            </div>
+      <div className="sticky top-4 z-10">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Rechercher un produit par nom ou référence..."
+            className="pl-10 w-full shadow-md h-12"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredProducts.map((product, index) => (
+          <Card key={product.id} className={cn("flex flex-col justify-between transition-all hover:shadow-lg hover:-translate-y-1", cardColors[index % cardColors.length])}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">{product.name}</CardTitle>
+              <CardDescription className="text-xs text-current/70">Réf: {product.reference}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="font-bold text-lg text-current">{formatCurrency(product.unitPrice, settings.currency)}</p>
+            </CardContent>
+            <CardFooter>
+              <div className="flex items-center gap-3 w-full justify-center bg-background/50 rounded-full p-1">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="text-destructive rounded-full h-8 w-8" 
+                  onClick={() => handleQuantityChange(product.id, -1)}
+                  disabled={!quantities[product.id]}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <span className="font-bold text-xl w-10 text-center text-foreground">{quantities[product.id] || 0}</span>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="text-primary rounded-full h-8 w-8" 
+                  onClick={() => handleQuantityChange(product.id, 1)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardFooter>
           </Card>
         ))}
         {filteredProducts.length === 0 && (
-          <p className="text-center text-muted-foreground py-8">Aucun produit ne correspond à votre recherche.</p>
+          <div className="col-span-full text-center text-muted-foreground py-16">
+            <p>Aucun produit ne correspond à votre recherche.</p>
+          </div>
         )}
       </div>
       
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm border-t">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <Button 
-            className="w-full text-lg h-14" 
+            className="w-full text-lg h-16 shadow-lg" 
+            size="lg"
             onClick={handleSubmit} 
             disabled={isPending || totalItemsInCart === 0}
           >
