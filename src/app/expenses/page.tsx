@@ -14,6 +14,7 @@ import { redirect } from "next/navigation";
 import { ROLES } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 
 export const dynamic = 'force-dynamic';
 
@@ -181,8 +182,7 @@ export default async function ExpensesPage() {
       user={user} 
       settings={settings}
     >
-       <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Dépenses</h1>
+       <PageHeader>
             {canEdit ? (
               <ExpenseFormDialog currency={settings.currency}>
                 <Button>
@@ -191,7 +191,7 @@ export default async function ExpensesPage() {
                 </Button>
               </ExpenseFormDialog>
             ) : undefined}
-        </div>
+        </PageHeader>
       <ExpensesContent />
     </AppLayout>
   );

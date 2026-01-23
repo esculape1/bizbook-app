@@ -15,6 +15,7 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Pencil } from "lucide-react";
 import { ROLES } from "@/lib/constants";
+import { PageHeader } from "@/components/PageHeader";
 
 export const dynamic = 'force-dynamic';
 
@@ -160,20 +161,17 @@ export default async function ProductsPage() {
       user={user} 
       settings={settings}
     >
-        <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Produits</h1>
-            <div className="flex items-center gap-2">
-                 <StockInventoryReport products={products} settings={settings} />
-                {canManageProducts && (
-                  <ProductFormDialog>
-                    <Button>
-                      <PlusCircle className="mr-2" />
-                      Ajouter un produit
-                    </Button>
-                  </ProductFormDialog>
-                )}
-            </div>
-        </div>
+      <PageHeader>
+        <StockInventoryReport products={products} settings={settings} />
+        {canManageProducts && (
+          <ProductFormDialog>
+            <Button>
+              <PlusCircle className="mr-2" />
+              Ajouter un produit
+            </Button>
+          </ProductFormDialog>
+        )}
+      </PageHeader>
       <ProductsContent />
     </AppLayout>
   );

@@ -29,9 +29,6 @@ export default async function ClientOrdersPage() {
       user={user}
       settings={settings}
     >
-        <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Commandes Clients</h1>
-        </div>
       <ClientOrdersList orders={orders} settings={settings} />
     </AppLayout>
   );

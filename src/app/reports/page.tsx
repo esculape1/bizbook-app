@@ -5,6 +5,7 @@ import { AppLayout } from '@/app/AppLayout';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import { ROLES } from '@/lib/constants';
+import { PageHeader } from '@/components/PageHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,7 +35,6 @@ export default async function ReportsPage() {
 
   return (
     <AppLayout user={user} settings={settings}>
-      <h1 className="text-2xl font-bold">Rapports</h1>
       <ReportsContent />
     </AppLayout>
   );

@@ -9,6 +9,7 @@ import { ClientFormDialog } from "./ClientFormDialog";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { ROLES } from "@/lib/constants";
+import { PageHeader } from "@/components/PageHeader";
 
 export const dynamic = 'force-dynamic';
 
@@ -30,17 +31,16 @@ export default async function ClientsPage() {
       user={user} 
       settings={settings}
     >
-        <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Clients</h1>
-            {canEdit && (
-              <ClientFormDialog>
-                <Button>
-                  <PlusCircle className="mr-2" />
-                  Ajouter un client
-                </Button>
-              </ClientFormDialog>
-            )}
-        </div>
+      <PageHeader>
+        {canEdit && (
+          <ClientFormDialog>
+            <Button>
+              <PlusCircle className="mr-2" />
+              Ajouter un client
+            </Button>
+          </ClientFormDialog>
+        )}
+      </PageHeader>
       <ClientsList clients={clients} userRole={user?.role} />
     </AppLayout>
   );

@@ -35,7 +35,6 @@ export default async function SettingsPage() {
 
   return (
     <AppLayout user={user} settings={settings}>
-        <h1 className="text-2xl font-bold">Paramètres</h1>
       <SettingsContent />
     </AppLayout>
   );

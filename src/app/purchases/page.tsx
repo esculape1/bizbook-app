@@ -1,5 +1,4 @@
 
-
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getPurchases, getSuppliers, getProducts, getSettings } from "@/lib/data";
@@ -17,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { AppLayout } from "@/components/AppLayout";
 import { redirect } from "next/navigation";
 import { ROLES } from "@/lib/constants";
+import { PageHeader } from "@/components/PageHeader";
 
 
 export const dynamic = 'force-dynamic';
@@ -178,21 +178,18 @@ export default async function PurchasesPage() {
 
   return (
     <AppLayout user={user} settings={settings}>
-        <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Achats</h1>
-            <div className="flex items-center gap-2">
-                {totalPendingAmount > 0 && (
-                    <div className="hidden md:flex p-2 rounded-lg bg-gradient-to-r from-lime-200 via-lime-300 to-lime-400 text-lime-900 shadow-sm items-center gap-2">
-                        <PackageSearch className="h-5 w-5" />
-                        <div className="text-right">
-                            <div className="text-xs font-medium">Achats en attente</div>
-                            <div className="text-base font-bold">{formatCurrency(totalPendingAmount, settings.currency)}</div>
-                        </div>
-                    </div>
-                )}
-                {canEdit && <PurchaseForm suppliers={suppliers} products={products} settings={settings} />}
+      <PageHeader>
+        {totalPendingAmount > 0 && (
+            <div className="hidden md:flex p-2 rounded-lg bg-gradient-to-r from-lime-200 via-lime-300 to-lime-400 text-lime-900 shadow-sm items-center gap-2">
+                <PackageSearch className="h-5 w-5" />
+                <div className="text-right">
+                    <div className="text-xs font-medium">Achats en attente</div>
+                    <div className="text-base font-bold">{formatCurrency(totalPendingAmount, settings.currency)}</div>
+                </div>
             </div>
-        </div>
+        )}
+        {canEdit && <PurchaseForm suppliers={suppliers} products={products} settings={settings} />}
+      </PageHeader>
       <PurchasesContent user={user} />
     </AppLayout>
   );

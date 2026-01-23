@@ -151,10 +151,9 @@ export default async function DevisPage() {
       user={user} 
       settings={settings}
     >
-       <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Proforma</h1>
-            {canEdit ? <QuoteForm clients={clients} products={products} settings={settings} /> : undefined}
-        </div>
+      <PageHeader>
+        {canEdit ? <QuoteForm clients={clients} products={products} settings={settings} /> : undefined}
+      </PageHeader>
       <DevisContent />
     </AppLayout>
   );

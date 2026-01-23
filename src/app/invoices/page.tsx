@@ -6,6 +6,7 @@ import { AppLayout } from "@/app/AppLayout";
 import { redirect } from "next/navigation";
 import { InvoiceForm } from "./InvoiceForm";
 import { ROLES } from "@/lib/constants";
+import { PageHeader } from "@/components/PageHeader";
 
 export const dynamic = 'force-dynamic';
 
@@ -54,11 +55,10 @@ export default async function InvoicesPage() {
           user={user} 
           settings={settings}
         >
-             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Factures</h1>
-                {canEdit ? <InvoiceForm clients={clients} products={products} settings={settings} /> : undefined}
-            </div>
-            <InvoicesDataWrapper />
+          <PageHeader>
+            {canEdit ? <InvoiceForm clients={clients} products={products} settings={settings} /> : undefined}
+          </PageHeader>
+          <InvoicesDataWrapper />
         </AppLayout>
     );
 }

@@ -9,6 +9,7 @@ import { SupplierFormDialog } from "./SupplierFormDialog";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { ROLES } from "@/lib/constants";
+import { PageHeader } from "@/components/PageHeader";
 
 export const dynamic = 'force-dynamic';
 
@@ -30,8 +31,7 @@ export default async function SuppliersPage() {
       user={user} 
       settings={settings}
     >
-        <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Fournisseurs</h1>
+        <PageHeader>
             {canEdit && (
               <SupplierFormDialog>
                 <Button>
@@ -40,7 +40,7 @@ export default async function SuppliersPage() {
                 </Button>
               </SupplierFormDialog>
             )}
-        </div>
+        </PageHeader>
       <SuppliersList suppliers={suppliers} userRole={user?.role} />
     </AppLayout>
   );
