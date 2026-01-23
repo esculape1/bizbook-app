@@ -216,12 +216,12 @@ export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>): Pr
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
     const quotesCol = db.collection('quotes');
     
-    const currentYear = 2026;
-    const prefix = `PRO${currentYear}`;
+    const currentYear = new Date().getFullYear();
+    const prefix = `PRO${currentYear}-`;
 
     const q = quotesCol
         .where('quoteNumber', '>=', prefix)
-        .where('quoteNumber', '<', `PRO${currentYear + 1}`)
+        .where('quoteNumber', '<', `PRO${currentYear + 1}-`)
         .orderBy('quoteNumber', 'desc')
         .limit(1);
 
@@ -236,7 +236,7 @@ export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>): Pr
         }
     }
 
-    const newQuoteNumber = `${prefix}-${(latestNumber + 1).toString().padStart(3, '0')}`;
+    const newQuoteNumber = `${prefix}${(latestNumber + 1).toString().padStart(3, '0')}`;
 
     const newQuoteData: Omit<Quote, 'id'> = {
         ...quoteData,
@@ -336,7 +336,16 @@ export const getPurchaseById = cache(
 export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'purchaseNumber'>): Promise<Purchase> {
     if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
     const purchasesCol = db.collection('purchases');
-    const q = purchasesCol.orderBy('purchaseNumber', 'desc').limit(1);
+
+    const currentYear = new Date().getFullYear();
+    const prefix = `ACH${currentYear}-`;
+
+    const q = purchasesCol
+        .where('purchaseNumber', '>=', prefix)
+        .where('purchaseNumber', '<', `ACH${currentYear + 1}-`)
+        .orderBy('purchaseNumber', 'desc')
+        .limit(1);
+
     const latestPurchaseSnap = await q.get();
     
     let latestPurchaseNumber = 0;
@@ -347,9 +356,11 @@ export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'purchaseN
         }
     }
 
+    const newPurchaseNumber = `${prefix}${(latestPurchaseNumber + 1).toString().padStart(3, '0')}`;
+
     const newPurchaseData: Omit<Purchase, 'id'> = {
         ...purchaseData,
-        purchaseNumber: `ACH2026-${(latestPurchaseNumber + 1).toString().padStart(3, '0')}`,
+        purchaseNumber: newPurchaseNumber,
     };
     const docRef = await purchasesCol.add(newPurchaseData);
     return { id: docRef.id, ...newPurchaseData };
@@ -531,6 +542,7 @@ export const getDashboardStats = cache(async () => {
 
     
     
+
 
 
 

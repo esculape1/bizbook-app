@@ -24,7 +24,13 @@ const cardColors = [
 
 type EnrichedProduct = Product & { quantity: number; total: number };
 
-export function OrderPortal({ client, products, settings }: { client: Client; products: Product[]; settings: Settings; }) {
+type OrderPortalProps = { 
+  client: Client; 
+  products: Product[]; 
+  settings: Settings; 
+};
+
+export function OrderPortal({ client, products, settings }: OrderPortalProps) {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [isPending, startTransition] = useTransition();
@@ -119,9 +125,13 @@ export function OrderPortal({ client, products, settings }: { client: Client; pr
           title: 'Commande envoyée !',
           description: 'Votre demande de commande a bien été reçue.',
         });
-        setQuantities({});
-        setSearchTerm('');
-        setSheetOpen(false);
+        setSheetOpen(false); // Close the sheet immediately
+        
+        // Give the toast a moment to be seen before reloading the page to prevent client-side errors.
+        setTimeout(() => {
+            window.location.reload();
+        }, 1500);
+
       } else {
         toast({
           variant: 'destructive',
@@ -136,7 +146,7 @@ export function OrderPortal({ client, products, settings }: { client: Client; pr
     <div className="max-w-4xl mx-auto p-4 space-y-6 pb-28">
       <Card className="shadow-lg border-primary/20 bg-gradient-to-br from-primary to-sky-400 text-white overflow-hidden">
         <CardHeader className="relative p-6">
-            {settings.logoUrl ? (
+            {settings.logoUrl && (
                 <Image 
                     src={settings.logoUrl} 
                     alt="Logo" 
@@ -145,10 +155,6 @@ export function OrderPortal({ client, products, settings }: { client: Client; pr
                     className="absolute top-4 right-4 rounded-md opacity-80" 
                     data-ai-hint="logo"
                 />
-            ) : (
-                <div className="absolute top-4 right-4 p-2 rounded-lg bg-white/20">
-                    <ShoppingCart className="h-5 w-5"/>
-                </div>
             )}
             <div className="pr-12">
                 <CardTitle className="text-4xl font-bold drop-shadow-md">
