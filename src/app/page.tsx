@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation';
 import { AppLayout } from '@/app/AppLayout';
 import DashboardPage from '@/components/dashboard/DashboardPage';
 import { ROLES } from '@/lib/constants';
+import { WelcomePage } from '@/components/WelcomePage';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,24 +18,8 @@ export default async function Home() {
         return redirect('/login');
     }
 
-    // Redirect users to their specific "home" page based on their role
-    switch (user.role) {
-      case ROLES.ADMIN:
-        return redirect('/purchases');
-      case ROLES.USER:
-        return redirect('/invoices');
-      case ROLES.SUPER_ADMIN:
-        // SuperAdmin stays on the dashboard, so we break to continue execution.
-        break;
-      default:
-        // Any other role is invalid and should be logged out.
-        return redirect('/login');
-    }
-
-    // From here, only SuperAdmins can continue.
     const settings = await getSettings();
 
-    // The check for settings is important. If it fails, something is wrong with the DB connection.
     if (!settings) {
         return (
             <div className="flex h-screen items-center justify-center">
@@ -49,9 +34,24 @@ export default async function Home() {
         );
     }
     
+    const renderContent = () => {
+        switch (user.role) {
+            case ROLES.SUPER_ADMIN:
+                return <DashboardPage />;
+            case ROLES.ADMIN:
+            case ROLES.USER:
+                return <WelcomePage user={user} />;
+            default:
+                // Any other role is invalid and should be logged out.
+                // This is a safeguard, as getSession should ideally handle this.
+                redirect('/login');
+                return null;
+        }
+    };
+    
     return (
         <AppLayout user={user} settings={settings}>
-            <DashboardPage />
+            {renderContent()}
         </AppLayout>
     );
 }
