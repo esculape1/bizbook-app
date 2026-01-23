@@ -1,2 +1,2 @@
-// This configuration file is deprecated.
-// The primary configuration is now at the project root in /next.config.js
+// This file is deprecated and has been intentionally emptied.
+// The primary configuration is at the project root in /next.config.js
