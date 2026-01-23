@@ -62,12 +62,25 @@ export async function generateReport(
 
         activeInvoices.forEach(inv => {
             inv.items.forEach(item => {
-                const product = allProducts.find(p => p.id === item.productId);
-                
-                const itemCost = item.purchasePrice ?? product?.purchasePrice ?? 0;
+                let itemCost = 0;
+                if (item.purchasePrice !== undefined && item.purchasePrice !== null) {
+                    // 1. Best case: historical purchase price was stored.
+                    itemCost = item.purchasePrice;
+                } else {
+                    // 2. Fallback: Estimate historical cost based on current margin.
+                    const product = allProducts.find(p => p.id === item.productId);
+                    if (product && product.unitPrice > 0 && product.purchasePrice >= 0) {
+                        // This ratio represents (cost / price).
+                        const currentCostToPriceRatio = product.purchasePrice / product.unitPrice;
+                        // Assumes the margin percentage has been stable over time.
+                        const estimatedCost = item.unitPrice * currentCostToPriceRatio;
+                        itemCost = isNaN(estimatedCost) ? 0 : estimatedCost;
+                    } 
+                    // 3. Worst case is implicitly handled as itemCost remains 0.
+                    // This is much safer than using a potentially wrong, large current purchase price.
+                }
                 costOfGoodsSold += itemCost * item.quantity;
                 
-                // Use a compound key to differentiate items with the same name but different prices/units
                 const uniqueKey = `${item.productName}::${item.unitPrice}`;
                 
                 if (!productSales[uniqueKey]) {
