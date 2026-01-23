@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/lib/firebase-admin';
-import { getInvoices, addInvoice, updateProduct, updateClientOrder } from '@/lib/data';
+import { getInvoices, addInvoice, updateProduct, updateClientOrder, getProducts } from '@/lib/data';
 import { getSession } from '@/lib/session';
 import { ROLES, CLIENT_ORDER_STATUS } from '@/lib/constants';
 import { revalidateTag } from 'next/cache';
@@ -22,7 +22,11 @@ export async function convertOrderToInvoice(orderId: string): Promise<{ success:
   const orderRef = db.collection('clientOrders').doc(orderId);
 
   try {
-    const orderDoc = await orderRef.get();
+    const [orderDoc, allProducts] = await Promise.all([
+        orderRef.get(),
+        getProducts()
+    ]);
+    
     if (!orderDoc.exists) {
       return { success: false, message: "Commande non trouvée." };
     }
@@ -34,14 +38,18 @@ export async function convertOrderToInvoice(orderId: string): Promise<{ success:
     }
 
     // Map ClientOrderItems to InvoiceItems
-    const invoiceItems: InvoiceItem[] = order.items.map(item => ({
-      productId: item.productId,
-      productName: item.productName,
-      reference: item.reference,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      total: item.total,
-    }));
+    const invoiceItems: InvoiceItem[] = order.items.map(item => {
+        const product = allProducts.find(p => p.id === item.productId);
+        return {
+            productId: item.productId,
+            productName: item.productName,
+            reference: item.reference,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.total,
+            purchasePrice: product?.purchasePrice ?? 0,
+        };
+    });
 
     // Generate the next sequential invoice number
     const allInvoices = await getInvoices();

@@ -67,6 +67,7 @@ export type InvoiceItem = {
   quantity: number;
   unitPrice: number;
   total: number;
+  purchasePrice?: number;
 };
 
 export type QuoteItem = {

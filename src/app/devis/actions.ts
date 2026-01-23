@@ -187,14 +187,18 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
     // Create invoice if status changed to 'Accepted'
     if (status === QUOTE_STATUS.ACCEPTED && originalQuote.status !== QUOTE_STATUS.ACCEPTED) {
       // Use the unit prices from the accepted quote, not the default product prices
-      const invoiceItems: InvoiceItem[] = quoteItems.map(item => ({ 
+      const invoiceItems: InvoiceItem[] = quoteItems.map(item => {
+        const product = products.find(p => p.id === item.productId);
+        return {
           productId: item.productId,
           productName: item.productName,
           reference: item.reference,
           quantity: item.quantity,
           unitPrice: item.unitPrice, // Important: use the price from the quote
           total: item.total,
-      }));
+          purchasePrice: product?.purchasePrice ?? 0,
+        };
+      });
       
       // Get the next sequential invoice number
       const allInvoices = await getInvoices();

@@ -65,6 +65,11 @@ export async function generateReport(
             inv.items.forEach(item => {
                 const product = allProducts.find(p => p.id === item.productId);
                 
+                // Use the purchase price stored with the invoice item for accuracy.
+                // For older invoices, fall back to the product's current purchase price.
+                const itemCost = item.purchasePrice ?? product?.purchasePrice ?? 0;
+                costOfGoodsSold += itemCost * item.quantity;
+                
                 if (!productSales[item.productId]) {
                     productSales[item.productId] = { 
                         productName: item.productName, 
@@ -75,10 +80,6 @@ export async function generateReport(
                 }
                 productSales[item.productId].quantitySold += item.quantity;
                 productSales[item.productId].totalValue += item.total;
-                
-                if (product) {
-                    costOfGoodsSold += (product.purchasePrice || 0) * item.quantity;
-                }
             });
         });
         

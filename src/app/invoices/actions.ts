@@ -114,6 +114,7 @@ export async function createInvoice(formData: unknown) {
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         total: item.quantity * item.unitPrice,
+        purchasePrice: product.purchasePrice ?? 0,
       });
     }
 
@@ -237,6 +238,7 @@ export async function updateInvoice(id: string, formData: unknown) {
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             total: item.quantity * item.unitPrice,
+            purchasePrice: product.purchasePrice ?? 0,
         });
     }
 
