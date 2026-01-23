@@ -12,12 +12,12 @@ import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 
 const cardColors = [
-  "bg-sky-100 border-sky-200 text-sky-900 dark:bg-sky-900/40 dark:border-sky-800 dark:text-sky-200",
-  "bg-emerald-100 border-emerald-200 text-emerald-900 dark:bg-emerald-900/40 dark:border-emerald-800 dark:text-emerald-200",
-  "bg-amber-100 border-amber-200 text-amber-900 dark:bg-amber-900/40 dark:border-amber-800 dark:text-amber-200",
-  "bg-rose-100 border-rose-200 text-rose-900 dark:bg-rose-900/40 dark:border-rose-800 dark:text-rose-200",
-  "bg-violet-100 border-violet-200 text-violet-900 dark:bg-violet-900/40 dark:border-violet-800 dark:text-violet-200",
-  "bg-teal-100 border-teal-200 text-teal-900 dark:bg-teal-900/40 dark:border-teal-800 dark:text-teal-200",
+  "bg-sky-500/10 border-sky-500/20 text-sky-800",
+  "bg-emerald-500/10 border-emerald-500/20 text-emerald-800",
+  "bg-amber-500/10 border-amber-500/20 text-amber-800",
+  "bg-rose-500/10 border-rose-500/20 text-rose-800",
+  "bg-violet-500/10 border-violet-500/20 text-violet-800",
+  "bg-teal-500/10 border-teal-500/20 text-teal-800",
 ];
 
 type OrderPortalProps = {
@@ -42,6 +42,26 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
       }
       return { ...prev, [productId]: newQuantity };
     });
+  };
+
+  const handleQuantityInputChange = (productId: string, value: string) => {
+    const newQuantity = parseInt(value, 10);
+    // Allow setting quantity to 0 by typing
+    if (!isNaN(newQuantity) && newQuantity >= 0) {
+      setQuantities(prev => {
+        if (newQuantity === 0) {
+          const { [productId]: _, ...rest } = prev;
+          return rest;
+        }
+        return { ...prev, [productId]: newQuantity };
+      });
+    } else if (value === '') {
+      // When user clears the input, remove from quantities
+      setQuantities(prev => {
+        const { [productId]: _, ...rest } = prev;
+        return rest;
+      });
+    }
   };
 
   const filteredProducts = useMemo(() => {
@@ -95,23 +115,30 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6 pb-28">
-      <Card className="shadow-lg border-primary/20 bg-gradient-to-br from-primary/10 via-background to-background">
-        <CardHeader className="flex flex-row items-center gap-4">
-          {settings.logoUrl ? (
-            <Image src={settings.logoUrl} alt="Logo" width={48} height={48} className="rounded-md" data-ai-hint="logo"/>
-          ) : (
-             <div className="p-3 rounded-lg bg-primary/20 text-primary">
-                <ShoppingCart className="h-6 w-6"/>
+      <Card className="shadow-lg border-primary/20 bg-gradient-to-br from-primary to-sky-400 text-white overflow-hidden">
+        <CardHeader className="relative p-6">
+            {settings.logoUrl ? (
+                <Image 
+                    src={settings.logoUrl} 
+                    alt="Logo" 
+                    width={40} 
+                    height={40} 
+                    className="absolute top-4 right-4 rounded-md opacity-80" 
+                    data-ai-hint="logo"
+                />
+            ) : (
+                <div className="absolute top-4 right-4 p-2 rounded-lg bg-white/20">
+                    <ShoppingCart className="h-5 w-5"/>
+                </div>
+            )}
+            <div className="pr-12">
+                <CardTitle className="text-4xl font-bold drop-shadow-md">
+                    Bonjour, <span className="font-extrabold">{client.name}</span>
+                </CardTitle>
+                <CardDescription className="text-lg text-white/90 mt-1">
+                    Portail de Commande Express
+                </CardDescription>
             </div>
-          )}
-          <div>
-            <CardTitle className="text-3xl">
-              Bonjour, <span className="font-bold text-primary">{client.name}</span>
-            </CardTitle>
-            <CardDescription className="text-lg text-muted-foreground">
-              Portail de Commande Express
-            </CardDescription>
-          </div>
         </CardHeader>
       </Card>
       
@@ -146,7 +173,7 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
               <p className="font-extrabold text-xl text-current">{formatCurrency(product.unitPrice, settings.currency)}</p>
             </CardContent>
             <CardFooter>
-              <div className="flex items-center gap-3 w-full justify-center bg-background/50 rounded-full p-1 shadow-inner">
+              <div className="flex items-center gap-2 w-full justify-center bg-background/50 rounded-full p-1 shadow-inner">
                 <Button 
                   variant="ghost" 
                   size="icon" 
@@ -156,7 +183,14 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
-                <span className="font-bold text-xl w-10 text-center text-foreground">{quantities[product.id] || 0}</span>
+                <Input
+                  type="number"
+                  className="w-14 h-9 text-center font-bold text-lg border-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
+                  value={quantities[product.id] || ''}
+                  placeholder="0"
+                  onChange={(e) => handleQuantityInputChange(product.id, e.target.value)}
+                  min="0"
+                />
                 <Button 
                   variant="ghost" 
                   size="icon" 
