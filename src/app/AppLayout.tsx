@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -153,7 +152,9 @@ export function AppLayout({
           </Sheet>
           
           <div className="w-full flex-1">
-             {/* Le titre a été enlevé pour un design plus épuré */}
+             <h1 className="hidden md:block text-lg font-semibold text-muted-foreground">
+                Bienvenue, {user.name} !
+              </h1>
           </div>
           
           <DropdownMenu>

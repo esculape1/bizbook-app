@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -38,18 +37,18 @@ import { signOut } from '@/app/auth/actions';
 import { ROLES } from '@/lib/constants';
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
-  { href: '/clients', label: 'Clients', icon: Users, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
-  { href: '/suppliers', label: 'Fournisseurs', icon: Briefcase, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
-  { href: '/purchases', label: 'Achats', icon: ShoppingCart, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: [ROLES.SUPER_ADMIN] },
+  { href: '/clients', label: 'Clients', icon: Users, roles: [ROLES.SUPER_ADMIN, ROLES.USER] },
+  { href: '/suppliers', label: 'Fournisseurs', icon: Briefcase, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN] },
+  { href: '/purchases', label: 'Achats', icon: ShoppingCart, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN] },
   { href: '/products', label: 'Produits', icon: Box, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
-  { href: '/devis', label: 'Proforma', icon: FileClock, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
-  { href: '/client-orders', label: 'Commandes Clients', icon: PackageSearch, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN] },
+  { href: '/devis', label: 'Proforma', icon: FileClock, roles: [ROLES.SUPER_ADMIN, ROLES.USER] },
+  { href: '/client-orders', label: 'Commandes Clients', icon: PackageSearch, roles: [ROLES.SUPER_ADMIN, ROLES.USER] },
   { href: '/invoices', label: 'Factures', icon: FileText, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
   { href: '/settlements', label: 'Règlements', icon: CreditCard, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN] },
-  { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
-  { href: '/reports', label: 'Rapports', icon: BarChart3, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
-  { href: '/settings', label: 'Paramètres', icon: Settings, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
+  { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN] },
+  { href: '/reports', label: 'Rapports', icon: BarChart3, roles: [ROLES.SUPER_ADMIN] },
+  { href: '/settings', label: 'Paramètres', icon: Settings, roles: [ROLES.SUPER_ADMIN] },
 ];
 
 export function AppLayout({ 
@@ -153,7 +152,9 @@ export function AppLayout({
           </Sheet>
           
           <div className="w-full flex-1">
-             {/* Le titre a été enlevé pour un design plus épuré */}
+             <h1 className="hidden md:block text-lg font-semibold text-muted-foreground">
+                Bienvenue, {user.name} !
+              </h1>
           </div>
           
           <DropdownMenu>
