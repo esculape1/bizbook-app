@@ -18,13 +18,17 @@ export default async function Home() {
     }
 
     // Redirect users to their specific "home" page based on their role
-    if (user.role === ROLES.ADMIN) {
-        redirect('/purchases');
-    } else if (user.role === ROLES.USER) {
-        redirect('/invoices');
-    } else if (user.role !== ROLES.SUPER_ADMIN) {
-        // As a fallback for any other roles, redirect to login
-        redirect('/login');
+    switch (user.role) {
+      case ROLES.ADMIN:
+        return redirect('/purchases');
+      case ROLES.USER:
+        return redirect('/invoices');
+      case ROLES.SUPER_ADMIN:
+        // SuperAdmin stays on the dashboard, so we break to continue execution.
+        break;
+      default:
+        // Any other role is invalid and should be logged out.
+        return redirect('/login');
     }
 
     // From here, only SuperAdmins can continue.
