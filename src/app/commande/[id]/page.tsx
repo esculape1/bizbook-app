@@ -1,6 +1,6 @@
 
 
-import { getClientById, getProductsForOrderPortal, getSettings } from "@/lib/data";
+import { getClientById, getProducts, getSettings } from "@/lib/data";
 import { notFound } from 'next/navigation';
 import { OrderPortal } from "./OrderPortal";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -13,7 +13,7 @@ export default async function OrderPage({ params }: { params: { id: string } }) 
   
   const [client, products, settings] = await Promise.all([
     getClientById(id),
-    getProductsForOrderPortal(),
+    getProducts(),
     getSettings()
   ]);
 
