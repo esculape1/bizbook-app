@@ -125,11 +125,19 @@ export default async function DashboardPage() {
             </Card>
         </div>
         
-        <div className="lg:col-span-1 space-y-6 flex flex-col">
-          <OverdueInvoicesTable invoices={invoices} settings={settings} />
+        <div className="lg:col-span-1">
           <LowStockTable products={products} />
         </div>
       </div>
+      
+      <Card className="bg-yellow-500/5">
+        <CardHeader className="text-center">
+            <CardTitle>Clients avec Factures Échues</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <OverdueInvoicesTable invoices={invoices} settings={settings} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

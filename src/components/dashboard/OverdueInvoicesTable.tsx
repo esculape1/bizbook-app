@@ -3,7 +3,7 @@
 
 import type { Invoice, Settings } from "@/lib/types";
 import { parseISO } from 'date-fns';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { cn, formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 
@@ -49,32 +49,27 @@ export function OverdueInvoicesTable({ invoices, settings }: { invoices: Invoice
     "bg-teal-500/10 border-teal-500/20 text-teal-900",
   ];
 
+  if (clientsWithOverdue.length === 0) {
+    return (
+        <p className="text-sm text-muted-foreground text-center py-8">Aucune facture échue. Excellent suivi !</p>
+    );
+  }
+
   return (
-    <Card className="bg-yellow-500/5">
-        <CardHeader className="text-center">
-            <CardTitle>Clients avec Factures Échues</CardTitle>
-        </CardHeader>
-        <CardContent>
-            {clientsWithOverdue.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center pt-12 pb-12">Aucune facture échue. Excellent suivi !</p>
-            ) : (
-                <div className="space-y-3 overflow-auto max-h-80 pr-2">
-                    {clientsWithOverdue.map((client, index) => (
-                        <Card key={client.clientId} className={cn("shadow-md transition-transform hover:scale-105", cardColors[index % cardColors.length])}>
-                           <CardContent className="p-3">
-                               <div className="flex justify-between items-start">
-                                   <div className="flex-1 mr-2">
-                                       <p className="font-bold text-sm text-current truncate">{client.clientName}</p>
-                                       <p className="text-lg font-extrabold text-destructive">{formatCurrency(client.totalDue, settings.currency)}</p>
-                                   </div>
-                                   <Badge variant="destructive" className="flex-shrink-0">{client.count} {client.count > 1 ? 'factures' : 'facture'}</Badge>
-                               </div>
-                           </CardContent>
-                        </Card>
-                    ))}
-                </div>
-            )}
-        </CardContent>
-    </Card>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {clientsWithOverdue.map((client, index) => (
+            <Card key={client.clientId} className={cn("shadow-md transition-transform hover:scale-105", cardColors[index % cardColors.length])}>
+               <CardContent className="p-4">
+                   <div className="flex justify-between items-start">
+                       <div className="flex-1 mr-2">
+                           <p className="font-bold text-sm text-current truncate">{client.clientName}</p>
+                           <p className="text-xl font-extrabold text-destructive">{formatCurrency(client.totalDue, settings.currency)}</p>
+                       </div>
+                       <Badge variant="destructive" className="flex-shrink-0">{client.count} {client.count > 1 ? 'factures' : 'facture'}</Badge>
+                   </div>
+               </CardContent>
+            </Card>
+        ))}
+    </div>
   );
 }
