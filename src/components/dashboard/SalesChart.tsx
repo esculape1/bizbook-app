@@ -25,25 +25,27 @@ type SalesChartProps = {
 }
 
 export function SalesChart({ invoices, currency }: SalesChartProps) {
-    const salesByProductAndPrice: { [key: string]: { name: string; revenue: number } } = {};
+    const salesByProductRef: { [key: string]: { name: string; productName: string; revenue: number } } = {};
 
     invoices
         .filter(inv => inv.status !== 'Cancelled')
         .flatMap(inv => inv.items)
         .forEach(item => {
-            const displayName = `${item.productName} (${formatCurrency(item.unitPrice, currency)})`;
+            // Group by product reference to have shorter labels, as requested.
+            const refKey = item.reference;
             
-            if (!salesByProductAndPrice[displayName]) {
-                salesByProductAndPrice[displayName] = {
-                    name: displayName,
+            if (!salesByProductRef[refKey]) {
+                salesByProductRef[refKey] = {
+                    name: refKey, // This is the reference for the Y-axis label
+                    productName: item.productName, // The full name for the tooltip
                     revenue: 0,
                 };
             }
-            salesByProductAndPrice[displayName].revenue += item.total;
+            salesByProductRef[refKey].revenue += item.total;
         });
 
-    // Sort descending by revenue to show the highest earning products first, and take the top 15.
-    const salesData = Object.values(salesByProductAndPrice)
+    // Sort descending by revenue and take top 15.
+    const salesData = Object.values(salesByProductRef)
         .filter(p => p.revenue > 0)
         .sort((a, b) => b.revenue - a.revenue)
         .slice(0, 15);
@@ -51,7 +53,6 @@ export function SalesChart({ invoices, currency }: SalesChartProps) {
     const renderCustomizedLabel = (props: any) => {
         const { x, y, width, height, value } = props;
         
-        // Always render the label outside, to the right of the bar.
         return (
              <text 
                 x={x + width + 5} 
@@ -73,32 +74,32 @@ export function SalesChart({ invoices, currency }: SalesChartProps) {
             <BarChart
                 data={salesData}
                 layout="vertical"
-                margin={{ top: 5, right: 120, left: 10, bottom: 5 }}
+                margin={{ top: 5, right: 100, left: 5, bottom: 5 }} // Reduced margins for mobile
             >
             <XAxis type="number" hide />
             <YAxis
-                dataKey="name"
+                dataKey="name" // Now displays the product reference
                 type="category"
                 tickLine={false}
                 axisLine={false}
                 stroke="hsl(var(--muted-foreground))"
                 fontSize={12}
                 tickFormatter={(value) =>
-                    value.length > 40 ? value.slice(0, 40) + '...' : value
+                    value.length > 12 ? value.slice(0, 12) + '…' : value // Truncate long references
                 }
-                width={250}
-                // Reversing the axis ensures that the first item in our sorted data (the largest) appears at the top.
+                width={80} // Reduced width for shorter labels
                 reversed={true}
             />
             <Tooltip
                 cursor={{ fill: 'hsl(var(--muted))' }}
                 content={<ChartTooltipContent formatter={(value, name, props) => {
                     return (
-                        <div className="flex flex-col">
-                        <span className="font-medium text-foreground">{props.payload.name}</span>
-                        <span className="text-sm text-muted-foreground">
-                            {formatCurrency(Number(value), currency)}
-                        </span>
+                        <div className="flex flex-col p-1">
+                            <span className="font-bold text-foreground">{props.payload.productName}</span>
+                            <span className="text-sm text-muted-foreground">Réf: {props.payload.name}</span>
+                            <span className="font-semibold text-foreground mt-2">
+                                {formatCurrency(Number(value), currency)}
+                            </span>
                         </div>
                     );
                 }} />}
