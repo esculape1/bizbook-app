@@ -42,41 +42,24 @@ export function SalesChart({ invoices, currency }: SalesChartProps) {
             salesByProductAndPrice[displayName].revenue += item.total;
         });
 
-    // Sort ascending by revenue and take the top 15.
-    // Recharts renders vertical bar charts from bottom to top, so ascending order places the largest bar at the top.
+    // Sort descending by revenue to show the highest earning products first, and take the top 15.
     const salesData = Object.values(salesByProductAndPrice)
         .filter(p => p.revenue > 0)
-        .sort((a, b) => a.revenue - b.revenue)
-        .slice(-15);
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 15);
     
     const renderCustomizedLabel = (props: any) => {
         const { x, y, width, height, value } = props;
-        const radius = 4;
         
-        const formattedValue = formatCurrency(value, currency);
-        // If bar is too short for the label to fit outside, render it inside
-        const isBarTooShort = width < 90; 
-
-        if (isBarTooShort) {
-            return (
-                <text 
-                    x={x + width - radius} // position inside, near the end
-                    y={y + height / 2} 
-                    fill="#fff" 
-                    textAnchor="end" 
-                    dominantBaseline="middle"
-                    fontSize={12}
-                    fontWeight="bold"
-                >
-                    {formattedValue}
-                </text>
-            );
+        // Don't render a label if the bar is too small to be meaningful
+        if (width < 20) {
+            return null;
         }
 
-        // Otherwise, render outside
+        // Always render the label outside, to the right of the bar.
         return (
              <text 
-                x={x + width + radius + 2} // position outside, to the right
+                x={x + width + 5} 
                 y={y + height / 2} 
                 fill="hsl(var(--foreground))" 
                 textAnchor="start" 
@@ -84,7 +67,7 @@ export function SalesChart({ invoices, currency }: SalesChartProps) {
                 fontSize={12}
                 fontWeight="500"
             >
-                {formattedValue}
+                {formatCurrency(value, currency)}
             </text>
         );
     };
@@ -95,7 +78,7 @@ export function SalesChart({ invoices, currency }: SalesChartProps) {
             <BarChart
                 data={salesData}
                 layout="vertical"
-                margin={{ top: 5, right: 100, left: 10, bottom: 5 }}
+                margin={{ top: 5, right: 120, left: 10, bottom: 5 }}
             >
             <XAxis type="number" hide />
             <YAxis
@@ -109,6 +92,8 @@ export function SalesChart({ invoices, currency }: SalesChartProps) {
                     value.length > 40 ? value.slice(0, 40) + '...' : value
                 }
                 width={250}
+                // Reversing the axis ensures that the first item in our sorted data (the largest) appears at the top.
+                reversed={true}
             />
             <Tooltip
                 cursor={{ fill: 'hsl(var(--muted))' }}
