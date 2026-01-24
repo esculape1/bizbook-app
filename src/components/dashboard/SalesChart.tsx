@@ -74,7 +74,7 @@ export function SalesChart({ invoices, currency }: SalesChartProps) {
             <BarChart
                 data={salesData}
                 layout="vertical"
-                margin={{ top: 5, right: 100, left: 5, bottom: 5 }} // Reduced margins for mobile
+                margin={{ top: 5, right: 80, left: 0, bottom: 5 }}
             >
             <XAxis type="number" hide />
             <YAxis
@@ -87,8 +87,7 @@ export function SalesChart({ invoices, currency }: SalesChartProps) {
                 tickFormatter={(value) =>
                     value.length > 12 ? value.slice(0, 12) + '…' : value // Truncate long references
                 }
-                width={80} // Reduced width for shorter labels
-                reversed={true}
+                width={70}
             />
             <Tooltip
                 cursor={{ fill: 'hsl(var(--muted))' }}
