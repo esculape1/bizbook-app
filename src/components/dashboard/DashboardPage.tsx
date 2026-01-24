@@ -126,7 +126,7 @@ export default async function DashboardPage() {
         </div>
         
         <div className="lg:col-span-1 space-y-6 flex flex-col">
-          <OverdueInvoicesTable invoices={invoices} />
+          <OverdueInvoicesTable invoices={invoices} settings={settings} />
           <LowStockTable products={products} />
         </div>
       </div>
