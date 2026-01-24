@@ -19,7 +19,7 @@ export function LowStockTable({ products }: { products: Product[] }) {
                 <div className="overflow-auto max-h-80 pr-2">
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {lowStockProducts.map((product) => (
-                            <div key={product.id} className="p-2 rounded-lg border bg-card text-card-foreground shadow-sm flex flex-col justify-center items-center text-center">
+                            <div key={product.id} className="p-2 rounded-lg border border-destructive/30 bg-card text-destructive shadow-sm flex flex-col justify-center items-center text-center">
                                 <p className="text-sm font-medium leading-tight truncate w-full" title={product.name}>{product.name}</p>
                                 <Badge variant="destructive" className="mt-1">
                                     Stock: {product.quantityInStock}
