@@ -42,11 +42,52 @@ export function SalesChart({ invoices, currency }: SalesChartProps) {
             salesByProductAndPrice[displayName].revenue += item.total;
         });
 
+    // Sort ascending by revenue and take the top 15.
+    // Recharts renders vertical bar charts from bottom to top, so ascending order places the largest bar at the top.
     const salesData = Object.values(salesByProductAndPrice)
         .filter(p => p.revenue > 0)
-        .sort((a, b) => b.revenue - a.revenue) // Sort descending first
-        .slice(0, 15)
-        .reverse(); // Reverse to have largest bar at the top
+        .sort((a, b) => a.revenue - b.revenue)
+        .slice(-15);
+    
+    const renderCustomizedLabel = (props: any) => {
+        const { x, y, width, height, value } = props;
+        const radius = 4;
+        
+        const formattedValue = formatCurrency(value, currency);
+        // If bar is too short for the label to fit outside, render it inside
+        const isBarTooShort = width < 90; 
+
+        if (isBarTooShort) {
+            return (
+                <text 
+                    x={x + width - radius} // position inside, near the end
+                    y={y + height / 2} 
+                    fill="#fff" 
+                    textAnchor="end" 
+                    dominantBaseline="middle"
+                    fontSize={12}
+                    fontWeight="bold"
+                >
+                    {formattedValue}
+                </text>
+            );
+        }
+
+        // Otherwise, render outside
+        return (
+             <text 
+                x={x + width + radius + 2} // position outside, to the right
+                y={y + height / 2} 
+                fill="hsl(var(--foreground))" 
+                textAnchor="start" 
+                dominantBaseline="middle"
+                fontSize={12}
+                fontWeight="500"
+            >
+                {formattedValue}
+            </text>
+        );
+    };
 
   return (
     <ChartContainer config={chartConfig} className="h-[500px] w-full">
@@ -88,11 +129,7 @@ export function SalesChart({ invoices, currency }: SalesChartProps) {
                 ))}
                  <LabelList
                     dataKey="revenue"
-                    position="right"
-                    offset={8}
-                    className="fill-foreground font-medium"
-                    fontSize={12}
-                    formatter={(value: number) => formatCurrency(value, currency)}
+                    content={renderCustomizedLabel}
                 />
             </Bar>
             </BarChart>
