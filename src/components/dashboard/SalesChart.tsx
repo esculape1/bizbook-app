@@ -51,11 +51,6 @@ export function SalesChart({ invoices, currency }: SalesChartProps) {
     const renderCustomizedLabel = (props: any) => {
         const { x, y, width, height, value } = props;
         
-        // Don't render a label if the bar is too small to be meaningful
-        if (width < 20) {
-            return null;
-        }
-
         // Always render the label outside, to the right of the bar.
         return (
              <text 
