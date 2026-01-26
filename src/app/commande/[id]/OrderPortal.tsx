@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useTransition, useEffect } from 'react';
@@ -191,13 +190,19 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
           description: 'Votre demande de commande a bien été reçue.',
         });
         
-        // Directly set the successful order state. This will cause the component
-        // to re-render with the SuccessView, cleanly unmounting the sheet
-        // and other components, thus avoiding animation conflicts.
-        setSuccessfulOrder({
-            orderNumber: result.orderNumber,
-            totalAmount: result.totalAmount,
-        });
+        // 1. Déclencher la fermeture du panneau (Sheet).
+        //    Ceci va lancer l'animation de sortie.
+        setSheetOpen(false);
+
+        // 2. Attendre que l'animation de fermeture soit terminée (500ms est une marge de sécurité).
+        //    Ce n'est qu'après ce délai que l'on modifie l'état pour afficher l'écran de succès.
+        //    Cela évite le conflit de rendu qui causait le crash.
+        setTimeout(() => {
+          setSuccessfulOrder({
+              orderNumber: result.orderNumber,
+              totalAmount: result.totalAmount,
+          });
+        }, 500);
 
       } else {
         toast({
@@ -398,5 +403,3 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
     </div>
   );
 }
-
-    
