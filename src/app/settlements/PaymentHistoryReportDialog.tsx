@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Printer } from 'lucide-react';
 import type { PaymentHistoryItem, Client, Settings } from '@/lib/types';
 import { PaymentHistoryReportTemplate } from './PaymentHistoryReportTemplate';
@@ -56,6 +56,9 @@ export function PaymentHistoryReportDialog({ history, client, settings }: Paymen
       <DialogContent className="max-w-4xl p-0">
         <DialogHeader className="p-6 pb-2">
           <DialogTitle>Aperçu de l'historique des paiements</DialogTitle>
+          <DialogDescription>
+            Ceci est un relevé de tous les paiements effectués par {client.name} que vous pouvez imprimer ou sauvegarder en PDF.
+          </DialogDescription>
         </DialogHeader>
         <div className="max-h-[70vh] overflow-y-auto bg-gray-50">
           <PaymentHistoryReportTemplate history={history} client={client} settings={settings} />

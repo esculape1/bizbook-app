@@ -22,7 +22,8 @@ export async function getUnpaidInvoicesForClient(clientId: string): Promise<Invo
 
 export async function getPaymentHistoryForClient(clientId: string): Promise<PaymentHistoryItem[]> {
   const allInvoices = await getInvoices();
-  const clientInvoices = allInvoices.filter(inv => inv.clientId === clientId && inv.payments.length > 0);
+  // Handle cases where `payments` might not be an array on older documents.
+  const clientInvoices = allInvoices.filter(inv => inv.clientId === clientId && Array.isArray(inv.payments) && inv.payments.length > 0);
 
   const paymentHistory: PaymentHistoryItem[] = [];
 
@@ -88,7 +89,7 @@ export async function processMultipleInvoicePayments(payload: SettlementPayload)
       return { success: false, message: "Certaines factures sélectionnées sont invalides ou n'appartiennent pas au client." };
     }
     
-    const totalDueOnSelected = invoicesToSettle.reduce((sum, inv) => sum + (inv.totalAmount - inv.amountPaid), 0);
+    const totalDueOnSelected = invoicesToSettle.reduce((sum, inv) => sum + (inv.totalAmount - (inv.amountPaid || 0)), 0);
     
     if (paymentAmount > totalDueOnSelected + 0.001) { // Add tolerance for float issues
         return { success: false, message: `Le montant du paiement (${paymentAmount}) dépasse le total dû (${totalDueOnSelected}) des factures sélectionnées.` };
@@ -100,11 +101,11 @@ export async function processMultipleInvoicePayments(payload: SettlementPayload)
         if (amountToApply <= 0) break;
 
         const invoiceRef = db.collection('invoices').doc(invoice.id);
-        const dueOnInvoice = invoice.totalAmount - invoice.amountPaid;
+        const dueOnInvoice = invoice.totalAmount - (invoice.amountPaid || 0);
         const paymentForThisInvoice = Math.min(amountToApply, dueOnInvoice);
 
         if (paymentForThisInvoice > 0) {
-            const newAmountPaid = invoice.amountPaid + paymentForThisInvoice;
+            const newAmountPaid = (invoice.amountPaid || 0) + paymentForThisInvoice;
             const newStatus: Invoice['status'] = newAmountPaid >= invoice.totalAmount - 0.001 ? 'Paid' : 'Partially Paid';
             
             const newPayment: Payment = {

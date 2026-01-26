@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import type { Client } from '@/lib/types';
 import { ChevronsUpDown } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
@@ -34,6 +34,9 @@ export function ClientPicker({ clients, onClientSelect, selectedClientName }: Cl
       <DialogContent className="p-0">
         <DialogHeader className='p-4 pb-0'>
           <DialogTitle>Sélectionner un Client</DialogTitle>
+          <DialogDescription>
+            Recherchez et sélectionnez un client dans la liste.
+          </DialogDescription>
         </DialogHeader>
         <Command>
           <CommandInput placeholder="Rechercher un client..." />
