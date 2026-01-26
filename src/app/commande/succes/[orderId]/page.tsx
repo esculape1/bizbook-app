@@ -38,7 +38,10 @@ export default async function OrderSuccessPage({ params }: { params: { orderId: 
         notFound();
     }
 
-    const whatsappLink = "https://wa.me/message/YZS5BF6UL4G3K1";
+    // Remplacer le lien business par un lien direct avec numéro de téléphone
+    // pour assurer la compatibilité du message pré-rempli.
+    const whatsappNumber = '22670150699';
+    const whatsappLink = `https://wa.me/${whatsappNumber}`;
     const prefilledMessage = `Bonjour, je viens de passer la commande N° ${order.orderNumber} d'un montant de ${formatCurrency(order.totalAmount, settings.currency)}. Merci.`;
     const finalWhatsAppLink = `${whatsappLink}?text=${encodeURIComponent(prefilledMessage)}`;
     
