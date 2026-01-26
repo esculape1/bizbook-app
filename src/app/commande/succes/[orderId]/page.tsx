@@ -40,7 +40,7 @@ export default async function OrderSuccessPage({ params }: { params: { orderId: 
 
     const whatsappLink = "https://wa.me/message/YZS5BF6UL4G3K1";
     const prefilledMessage = `Bonjour, je viens de passer la commande N° ${order.orderNumber} d'un montant de ${formatCurrency(order.totalAmount, settings.currency)}. Merci.`;
-    const finalWhatsAppLink = `${whatsappLink}&text=${encodeURIComponent(prefilledMessage)}`;
+    const finalWhatsAppLink = `${whatsappLink}?text=${encodeURIComponent(prefilledMessage)}`;
     
     return (
         <div className="flex flex-col items-center justify-center min-h-screen text-center p-4 bg-muted/30">
