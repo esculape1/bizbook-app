@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo, useTransition, useEffect } from 'react';
 import type { Client, Product, Settings } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -102,6 +102,14 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
   const [successfulOrder, setSuccessfulOrder] = useState<{ orderNumber: string; totalAmount: number; } | null>(null);
   const { toast } = useToast();
 
+  useEffect(() => {
+    // This effect ensures that if the success view is displayed,
+    // the sheet's controlling state is also set to closed.
+    if (successfulOrder) {
+      setSheetOpen(false);
+    }
+  }, [successfulOrder]);
+
   const handleQuantityChange = (productId: string, change: number) => {
     setQuantities(prev => {
       const currentQuantity = prev[productId] || 0;
@@ -191,17 +199,13 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
           description: 'Votre demande de commande a bien été reçue.',
         });
         
-        // Step 1: Programmatically close the sheet to trigger its animation.
-        setSheetOpen(false);
-
-        // Step 2: Wait for the animation to finish before unmounting the sheet's parent.
-        // This prevents React from trying to unmount an animating component.
-        setTimeout(() => {
-            setSuccessfulOrder({
-                orderNumber: result.orderNumber,
-                totalAmount: result.totalAmount,
-            });
-        }, 500); // 500ms provides a safe buffer for the animation.
+        // This is the fix: simply set the state that causes the component
+        // to re-render with the SuccessView. The useEffect will handle
+        // the sheet's state after the re-render, avoiding the animation conflict.
+        setSuccessfulOrder({
+            orderNumber: result.orderNumber,
+            totalAmount: result.totalAmount,
+        });
 
       } else {
         toast({
