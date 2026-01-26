@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useTransition, useEffect } from 'react';
@@ -99,7 +100,25 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
   const [isPending, startTransition] = useTransition();
   const [isSheetOpen, setSheetOpen] = useState(false);
   const [successfulOrder, setSuccessfulOrder] = useState<{ orderNumber: string; totalAmount: number; } | null>(null);
+  
+  // New state to manage the transition gracefully
+  const [pendingConfirmation, setPendingConfirmation] = useState<{ orderNumber: string; totalAmount: number; } | null>(null);
+
   const { toast } = useToast();
+
+  useEffect(() => {
+    // This effect runs when the sheet is told to close after a successful submission.
+    if (pendingConfirmation && !isSheetOpen) {
+      // The sheet has started its closing animation. We wait for it to finish.
+      const timer = setTimeout(() => {
+        setSuccessfulOrder(pendingConfirmation);
+        setPendingConfirmation(null); // Clean up the temporary state
+      }, 500); // Animation duration is around 300-500ms.
+
+      // Clean up the timer if the component unmounts or dependencies change.
+      return () => clearTimeout(timer);
+    }
+  }, [isSheetOpen, pendingConfirmation]);
 
   const handleQuantityChange = (productId: string, change: number) => {
     setQuantities(prev => {
@@ -190,12 +209,13 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
           description: 'Votre demande de commande a bien été reçue.',
         });
         
-        // Directly set the success state. This will cause a re-render
-        // that unmounts the sheet, avoiding the animation conflict.
-        setSuccessfulOrder({
+        // Instead of setting success state directly, we set a pending state
+        // and trigger the sheet to close. The useEffect will handle the rest.
+        setPendingConfirmation({
             orderNumber: result.orderNumber,
             totalAmount: result.totalAmount,
         });
+        setSheetOpen(false);
 
       } else {
         toast({
