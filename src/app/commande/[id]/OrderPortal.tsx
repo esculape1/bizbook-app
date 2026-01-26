@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useTransition, useEffect } from 'react';
@@ -190,14 +191,13 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
           description: 'Votre demande de commande a bien été reçue.',
         });
         
-        setSheetOpen(false);
-        
-        setTimeout(() => {
-            setSuccessfulOrder({
-                orderNumber: result.orderNumber,
-                totalAmount: result.totalAmount,
-            });
-        }, 500);
+        // Directly set the successful order state. This will cause the component
+        // to re-render with the SuccessView, cleanly unmounting the sheet
+        // and other components, thus avoiding animation conflicts.
+        setSuccessfulOrder({
+            orderNumber: result.orderNumber,
+            totalAmount: result.totalAmount,
+        });
 
       } else {
         toast({
@@ -398,3 +398,5 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
     </div>
   );
 }
+
+    

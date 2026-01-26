@@ -87,12 +87,11 @@
 
   body {
     @apply text-foreground;
-    /* To use your real image, place it in the public folder as `background.jpg` */
-    /* data-ai-hint: pagne burkinabe */
-    background-image: url('/background.jpg');
     background-color: hsl(var(--background));
     background-size: cover;
     background-attachment: fixed;
     background-position: center;
   }
 }
+
+    
