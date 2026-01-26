@@ -21,7 +21,7 @@ const clientOrderSchema = z.object({
 
 type ClientOrderPayload = z.infer<typeof clientOrderSchema>;
 
-export async function submitClientOrder(payload: ClientOrderPayload): Promise<{ success: boolean; message?: string }> {
+export async function submitClientOrder(payload: ClientOrderPayload): Promise<{ success: true; orderNumber: string; totalAmount: number; } | { success: false; message?: string }> {
   const validatedPayload = clientOrderSchema.safeParse(payload);
 
   if (!validatedPayload.success) {
@@ -96,7 +96,7 @@ export async function submitClientOrder(payload: ClientOrderPayload): Promise<{ 
     // Revalidate the tag for client orders so the admin interface can update.
     revalidateTag('client-orders');
     
-    return { success: true };
+    return { success: true, orderNumber: newOrderNumber, totalAmount };
 
   } catch (error) {
     console.error('Failed to submit client order:', error);
