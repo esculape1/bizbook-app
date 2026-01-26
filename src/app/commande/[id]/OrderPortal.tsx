@@ -190,19 +190,12 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
           description: 'Votre demande de commande a bien été reçue.',
         });
         
-        // 1. Déclencher la fermeture du panneau (Sheet).
-        //    Ceci va lancer l'animation de sortie.
-        setSheetOpen(false);
-
-        // 2. Attendre que l'animation de fermeture soit terminée (500ms est une marge de sécurité).
-        //    Ce n'est qu'après ce délai que l'on modifie l'état pour afficher l'écran de succès.
-        //    Cela évite le conflit de rendu qui causait le crash.
-        setTimeout(() => {
-          setSuccessfulOrder({
-              orderNumber: result.orderNumber,
-              totalAmount: result.totalAmount,
-          });
-        }, 500);
+        // Directly set the success state. This will cause a re-render
+        // that unmounts the sheet, avoiding the animation conflict.
+        setSuccessfulOrder({
+            orderNumber: result.orderNumber,
+            totalAmount: result.totalAmount,
+        });
 
       } else {
         toast({
