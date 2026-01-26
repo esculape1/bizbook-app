@@ -22,7 +22,7 @@ export function ProductQrCodeDialog({ product, settings }: ProductQrCodeDialogPr
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const qrCodeCardRef = useRef<HTMLDivElement>(null);
   
-  const whatsappNumber = '22678259385';
+  const whatsappNumber = '22625465512';
 
   useEffect(() => {
     if (isOpen) {
