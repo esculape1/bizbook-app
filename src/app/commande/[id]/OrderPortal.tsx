@@ -1,13 +1,13 @@
 
 'use client';
 
-import { useState, useMemo, useTransition, useEffect } from 'react';
+import { useState, useMemo, useTransition } from 'react';
 import type { Client, Product, Settings } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency, cn } from '@/lib/utils';
-import { CheckCircle, MessageSquare, Minus, Plus, PlusCircle, Search, Send, ShoppingCart, Trash2 } from 'lucide-react';
+import { Minus, Plus, Search, Send, ShoppingCart, Trash2 } from 'lucide-react';
 import { submitClientOrder } from './actions';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
@@ -30,95 +30,12 @@ type OrderPortalProps = {
   settings: Settings; 
 };
 
-function SuccessView({
-    order,
-    settings,
-    client,
-    onNewOrder,
-    whatsappLink,
-}: {
-    order: { orderNumber: string; totalAmount: number };
-    settings: Settings;
-    client: Client;
-    onNewOrder: () => void;
-    whatsappLink: string;
-}) {
-    const prefilledMessage = `Bonjour, je viens de passer la commande N° ${order.orderNumber} d'un montant de ${formatCurrency(order.totalAmount, settings.currency)}. Merci.`;
-    const finalWhatsAppLink = `${whatsappLink}&text=${encodeURIComponent(prefilledMessage)}`;
-    
-    return (
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] text-center p-4">
-            <Card className="w-full max-w-md shadow-2xl border-emerald-500/50 bg-emerald-500/10">
-                <CardHeader className="items-center">
-                    <CheckCircle className="h-16 w-16 text-emerald-500 mb-4" />
-                    <CardTitle className="text-2xl font-bold text-emerald-800">Commande envoyée !</CardTitle>
-                    <CardDescription className="text-emerald-700/80">Votre commande a été reçue avec succès.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="p-4 bg-background/50 rounded-lg text-left text-sm space-y-2">
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">Client:</span>
-                            <span className="font-semibold">{client.name}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-muted-foreground">N° Commande:</span>
-                            <span className="font-semibold">{order.orderNumber}</span>
-                        </div>
-                         <div className="flex justify-between">
-                            <span className="text-muted-foreground">Montant Total:</span>
-                            <span className="font-semibold">{formatCurrency(order.totalAmount, settings.currency)}</span>
-                        </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                        Cliquez sur le bouton ci-dessous pour nous notifier rapidement sur WhatsApp.
-                    </p>
-                </CardContent>
-                <CardFooter className="flex flex-col gap-3">
-                     <Button asChild className="w-full h-12 bg-green-500 hover:bg-green-600 text-white">
-                         <a
-                            href={finalWhatsAppLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                         >
-                            <MessageSquare className="mr-2 h-5 w-5" />
-                            Notifier sur WhatsApp
-                        </a>
-                    </Button>
-                    <Button variant="outline" className="w-full" onClick={onNewOrder}>
-                       <PlusCircle className="mr-2 h-4 w-4" />
-                       Passer une autre commande
-                    </Button>
-                </CardFooter>
-            </Card>
-        </div>
-    );
-}
-
 export function OrderPortal({ client, products, settings }: OrderPortalProps) {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [isPending, startTransition] = useTransition();
-  const [isSheetOpen, setSheetOpen] = useState(false);
-  const [successfulOrder, setSuccessfulOrder] = useState<{ orderNumber: string; totalAmount: number; } | null>(null);
   
-  // New state to manage the transition gracefully
-  const [pendingConfirmation, setPendingConfirmation] = useState<{ orderNumber: string; totalAmount: number; } | null>(null);
-
   const { toast } = useToast();
-
-  useEffect(() => {
-    // This effect runs when the sheet is told to close after a successful submission.
-    if (pendingConfirmation && !isSheetOpen) {
-      // The sheet has started its closing animation. We wait for it to finish.
-      const timer = setTimeout(() => {
-        setSuccessfulOrder(pendingConfirmation);
-        setPendingConfirmation(null); // Clean up the temporary state
-      }, 500); // Animation duration is around 300-500ms.
-
-      // Clean up the timer if the component unmounts or dependencies change.
-      return () => clearTimeout(timer);
-    }
-  }, [isSheetOpen, pendingConfirmation]);
 
   const handleQuantityChange = (productId: string, change: number) => {
     setQuantities(prev => {
@@ -203,51 +120,17 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
         items: payloadItems,
       });
 
-      if (result.success) {
-        toast({
-          title: 'Commande envoyée !',
-          description: 'Votre demande de commande a bien été reçue.',
-        });
-        
-        // Instead of setting success state directly, we set a pending state
-        // and trigger the sheet to close. The useEffect will handle the rest.
-        setPendingConfirmation({
-            orderNumber: result.orderNumber,
-            totalAmount: result.totalAmount,
-        });
-        setSheetOpen(false);
-
-      } else {
+      // On success, the server action will redirect.
+      // We only reach this code if there was an error.
+      if (result?.message) {
         toast({
           variant: 'destructive',
           title: 'Erreur',
-          description: result.message || 'Une erreur est survenue.',
+          description: result.message,
         });
       }
     });
   };
-
-  const handleNewOrder = () => {
-      setSuccessfulOrder(null);
-      setQuantities({});
-      setSearchTerm('');
-  };
-
-  const whatsappLink = "https://wa.me/message/YZS5BF6UL4G3K1";
-
-  if (successfulOrder) {
-      return (
-        <div className="max-w-4xl mx-auto p-4">
-          <SuccessView
-            order={successfulOrder}
-            settings={settings}
-            client={client}
-            onNewOrder={handleNewOrder}
-            whatsappLink={whatsappLink}
-          />
-        </div>
-      );
-  }
 
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6 pb-28">
@@ -342,7 +225,7 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
         )}
       </div>
       
-      <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
+      <Sheet>
         <SheetTrigger asChild>
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm border-t">
                 <div className="max-w-4xl mx-auto">

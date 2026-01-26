@@ -417,6 +417,20 @@ export const getClientOrders = cache(
   { revalidate: REVALIDATION_TIME, tags: ['client-orders'] }
 );
 
+export const getClientOrderById = cache(
+  async (id: string): Promise<ClientOrder | null> => {
+    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
+    const orderDocRef = db.collection('clientOrders').doc(id);
+    const orderDoc = await orderDocRef.get();
+    if (orderDoc.exists) {
+        return docToObject<ClientOrder>(orderDoc);
+    }
+    return null;
+  },
+  ['client-order'],
+  { revalidate: REVALIDATION_TIME, tags: ['client-orders'] }
+);
+
 export async function updateClientOrder(id: string, data: Partial<Omit<ClientOrder, 'id'>>): Promise<void> {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
   await db.collection('clientOrders').doc(id).set(data, { merge: true });
@@ -542,6 +556,7 @@ export const getDashboardStats = cache(async () => {
 
     
     
+
 
 
 
