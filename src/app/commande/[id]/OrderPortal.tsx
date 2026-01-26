@@ -190,16 +190,14 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
           title: 'Commande envoyée !',
           description: 'Votre demande de commande a bien été reçue.',
         });
-        setSheetOpen(false); // Close the cart sheet
-
-        // Defer the UI swap to allow the sheet's closing animation to finish.
-        // This prevents a client-side exception caused by unmounting an animating component.
-        setTimeout(() => {
-            setSuccessfulOrder({
-                orderNumber: result.orderNumber,
-                totalAmount: result.totalAmount,
-            });
-        }, 500);
+        
+        // By immediately setting the successfulOrder state, we trigger a re-render
+        // that replaces the ordering view (and the sheet) with the success view.
+        // This avoids any animation race conditions with the sheet closing.
+        setSuccessfulOrder({
+            orderNumber: result.orderNumber,
+            totalAmount: result.totalAmount,
+        });
 
       } else {
         toast({
