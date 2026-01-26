@@ -191,13 +191,17 @@ export function OrderPortal({ client, products, settings }: OrderPortalProps) {
           description: 'Votre demande de commande a bien été reçue.',
         });
         
-        // By immediately setting the successfulOrder state, we trigger a re-render
-        // that replaces the ordering view (and the sheet) with the success view.
-        // This avoids any animation race conditions with the sheet closing.
-        setSuccessfulOrder({
-            orderNumber: result.orderNumber,
-            totalAmount: result.totalAmount,
-        });
+        // Step 1: Programmatically close the sheet to trigger its animation.
+        setSheetOpen(false);
+
+        // Step 2: Wait for the animation to finish before unmounting the sheet's parent.
+        // This prevents React from trying to unmount an animating component.
+        setTimeout(() => {
+            setSuccessfulOrder({
+                orderNumber: result.orderNumber,
+                totalAmount: result.totalAmount,
+            });
+        }, 500); // 500ms provides a safe buffer for the animation.
 
       } else {
         toast({
