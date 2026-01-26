@@ -74,17 +74,16 @@ function SuccessView({
                     </p>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-3">
-                     <a
-                        href={finalWhatsAppLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full"
-                     >
-                        <Button className="w-full h-12 bg-green-500 hover:bg-green-600 text-white">
+                     <Button asChild className="w-full h-12 bg-green-500 hover:bg-green-600 text-white">
+                         <a
+                            href={finalWhatsAppLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                         >
                             <MessageSquare className="mr-2 h-5 w-5" />
                             Notifier sur WhatsApp
-                        </Button>
-                    </a>
+                        </a>
+                    </Button>
                     <Button variant="outline" className="w-full" onClick={onNewOrder}>
                        <PlusCircle className="mr-2 h-4 w-4" />
                        Passer une autre commande
