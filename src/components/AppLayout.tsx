@@ -37,18 +37,18 @@ import { signOut } from '@/app/auth/actions';
 import { ROLES } from '@/lib/constants';
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: [ROLES.SUPER_ADMIN] },
-  { href: '/clients', label: 'Clients', icon: Users, roles: [ROLES.SUPER_ADMIN, ROLES.USER] },
-  { href: '/suppliers', label: 'Fournisseurs', icon: Briefcase, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN] },
-  { href: '/purchases', label: 'Achats', icon: ShoppingCart, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN] },
-  { href: '/products', label: 'Produits', icon: Box, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
-  { href: '/devis', label: 'Proforma', icon: FileClock, roles: [ROLES.SUPER_ADMIN, ROLES.USER] },
-  { href: '/client-orders', label: 'Commandes', icon: PackageSearch, roles: [ROLES.SUPER_ADMIN, ROLES.USER] },
-  { href: '/invoices', label: 'Factures', icon: FileText, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER] },
-  { href: '/settlements', label: 'Règlements', icon: CreditCard, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN] },
-  { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN] },
-  { href: '/reports', label: 'Rapports', icon: BarChart3, roles: [ROLES.SUPER_ADMIN] },
-  { href: '/settings', label: 'Paramètres', icon: Settings, roles: [ROLES.SUPER_ADMIN] },
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: [ROLES.SUPER_ADMIN], color: 'text-blue-500', bg: 'hover:bg-blue-50' },
+  { href: '/clients', label: 'Clients', icon: Users, roles: [ROLES.SUPER_ADMIN, ROLES.USER], color: 'text-indigo-500', bg: 'hover:bg-indigo-50' },
+  { href: '/suppliers', label: 'Fournisseurs', icon: Briefcase, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN], color: 'text-amber-500', bg: 'hover:bg-amber-50' },
+  { href: '/purchases', label: 'Achats', icon: ShoppingCart, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN], color: 'text-emerald-500', bg: 'hover:bg-emerald-50' },
+  { href: '/products', label: 'Produits', icon: Box, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER], color: 'text-orange-500', bg: 'hover:bg-orange-50' },
+  { href: '/devis', label: 'Proforma', icon: FileClock, roles: [ROLES.SUPER_ADMIN, ROLES.USER], color: 'text-violet-500', bg: 'hover:bg-violet-50' },
+  { href: '/client-orders', label: 'Commandes', icon: PackageSearch, roles: [ROLES.SUPER_ADMIN, ROLES.USER], color: 'text-rose-500', bg: 'hover:bg-rose-50' },
+  { href: '/invoices', label: 'Factures', icon: FileText, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER], color: 'text-sky-500', bg: 'hover:bg-sky-50' },
+  { href: '/settlements', label: 'Règlements', icon: CreditCard, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN], color: 'text-lime-500', bg: 'hover:bg-lime-50' },
+  { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN], color: 'text-red-500', bg: 'hover:bg-red-50' },
+  { href: '/reports', label: 'Rapports', icon: BarChart3, roles: [ROLES.SUPER_ADMIN], color: 'text-cyan-500', bg: 'hover:bg-cyan-50' },
+  { href: '/settings', label: 'Paramètres', icon: Settings, roles: [ROLES.SUPER_ADMIN], color: 'text-slate-500', bg: 'hover:bg-slate-50' },
 ];
 
 export function AppLayout({ 
@@ -70,25 +70,26 @@ export function AppLayout({
     settings.logoUrl ? (
       <Image src={settings.logoUrl} alt="BizBook Logo" width={size} height={size} className="rounded-md object-contain" data-ai-hint="logo" />
     ) : (
-      <div className="p-1.5 rounded-lg bg-primary shadow-sm text-white">
-        <svg xmlns="http://www.w3.org/2000/svg" width={size-8} height={size-8} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9.5a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0Z"/><path d="M12.5 4H15a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5"/><path d="m14 6-2.5 2.5"/><path d="m18 10-6 6"/></svg>
+      <div className="p-1 rounded-lg bg-primary shadow-sm text-white">
+        <svg xmlns="http://www.w3.org/2000/svg" width={size-10} height={size-8} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9.5a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0Z"/><path d="M12.5 4H15a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5"/><path d="m14 6-2.5 2.5"/><path d="m18 10-6 6"/></svg>
       </div>
     )
   );
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-40 w-full border-b bg-card/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 md:h-20 max-w-[1800px] items-center justify-between px-4 lg:px-8">
-          <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <Logo size={36} />
-              <span className="hidden font-black text-xl tracking-tight text-primary md:inline-block transition-transform group-hover:scale-105">
+      <header className="sticky top-0 z-40 w-full border-b bg-card/90 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 md:h-16 max-w-[1800px] items-center justify-between px-4 lg:px-6">
+          <div className="flex items-center gap-4 xl:gap-6">
+            <Link href="/" className="flex items-center gap-2 group shrink-0">
+              <Logo size={32} />
+              <span className="hidden font-black text-lg tracking-tight text-primary lg:inline-block transition-transform group-hover:scale-105">
                 BizBook
               </span>
             </Link>
 
-            <nav className="hidden xl:flex items-center gap-1">
+            {/* Desktop Horizontal Navigation - Compact & Colorful */}
+            <nav className="hidden xl:flex items-center gap-0.5">
               {accessibleNavItems.map((item) => {
                 const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
                 return (
@@ -96,15 +97,15 @@ export function AppLayout({
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap group/nav",
+                      "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[13px] font-bold transition-all duration-200 whitespace-nowrap group/nav",
                       isActive 
-                        ? "bg-primary text-white shadow-md shadow-primary/20 scale-105" 
-                        : "text-muted-foreground hover:bg-primary/10 hover:text-primary hover:scale-105"
+                        ? "bg-primary text-white shadow-sm scale-105" 
+                        : cn("text-muted-foreground", item.bg, "hover:text-foreground hover:scale-105")
                     )}
                   >
                     <item.icon className={cn(
-                      "h-4 w-4 transition-transform duration-300",
-                      isActive ? "text-white" : "group-hover/nav:rotate-12"
+                      "h-4 w-4 transition-all duration-300",
+                      isActive ? "text-white" : cn(item.color, "group-hover/nav:scale-110")
                     )} />
                     {item.label}
                   </Link>
@@ -113,7 +114,7 @@ export function AppLayout({
             </nav>
           </div>
 
-          <div className="flex items-center gap-3 lg:gap-6">
+          <div className="flex items-center gap-3">
             <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
                 <Button
@@ -147,7 +148,7 @@ export function AppLayout({
                           : "text-muted-foreground active:bg-primary/5"
                       )}
                     >
-                      <item.icon className="h-5 w-5" />
+                      <item.icon className={cn("h-5 w-5", (item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)) ? "text-white" : item.color)} />
                       {item.label}
                     </Link>
                   ))}
@@ -155,17 +156,17 @@ export function AppLayout({
               </SheetContent>
             </Sheet>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 shrink-0">
               <div className="hidden lg:flex flex-col items-end">
-                  <p className="text-sm font-bold text-foreground leading-none">{user.name}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1 font-bold">{user.role}</p>
+                  <p className="text-xs font-bold text-foreground leading-none">{user.name}</p>
+                  <p className="text-[9px] text-muted-foreground uppercase tracking-widest mt-1 font-bold">{user.role}</p>
               </div>
               <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 lg:h-11 lg:w-11 rounded-full p-0 overflow-hidden border-2 border-primary/10 hover:border-primary/40 transition-all shadow-sm">
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 overflow-hidden border-2 border-primary/10 hover:border-primary/40 transition-all">
                       <Avatar className="h-full w-full">
                       <AvatarImage src={`https://i.pravatar.cc/150?u=${user.email}`} alt={user.name} />
-                      <AvatarFallback className="bg-primary/10 text-primary font-bold">{user.name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">{user.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                   </Button>
                   </DropdownMenuTrigger>
@@ -202,7 +203,7 @@ export function AppLayout({
       </header>
 
       <main className="flex-1 flex flex-col items-center">
-        <div className="w-full max-w-[1800px] p-4 lg:p-10 xl:p-12">
+        <div className="w-full max-w-[1800px] p-4 lg:p-8 xl:p-10">
           {children}
         </div>
       </main>
