@@ -82,13 +82,13 @@ export function ReportGenerator({ clients, settings }: ReportGeneratorProps) {
               <label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1 flex items-center gap-1.5">
                 <Filter className="size-3" /> Période d'analyse
               </label>
-              <DateRangePicker date={dateRange} onDateChange={setDateRange} className="w-full bg-white shadow-sm" />
+              <DateRangePicker date={dateRange} onDateChange={setDateRange} className="w-full" />
             </div>
             
             <div className="flex-1 w-full space-y-1.5">
               <label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Client concerné</label>
               <Select value={clientId} onValueChange={setClientId}>
-                <SelectTrigger className="w-full bg-white shadow-sm h-10 font-bold">
+                <SelectTrigger className="w-full h-10 font-bold">
                   <SelectValue placeholder="Sélectionner un client" />
                 </SelectTrigger>
                 <SelectContent>
@@ -103,7 +103,7 @@ export function ReportGenerator({ clients, settings }: ReportGeneratorProps) {
              <div className="flex-1 w-full space-y-1.5">
               <label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Statut des factures</label>
               <Select value={invoiceStatus} onValueChange={setInvoiceStatus as (value: string) => void}>
-                <SelectTrigger className="w-full bg-white shadow-sm h-10 font-bold">
+                <SelectTrigger className="w-full h-10 font-bold">
                   <SelectValue placeholder="Sélectionner un statut" />
                 </SelectTrigger>
                 <SelectContent>
