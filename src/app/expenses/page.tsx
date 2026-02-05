@@ -9,12 +9,13 @@ import type { Expense } from "@/lib/types";
 import { format, getYear, getMonth, set } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ExpenseCategoryDetailsDialog } from "./ExpenseCategoryDetailsDialog";
-import { AppLayout } from "@/components/AppLayout";
+import { AppLayout } from "@/app/AppLayout";
 import { redirect } from "next/navigation";
 import { ROLES } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Wallet, Calendar, ArrowUpRight, ArrowDownRight, MoreHorizontal, Receipt } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { Badge } from "@/components/ui/badge";
 
 export const dynamic = 'force-dynamic';
 
@@ -36,13 +37,11 @@ type GroupedExpenses = {
 const getFiscalMonthKey = (date: Date): string => {
   let year = getYear(date);
   let month = getMonth(date); // 0-11
-  // If the date is on or after the 25th, it belongs to the next fiscal month.
   if (date.getDate() >= 25) {
     const nextMonthDate = new Date(year, month + 1, 1);
     month = getMonth(nextMonthDate);
     year = getYear(nextMonthDate);
   }
-  // Format as YYYY-MM
   return `${year}-${(month + 1).toString().padStart(2, '0')}`;
 };
 
@@ -92,30 +91,28 @@ async function ExpensesContent() {
   const sortedGroupKeys = Object.keys(groupedExpenses).sort((a, b) => b.localeCompare(a));
   
   const cardColors = [
-      "bg-sky-500/10 border-sky-500/20 text-sky-800",
-      "bg-emerald-500/10 border-emerald-500/20 text-emerald-800",
-      "bg-amber-500/10 border-amber-500/20 text-amber-800",
-      "bg-rose-500/10 border-rose-500/20 text-rose-800",
-      "bg-violet-500/10 border-violet-500/20 text-violet-800",
-      "bg-teal-500/10 border-teal-500/20 text-teal-800",
+      "bg-sky-500/5 border-sky-200 text-sky-900",
+      "bg-emerald-500/5 border-emerald-200 text-emerald-900",
+      "bg-amber-500/5 border-amber-200 text-amber-900",
+      "bg-rose-500/5 border-rose-200 text-rose-900",
+      "bg-violet-500/5 border-violet-200 text-violet-900",
+      "bg-indigo-500/5 border-indigo-200 text-indigo-900",
   ];
 
-
   return (
-    <>
+    <div className="flex flex-col gap-8">
       {sortedGroupKeys.length === 0 ? (
-        <Card>
-            <CardContent className="pt-6 text-center text-muted-foreground">
-                <p>Aucune dépense enregistrée.</p>
-            </CardContent>
-        </Card>
+        <div className="flex flex-col items-center justify-center py-24 px-4 border-2 border-dashed rounded-3xl bg-card/50">
+          <Receipt className="h-16 w-16 text-muted-foreground/30 mb-4" />
+          <h3 className="text-xl font-bold text-muted-foreground">Aucune dépense</h3>
+          <p className="text-sm text-muted-foreground mt-2">Enregistrez vos premières dépenses pour suivre votre rentabilité.</p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
             {sortedGroupKeys.map((monthKey, index) => {
                 const group = groupedExpenses[monthKey];
-                
                 const year = parseInt(monthKey.split('-')[0], 10);
-                const month = parseInt(monthKey.split('-')[1], 10) -1;
+                const month = parseInt(monthKey.split('-')[1], 10) - 1;
                 
                 let fromDate = set(new Date(), { year, month: month - 1, date: 25 });
                 let toDate = set(new Date(), { year, month, date: 24 });
@@ -124,39 +121,59 @@ async function ExpensesContent() {
                 const toDateDisplay = format(toDate, 'd MMM yyyy', { locale: fr });
 
                 return (
-                    <Card key={monthKey} className={cn("flex flex-col", cardColors[index % cardColors.length])}>
-                        <CardHeader>
-                            <CardTitle className="capitalize text-lg">{group.displayMonth}</CardTitle>
-                            <CardDescription className="text-current/70">Période du {fromDateDisplay} au {toDateDisplay}</CardDescription>
+                    <Card key={monthKey} className={cn(
+                        "flex flex-col border-2 shadow-lg transition-all duration-300 hover:scale-[1.02] overflow-hidden", 
+                        cardColors[index % cardColors.length]
+                    )}>
+                        <CardHeader className="pb-4 relative">
+                            <div className="flex justify-between items-start">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        <Calendar className="size-4 opacity-60" />
+                                        <CardTitle className="capitalize text-xl font-black tracking-tight">{group.displayMonth}</CardTitle>
+                                    </div>
+                                    <CardDescription className="text-current/60 font-bold text-[10px] uppercase tracking-wider">
+                                        Du {fromDateDisplay} au {toDateDisplay}
+                                    </CardDescription>
+                                </div>
+                                <Badge variant="outline" className="bg-white/50 border-current/10 font-black text-[10px]">
+                                    {group.allExpensesInGroup.length} OPÉRATIONS
+                                </Badge>
+                            </div>
                         </CardHeader>
-                        <CardContent className="flex-grow">
-                            <Table>
-                                <TableBody>
+                        <CardContent className="flex-grow pt-2">
+                            <div className="space-y-1">
                                 {group.expensesByCategory
                                     .sort((a,b) => b.total - a.total)
                                     .map((expCat) => (
-                                    <TableRow key={expCat.category}>
-                                        <TableCell className="font-medium p-2 flex items-center gap-2">
-                                            {canEdit && (
+                                    <div key={expCat.category} className="flex items-center justify-between p-3 rounded-xl hover:bg-white/40 transition-colors group/item">
+                                        <div className="flex items-center gap-3">
+                                            {canEdit ? (
                                               <ExpenseCategoryDetailsDialog 
                                                 expenses={expCat.expenses}
                                                 category={expCat.category}
                                                 displayMonth={group.displayMonth}
                                                 settings={settings}
                                               />
+                                            ) : (
+                                                <div className="p-1.5 rounded-lg bg-current/5"><MoreHorizontal className="size-4 opacity-40" /></div>
                                             )}
-                                            {expCat.category}
-                                        </TableCell>
-                                        <TableCell className="text-right p-2">{formatCurrency(expCat.total, settings.currency)}</TableCell>
-                                    </TableRow>
+                                            <span className="font-bold text-sm uppercase tracking-tight">{expCat.category}</span>
+                                        </div>
+                                        <span className="font-black text-sm">{formatCurrency(expCat.total, settings.currency)}</span>
+                                    </div>
                                 ))}
-                                </TableBody>
-                            </Table>
+                            </div>
                         </CardContent>
-                        <CardFooter className="mt-auto border-t pt-4">
-                           <div className="w-full flex justify-between items-center text-lg font-bold">
-                                <span>Total du mois</span>
-                                <span>{formatCurrency(group.total, settings.currency)}</span>
+                        <CardFooter className="mt-auto border-t border-current/10 pt-6 bg-current/[0.02]">
+                           <div className="w-full flex justify-between items-center">
+                                <div className="space-y-0.5">
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50">Total Mensuel</p>
+                                    <p className="text-2xl font-black tracking-tighter">{formatCurrency(group.total, settings.currency)}</p>
+                                </div>
+                                <div className="p-2 rounded-2xl bg-current/10">
+                                    <ArrowDownRight className="size-6 opacity-60" />
+                                </div>
                            </div>
                         </CardFooter>
                     </Card>
@@ -164,7 +181,7 @@ async function ExpensesContent() {
             })}
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -182,16 +199,23 @@ export default async function ExpensesPage() {
       user={user} 
       settings={settings}
     >
-       <PageHeader>
-            {canEdit ? (
+       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+            <div>
+                <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
+                    <Wallet className="size-8 text-primary" />
+                    Gestion des Dépenses
+                </h1>
+                <p className="text-muted-foreground mt-1 font-medium">Suivez et catégorisez vos sorties de fonds mensuelles.</p>
+            </div>
+            {canEdit && (
               <ExpenseFormDialog currency={settings.currency}>
-                <Button>
-                  <PlusCircle className="mr-2" />
-                  Ajouter une dépense
+                <Button className="h-11 px-6 font-black uppercase tracking-tight shadow-xl shadow-primary/20 active:scale-95 transition-all">
+                  <PlusCircle className="mr-2 size-5" />
+                  Nouvelle Dépense
                 </Button>
               </ExpenseFormDialog>
-            ) : undefined}
-        </PageHeader>
+            )}
+        </div>
       <ExpensesContent />
     </AppLayout>
   );

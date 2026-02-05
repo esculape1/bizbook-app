@@ -9,9 +9,10 @@ import { formatCurrency } from '@/lib/utils';
 import type { Expense, Settings } from '@/lib/types';
 import { ExpenseFormDialog } from './ExpenseFormDialog';
 import { DeleteExpenseButton } from './DeleteExpenseButton';
-import { MoreVertical, Pencil } from 'lucide-react';
+import { MoreVertical, Pencil, Calendar, Receipt, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { Badge } from '@/components/ui/badge';
 
 type ExpenseCategoryDetailsDialogProps = {
   expenses: Expense[];
@@ -23,45 +24,59 @@ type ExpenseCategoryDetailsDialogProps = {
 export function ExpenseCategoryDetailsDialog({ expenses, category, displayMonth, settings }: ExpenseCategoryDetailsDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   
-  // Sort expenses by date, most recent first
   const sortedExpenses = expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" title={`Détails pour ${category}`}>
+        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 rounded-xl hover:bg-current/10 transition-colors" title={`Détails pour ${category}`}>
             <MoreVertical className="h-4 w-4" />
             <span className="sr-only">Voir détails</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Détails des Dépenses - {category}</DialogTitle>
-          <DialogDescription>
-            Toutes les dépenses pour la catégorie "{category}" durant la période de {displayMonth}.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="max-h-[60vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl border-none shadow-2xl p-0 overflow-hidden">
+        <div className="bg-primary/5 p-6 border-b border-primary/10">
+            <DialogHeader>
+                <div className="flex items-center gap-3 mb-1">
+                    <div className="p-2 rounded-xl bg-primary text-white">
+                        <Receipt className="size-5" />
+                    </div>
+                    <DialogTitle className="text-2xl font-black uppercase tracking-tight">{category}</DialogTitle>
+                </div>
+                <DialogDescription className="font-bold flex items-center gap-2 text-primary/70">
+                    <Calendar className="size-3" />
+                    Période de {displayMonth} • {expenses.length} dépense(s)
+                </DialogDescription>
+            </DialogHeader>
+        </div>
+        
+        <div className="max-h-[60vh] overflow-y-auto p-6">
             <Table>
                 <TableHeader>
-                    <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead className="text-right">Montant</TableHead>
-                        <TableHead className="text-right w-[100px]">Actions</TableHead>
+                    <TableRow className="hover:bg-transparent border-b-2">
+                        <TableHead className="font-black uppercase text-[10px] tracking-widest">Date</TableHead>
+                        <TableHead className="font-black uppercase text-[10px] tracking-widest">Désignation</TableHead>
+                        <TableHead className="text-right font-black uppercase text-[10px] tracking-widest">Montant</TableHead>
+                        <TableHead className="text-right w-[100px] font-black uppercase text-[10px] tracking-widest">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                 {sortedExpenses.map((expense) => (
-                    <TableRow key={expense.id}>
-                    <TableCell>{format(new Date(expense.date), 'd MMM yyyy', { locale: fr })}</TableCell>
-                    <TableCell className="font-medium">{expense.description}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(expense.amount, settings.currency)}</TableCell>
+                    <TableRow key={expense.id} className="group hover:bg-primary/5 border-l-4 border-l-transparent hover:border-l-primary transition-all">
+                    <TableCell className="text-xs font-bold text-muted-foreground whitespace-nowrap">
+                        {format(new Date(expense.date), 'dd/MM/yyyy', { locale: fr })}
+                    </TableCell>
+                    <TableCell className="font-extrabold text-sm uppercase tracking-tight">
+                        {expense.description}
+                    </TableCell>
+                    <TableCell className="text-right font-black text-primary">
+                        {formatCurrency(expense.amount, settings.currency)}
+                    </TableCell>
                     <TableCell>
-                        <div className="flex items-center justify-end">
+                        <div className="flex items-center justify-end gap-1">
                             <ExpenseFormDialog expense={expense} currency={settings.currency}>
-                                <Button variant="ghost" size="icon" title="Modifier la dépense">
-                                  <Pencil className="h-4 w-4" />
+                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-amber-100" title="Modifier la dépense">
+                                  <Pencil className="h-4 w-4 text-amber-600" />
                                 </Button>
                             </ExpenseFormDialog>
                             <DeleteExpenseButton id={expense.id} description={expense.description} />
@@ -72,8 +87,9 @@ export function ExpenseCategoryDetailsDialog({ expenses, category, displayMonth,
                 </TableBody>
             </Table>
         </div>
-        <DialogFooter>
-          <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>
+        
+        <DialogFooter className="p-6 bg-muted/30 border-t">
+          <Button type="button" variant="secondary" onClick={() => setIsOpen(false)} className="font-bold">
             Fermer
           </Button>
         </DialogFooter>
