@@ -65,7 +65,6 @@ export function AppLayout({
 
   const accessibleNavItems = navItems.filter(item => item.roles.includes(userRole));
 
-  // Identifier l'élément de navigation actuel pour l'affichage du titre
   const currentItem = navItems.find(item => 
     item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
   );
@@ -84,9 +83,8 @@ export function AppLayout({
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-40 w-full border-b bg-card/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 md:h-16 max-w-[1800px] items-center justify-between px-4 lg:px-6">
+        <div className="mx-auto flex h-16 max-w-[1800px] items-center justify-between px-4 lg:px-6">
           <div className="flex items-center gap-4 xl:gap-6 overflow-hidden">
-            {/* Logo visible uniquement sur mobile dans le header */}
             <Link href="/" className="flex items-center gap-2 group shrink-0 xl:hidden">
               <Logo size={32} />
               <span className="font-black text-lg tracking-tight text-primary">
@@ -94,7 +92,6 @@ export function AppLayout({
               </span>
             </Link>
 
-            {/* Navigation horizontale Desktop - Prend toute la largeur disponible */}
             <nav className="hidden xl:flex items-center gap-0.5">
               {accessibleNavItems.map((item) => {
                 const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
@@ -165,7 +162,6 @@ export function AppLayout({
             <div className="flex items-center gap-3 shrink-0">
               <div className="hidden lg:flex flex-col items-end">
                   <p className="text-xs font-bold text-foreground leading-none">{user.name}</p>
-                  <p className="text-[9px] text-muted-foreground uppercase tracking-widest mt-1 font-bold">{user.role}</p>
               </div>
               <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -180,7 +176,8 @@ export function AppLayout({
                   <DropdownMenuLabel className="font-normal px-4 py-3">
                       <div className="flex flex-col space-y-1">
                       <p className="text-sm font-bold leading-none">{user.name}</p>
-                      <p className="text-xs leading-none text-muted-foreground truncate">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">{user.role}</p>
+                      <p className="text-xs leading-none text-muted-foreground truncate pt-1">
                           {user.email}
                       </p>
                       </div>
@@ -209,17 +206,14 @@ export function AppLayout({
       </header>
 
       <main className="flex-1 flex flex-col items-center">
-        <div className="w-full max-w-[1800px] p-4 lg:p-8 xl:p-10">
-          {/* Section Branding & Titre de page Desktop */}
-          <div className="hidden xl:flex items-center gap-6 mb-10 border-b border-primary/10 pb-8">
-            <Logo size={64} />
-            <div className="flex flex-col">
-              <div className="flex items-center gap-4">
-                <span className="text-5xl font-black tracking-tighter text-primary">BizBook</span>
-                <div className="h-10 w-px bg-border mx-1 rotate-12" />
-                <span className="text-4xl font-bold text-foreground tracking-tight">{currentPageLabel}</span>
-              </div>
-              <p className="text-muted-foreground text-base font-medium mt-2">Gestion commerciale & pilotage d'activité</p>
+        <div className="w-full max-w-[1800px] p-4 lg:p-8 xl:px-10 xl:py-6">
+          {/* Section Branding & Titre de page Desktop Compact */}
+          <div className="hidden xl:flex items-center gap-3 mb-6">
+            <Logo size={32} />
+            <div className="flex items-center gap-2 text-sm">
+              <span className="font-bold text-primary/60">BizBook</span>
+              <span className="text-muted-foreground/40">/</span>
+              <span className="font-bold text-foreground">{currentPageLabel}</span>
             </div>
           </div>
 
