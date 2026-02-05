@@ -185,7 +185,7 @@ export function ProductsList({
                         </TableCell>
                         <TableCell className="font-bold text-[11px] text-muted-foreground uppercase">{product.reference}</TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="text-[10px] font-black uppercase px-2 py-0">
+                          <Badge variant="outline" className="text-[10px] font-black uppercase px-2.5 py-0.5 whitespace-nowrap">
                             {product.category}
                           </Badge>
                         </TableCell>
