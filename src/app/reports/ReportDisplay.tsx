@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -10,18 +8,28 @@ import { cn, formatCurrency } from "@/lib/utils";
 import type { ReportData, Settings, Client, Invoice } from "@/lib/types";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Printer } from "lucide-react";
+import { Printer, TrendingUp, Wallet, Package, Target, FileText, User as UserIcon, Calendar, ArrowRight } from "lucide-react";
 import { ClientStatementTemplate } from "@/components/report-templates/ClientStatementTemplate";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import Image from 'next/image';
 
-const StatCard = ({ title, value, className }: { title: string, value: string, className?: string }) => (
-    <Card className={cn("text-center", className)}>
-        <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0">
-            <p className="text-2xl font-bold">{value}</p>
+const StatCard = ({ title, value, icon, className, colorClass }: { title: string, value: string, icon: React.ReactNode, className?: string, colorClass: string }) => (
+    <Card className={cn("overflow-hidden border-none shadow-md group relative transition-all hover:scale-[1.02]", className, colorClass)}>
+        <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+                <div className="p-2.5 rounded-xl bg-white/20 text-white shadow-inner">
+                    {icon}
+                </div>
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60">Indicateur Clé</span>
+            </div>
+            <div className="space-y-1">
+                <p className="text-[11px] font-bold text-white/80 uppercase tracking-wider">{title}</p>
+                <p className="text-xl md:text-2xl font-black text-white tracking-tight">{value}</p>
+            </div>
+            {/* Decorative element */}
+            <div className="absolute -right-4 -bottom-4 opacity-10 scale-[2.5] text-white rotate-12 transition-transform group-hover:rotate-0 duration-500">
+                {icon}
+            </div>
         </CardContent>
     </Card>
 )
@@ -43,7 +51,7 @@ const getStatusVariant = (status: Invoice['status']): "success" | "warning" | "d
 const statusTranslations: { [key: string]: string } = {
     Paid: 'Payée',
     Unpaid: 'Impayée',
-    'Partially Paid': 'Partiellement Payée',
+    'Partially Paid': 'Partiel',
     Cancelled: 'Annulée'
 };
 
@@ -53,7 +61,6 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
   
   const startDate = parseISO(data.startDate);
   const endDate = parseISO(data.endDate);
-
 
   const handlePrint = (elementId: string) => {
     const content = document.getElementById(elementId);
@@ -83,59 +90,187 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-            <div>
-              <CardTitle>Rapport d'activité</CardTitle>
-              <CardDescription>
-                  Période du {format(startDate, "d MMMM yyyy", { locale: fr })} au {format(endDate, "d MMMM yyyy", { locale: fr })}
-              </CardDescription>
+    <div className="space-y-8 pb-12">
+      {/* En-tête du Rapport */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div>
+            <h2 className="text-3xl font-black tracking-tight text-foreground">Analyse d'Activité</h2>
+            <div className="flex items-center gap-2 mt-1 text-muted-foreground font-medium">
+                <Calendar className="size-4" />
+                <span className="text-sm">Du {format(startDate, "d MMMM yyyy", { locale: fr })} au {format(endDate, "d MMMM yyyy", { locale: fr })}</span>
             </div>
-             <div className="flex flex-wrap items-center justify-end gap-2">
-                <Button size="sm" variant="outline" onClick={() => handlePrint('report-display-content-printable')}>
-                    <Printer className="mr-2 h-4 w-4" />
-                    Imprimer le rapport
-                </Button>
-                {client && (
-                    <Dialog>
-                        <DialogTrigger asChild>
-                           <Button size="sm" variant="outline">
-                               <Printer className="mr-2 h-4 w-4" />
-                               Relevé du Client
-                           </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl p-0">
-                           <DialogHeader className="p-6 pb-2">
-                               <DialogTitle>Aperçu du relevé de compte</DialogTitle>
-                           </DialogHeader>
-                           <div className="max-h-[70vh] overflow-y-auto bg-gray-50">
-                               <ClientStatementTemplate data={data} settings={settings} client={client} />
-                           </div>
-                           <DialogFooter className="p-6 bg-white border-t">
-                               <Button type="button" variant="secondary" onClick={() => (document.querySelector('[data-radix-dialog-default-open="true"] [data-radix-dialog-close="true"]') as HTMLElement)?.click()}>Fermer</Button>
-                               <Button onClick={() => handlePrint('client-statement-content')}>
-                                   <Printer className="mr-2 h-4 w-4" />
-                                   Imprimer / PDF
-                               </Button>
-                           </DialogFooter>
-                        </DialogContent>
-                    </Dialog>
-                )}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-            <div id="report-summary-cards" className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <StatCard title="Chiffre d'Affaires (Ventes)" value={formatCurrency(data.summary.grossSales, currency)} className="bg-green-500/10 text-green-800" />
-                <StatCard title="Coût Marchandises" value={formatCurrency(data.summary.costOfGoodsSold, currency)} className="bg-orange-500/10 text-orange-800" />
-                <StatCard title="Dépenses" value={formatCurrency(data.summary.totalExpenses, currency)} className="bg-red-500/10 text-red-800" />
-                <StatCard title="Bénéfice Net" value={formatCurrency(data.summary.netProfit, currency)} className="bg-blue-500/10 text-blue-800" />
-            </div>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+            {client && (
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button variant="outline" className="font-bold border-primary/20 hover:bg-primary/5">
+                            <ArrowRight className="mr-2 h-4 w-4 text-primary" />
+                            Relevé de Compte
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl p-0">
+                        <DialogHeader className="p-6 pb-2">
+                            <DialogTitle>Aperçu du relevé de compte</DialogTitle>
+                        </DialogHeader>
+                        <div className="max-h-[70vh] overflow-y-auto bg-gray-50">
+                            <ClientStatementTemplate data={data} settings={settings} client={client} />
+                        </div>
+                        <DialogFooter className="p-6 bg-white border-t">
+                            <Button variant="secondary" onClick={() => (document.querySelector('[data-radix-dialog-default-open="true"] [data-radix-dialog-close="true"]') as HTMLElement)?.click()}>Fermer</Button>
+                            <Button onClick={() => handlePrint('client-statement-content')} className="font-black">
+                                <Printer className="mr-2 h-4 w-4" />
+                                Imprimer / PDF
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            )}
+            <Button onClick={() => handlePrint('report-display-content-printable')} className="font-black shadow-md">
+                <Printer className="mr-2 h-4 w-4" />
+                Exporter le Rapport
+            </Button>
+        </div>
+      </div>
+
+      {/* Cartes de Synthèse */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard 
+            title="Chiffre d'Affaires" 
+            value={formatCurrency(data.summary.grossSales, currency)} 
+            icon={<TrendingUp className="size-6" />}
+            colorClass="bg-gradient-to-br from-emerald-500 to-teal-600"
+        />
+        <StatCard 
+            title="Coût Marchandises" 
+            value={formatCurrency(data.summary.costOfGoodsSold, currency)} 
+            icon={<Package className="size-6" />}
+            colorClass="bg-gradient-to-br from-orange-400 to-amber-600"
+        />
+        <StatCard 
+            title="Total Dépenses" 
+            value={formatCurrency(data.summary.totalExpenses, currency)} 
+            icon={<Wallet className="size-6" />}
+            colorClass="bg-gradient-to-br from-rose-500 to-red-600"
+        />
+        <StatCard 
+            title="Bénéfice Net" 
+            value={formatCurrency(data.summary.netProfit, currency)} 
+            icon={<Target className="size-6" />}
+            colorClass="bg-gradient-to-br from-blue-500 to-indigo-600"
+        />
+      </div>
+
+      <div className="grid gap-8 grid-cols-1 xl:grid-cols-3">
+        {/* Détails des Factures */}
+        <Card className="xl:col-span-2 border-none shadow-premium bg-card/50 overflow-hidden">
+            <CardHeader className="bg-muted/30 border-b py-4">
+                <div className="flex items-center gap-2">
+                    <FileText className="size-5 text-primary" />
+                    <CardTitle className="text-lg font-black uppercase tracking-tight">Factures de la période</CardTitle>
+                </div>
+            </CardHeader>
+            <CardContent className="p-0">
+                <div className="max-h-[500px] overflow-auto">
+                    <Table>
+                        <TableHeader className="sticky top-0 bg-white/80 backdrop-blur-sm z-10">
+                            <TableRow>
+                                <TableHead className="font-black uppercase text-[10px] tracking-widest">N° Facture</TableHead>
+                                <TableHead className="font-black uppercase text-[10px] tracking-widest">Client</TableHead>
+                                <TableHead className="font-black uppercase text-[10px] tracking-widest">Date</TableHead>
+                                <TableHead className="text-center font-black uppercase text-[10px] tracking-widest">Statut</TableHead>
+                                <TableHead className="text-right font-black uppercase text-[10px] tracking-widest">Montant</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {data.allInvoices.length > 0 ? data.allInvoices.map((invoice) => (
+                                <TableRow key={invoice.id} className="group hover:bg-primary/5 transition-colors">
+                                    <TableCell className="font-black text-sm">{invoice.invoiceNumber}</TableCell>
+                                    <TableCell className="font-bold text-[11px] uppercase text-muted-foreground line-clamp-1">{invoice.clientName}</TableCell>
+                                    <TableCell className="text-xs">{format(new Date(invoice.date), "dd/MM/yy")}</TableCell>
+                                    <TableCell className="text-center">
+                                        <Badge variant={getStatusVariant(invoice.status)} className="font-black text-[9px] px-2 py-0">
+                                            {statusTranslations[invoice.status]}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right font-black text-primary">{formatCurrency(invoice.totalAmount, currency)}</TableCell>
+                                </TableRow>
+                            )) : (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="h-32 text-center text-muted-foreground italic">Aucune facture sur cette période.</TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            </CardContent>
+        </Card>
+
+        <div className="space-y-8">
+            {/* Ventes par Produit */}
+            <Card className="border-none shadow-premium bg-card/50 overflow-hidden">
+                <CardHeader className="bg-amber-500/10 border-b border-amber-500/10 py-4">
+                    <div className="flex items-center gap-2">
+                        <Package className="size-5 text-amber-600" />
+                        <CardTitle className="text-lg font-black uppercase tracking-tight text-amber-900">Ventes par Produit</CardTitle>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                    <div className="max-h-[300px] overflow-auto">
+                        <Table>
+                            <TableBody>
+                                {data.productSales.slice(0, 10).map((sale, i) => (
+                                    <TableRow key={i} className="hover:bg-amber-500/5">
+                                        <TableCell className="font-bold text-xs uppercase tracking-tight leading-snug">
+                                            {sale.productName}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <Badge variant="outline" className="bg-white font-black">{sale.quantitySold}</Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Liste des Dépenses */}
+            <Card className="border-none shadow-premium bg-card/50 overflow-hidden">
+                <CardHeader className="bg-rose-500/10 border-b border-rose-500/10 py-4">
+                    <div className="flex items-center gap-2">
+                        <Wallet className="size-5 text-rose-600" />
+                        <CardTitle className="text-lg font-black uppercase tracking-tight text-rose-900">Dernières Dépenses</CardTitle>
+                    </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                    <div className="max-h-[300px] overflow-auto">
+                        <Table>
+                            <TableBody>
+                                {data.expenses.length > 0 ? data.expenses.slice(0, 10).map((exp) => (
+                                    <TableRow key={exp.id} className="hover:bg-rose-500/5">
+                                        <TableCell className="p-3">
+                                            <p className="font-bold text-xs uppercase leading-none truncate w-[150px]">{exp.description}</p>
+                                            <p className="text-[9px] font-black text-muted-foreground mt-1 uppercase">{exp.category}</p>
+                                        </TableCell>
+                                        <TableCell className="text-right p-3 font-black text-rose-700 whitespace-nowrap">
+                                            {formatCurrency(exp.amount, currency)}
+                                        </TableCell>
+                                    </TableRow>
+                                )) : (
+                                    <TableRow>
+                                        <TableCell className="h-20 text-center text-muted-foreground text-xs italic">Aucune dépense.</TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+      </div>
       
+      {/* VERSION IMPRIMABLE (Cachée) */}
       <div id="report-display-content-printable" className="printable-report space-y-6 hidden print:block">
         <header className="flex justify-between items-start mb-8 pb-4 border-b">
             <div>
@@ -161,121 +296,51 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
             </div>
         </header>
 
-        <div className="grid gap-4 grid-cols-4" style={{ breakInside: 'avoid-page' }}>
-            <StatCard title="Chiffre d'Affaires (Ventes)" value={formatCurrency(data.summary.grossSales, currency)} className="bg-green-100 border-green-200 text-green-800" />
-            <StatCard title="Coût Marchandises" value={formatCurrency(data.summary.costOfGoodsSold, currency)} className="bg-orange-100 border-orange-200 text-orange-800" />
-            <StatCard title="Dépenses" value={formatCurrency(data.summary.totalExpenses, currency)} className="bg-red-100 border-red-200 text-red-800" />
-            <StatCard title="Bénéfice Net" value={formatCurrency(data.summary.netProfit, currency)} className="bg-blue-100 border-blue-200 text-blue-800" />
+        <div className="grid gap-4 grid-cols-4 mb-8">
+            <div className="p-4 bg-gray-100 rounded-lg text-center">
+                <p className="text-[10px] font-bold uppercase text-gray-500">Ventes</p>
+                <p className="text-lg font-black">{formatCurrency(data.summary.grossSales, currency)}</p>
+            </div>
+            <div className="p-4 bg-gray-100 rounded-lg text-center">
+                <p className="text-[10px] font-bold uppercase text-gray-500">Coût Marchandises</p>
+                <p className="text-lg font-black">{formatCurrency(data.summary.costOfGoodsSold, currency)}</p>
+            </div>
+            <div className="p-4 bg-gray-100 rounded-lg text-center">
+                <p className="text-[10px] font-bold uppercase text-gray-500">Dépenses</p>
+                <p className="text-lg font-black">{formatCurrency(data.summary.totalExpenses, currency)}</p>
+            </div>
+            <div className="p-4 bg-gray-800 text-white rounded-lg text-center">
+                <p className="text-[10px] font-bold uppercase text-gray-300">Bénéfice Net</p>
+                <p className="text-lg font-black">{formatCurrency(data.summary.netProfit, currency)}</p>
+            </div>
         </div>
 
-        {data.allInvoices.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Détail des Factures ({data.allInvoices.length})</CardTitle>
-              </CardHeader>
-              <CardContent>
+        <div className="space-y-8">
+            <div className="border rounded-lg overflow-hidden">
                 <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>N° Facture</TableHead>
-                      <TableHead>Client</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Statut</TableHead>
-                      <TableHead className="text-right whitespace-nowrap">Montant</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {data.allInvoices.map((invoice) => (
-                      <TableRow key={invoice.id}>
-                        <TableCell>{invoice.invoiceNumber}</TableCell>
-                        <TableCell>{invoice.clientName}</TableCell>
-                        <TableCell>{format(new Date(invoice.date), "dd/MM/yyyy")}</TableCell>
-                        <TableCell>
-                          <Badge variant={getStatusVariant(invoice.status)}>
-                            {statusTranslations[invoice.status]}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right whitespace-nowrap">{formatCurrency(invoice.totalAmount, currency)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                   <TableFooter>
-                      <TableRow>
-                          <TableCell colSpan={4} className="text-right font-bold">Total Ventes sur la période</TableCell>
-                          <TableCell className="text-right font-bold whitespace-nowrap">{formatCurrency(data.summary.grossSales, currency)}</TableCell>
-                      </TableRow>
-                  </TableFooter>
+                    <TableHeader className="bg-gray-200">
+                        <TableRow>
+                            <TableHead className="text-black font-bold">N° Facture</TableHead>
+                            <TableHead className="text-black font-bold">Client</TableHead>
+                            <TableHead className="text-black font-bold">Date</TableHead>
+                            <TableHead className="text-right text-black font-bold">Montant</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {data.allInvoices.map((inv) => (
+                            <TableRow key={inv.id}>
+                                <TableCell className="font-bold">{inv.invoiceNumber}</TableCell>
+                                <TableCell className="text-xs uppercase">{inv.clientName}</TableCell>
+                                <TableCell>{format(new Date(inv.date), "dd/MM/yyyy")}</TableCell>
+                                <TableCell className="text-right font-bold">{formatCurrency(inv.totalAmount, currency)}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
                 </Table>
-              </CardContent>
-            </Card>
-        )}
-
-        <div className="grid gap-6 lg:grid-cols-2" style={{ breakInside: 'avoid-page' }}>
-          {data.productSales.length > 0 && (
-              <Card>
-                  <CardHeader>
-                      <CardTitle>Ventes par Produit</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                      <Table>
-                          <TableHeader>
-                              <TableRow>
-                                  <TableHead>Produit</TableHead>
-                                  <TableHead className="text-right">Qté Vendue</TableHead>
-                                  <TableHead className="text-right">Stock Actuel</TableHead>
-                              </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                              {data.productSales.map(item => (
-                                  <TableRow key={item.productName}>
-                                      <TableCell>{item.productName}</TableCell>
-                                      <TableCell className="text-right">{item.quantitySold}</TableCell>
-                                      <TableCell className="text-right">{item.quantityInStock}</TableCell>
-                                  </TableRow>
-                              ))}
-                          </TableBody>
-                      </Table>
-                  </CardContent>
-              </Card>
-          )}
-          
-          {data.expenses.length > 0 && (
-              <Card>
-                  <CardHeader>
-                      <CardTitle>Dépenses</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                      <Table>
-                          <TableHeader>
-                              <TableRow>
-                                  <TableHead>Date</TableHead>
-                                  <TableHead>Description</TableHead>
-                                  <TableHead>Catégorie</TableHead>
-                                  <TableHead className="text-right">Montant</TableHead>
-                              </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                              {data.expenses.map(exp => (
-                                  <TableRow key={exp.id}>
-                                      <TableCell>{format(new Date(exp.date), "dd/MM/yyyy")}</TableCell>
-                                      <TableCell>{exp.description}</TableCell>
-                                      <TableCell>{exp.category}</TableCell>
-                                      <TableCell className="text-right whitespace-nowrap">{formatCurrency(exp.amount, currency)}</TableCell>
-                                  </TableRow>
-                              ))}
-                          </TableBody>
-                           <TableFooter>
-                              <TableRow>
-                                  <TableCell colSpan={3} className="text-right font-bold">Total Dépenses</TableCell>
-                                  <TableCell className="text-right font-bold whitespace-nowrap">{formatCurrency(data.summary.totalExpenses, currency)}</TableCell>
-                              </TableRow>
-                          </TableFooter>
-                      </Table>
-                  </CardContent>
-              </Card>
-          )}
+            </div>
         </div>
-         <footer className="flex justify-between items-start mt-24 pt-8 border-t-2 border-dashed" style={{ breakInside: 'avoid-page' }}>
+
+         <footer className="flex justify-between items-start mt-24 pt-8 border-t-2 border-dashed">
             <div className="w-2/5 text-center">
                 <p className="font-bold text-sm">Le Magasinier</p>
                 <div className="mt-20 border-b-2 border-gray-400"></div>
