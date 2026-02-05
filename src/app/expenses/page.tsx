@@ -13,8 +13,7 @@ import { AppLayout } from "@/app/AppLayout";
 import { redirect } from "next/navigation";
 import { ROLES } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Wallet, Calendar, ArrowUpRight, ArrowDownRight, MoreHorizontal, Receipt } from "lucide-react";
-import { PageHeader } from "@/components/PageHeader";
+import { PlusCircle, Wallet, Calendar, ArrowDownRight, MoreHorizontal, Receipt } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export const dynamic = 'force-dynamic';
@@ -100,15 +99,15 @@ async function ExpensesContent() {
   ];
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       {sortedGroupKeys.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-24 px-4 border-2 border-dashed rounded-3xl bg-card/50">
-          <Receipt className="h-16 w-16 text-muted-foreground/30 mb-4" />
-          <h3 className="text-xl font-bold text-muted-foreground">Aucune dépense</h3>
-          <p className="text-sm text-muted-foreground mt-2">Enregistrez vos premières dépenses pour suivre votre rentabilité.</p>
+        <div className="flex flex-col items-center justify-center py-20 px-4 border-2 border-dashed rounded-3xl bg-card/50">
+          <Receipt className="h-12 w-12 text-muted-foreground/30 mb-4" />
+          <h3 className="text-lg font-bold text-muted-foreground">Aucune dépense</h3>
+          <p className="text-xs text-muted-foreground mt-1">Enregistrez vos premières dépenses pour suivre votre rentabilité.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {sortedGroupKeys.map((monthKey, index) => {
                 const group = groupedExpenses[monthKey];
                 const year = parseInt(monthKey.split('-')[0], 10);
@@ -122,32 +121,32 @@ async function ExpensesContent() {
 
                 return (
                     <Card key={monthKey} className={cn(
-                        "flex flex-col border-2 shadow-lg transition-all duration-300 hover:scale-[1.02] overflow-hidden", 
+                        "flex flex-col border shadow-sm transition-all duration-300 hover:shadow-md overflow-hidden", 
                         cardColors[index % cardColors.length]
                     )}>
-                        <CardHeader className="pb-4 relative">
-                            <div className="flex justify-between items-start">
-                                <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
-                                        <Calendar className="size-4 opacity-60" />
-                                        <CardTitle className="capitalize text-xl font-black tracking-tight">{group.displayMonth}</CardTitle>
+                        <CardHeader className="p-4 pb-3 relative space-y-0">
+                            <div className="flex justify-between items-start gap-2">
+                                <div className="space-y-0.5">
+                                    <div className="flex items-center gap-1.5">
+                                        <Calendar className="size-3.5 opacity-60" />
+                                        <CardTitle className="capitalize text-lg font-black tracking-tight leading-none">{group.displayMonth}</CardTitle>
                                     </div>
-                                    <CardDescription className="text-current/60 font-bold text-[10px] uppercase tracking-wider">
-                                        Du {fromDateDisplay} au {toDateDisplay}
+                                    <CardDescription className="text-current/60 font-bold text-[9px] uppercase tracking-wider">
+                                        {fromDateDisplay} - {toDateDisplay}
                                     </CardDescription>
                                 </div>
-                                <Badge variant="outline" className="bg-white/50 border-current/10 font-black text-[10px]">
-                                    {group.allExpensesInGroup.length} OPÉRATIONS
+                                <Badge variant="outline" className="bg-white/50 border-current/10 font-black text-[8px] h-5 px-1.5">
+                                    {group.allExpensesInGroup.length} OP.
                                 </Badge>
                             </div>
                         </CardHeader>
-                        <CardContent className="flex-grow pt-2">
-                            <div className="space-y-1">
+                        <CardContent className="flex-grow px-2 py-0">
+                            <div className="space-y-0.5">
                                 {group.expensesByCategory
                                     .sort((a,b) => b.total - a.total)
                                     .map((expCat) => (
-                                    <div key={expCat.category} className="flex items-center justify-between p-3 rounded-xl hover:bg-white/40 transition-colors group/item">
-                                        <div className="flex items-center gap-3">
+                                    <div key={expCat.category} className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/40 transition-colors group/item">
+                                        <div className="flex items-center gap-2">
                                             {canEdit ? (
                                               <ExpenseCategoryDetailsDialog 
                                                 expenses={expCat.expenses}
@@ -156,23 +155,23 @@ async function ExpensesContent() {
                                                 settings={settings}
                                               />
                                             ) : (
-                                                <div className="p-1.5 rounded-lg bg-current/5"><MoreHorizontal className="size-4 opacity-40" /></div>
+                                                <div className="p-1 rounded-lg bg-current/5"><MoreHorizontal className="size-3 opacity-40" /></div>
                                             )}
-                                            <span className="font-bold text-sm uppercase tracking-tight">{expCat.category}</span>
+                                            <span className="font-bold text-xs uppercase tracking-tight truncate max-w-[100px]">{expCat.category}</span>
                                         </div>
-                                        <span className="font-black text-sm">{formatCurrency(expCat.total, settings.currency)}</span>
+                                        <span className="font-black text-xs whitespace-nowrap">{formatCurrency(expCat.total, settings.currency)}</span>
                                     </div>
                                 ))}
                             </div>
                         </CardContent>
-                        <CardFooter className="mt-auto border-t border-current/10 pt-6 bg-current/[0.02]">
+                        <CardFooter className="mt-auto border-t border-current/10 p-4 py-3 bg-current/[0.02]">
                            <div className="w-full flex justify-between items-center">
-                                <div className="space-y-0.5">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50">Total Mensuel</p>
-                                    <p className="text-2xl font-black tracking-tighter">{formatCurrency(group.total, settings.currency)}</p>
+                                <div className="space-y-0">
+                                    <p className="text-[8px] font-black uppercase tracking-[0.1em] opacity-50 leading-none">Total Mensuel</p>
+                                    <p className="text-lg font-black tracking-tighter">{formatCurrency(group.total, settings.currency)}</p>
                                 </div>
-                                <div className="p-2 rounded-2xl bg-current/10">
-                                    <ArrowDownRight className="size-6 opacity-60" />
+                                <div className="p-1.5 rounded-xl bg-current/10 shrink-0">
+                                    <ArrowDownRight className="size-4 opacity-60" />
                                 </div>
                            </div>
                         </CardFooter>
@@ -199,18 +198,18 @@ export default async function ExpensesPage() {
       user={user} 
       settings={settings}
     >
-       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div>
-                <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
-                    <Wallet className="size-8 text-primary" />
+                <h1 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-2">
+                    <Wallet className="size-6 text-primary" />
                     Gestion des Dépenses
                 </h1>
-                <p className="text-muted-foreground mt-1 font-medium">Suivez et catégorisez vos sorties de fonds mensuelles.</p>
+                <p className="text-muted-foreground text-xs font-medium">Suivez et catégorisez vos sorties de fonds mensuelles.</p>
             </div>
             {canEdit && (
               <ExpenseFormDialog currency={settings.currency}>
-                <Button className="h-11 px-6 font-black uppercase tracking-tight shadow-xl shadow-primary/20 active:scale-95 transition-all">
-                  <PlusCircle className="mr-2 size-5" />
+                <Button className="h-10 px-5 font-black uppercase tracking-tight shadow-lg shadow-primary/10 active:scale-95 transition-all text-xs">
+                  <PlusCircle className="mr-2 size-4" />
                   Nouvelle Dépense
                 </Button>
               </ExpenseFormDialog>
