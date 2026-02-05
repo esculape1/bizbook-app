@@ -1,5 +1,4 @@
 
-
 import { db } from '@/lib/firebase-admin';
 import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User, UserWithPassword, ClientOrder } from './types';
@@ -293,6 +292,33 @@ export async function addInvoice(invoiceData: Omit<Invoice, 'id'>): Promise<Invo
     return { id: docRef.id, ...invoiceData };
 }
 
+/**
+ * Unified helper to get the next sequential invoice number for the year.
+ */
+export async function getNextInvoiceNumber(): Promise<string> {
+    const allInvoices = await getInvoices();
+    const currentYear = new Date().getFullYear();
+    const yearPrefix = `FACT-${currentYear}-`;
+
+    const latestInvoiceForYear = allInvoices
+      .filter(inv => inv.invoiceNumber && inv.invoiceNumber.startsWith(yearPrefix))
+      .sort((a, b) => {
+        const numA = parseInt(a.invoiceNumber.replace(yearPrefix, ''), 10);
+        const numB = parseInt(b.invoiceNumber.replace(yearPrefix, ''), 10);
+        return numB - numA;
+      })[0];
+      
+    let newInvoiceSuffix = 1;
+    if (latestInvoiceForYear) {
+        const lastSuffix = parseInt(latestInvoiceForYear.invoiceNumber.replace(yearPrefix, ''), 10);
+        if (!isNaN(lastSuffix)) {
+            newInvoiceSuffix = lastSuffix + 1;
+        }
+    }
+    
+    return `${yearPrefix}${newInvoiceSuffix.toString().padStart(4, '0')}`;
+}
+
 export async function updateInvoice(id: string, invoiceData: Partial<Omit<Invoice, 'id'>>): Promise<void> {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
   const invoiceDocRef = db.collection('invoices').doc(id);
@@ -553,22 +579,3 @@ export const getDashboardStats = cache(async () => {
 },
 ['dashboard-stats'],
 { revalidate: REVALIDATION_TIME, tags: ['invoices', 'expenses', 'clients', 'products'] });
-
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

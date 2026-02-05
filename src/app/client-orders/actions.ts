@@ -2,7 +2,7 @@
 'use server';
 
 import { db } from '@/lib/firebase-admin';
-import { getInvoices, addInvoice, updateProduct, updateClientOrder, getProducts } from '@/lib/data';
+import { getInvoices, addInvoice, updateProduct, updateClientOrder, getProducts, getNextInvoiceNumber } from '@/lib/data';
 import { getSession } from '@/lib/session';
 import { ROLES, CLIENT_ORDER_STATUS } from '@/lib/constants';
 import { revalidateTag } from 'next/cache';
@@ -51,28 +51,7 @@ export async function convertOrderToInvoice(orderId: string): Promise<{ success:
         };
     });
 
-    // Generate the next sequential invoice number
-    const allInvoices = await getInvoices();
-    const currentYear = new Date().getFullYear();
-    const yearPrefix = `FACT-${currentYear}-`;
-
-    const latestInvoiceForYear = allInvoices
-      .filter(inv => inv.invoiceNumber && inv.invoiceNumber.startsWith(yearPrefix))
-      .sort((a, b) => {
-        const numA = parseInt(a.invoiceNumber.replace(yearPrefix, ''), 10);
-        const numB = parseInt(b.invoiceNumber.replace(yearPrefix, ''), 10);
-        return numB - numA;
-      })[0];
-      
-    let newInvoiceSuffix = 1;
-    if (latestInvoiceForYear) {
-        const lastSuffix = parseInt(latestInvoiceForYear.invoiceNumber.replace(yearPrefix, ''), 10);
-        if (!isNaN(lastSuffix)) {
-            newInvoiceSuffix = lastSuffix + 1;
-        }
-    }
-    
-    const newInvoiceNumber = `${yearPrefix}${newInvoiceSuffix.toString().padStart(4, '0')}`;
+    const newInvoiceNumber = await getNextInvoiceNumber();
 
     // Create the new invoice
     await addInvoice({

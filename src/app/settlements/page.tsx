@@ -1,7 +1,7 @@
 
 import { getClients, getSettings } from "@/lib/data";
 import { getSession } from "@/lib/session";
-import { AppLayout } from "@/components/AppLayout";
+import { AppLayout } from "@/app/AppLayout";
 import { redirect } from "next/navigation";
 import { SettlementsClientPage } from "./SettlementsClientPage";
 import { ROLES } from "@/lib/constants";
@@ -21,7 +21,6 @@ export default async function SettlementsPage() {
 
   const canSettle = user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN;
   if (!canSettle) {
-    // Or show a disabled page
     redirect('/');
   }
 

@@ -10,6 +10,7 @@ import {
   getInvoiceById,
   updateProduct,
   getInvoices,
+  getNextInvoiceNumber,
 } from '@/lib/data';
 import { revalidateTag } from 'next/cache';
 import type { InvoiceItem, Invoice } from '@/lib/types';
@@ -69,7 +70,6 @@ export async function createInvoice(formData: unknown) {
   const validatedFields = createInvoiceSchema.safeParse(formData);
 
   if (!validatedFields.success) {
-    console.log(validatedFields.error.flatten().fieldErrors);
     return {
       message: 'Certains champs sont invalides. Impossible de créer la facture.',
     };

@@ -4,7 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 import { InvoiceViewer } from "../InvoiceViewer";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
-import { AppLayout } from "@/components/AppLayout";
+import { AppLayout } from "@/app/AppLayout";
 import { getSession } from "@/lib/session";
 
 export default async function InvoiceDetailPage({ params }: { params: { id: string } }) {
@@ -24,11 +24,8 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
     notFound();
   }
 
-  // Fetch client after we know the invoice exists.
   const client = await getClientById(invoice.clientId);
   
-  // This check is important. If the client is not found, we should not proceed to render.
-  // Instead, we show a helpful error message.
   if (!client) {
       return (
         <AppLayout user={user} settings={settings}>

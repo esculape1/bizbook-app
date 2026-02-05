@@ -2,7 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { addQuote, getClients, getProducts, updateQuote as updateQuoteInDB, deleteQuote as deleteQuoteFromDB, getQuoteById, addInvoice, updateProduct, getInvoices } from '@/lib/data';
+import { addQuote, getClients, getProducts, updateQuote as updateQuoteInDB, deleteQuote as deleteQuoteFromDB, getQuoteById, addInvoice, updateProduct, getInvoices, getNextInvoiceNumber } from '@/lib/data';
 import { revalidateTag } from 'next/cache';
 import type { QuoteItem, InvoiceItem } from '@/lib/types';
 import { getSession } from '@/lib/session';
@@ -108,7 +108,6 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
   const validatedFields = updateQuoteSchema.safeParse(formData);
 
   if (!validatedFields.success) {
-      console.log(validatedFields.error.flatten().fieldErrors);
     return {
       message: 'Certains champs sont invalides. Impossible de mettre à jour la proforma.',
     };
@@ -143,7 +142,6 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
       }
     }
 
-    // The unitPrice from the form (item.unitPrice) is now correctly used.
     const quoteItems: QuoteItem[] = items.map(item => {
       const product = products.find(p => p.id === item.productId);
       if (!product) throw new Error(`Produit non trouvé: ${item.productId}`);
@@ -152,8 +150,8 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
         productName: product.name,
         reference: product.reference,
         quantity: item.quantity,
-        unitPrice: item.unitPrice, // Use the price from the submitted form data
-        total: item.quantity * item.unitPrice, // Recalculate total with the submitted price
+        unitPrice: item.unitPrice, 
+        total: item.quantity * item.unitPrice,
       };
     });
 
@@ -186,7 +184,6 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
 
     // Create invoice if status changed to 'Accepted'
     if (status === QUOTE_STATUS.ACCEPTED && originalQuote.status !== QUOTE_STATUS.ACCEPTED) {
-      // Use the unit prices from the accepted quote, not the default product prices
       const invoiceItems: InvoiceItem[] = quoteItems.map(item => {
         const product = products.find(p => p.id === item.productId);
         return {
@@ -194,34 +191,13 @@ export async function updateQuote(id: string, quoteNumber: string, formData: unk
           productName: item.productName,
           reference: item.reference,
           quantity: item.quantity,
-          unitPrice: item.unitPrice, // Important: use the price from the quote
+          unitPrice: item.unitPrice,
           total: item.total,
           purchasePrice: product?.purchasePrice ?? 0,
         };
       });
       
-      // Get the next sequential invoice number
-      const allInvoices = await getInvoices();
-      const currentYear = new Date().getFullYear();
-      const yearPrefix = `FACT-${currentYear}-`;
-
-      const latestInvoiceForYear = allInvoices
-        .filter(inv => inv.invoiceNumber && inv.invoiceNumber.startsWith(yearPrefix))
-        .sort((a, b) => {
-            const numA = parseInt(a.invoiceNumber.replace(yearPrefix, ''), 10);
-            const numB = parseInt(b.invoiceNumber.replace(yearPrefix, ''), 10);
-            return numB - numA;
-        })[0];
-        
-      let newInvoiceSuffix = 1;
-      if (latestInvoiceForYear) {
-          const lastSuffix = parseInt(latestInvoiceForYear.invoiceNumber.replace(yearPrefix, ''), 10);
-          if (!isNaN(lastSuffix)) {
-              newInvoiceSuffix = lastSuffix + 1;
-          }
-      }
-      
-      const newInvoiceNumber = `${yearPrefix}${newInvoiceSuffix.toString().padStart(3, '0')}`;
+      const newInvoiceNumber = await getNextInvoiceNumber();
 
       // Create invoice
       await addInvoice({
