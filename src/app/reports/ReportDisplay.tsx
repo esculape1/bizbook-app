@@ -26,7 +26,6 @@ const StatCard = ({ title, value, icon, className, colorClass }: { title: string
                 <p className="text-[11px] font-bold text-white/80 uppercase tracking-wider">{title}</p>
                 <p className="text-xl md:text-2xl font-black text-white tracking-tight">{value}</p>
             </div>
-            {/* Decorative element */}
             <div className="absolute -right-4 -bottom-4 opacity-10 scale-[2.5] text-white rotate-12 transition-transform group-hover:rotate-0 duration-500">
                 {icon}
             </div>
@@ -62,6 +61,20 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
   const startDate = parseISO(data.startDate);
   const endDate = parseISO(data.endDate);
 
+  // Calculate Revenue per Client
+  const salesByClient = data.allInvoices.reduce((acc, inv) => {
+    if (inv.status === 'Cancelled') return acc;
+    const clientName = inv.clientName;
+    if (!acc[clientName]) {
+      acc[clientName] = 0;
+    }
+    acc[clientName] += inv.totalAmount;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const sortedSalesByClient = Object.entries(salesByClient)
+    .sort(([, a], [, b]) => b - a);
+
   const handlePrint = (elementId: string) => {
     const content = document.getElementById(elementId);
     if (content) {
@@ -78,7 +91,7 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
             console.warn('Could not read stylesheet for printing', e);
         }
       });
-      printWindow?.document.write('<body class="p-8">');
+      printWindow?.document.write('</head><body class="p-0 bg-white">');
       printWindow?.document.write(content.innerHTML);
       printWindow?.document.write('</body></html>');
       printWindow?.document.close();
@@ -91,7 +104,6 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
 
   return (
     <div className="space-y-8 pb-12">
-      {/* En-tête du Rapport */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
             <h2 className="text-3xl font-black tracking-tight text-foreground">Analyse d'Activité</h2>
@@ -133,7 +145,6 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
         </div>
       </div>
 
-      {/* Cartes de Synthèse */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard 
             title="Chiffre d'Affaires" 
@@ -162,7 +173,6 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
       </div>
 
       <div className="grid gap-8 grid-cols-1 xl:grid-cols-3">
-        {/* Détails des Factures */}
         <Card className="xl:col-span-2 border-none shadow-premium bg-card overflow-hidden">
             <CardHeader className="bg-white border-b py-5">
                 <div className="flex items-center gap-3">
@@ -224,7 +234,6 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
         </Card>
 
         <div className="space-y-8">
-            {/* Ventes par Produit */}
             <Card className="border-none shadow-premium bg-card overflow-hidden">
                 <CardHeader className="bg-amber-500/5 border-b border-amber-500/10 py-5">
                     <div className="flex items-center gap-3">
@@ -238,7 +247,7 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                     <div className="max-h-[350px] overflow-auto custom-scrollbar">
                         <Table>
                             <TableBody>
-                                {data.productSales.slice(0, 10).map((sale, i) => (
+                                {data.productSales.map((sale, i) => (
                                     <TableRow key={i} className="group transition-all hover:bg-amber-500/5 border-l-4 border-l-transparent hover:border-l-amber-500 border-b last:border-0">
                                         <TableCell className="py-4 px-5">
                                             <p className="font-bold text-xs uppercase tracking-tight leading-snug text-foreground">
@@ -258,7 +267,6 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                 </CardContent>
             </Card>
 
-            {/* Liste des Dépenses */}
             <Card className="border-none shadow-premium bg-card overflow-hidden">
                 <CardHeader className="bg-rose-500/5 border-b border-rose-500/10 py-5">
                     <div className="flex items-center gap-3">
@@ -272,7 +280,7 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                     <div className="max-h-[350px] overflow-auto custom-scrollbar">
                         <Table>
                             <TableBody>
-                                {data.expenses.length > 0 ? data.expenses.slice(0, 10).map((exp) => (
+                                {data.expenses.length > 0 ? data.expenses.map((exp) => (
                                     <TableRow key={exp.id} className="group transition-all hover:bg-rose-500/5 border-l-4 border-l-transparent hover:border-l-rose-500 border-b last:border-0">
                                         <TableCell className="py-4 px-5">
                                             <p className="font-bold text-xs uppercase leading-none truncate max-w-[160px] text-foreground">{exp.description}</p>
@@ -299,85 +307,175 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
         </div>
       </div>
       
-      {/* VERSION IMPRIMABLE (Cachée) */}
-      <div id="report-display-content-printable" className="printable-report space-y-6 hidden print:block">
-        <header className="flex justify-between items-start mb-8 pb-4 border-b">
-            <div>
+      {/* VERSION IMPRIMABLE AMÉLIORÉE */}
+      <div id="report-display-content-printable" className="printable-report space-y-8 hidden print:block bg-white text-black">
+        <style>{`
+          @media print {
+            .printable-report { padding: 20mm; font-family: 'Inter', sans-serif; }
+            .print-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+            .print-card { border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; text-align: center; background-color: #f9fafb !important; -webkit-print-color-adjust: exact; }
+            .print-card-title { font-size: 9px; text-transform: uppercase; color: #6b7280; font-weight: 800; margin-bottom: 5px; }
+            .print-card-value { font-size: 16px; font-weight: 900; }
+            .print-section-title { font-size: 14px; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 5px; margin: 30px 0 15px 0; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            th { text-align: left; font-size: 10px; text-transform: uppercase; padding: 8px; background-color: #f3f4f6 !important; border: 1px solid #d1d5db; -webkit-print-color-adjust: exact; }
+            td { padding: 8px; border: 1px solid #d1d5db; font-size: 11px; }
+            .text-right { text-align: right; }
+            .font-bold { font-weight: 700; }
+          }
+        `}</style>
+
+        <header className="flex justify-between items-start border-b-4 border-black pb-6 mb-8">
+            <div className="flex gap-6 items-center">
               {settings.logoUrl && (
                 <Image 
                   src={settings.logoUrl} 
-                  alt={`${settings.companyName} logo`} 
-                  width={120} 
-                  height={60} 
-                  className="object-contain mb-4"
+                  alt="Logo" 
+                  width={100} 
+                  height={50} 
+                  className="object-contain"
                   data-ai-hint="logo"
                 />
               )}
-              <h2 className="text-lg font-bold">{settings.companyName}</h2>
-              <p className="text-xs">{settings.companyAddress}</p>
-              <p className="text-xs">Tél: {settings.companyPhone}</p>
+              <div>
+                <h2 className="text-2xl font-black uppercase leading-tight">{settings.companyName}</h2>
+                <p className="text-xs font-bold text-gray-600">{settings.companyAddress}</p>
+                <p className="text-xs font-bold text-gray-600">Tél: {settings.companyPhone}</p>
+                <p className="text-[10px] text-gray-500">IFU: {settings.companyIfu} | RCCM: {settings.companyRccm}</p>
+              </div>
             </div>
             <div className="text-right">
-              <h1 className="text-2xl font-bold">Rapport d'Activité</h1>
-              <p className="text-sm">Date: {format(reportDate, 'd MMMM yyyy', { locale: fr })}</p>
-              <p className="text-sm">Période du {format(startDate, 'dd/MM/yy')} au {format(endDate, 'dd/MM/yy')}</p>
-              {data.clientName !== "Tous les clients" && <p className="text-sm font-bold">Client: {data.clientName}</p>}
+              <h1 className="text-3xl font-black uppercase tracking-tighter">Rapport d'Activité</h1>
+              <p className="text-sm font-bold bg-black text-white px-3 py-1 inline-block mt-2">
+                Période : {format(startDate, 'dd/MM/yy')} au {format(endDate, 'dd/MM/yy')}
+              </p>
+              <p className="text-xs text-gray-500 mt-2 italic">Généré le {format(reportDate, 'd MMMM yyyy à HH:mm', { locale: fr })}</p>
             </div>
         </header>
 
-        <div className="grid gap-4 grid-cols-4 mb-8">
-            <div className="p-4 bg-gray-100 rounded-lg text-center">
-                <p className="text-[10px] font-bold uppercase text-gray-500">Ventes</p>
-                <p className="text-lg font-black">{formatCurrency(data.summary.grossSales, currency)}</p>
+        <div className="print-grid">
+            <div className="print-card">
+                <p className="print-card-title">Ventes (CA)</p>
+                <p className="print-card-value">{formatCurrency(data.summary.grossSales, currency)}</p>
             </div>
-            <div className="p-4 bg-gray-100 rounded-lg text-center">
-                <p className="text-[10px] font-bold uppercase text-gray-500">Coût Marchandises</p>
-                <p className="text-lg font-black">{formatCurrency(data.summary.costOfGoodsSold, currency)}</p>
+            <div className="print-card">
+                <p className="print-card-title">Coût Marchandises</p>
+                <p className="print-card-value">{formatCurrency(data.summary.costOfGoodsSold, currency)}</p>
             </div>
-            <div className="p-4 bg-gray-100 rounded-lg text-center">
-                <p className="text-[10px] font-bold uppercase text-gray-500">Dépenses</p>
-                <p className="text-lg font-black">{formatCurrency(data.summary.totalExpenses, currency)}</p>
+            <div className="print-card">
+                <p className="print-card-title">Total Dépenses</p>
+                <p className="print-card-value">{formatCurrency(data.summary.totalExpenses, currency)}</p>
             </div>
-            <div className="p-4 bg-gray-800 text-white rounded-lg text-center">
-                <p className="text-[10px] font-bold uppercase text-gray-300">Bénéfice Net</p>
-                <p className="text-lg font-black">{formatCurrency(data.summary.netProfit, currency)}</p>
+            <div className="print-card" style={{ backgroundColor: '#000 !important', color: '#fff !important' }}>
+                <p className="print-card-title" style={{ color: '#ccc !important' }}>Bénéfice Net</p>
+                <p className="print-card-value">{formatCurrency(data.summary.netProfit, currency)}</p>
             </div>
         </div>
 
-        <div className="space-y-8">
-            <div className="border rounded-lg overflow-hidden">
-                <Table>
-                    <TableHeader className="bg-gray-200">
-                        <TableRow>
-                            <TableHead className="text-black font-bold">N° Facture</TableHead>
-                            <TableHead className="text-black font-bold">Client</TableHead>
-                            <TableHead className="text-black font-bold">Date</TableHead>
-                            <TableHead className="text-right text-black font-bold">Montant</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {data.allInvoices.map((inv) => (
-                            <TableRow key={inv.id}>
-                                <TableCell className="font-bold">{inv.invoiceNumber}</TableCell>
-                                <TableCell className="text-xs uppercase">{inv.clientName}</TableCell>
-                                <TableCell>{format(new Date(inv.date), "dd/MM/yyyy")}</TableCell>
-                                <TableCell className="text-right font-bold">{formatCurrency(inv.totalAmount, currency)}</TableCell>
-                            </TableRow>
+        <section>
+            <h3 className="print-section-title">Ventes par Client</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nom du Client / Entreprise</th>
+                        <th className="text-right">Chiffre d'Affaires Généré</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {sortedSalesByClient.map(([clientName, revenue]) => (
+                        <tr key={clientName}>
+                            <td className="font-bold uppercase">{clientName}</td>
+                            <td className="text-right font-bold">{formatCurrency(revenue, currency)}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </section>
+
+        <div className="grid grid-cols-2 gap-8">
+            <section>
+                <h3 className="print-section-title">Ventes par Produit</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Désignation</th>
+                            <th className="text-right">Qté Vendue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {data.productSales.map((sale, i) => (
+                            <tr key={i}>
+                                <td className="uppercase text-[10px]">{sale.productName}</td>
+                                <td className="text-right font-bold">{sale.quantitySold}</td>
+                            </tr>
                         ))}
-                    </TableBody>
-                </Table>
-            </div>
+                    </tbody>
+                </table>
+            </section>
+
+            <section>
+                <h3 className="print-section-title">Résumé des Dépenses</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Désignation</th>
+                            <th className="text-right">Montant</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {data.expenses.map((exp) => (
+                            <tr key={exp.id}>
+                                <td className="uppercase text-[10px]">{exp.description}</td>
+                                <td className="text-right font-bold">{formatCurrency(exp.amount, currency)}</td>
+                            </tr>
+                        ))}
+                        {data.expenses.length === 0 && (
+                            <tr><td colSpan={2} className="text-center italic text-gray-400">Aucune dépense enregistrée.</td></tr>
+                        )}
+                    </tbody>
+                    <tfoot>
+                        <tr className="bg-gray-50 font-bold">
+                            <td className="text-right uppercase">Total Dépenses</td>
+                            <td className="text-right">{formatCurrency(data.summary.totalExpenses, currency)}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </section>
         </div>
 
-         <footer className="flex justify-between items-start mt-24 pt-8 border-t-2 border-dashed">
-            <div className="w-2/5 text-center">
-                <p className="font-bold text-sm">Le Magasinier</p>
-                <div className="mt-20 border-b-2 border-gray-400"></div>
+        <section>
+            <h3 className="print-section-title">Détail des Factures</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>N° Facture</th>
+                        <th>Client</th>
+                        <th>Date</th>
+                        <th className="text-right">Montant</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {data.allInvoices.map((inv) => (
+                        <tr key={inv.id}>
+                            <td className="font-bold">{inv.invoiceNumber}</td>
+                            <td className="uppercase">{inv.clientName}</td>
+                            <td>{format(new Date(inv.date), "dd/MM/yyyy")}</td>
+                            <td className="text-right font-bold">{formatCurrency(inv.totalAmount, currency)}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </section>
+
+         <footer className="flex justify-between items-start mt-20 pt-10 border-t-2 border-dashed border-gray-300">
+            <div className="w-1/3 text-center">
+                <p className="font-black uppercase text-xs mb-16 underline">Le Comptable</p>
+                <div className="border-b border-gray-400 w-full"></div>
             </div>
-            <div className="w-2/5 text-center">
-                <p className="font-bold text-sm">La Gérante</p>
-                <div className="mt-20 border-b-2 border-gray-400"></div>
-                <p className="text-xs text-gray-700 mt-1">{settings.managerName}</p>
+            <div className="w-1/3 text-center">
+                <p className="font-black uppercase text-xs mb-16 underline">La Gérance</p>
+                <div className="border-b border-gray-400 w-full"></div>
+                <p className="text-[10px] font-bold mt-2 text-gray-700">{settings.managerName}</p>
             </div>
         </footer>
       </div>
