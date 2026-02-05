@@ -49,7 +49,7 @@ export default function ClientsList({ clients, userRole }: { clients: Client[], 
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">
                   <div className="flex-1 min-w-0">
-                      <CardTitle className="text-lg font-extrabold truncate uppercase tracking-tight">{client.name}</CardTitle>
+                      <CardTitle className="text-lg font-extrabold break-words uppercase tracking-tight">{client.name}</CardTitle>
                       <CardDescription className="text-current/70 text-xs font-bold mt-1">
                         {client.taxRegime || 'Régime non spécifié'}
                       </CardDescription>
@@ -104,7 +104,7 @@ export default function ClientsList({ clients, userRole }: { clients: Client[], 
                 <Table>
                   <TableHeader className="bg-muted/50">
                     <TableRow className="hover:bg-transparent">
-                      <TableHead className="w-[300px] font-bold uppercase text-[11px] tracking-widest">Client / Entreprise</TableHead>
+                      <TableHead className="w-[350px] font-bold uppercase text-[11px] tracking-widest">Client / Entreprise</TableHead>
                       <TableHead className="font-bold uppercase text-[11px] tracking-widest">Coordonnées</TableHead>
                       <TableHead className="font-bold uppercase text-[11px] tracking-widest">Informations Fiscales</TableHead>
                       <TableHead className="font-bold uppercase text-[11px] tracking-widest">Localisation</TableHead>
@@ -115,16 +115,16 @@ export default function ClientsList({ clients, userRole }: { clients: Client[], 
                   <TableBody>
                     {sortedClients.map((client) => (
                       <TableRow key={client.id} className="group transition-all hover:bg-primary/5 border-l-4 border-l-transparent hover:border-l-primary">
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 font-black">
+                        <TableCell className="max-w-[350px]">
+                          <div className="flex items-start gap-3">
+                            <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 font-black mt-0.5">
                               {client.name.charAt(0).toUpperCase()}
                             </div>
-                            <div className="min-w-0">
-                              <p className="font-extrabold text-sm text-foreground uppercase tracking-tight truncate" title={client.name}>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-extrabold text-sm text-foreground uppercase tracking-tight leading-snug break-words">
                                 {client.name}
                               </p>
-                              <p className="text-[10px] font-bold text-muted-foreground mt-0.5 truncate">
+                              <p className="text-[10px] font-bold text-muted-foreground mt-1 uppercase">
                                 {client.taxRegime || 'Régime Normal'}
                               </p>
                             </div>
@@ -173,14 +173,14 @@ export default function ClientsList({ clients, userRole }: { clients: Client[], 
                         </TableCell>
                         {canEdit && (
                           <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center justify-end gap-1">
                               <ClientQRCodeDialog client={client}>
-                                <Button variant="ghost" size="icon" className="size-8 rounded-lg hover:bg-white hover:shadow-sm" title="QR Code">
+                                <Button variant="ghost" size="icon" className="size-8 rounded-lg hover:bg-primary/10" title="QR Code">
                                   <QrCode className="size-4 text-primary" />
                                 </Button>
                               </ClientQRCodeDialog>
                               <ClientFormDialog client={client}>
-                                <Button variant="ghost" size="icon" className="size-8 rounded-lg hover:bg-white hover:shadow-sm" title="Modifier">
+                                <Button variant="ghost" size="icon" className="size-8 rounded-lg hover:bg-amber-100" title="Modifier">
                                   <Pencil className="size-4 text-amber-600" />
                                 </Button>
                               </ClientFormDialog>
