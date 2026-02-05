@@ -160,9 +160,6 @@ export function AppLayout({
             </Sheet>
 
             <div className="flex items-center gap-3 shrink-0">
-              <div className="hidden lg:flex flex-col items-end">
-                  <p className="text-xs font-bold text-foreground leading-none">{user.name}</p>
-              </div>
               <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 overflow-hidden border-2 border-primary/10 hover:border-primary/40 transition-all">
