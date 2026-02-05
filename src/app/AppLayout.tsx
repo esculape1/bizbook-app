@@ -48,7 +48,6 @@ const navItems = [
   { href: '/settlements', label: 'Règlements', icon: CreditCard, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN], color: 'text-lime-500', bg: 'hover:bg-lime-50' },
   { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN], color: 'text-red-500', bg: 'hover:bg-red-50' },
   { href: '/reports', label: 'Rapports', icon: BarChart3, roles: [ROLES.SUPER_ADMIN], color: 'text-cyan-500', bg: 'hover:bg-cyan-50' },
-  { href: '/settings', label: 'Paramètres', icon: Settings, roles: [ROLES.SUPER_ADMIN], color: 'text-slate-500', bg: 'hover:bg-slate-50' },
 ];
 
 export function AppLayout({ 
@@ -66,11 +65,17 @@ export function AppLayout({
 
   const accessibleNavItems = navItems.filter(item => item.roles.includes(userRole));
 
+  // Identifier l'élément de navigation actuel pour l'affichage du titre
+  const currentItem = navItems.find(item => 
+    item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
+  );
+  const currentPageLabel = currentItem?.label || 'Application';
+
   const Logo = ({ size = 32 }: { size?: number }) => (
     settings.logoUrl ? (
-      <Image src={settings.logoUrl} alt="BizBook Logo" width={size} height={size} className="rounded-md object-contain" data-ai-hint="logo" />
+      <Image src={settings.logoUrl} alt="BizBook Logo" width={size} height={size} className="rounded-md object-contain shrink-0" data-ai-hint="logo" />
     ) : (
-      <div className="p-1 rounded-lg bg-primary shadow-sm text-white">
+      <div className="p-1 rounded-lg bg-primary shadow-sm text-white shrink-0">
         <svg xmlns="http://www.w3.org/2000/svg" width={size-10} height={size-8} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9.5a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0Z"/><path d="M12.5 4H15a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5"/><path d="m14 6-2.5 2.5"/><path d="m18 10-6 6"/></svg>
       </div>
     )
@@ -80,15 +85,16 @@ export function AppLayout({
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-40 w-full border-b bg-card/90 backdrop-blur-xl">
         <div className="mx-auto flex h-16 md:h-16 max-w-[1800px] items-center justify-between px-4 lg:px-6">
-          <div className="flex items-center gap-4 xl:gap-6">
-            <Link href="/" className="flex items-center gap-2 group shrink-0">
+          <div className="flex items-center gap-4 xl:gap-6 overflow-hidden">
+            {/* Logo visible uniquement sur mobile dans le header */}
+            <Link href="/" className="flex items-center gap-2 group shrink-0 xl:hidden">
               <Logo size={32} />
-              <span className="hidden font-black text-lg tracking-tight text-primary lg:inline-block transition-transform group-hover:scale-105">
+              <span className="font-black text-lg tracking-tight text-primary">
                 BizBook
               </span>
             </Link>
 
-            {/* Desktop Horizontal Navigation - Compact & Colorful */}
+            {/* Navigation horizontale Desktop - Prend toute la largeur disponible */}
             <nav className="hidden xl:flex items-center gap-0.5">
               {accessibleNavItems.map((item) => {
                 const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
@@ -204,6 +210,19 @@ export function AppLayout({
 
       <main className="flex-1 flex flex-col items-center">
         <div className="w-full max-w-[1800px] p-4 lg:p-8 xl:p-10">
+          {/* Section Branding & Titre de page Desktop */}
+          <div className="hidden xl:flex items-center gap-6 mb-10 border-b border-primary/10 pb-8">
+            <Logo size={64} />
+            <div className="flex flex-col">
+              <div className="flex items-center gap-4">
+                <span className="text-5xl font-black tracking-tighter text-primary">BizBook</span>
+                <div className="h-10 w-px bg-border mx-1 rotate-12" />
+                <span className="text-4xl font-bold text-foreground tracking-tight">{currentPageLabel}</span>
+              </div>
+              <p className="text-muted-foreground text-base font-medium mt-2">Gestion commerciale & pilotage d'activité</p>
+            </div>
+          </div>
+
           {children}
         </div>
       </main>
