@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SalesChart } from "@/components/dashboard/SalesChart";
 import { LowStockTable } from "@/components/dashboard/LowStockTable";
-import { DollarSign, Users, Box, Receipt, Wallet, AlertTriangle } from "lucide-react";
+import { DollarSign, Users, Box, Receipt, Wallet, AlertTriangle, TrendingUp } from "lucide-react";
 import { getDashboardStats, getProducts, getInvoices, getSettings } from "@/lib/data";
 import { formatCurrency } from "@/lib/utils";
 import { OverdueInvoicesTable } from "@/components/dashboard/OverdueInvoicesTable";
@@ -115,8 +115,13 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
             <Card className="shadow-premium border-none h-full bg-card/50 overflow-hidden">
-                <CardHeader className="border-b bg-card/80 py-6 px-8">
-                    <CardTitle className="text-xl font-bold">Performance des Ventes</CardTitle>
+                <CardHeader className="bg-primary/5 border-b border-primary/10 py-6">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-primary text-white">
+                            <TrendingUp className="size-5" />
+                        </div>
+                        <CardTitle className="text-xl font-bold text-primary">Performance des Ventes</CardTitle>
+                    </div>
                 </CardHeader>
                 <CardContent className="p-8">
                     <SalesChart invoices={invoicesForFiscalYear} currency={settings.currency} />

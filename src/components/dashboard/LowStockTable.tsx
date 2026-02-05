@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge";
 import type { Product } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -37,11 +36,12 @@ export function LowStockTable({ products }: { products: Product[] }) {
                         const isOutOfStock = product.quantityInStock === 0;
                         return (
                             <div key={product.id} className={cn(
-                                "flex items-center justify-between p-4 transition-colors hover:bg-muted/30",
+                                "flex items-center justify-between p-4 transition-all duration-200 cursor-default border-l-4 border-l-transparent",
+                                "hover:bg-amber-500/5 hover:border-l-amber-500 hover:shadow-[inset_0_0_10px_rgba(245,158,11,0.05)] group",
                                 isOutOfStock ? "bg-rose-50/30" : ""
                             )}>
                                 <div className="flex-1 min-w-0 mr-4">
-                                    <p className="font-bold text-sm text-foreground truncate uppercase tracking-tight" title={product.name}>
+                                    <p className="font-bold text-sm text-foreground truncate uppercase tracking-tight group-hover:text-amber-700" title={product.name}>
                                         {product.name}
                                     </p>
                                     <p className="text-[10px] font-bold text-muted-foreground mt-0.5">
