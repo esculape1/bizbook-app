@@ -51,11 +51,11 @@ export default function LoginPage() {
         </div>
 
         <Card className="border-primary/10 shadow-2xl shadow-black/5 bg-card/80 backdrop-blur-xl rounded-[1.5rem] overflow-hidden">
-          <CardHeader className="pt-6 px-6 pb-2 text-center">
+          <CardHeader className="pt-6 px-6 pb-0 text-center">
             <CardTitle className="text-xl font-black tracking-tight">Accès Sécurisé</CardTitle>
             <CardDescription className="text-xs font-medium italic">Renseignez vos identifiants</CardDescription>
           </CardHeader>
-          <CardContent className="p-6 pt-2">
+          <CardContent className="p-6 pt-3">
             {state?.message && (
               <Alert variant="destructive" className="mb-4 py-2 rounded-xl bg-destructive/10 animate-in fade-in zoom-in-95 duration-300">
                 <AlertCircle className="h-4 w-4" />
