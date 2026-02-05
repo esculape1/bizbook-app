@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Cell, LabelList } from "recharts"
@@ -11,12 +12,15 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
+// Une palette de couleurs plus douce et professionnelle
 const chartColors = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
+  "#3b82f6", // blue-500
+  "#6366f1", // indigo-500
+  "#8b5cf6", // violet-500
+  "#a855f7", // purple-500
+  "#d946ef", // fuchsia-500
+  "#ec4899", // pink-500
+  "#f43f5e", // rose-500
 ];
 
 type SalesChartProps = {
@@ -31,37 +35,34 @@ export function SalesChart({ invoices, currency }: SalesChartProps) {
         .filter(inv => inv.status !== 'Cancelled')
         .flatMap(inv => inv.items)
         .forEach(item => {
-            // Group by product reference to have shorter labels, as requested.
-            const refKey = item.reference;
+            const refKey = item.reference || 'Sans Réf';
             
             if (!salesByProductRef[refKey]) {
                 salesByProductRef[refKey] = {
-                    name: refKey, // This is the reference for the Y-axis label
-                    productName: item.productName, // The full name for the tooltip
+                    name: refKey,
+                    productName: item.productName,
                     revenue: 0,
                 };
             }
             salesByProductRef[refKey].revenue += item.total;
         });
 
-    // Sort descending by revenue and take top 15.
     const salesData = Object.values(salesByProductRef)
         .filter(p => p.revenue > 0)
         .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 15);
+        .slice(0, 10); // Limité à 10 pour plus de clarté
     
     const renderCustomizedLabel = (props: any) => {
         const { x, y, width, height, value } = props;
         
         return (
              <text 
-                x={x + width + 5} 
+                x={x + width + 8} 
                 y={y + height / 2} 
-                fill="hsl(var(--foreground))" 
+                fill="currentColor" 
+                className="fill-muted-foreground font-bold text-[11px]"
                 textAnchor="start" 
                 dominantBaseline="middle"
-                fontSize={12}
-                fontWeight="500"
             >
                 {formatCurrency(value, currency)}
             </text>
@@ -69,43 +70,45 @@ export function SalesChart({ invoices, currency }: SalesChartProps) {
     };
 
   return (
-    <ChartContainer config={chartConfig} className="h-[500px] w-full">
+    <ChartContainer config={chartConfig} className="h-[450px] w-full">
         <ResponsiveContainer>
             <BarChart
                 data={salesData}
                 layout="vertical"
-                margin={{ top: 5, right: 80, left: 0, bottom: 5 }}
+                margin={{ top: 5, right: 100, left: 10, bottom: 5 }}
+                barGap={8}
             >
             <XAxis type="number" hide />
             <YAxis
-                dataKey="name" // Now displays the product reference
+                dataKey="name"
                 type="category"
                 tickLine={false}
                 axisLine={false}
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-                tickFormatter={(value) =>
-                    value.length > 12 ? value.slice(0, 12) + '…' : value // Truncate long references
-                }
-                width={70}
+                className="text-[11px] font-bold fill-muted-foreground"
+                width={80}
             />
             <Tooltip
-                cursor={{ fill: 'hsl(var(--muted))' }}
+                cursor={{ fill: 'rgba(0,0,0,0.04)', radius: 4 }}
                 content={<ChartTooltipContent formatter={(value, name, props) => {
                     return (
-                        <div className="flex flex-col p-1">
-                            <span className="font-bold text-foreground">{props.payload.productName}</span>
-                            <span className="text-sm text-muted-foreground">Réf: {props.payload.name}</span>
-                            <span className="font-semibold text-foreground mt-2">
+                        <div className="flex flex-col gap-1 p-1">
+                            <span className="font-bold text-foreground text-sm">{props.payload.productName}</span>
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Réf: {props.payload.name}</span>
+                            <div className="h-px bg-border my-1" />
+                            <span className="font-extrabold text-primary">
                                 {formatCurrency(Number(value), currency)}
                             </span>
                         </div>
                     );
                 }} />}
             />
-            <Bar dataKey="revenue" radius={[0, 4, 4, 0]} barSize={20}>
+            <Bar 
+                dataKey="revenue" 
+                radius={[0, 10, 10, 0]} // Bords très arrondis
+                barSize={24}
+            >
                 {salesData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
+                    <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} fillOpacity={0.9} />
                 ))}
                  <LabelList
                     dataKey="revenue"
