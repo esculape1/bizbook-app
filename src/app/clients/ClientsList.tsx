@@ -30,7 +30,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ClientQRCodeDialog } from './ClientQRCodeDialog';
 
-export default function ClientsList({ clients, userRole }: { clients: Client[], userRole: User['role'] | undefined }) {
+export default function ClientsList({ 
+  clients, 
+  userRole,
+  headerActions
+}: { 
+  clients: Client[], 
+  userRole: User['role'] | undefined,
+  headerActions?: React.ReactNode
+}) {
   const [searchTerm, setSearchTerm] = useState('');
   
   const canEdit = userRole === ROLES.SUPER_ADMIN || userRole === ROLES.USER;
@@ -52,15 +60,20 @@ export default function ClientsList({ clients, userRole }: { clients: Client[], 
 
   return (
     <div className="flex flex-col h-full gap-6">
-      {/* Barre de Recherche */}
-      <div className="relative max-w-md w-full">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Rechercher un client ou une entreprise..."
-          className="pl-10 h-11 bg-card shadow-sm border-primary/10 focus-visible:ring-primary"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      {/* Barre de Recherche et Actions */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="relative max-w-md w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher un client ou une entreprise..."
+            className="pl-10 h-10 bg-card shadow-sm border-primary/10 focus-visible:ring-primary"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          {headerActions}
+        </div>
       </div>
 
       {clients.length === 0 ? (
@@ -85,7 +98,7 @@ export default function ClientsList({ clients, userRole }: { clients: Client[], 
                       <div className="flex-1 min-w-0">
                           <CardTitle className="text-lg font-extrabold break-words uppercase tracking-tight">{client.name}</CardTitle>
                           <CardDescription className="text-current/70 text-xs font-bold mt-1">
-                            {client.taxRegime || 'Régime non spécifié'}
+                            {client.taxRegime || '-'}
                           </CardDescription>
                       </div>
                       <Badge variant={client.status === CLIENT_STATUS.ACTIVE ? 'success' : 'outline'} className="ml-2 shrink-0 font-black">
@@ -229,7 +242,7 @@ export default function ClientsList({ clients, userRole }: { clients: Client[], 
                             <TableCell>
                               <div className="flex items-start gap-2 max-w-[180px]">
                                 <MapPin className="size-3 text-rose-500 shrink-0 mt-0.5" />
-                                <span className="text-xs text-muted-foreground line-clamp-2">{client.address || 'Non spécifiée'}</span>
+                                <span className="text-xs text-muted-foreground line-clamp-2">{client.address || '-'}</span>
                               </div>
                             </TableCell>
                             <TableCell className="text-center">

@@ -1,15 +1,12 @@
 
-import { getSuppliers } from "@/lib/data";
+import { getSuppliers, getSession, getSettings } from "@/lib/data";
 import SuppliersList from "./SuppliersList";
-import { getSession } from "@/lib/session";
-import { AppLayout } from "@/components/AppLayout";
-import { getSettings } from "@/lib/data";
+import { AppLayout } from "@/app/AppLayout";
 import { redirect } from "next/navigation";
 import { SupplierFormDialog } from "./SupplierFormDialog";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { ROLES } from "@/lib/constants";
-import { PageHeader } from "@/components/PageHeader";
 
 export const dynamic = 'force-dynamic';
 
@@ -26,22 +23,25 @@ export default async function SuppliersPage() {
   
   const canEdit = user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN;
 
+  const headerActions = canEdit ? (
+    <SupplierFormDialog>
+      <Button>
+        <PlusCircle className="mr-2" />
+        Ajouter un fournisseur
+      </Button>
+    </SupplierFormDialog>
+  ) : undefined;
+
   return (
     <AppLayout 
       user={user} 
       settings={settings}
     >
-        <PageHeader>
-            {canEdit && (
-              <SupplierFormDialog>
-                <Button>
-                  <PlusCircle className="mr-2" />
-                  Ajouter un fournisseur
-                </Button>
-              </SupplierFormDialog>
-            )}
-        </PageHeader>
-      <SuppliersList suppliers={suppliers} userRole={user?.role} />
+      <SuppliersList 
+        suppliers={suppliers} 
+        userRole={user?.role} 
+        headerActions={headerActions}
+      />
     </AppLayout>
   );
 }

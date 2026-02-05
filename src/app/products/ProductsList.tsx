@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -15,7 +16,17 @@ import { ROLES } from "@/lib/constants";
 import { Input } from "@/components/ui/input";
 import type { Product, Settings, User } from '@/lib/types';
 
-export function ProductsList({ products, settings, user }: { products: Product[], settings: Settings, user: User }) {
+export function ProductsList({ 
+  products, 
+  settings, 
+  user,
+  headerActions
+}: { 
+  products: Product[], 
+  settings: Settings, 
+  user: User,
+  headerActions?: React.ReactNode
+}) {
   const [searchTerm, setSearchTerm] = useState('');
   
   const canManageProducts = user.role === ROLES.SUPER_ADMIN || user.role === ROLES.ADMIN || user.role === ROLES.USER;
@@ -29,14 +40,20 @@ export function ProductsList({ products, settings, user }: { products: Product[]
 
   return (
     <div className="flex flex-col h-full gap-6">
-      <div className="relative max-w-md w-full">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Rechercher un produit, référence ou catégorie..."
-          className="pl-10 h-11 bg-card shadow-sm border-primary/10 focus-visible:ring-primary"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      {/* Barre de Recherche et Actions */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="relative max-w-md w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher un produit, référence ou catégorie..."
+            className="pl-10 h-10 bg-card shadow-sm border-primary/10 focus-visible:ring-primary"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          {headerActions}
+        </div>
       </div>
 
       {/* Mobile View */}

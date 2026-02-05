@@ -1,9 +1,8 @@
-import { getPurchases, getSuppliers, getProducts, getSettings } from "@/lib/data";
-import { getSession } from "@/lib/session";
+
+import { getPurchases, getSuppliers, getProducts, getSettings, getSession } from "@/lib/data";
 import { AppLayout } from "@/app/AppLayout";
 import { redirect } from "next/navigation";
 import { ROLES } from "@/lib/constants";
-import { PageHeader } from "@/components/PageHeader";
 import { PurchasesList } from "./PurchasesList";
 import { PurchaseForm } from "./PurchaseForm";
 import { PackageSearch } from "lucide-react";
@@ -30,26 +29,30 @@ export default async function PurchasesPage() {
     .filter(p => p.status === 'Pending')
     .reduce((sum, p) => sum + p.totalAmount, 0);
 
+  const headerActions = (
+    <>
+      {totalPendingAmount > 0 && (
+          <div className="hidden md:flex p-2 px-4 rounded-xl bg-gradient-to-r from-amber-100 to-amber-200 text-amber-900 shadow-sm items-center gap-3 border border-amber-300/50">
+              <PackageSearch className="h-5 w-5 text-amber-600" />
+              <div className="text-right leading-tight">
+                  <div className="text-[10px] font-black uppercase tracking-wider opacity-70">Achats en attente</div>
+                  <div className="text-sm font-black">{formatCurrency(totalPendingAmount, settings.currency)}</div>
+              </div>
+          </div>
+      )}
+      {canEdit && <PurchaseForm suppliers={suppliers} products={products} settings={settings} />}
+    </>
+  );
+
   return (
     <AppLayout user={user} settings={settings}>
-      <PageHeader>
-        {totalPendingAmount > 0 && (
-            <div className="hidden md:flex p-2 px-4 rounded-xl bg-gradient-to-r from-amber-100 to-amber-200 text-amber-900 shadow-sm items-center gap-3 border border-amber-300/50">
-                <PackageSearch className="h-5 w-5 text-amber-600" />
-                <div className="text-right leading-tight">
-                    <div className="text-[10px] font-black uppercase tracking-wider opacity-70">Achats en attente</div>
-                    <div className="text-base font-black">{formatCurrency(totalPendingAmount, settings.currency)}</div>
-                </div>
-            </div>
-        )}
-        {canEdit && <PurchaseForm suppliers={suppliers} products={products} settings={settings} />}
-      </PageHeader>
       <PurchasesList 
         user={user} 
         purchases={purchases} 
         suppliers={suppliers} 
         products={products} 
-        settings={settings} 
+        settings={settings}
+        headerActions={headerActions}
       />
     </AppLayout>
   );

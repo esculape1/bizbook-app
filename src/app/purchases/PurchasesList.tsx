@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -30,13 +31,15 @@ export function PurchasesList({
   purchases, 
   suppliers, 
   products, 
-  settings 
+  settings,
+  headerActions
 }: { 
   user: User, 
   purchases: Purchase[], 
   suppliers: Supplier[], 
   products: Product[], 
-  settings: Settings 
+  settings: Settings,
+  headerActions?: React.ReactNode
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const canEdit = user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN;
@@ -75,14 +78,20 @@ export function PurchasesList({
 
   return (
     <div className="flex flex-col h-full gap-6">
-      <div className="relative max-w-md w-full">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Rechercher un achat ou fournisseur..."
-          className="pl-10 h-11 bg-card shadow-sm border-primary/10 focus-visible:ring-primary"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      {/* Barre de Recherche et Actions */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="relative max-w-md w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher un achat ou fournisseur..."
+            className="pl-10 h-10 bg-card shadow-sm border-primary/10 focus-visible:ring-primary"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          {headerActions}
+        </div>
       </div>
 
       {/* Mobile View */}

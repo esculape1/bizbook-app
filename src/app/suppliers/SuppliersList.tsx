@@ -25,7 +25,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ROLES } from '@/lib/constants';
 
-export default function SuppliersList({ suppliers, userRole }: { suppliers: Supplier[], userRole: User['role'] | undefined }) {
+export default function SuppliersList({ 
+  suppliers, 
+  userRole,
+  headerActions
+}: { 
+  suppliers: Supplier[], 
+  userRole: User['role'] | undefined,
+  headerActions?: React.ReactNode
+}) {
   const [searchTerm, setSearchTerm] = useState('');
   const canEdit = userRole === ROLES.ADMIN || userRole === ROLES.SUPER_ADMIN;
   
@@ -47,14 +55,20 @@ export default function SuppliersList({ suppliers, userRole }: { suppliers: Supp
 
   return (
     <div className="flex flex-col h-full gap-6">
-      <div className="relative max-w-md w-full">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Rechercher un fournisseur ou contact..."
-          className="pl-10 h-11 bg-card shadow-sm border-primary/10 focus-visible:ring-primary"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      {/* Barre de Recherche et Actions */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="relative max-w-md w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher un fournisseur ou contact..."
+            className="pl-10 h-10 bg-card shadow-sm border-primary/10 focus-visible:ring-primary"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          {headerActions}
+        </div>
       </div>
 
       {suppliers.length === 0 ? (
@@ -170,7 +184,7 @@ export default function SuppliersList({ suppliers, userRole }: { suppliers: Supp
                           <TableCell>
                             <div className="flex items-start gap-2 max-w-[200px]">
                               <MapPin className="size-3 text-rose-500 shrink-0 mt-0.5" />
-                              <span className="text-xs text-muted-foreground line-clamp-2">{supplier.address || 'Non renseignée'}</span>
+                              <span className="text-xs text-muted-foreground line-clamp-2">{supplier.address || '-'}</span>
                             </div>
                           </TableCell>
                           {canEdit && (
