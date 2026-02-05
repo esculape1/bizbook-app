@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import type { User } from '@/lib/types';
 import { getUserByEmail, updateUserPassword } from '@/lib/data';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { ROLES } from '@/lib/constants';
 
 export type State = {
@@ -41,7 +41,8 @@ export async function signIn(prevState: State | undefined, formData: FormData) {
       if (passwordMatch) {
         // Plaintext match successful, so let's hash and update the password in the DB for future logins
         try {
-          const hashedPassword = await bcrypt.hash(password, 10);
+          const salt = await bcrypt.genSalt(10);
+          const hashedPassword = await bcrypt.hash(password, salt);
           await updateUserPassword(userRecord.id, hashedPassword);
           console.log(`Mot de passe mis à jour pour l'utilisateur ${email}`);
         } catch (hashError) {

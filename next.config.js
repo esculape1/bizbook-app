@@ -10,6 +10,9 @@ const nextConfig = {
       },
     ]
   },
+  experimental: {
+    serverComponentsExternalPackages: ['firebase-admin'],
+  },
   images: {
     unoptimized: true, // Requis pour l'export statique avec next/image
     remotePatterns: [
