@@ -1,5 +1,6 @@
 
-import { getSuppliers, getSession, getSettings } from "@/lib/data";
+import { getSuppliers, getSettings } from "@/lib/data";
+import { getSession } from "@/lib/session";
 import SuppliersList from "./SuppliersList";
 import { AppLayout } from "@/app/AppLayout";
 import { redirect } from "next/navigation";
