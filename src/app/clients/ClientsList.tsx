@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -151,7 +150,7 @@ export default function ClientsList({
                     <Table>
                       <TableHeader className="bg-muted/50 border-b-2 border-primary/10">
                         <TableRow className="hover:bg-transparent">
-                          <TableHead className="w-[300px] py-4">
+                          <TableHead className="w-[250px] py-4">
                             <div className="flex items-center gap-2 text-primary font-black uppercase text-[11px] tracking-widest">
                               <Building2 className="size-4" />
                               Client / Entreprise
@@ -194,13 +193,13 @@ export default function ClientsList({
                       <TableBody>
                         {filteredClients.map((client) => (
                           <TableRow key={client.id} className="group transition-all hover:bg-primary/5 border-l-4 border-l-transparent hover:border-l-primary">
-                            <TableCell className="max-w-[300px]">
+                            <TableCell className="max-w-[250px]">
                               <div className="flex items-start gap-3">
                                 <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 font-black mt-0.5">
                                   {client.name.charAt(0).toUpperCase()}
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <p className="font-extrabold text-sm text-foreground uppercase tracking-tight leading-snug break-words">
+                                  <p className="font-extrabold text-sm text-foreground uppercase tracking-tight leading-snug line-clamp-2" title={client.name}>
                                     {client.name}
                                   </p>
                                   <p className="text-[10px] font-bold text-muted-foreground mt-1 uppercase">

@@ -138,7 +138,7 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                                                 N° Facture
                                             </div>
                                         </TableHead>
-                                        <TableHead className="py-4">
+                                        <TableHead className="py-4 w-[200px]">
                                             <div className="flex items-center gap-2 text-primary font-black uppercase text-[11px] tracking-widest">
                                                 <UserIcon className="size-4" />
                                                 Client
@@ -193,7 +193,11 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                                                         {invoice.invoiceNumber}
                                                     </Link>
                                                 </TableCell>
-                                                <TableCell className="font-bold text-xs uppercase text-muted-foreground">{invoice.clientName}</TableCell>
+                                                <TableCell className="max-w-[200px]">
+                                                    <p className="font-bold text-[11px] uppercase text-muted-foreground line-clamp-2 leading-snug" title={invoice.clientName}>
+                                                        {invoice.clientName}
+                                                    </p>
+                                                </TableCell>
                                                 <TableCell className="text-xs">{new Date(invoice.date).toLocaleDateString('fr-FR')}</TableCell>
                                                 <TableCell className="text-center">
                                                     <Badge variant={getStatusVariant(invoice.status)} className="font-black px-2.5">
