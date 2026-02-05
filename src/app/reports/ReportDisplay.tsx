@@ -163,7 +163,7 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
 
       <div className="grid gap-8 grid-cols-1 xl:grid-cols-3">
         {/* Détails des Factures */}
-        <Card className="xl:col-span-2 border-none shadow-premium bg-card/50 overflow-hidden">
+        <Card className="xl:col-span-2 border-none shadow-premium bg-card overflow-hidden">
             <CardHeader className="bg-white border-b py-5">
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-primary/10 text-primary">
@@ -186,7 +186,7 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                         </TableHeader>
                         <TableBody>
                             {data.allInvoices.length > 0 ? data.allInvoices.map((invoice) => (
-                                <TableRow key={invoice.id} className="group hover:bg-primary/[0.02] transition-colors border-b">
+                                <TableRow key={invoice.id} className="group transition-all hover:bg-primary/5 border-l-4 border-l-transparent hover:border-l-primary border-b">
                                     <TableCell className="py-5 font-black text-sm text-foreground uppercase tracking-tight">
                                         {invoice.invoiceNumber}
                                     </TableCell>
@@ -225,7 +225,7 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
 
         <div className="space-y-8">
             {/* Ventes par Produit */}
-            <Card className="border-none shadow-premium bg-card/50 overflow-hidden">
+            <Card className="border-none shadow-premium bg-card overflow-hidden">
                 <CardHeader className="bg-amber-500/5 border-b border-amber-500/10 py-5">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-xl bg-amber-500 text-white shadow-lg shadow-amber-200">
@@ -239,7 +239,7 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                         <Table>
                             <TableBody>
                                 {data.productSales.slice(0, 10).map((sale, i) => (
-                                    <TableRow key={i} className="hover:bg-amber-500/[0.02] border-b last:border-0">
+                                    <TableRow key={i} className="group transition-all hover:bg-amber-500/5 border-l-4 border-l-transparent hover:border-l-amber-500 border-b last:border-0">
                                         <TableCell className="py-4 px-5">
                                             <p className="font-bold text-xs uppercase tracking-tight leading-snug text-foreground">
                                                 {sale.productName}
@@ -259,7 +259,7 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
             </Card>
 
             {/* Liste des Dépenses */}
-            <Card className="border-none shadow-premium bg-card/50 overflow-hidden">
+            <Card className="border-none shadow-premium bg-card overflow-hidden">
                 <CardHeader className="bg-rose-500/5 border-b border-rose-500/10 py-5">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-xl bg-rose-500 text-white shadow-lg shadow-rose-200">
@@ -273,7 +273,7 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                         <Table>
                             <TableBody>
                                 {data.expenses.length > 0 ? data.expenses.slice(0, 10).map((exp) => (
-                                    <TableRow key={exp.id} className="hover:bg-rose-500/[0.02] border-b last:border-0">
+                                    <TableRow key={exp.id} className="group transition-all hover:bg-rose-500/5 border-l-4 border-l-transparent hover:border-l-rose-500 border-b last:border-0">
                                         <TableCell className="py-4 px-5">
                                             <p className="font-bold text-xs uppercase leading-none truncate max-w-[160px] text-foreground">{exp.description}</p>
                                             <p className="text-[9px] font-black text-muted-foreground mt-1.5 uppercase tracking-widest flex items-center gap-1">
