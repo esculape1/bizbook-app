@@ -1,11 +1,11 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn, formatCurrency } from "@/lib/utils";
-import type { ReportData, Settings, Client, Invoice } from "@/lib/types";
+import type { ReportData, Settings, Client } from "@/lib/types";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Printer, TrendingUp, Wallet, Package, Target, ChevronRight, Calendar, ArrowRight } from "lucide-react";
@@ -13,7 +13,7 @@ import { ClientStatementTemplate } from "@/components/report-templates/ClientSta
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import Image from 'next/image';
 
-const StatCard = ({ title, value, icon, className, colorClass, iconBg }: { title: string, value: string, icon: React.ReactNode, className?: string, colorClass: string, iconBg: string }) => (
+const StatCard = ({ title, value, icon, className, colorClass, iconBg, textColor }: { title: string, value: string, icon: React.ReactNode, className?: string, colorClass: string, iconBg: string, textColor: string }) => (
     <Card className={cn("overflow-hidden border-2 shadow-sm group relative transition-all hover:scale-[1.02]", className, colorClass)}>
         <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
@@ -23,8 +23,8 @@ const StatCard = ({ title, value, icon, className, colorClass, iconBg }: { title
                 <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40">Indicateur Clé</span>
             </div>
             <div className="space-y-1">
-                <p className="text-[11px] font-bold opacity-60 uppercase tracking-wider">{title}</p>
-                <p className="text-xl md:text-2xl font-black tracking-tight">{value}</p>
+                <p className="text-[10px] font-bold opacity-60 uppercase tracking-wider">{title}</p>
+                <p className={cn("text-xl md:text-2xl font-black tracking-tight", textColor)}>{value}</p>
             </div>
             <div className="absolute -right-4 -bottom-4 opacity-[0.05] scale-[2.5] rotate-12 transition-transform group-hover:rotate-0 duration-500">
                 {icon}
@@ -40,7 +40,6 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
   const startDate = parseISO(data.startDate);
   const endDate = parseISO(data.endDate);
 
-  // Calculate Revenue per Client
   const salesByClient = data.allInvoices.reduce((acc, inv) => {
     if (inv.status === 'Cancelled') return acc;
     const clientName = inv.clientName;
@@ -128,30 +127,34 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
         <StatCard 
             title="Chiffre d'Affaires" 
             value={formatCurrency(data.summary.grossSales, currency)} 
-            icon={<TrendingUp className="size-6 text-emerald-600" />}
-            colorClass="bg-emerald-50 border-emerald-100 text-emerald-900"
-            iconBg="bg-emerald-100"
+            icon={<TrendingUp className="size-6" />}
+            colorClass="bg-emerald-50/80 border-emerald-200"
+            iconBg="bg-emerald-100 text-emerald-600"
+            textColor="text-emerald-950"
         />
         <StatCard 
             title="Coût Marchandises" 
             value={formatCurrency(data.summary.costOfGoodsSold, currency)} 
-            icon={<Package className="size-6 text-amber-600" />}
-            colorClass="bg-amber-50 border-amber-100 text-amber-900"
-            iconBg="bg-amber-100"
+            icon={<Package className="size-6" />}
+            colorClass="bg-amber-50/80 border-amber-200"
+            iconBg="bg-amber-100 text-amber-600"
+            textColor="text-amber-950"
         />
         <StatCard 
             title="Total Dépenses" 
             value={formatCurrency(data.summary.totalExpenses, currency)} 
-            icon={<Wallet className="size-6 text-rose-600" />}
-            colorClass="bg-rose-50 border-rose-100 text-rose-900"
-            iconBg="bg-rose-100"
+            icon={<Wallet className="size-6" />}
+            colorClass="bg-rose-50/80 border-rose-200"
+            iconBg="bg-rose-100 text-rose-600"
+            textColor="text-rose-950"
         />
         <StatCard 
             title="Bénéfice Net" 
             value={formatCurrency(data.summary.netProfit, currency)} 
-            icon={<Target className="size-6 text-blue-600" />}
-            colorClass="bg-blue-50 border-blue-100 text-blue-900"
-            iconBg="bg-blue-100"
+            icon={<Target className="size-6" />}
+            colorClass="bg-blue-50/80 border-blue-200"
+            iconBg="bg-blue-100 text-blue-600"
+            textColor="text-blue-950"
         />
       </div>
 
@@ -228,7 +231,6 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
             </Card>
       </div>
       
-      {/* VERSION IMPRIMABLE AMÉLIORÉE AVEC COULEURS LÉGÈRES */}
       <div id="report-display-content-printable" className="printable-report space-y-8 hidden print:block bg-white text-black">
         <style>{`
           @media print {
@@ -245,7 +247,6 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
             .print-card-title { font-size: 8pt; text-transform: uppercase; color: #4b5563; font-weight: 800; margin-bottom: 4px; }
             .print-card-value { font-size: 13pt; font-weight: 900; }
             
-            /* Couleurs pastel forcées pour l'impression PDF */
             .bg-emerald-print { background-color: #f0fdf4 !important; border-color: #bbf7d0 !important; color: #065f46 !important; }
             .bg-amber-print { background-color: #fffbeb !important; border-color: #fef3c7 !important; color: #92400e !important; }
             .bg-rose-print { background-color: #fff1f2 !important; border-color: #fecdd3 !important; color: #9f1239 !important; }
