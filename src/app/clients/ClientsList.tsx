@@ -8,15 +8,19 @@ import { Badge } from "@/components/ui/badge";
 import { DeleteClientButton } from "./DeleteClientButton";
 import { ClientFormDialog } from "./ClientFormDialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Mail, MapPin, Phone, Pencil, QrCode, Building2, Contact2, ShieldCheck, FileCheck } from 'lucide-react';
+import { Mail, MapPin, Phone, Pencil, QrCode, Building2, ShieldCheck, FileCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ROLES, CLIENT_STATUS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { ClientQRCodeDialog } from './ClientQRCodeDialog';
 
 export default function ClientsList({ clients, userRole }: { clients: Client[], userRole: User['role'] | undefined }) {
-  const canEdit = userRole === ROLES.ADMIN || userRole === ROLES.SUPER_ADMIN;
+  // Le rôle USER (Ventes) et SUPER_ADMIN ont les droits sur les clients
+  const canEdit = userRole === ROLES.SUPER_ADMIN || userRole === ROLES.USER;
   
+  // Tri alphabétique par nom
+  const sortedClients = [...clients].sort((a, b) => a.name.localeCompare(b.name));
+
   const cardColors = [
       "bg-sky-500/10 border-sky-500/20 text-sky-800",
       "bg-emerald-500/10 border-emerald-500/20 text-emerald-800",
@@ -40,7 +44,7 @@ export default function ClientsList({ clients, userRole }: { clients: Client[], 
     <div className="flex flex-col h-full gap-6">
       {/* Mobile View - Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
-        {clients.map((client, index) => (
+        {sortedClients.map((client, index) => (
           <Card key={client.id} className={cn("flex flex-col border-2 transition-all shadow-md", cardColors[index % cardColors.length])}>
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">
@@ -109,7 +113,7 @@ export default function ClientsList({ clients, userRole }: { clients: Client[], 
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {clients.map((client) => (
+                    {sortedClients.map((client) => (
                       <TableRow key={client.id} className="group transition-all hover:bg-primary/5 border-l-4 border-l-transparent hover:border-l-primary">
                         <TableCell>
                           <div className="flex items-center gap-3">
@@ -169,7 +173,7 @@ export default function ClientsList({ clients, userRole }: { clients: Client[], 
                         </TableCell>
                         {canEdit && (
                           <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
                               <ClientQRCodeDialog client={client}>
                                 <Button variant="ghost" size="icon" className="size-8 rounded-lg hover:bg-white hover:shadow-sm" title="QR Code">
                                   <QrCode className="size-4 text-primary" />
