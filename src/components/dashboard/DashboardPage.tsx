@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SalesChart } from "@/components/dashboard/SalesChart";
 import { LowStockTable } from "@/components/dashboard/LowStockTable";
@@ -8,6 +8,7 @@ import { formatCurrency } from "@/lib/utils";
 import { OverdueInvoicesTable } from "@/components/dashboard/OverdueInvoicesTable";
 import { DateTimeDisplay } from "@/components/dashboard/DateTimeDisplay";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const dynamic = 'force-dynamic';
 
@@ -134,10 +135,7 @@ export default async function DashboardPage() {
         </div>
       </div>
       
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold px-1">Alertes de Recouvrement</h2>
-        <OverdueInvoicesTable invoices={invoices} settings={settings} />
-      </div>
+      <OverdueInvoicesTable invoices={invoices} settings={settings} />
     </div>
   );
 }
