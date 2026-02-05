@@ -8,7 +8,7 @@ import { cn, formatCurrency } from "@/lib/utils";
 import type { ReportData, Settings, Client, Invoice } from "@/lib/types";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Printer, TrendingUp, Wallet, Package, Target, FileText, User as UserIcon, Calendar, ArrowRight } from "lucide-react";
+import { Printer, TrendingUp, Wallet, Package, Target, FileText, User as UserIcon, Calendar, ArrowRight, ChevronRight } from "lucide-react";
 import { ClientStatementTemplate } from "@/components/report-templates/ClientStatementTemplate";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import Image from 'next/image';
@@ -164,40 +164,57 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
       <div className="grid gap-8 grid-cols-1 xl:grid-cols-3">
         {/* Détails des Factures */}
         <Card className="xl:col-span-2 border-none shadow-premium bg-card/50 overflow-hidden">
-            <CardHeader className="bg-muted/30 border-b py-4">
-                <div className="flex items-center gap-2">
-                    <FileText className="size-5 text-primary" />
-                    <CardTitle className="text-lg font-black uppercase tracking-tight">Factures de la période</CardTitle>
+            <CardHeader className="bg-white border-b py-5">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                        <FileText className="size-5" />
+                    </div>
+                    <CardTitle className="text-xl font-black uppercase tracking-tight">Factures de la période</CardTitle>
                 </div>
             </CardHeader>
             <CardContent className="p-0">
-                <div className="max-h-[500px] overflow-auto">
+                <div className="max-h-[600px] overflow-auto custom-scrollbar">
                     <Table>
-                        <TableHeader className="sticky top-0 bg-white/80 backdrop-blur-sm z-10">
-                            <TableRow>
-                                <TableHead className="font-black uppercase text-[10px] tracking-widest">N° Facture</TableHead>
-                                <TableHead className="font-black uppercase text-[10px] tracking-widest">Client</TableHead>
-                                <TableHead className="font-black uppercase text-[10px] tracking-widest">Date</TableHead>
-                                <TableHead className="text-center font-black uppercase text-[10px] tracking-widest">Statut</TableHead>
-                                <TableHead className="text-right font-black uppercase text-[10px] tracking-widest">Montant</TableHead>
+                        <TableHeader className="sticky top-0 bg-muted/50 backdrop-blur-md z-10">
+                            <TableRow className="hover:bg-transparent border-b-2">
+                                <TableHead className="py-4 font-black uppercase text-[10px] tracking-widest text-muted-foreground/70">N° Facture</TableHead>
+                                <TableHead className="py-4 font-black uppercase text-[10px] tracking-widest text-muted-foreground/70">Client</TableHead>
+                                <TableHead className="py-4 font-black uppercase text-[10px] tracking-widest text-muted-foreground/70">Date</TableHead>
+                                <TableHead className="py-4 text-center font-black uppercase text-[10px] tracking-widest text-muted-foreground/70">Statut</TableHead>
+                                <TableHead className="py-4 text-right font-black uppercase text-[10px] tracking-widest text-muted-foreground/70">Montant</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {data.allInvoices.length > 0 ? data.allInvoices.map((invoice) => (
-                                <TableRow key={invoice.id} className="group hover:bg-primary/5 transition-colors">
-                                    <TableCell className="font-black text-sm">{invoice.invoiceNumber}</TableCell>
-                                    <TableCell className="font-bold text-[11px] uppercase text-muted-foreground line-clamp-1">{invoice.clientName}</TableCell>
-                                    <TableCell className="text-xs">{format(new Date(invoice.date), "dd/MM/yy")}</TableCell>
-                                    <TableCell className="text-center">
-                                        <Badge variant={getStatusVariant(invoice.status)} className="font-black text-[9px] px-2 py-0">
+                                <TableRow key={invoice.id} className="group hover:bg-primary/[0.02] transition-colors border-b">
+                                    <TableCell className="py-5 font-black text-sm text-foreground uppercase tracking-tight">
+                                        {invoice.invoiceNumber}
+                                    </TableCell>
+                                    <TableCell className="py-5">
+                                        <p className="font-bold text-[11px] uppercase text-muted-foreground/80 leading-snug line-clamp-2 max-w-[200px]">
+                                            {invoice.clientName}
+                                        </p>
+                                    </TableCell>
+                                    <TableCell className="py-5 text-xs font-semibold text-muted-foreground">
+                                        {format(new Date(invoice.date), "dd/MM/yy")}
+                                    </TableCell>
+                                    <TableCell className="py-5 text-center">
+                                        <Badge 
+                                            variant={getStatusVariant(invoice.status)} 
+                                            className="font-black text-[9px] px-3 py-1 uppercase rounded-full tracking-wide shadow-sm"
+                                        >
                                             {statusTranslations[invoice.status]}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="text-right font-black text-primary">{formatCurrency(invoice.totalAmount, currency)}</TableCell>
+                                    <TableCell className="py-5 text-right">
+                                        <span className="font-black text-base text-primary tracking-tight">
+                                            {formatCurrency(invoice.totalAmount, currency)}
+                                        </span>
+                                    </TableCell>
                                 </TableRow>
                             )) : (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-32 text-center text-muted-foreground italic">Aucune facture sur cette période.</TableCell>
+                                    <TableCell colSpan={5} className="h-40 text-center text-muted-foreground italic">Aucune facture sur cette période.</TableCell>
                                 </TableRow>
                             )}
                         </TableBody>
@@ -209,23 +226,29 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
         <div className="space-y-8">
             {/* Ventes par Produit */}
             <Card className="border-none shadow-premium bg-card/50 overflow-hidden">
-                <CardHeader className="bg-amber-500/10 border-b border-amber-500/10 py-4">
-                    <div className="flex items-center gap-2">
-                        <Package className="size-5 text-amber-600" />
+                <CardHeader className="bg-amber-500/5 border-b border-amber-500/10 py-5">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-amber-500 text-white shadow-lg shadow-amber-200">
+                            <Package className="size-5" />
+                        </div>
                         <CardTitle className="text-lg font-black uppercase tracking-tight text-amber-900">Ventes par Produit</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <div className="max-h-[300px] overflow-auto">
+                    <div className="max-h-[350px] overflow-auto custom-scrollbar">
                         <Table>
                             <TableBody>
                                 {data.productSales.slice(0, 10).map((sale, i) => (
-                                    <TableRow key={i} className="hover:bg-amber-500/5">
-                                        <TableCell className="font-bold text-xs uppercase tracking-tight leading-snug">
-                                            {sale.productName}
+                                    <TableRow key={i} className="hover:bg-amber-500/[0.02] border-b last:border-0">
+                                        <TableCell className="py-4 px-5">
+                                            <p className="font-bold text-xs uppercase tracking-tight leading-snug text-foreground">
+                                                {sale.productName}
+                                            </p>
                                         </TableCell>
-                                        <TableCell className="text-right">
-                                            <Badge variant="outline" className="bg-white font-black">{sale.quantitySold}</Badge>
+                                        <TableCell className="py-4 px-5 text-right">
+                                            <Badge variant="outline" className="bg-white font-black text-amber-700 border-amber-200">
+                                                {sale.quantitySold}
+                                            </Badge>
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -237,29 +260,35 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
 
             {/* Liste des Dépenses */}
             <Card className="border-none shadow-premium bg-card/50 overflow-hidden">
-                <CardHeader className="bg-rose-500/10 border-b border-rose-500/10 py-4">
-                    <div className="flex items-center gap-2">
-                        <Wallet className="size-5 text-rose-600" />
+                <CardHeader className="bg-rose-500/5 border-b border-rose-500/10 py-5">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-rose-500 text-white shadow-lg shadow-rose-200">
+                            <Wallet className="size-5" />
+                        </div>
                         <CardTitle className="text-lg font-black uppercase tracking-tight text-rose-900">Dernières Dépenses</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <div className="max-h-[300px] overflow-auto">
+                    <div className="max-h-[350px] overflow-auto custom-scrollbar">
                         <Table>
                             <TableBody>
                                 {data.expenses.length > 0 ? data.expenses.slice(0, 10).map((exp) => (
-                                    <TableRow key={exp.id} className="hover:bg-rose-500/5">
-                                        <TableCell className="p-3">
-                                            <p className="font-bold text-xs uppercase leading-none truncate w-[150px]">{exp.description}</p>
-                                            <p className="text-[9px] font-black text-muted-foreground mt-1 uppercase">{exp.category}</p>
+                                    <TableRow key={exp.id} className="hover:bg-rose-500/[0.02] border-b last:border-0">
+                                        <TableCell className="py-4 px-5">
+                                            <p className="font-bold text-xs uppercase leading-none truncate max-w-[160px] text-foreground">{exp.description}</p>
+                                            <p className="text-[9px] font-black text-muted-foreground mt-1.5 uppercase tracking-widest flex items-center gap-1">
+                                                <ChevronRight className="size-2" /> {exp.category}
+                                            </p>
                                         </TableCell>
-                                        <TableCell className="text-right p-3 font-black text-rose-700 whitespace-nowrap">
-                                            {formatCurrency(exp.amount, currency)}
+                                        <TableCell className="py-4 px-5 text-right">
+                                            <span className="font-black text-sm text-rose-700 whitespace-nowrap">
+                                                {formatCurrency(exp.amount, currency)}
+                                            </span>
                                         </TableCell>
                                     </TableRow>
                                 )) : (
                                     <TableRow>
-                                        <TableCell className="h-20 text-center text-muted-foreground text-xs italic">Aucune dépense.</TableCell>
+                                        <TableCell className="h-24 text-center text-muted-foreground text-xs italic">Aucune dépense.</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
