@@ -443,30 +443,6 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
             </section>
         </div>
 
-        <section>
-            <h3 className="print-section-title">Détail des Factures</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>N° Facture</th>
-                        <th>Client</th>
-                        <th>Date</th>
-                        <th className="text-right">Montant</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {data.allInvoices.map((inv) => (
-                        <tr key={inv.id}>
-                            <td className="font-bold">{inv.invoiceNumber}</td>
-                            <td className="uppercase">{inv.clientName}</td>
-                            <td>{format(new Date(inv.date), "dd/MM/yyyy")}</td>
-                            <td className="text-right font-bold">{formatCurrency(inv.totalAmount, currency)}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </section>
-
          <footer className="flex justify-between items-start mt-20 pt-10 border-t-2 border-dashed border-gray-300">
             <div className="w-1/3 text-center">
                 <p className="font-black uppercase text-xs mb-16 underline">Le Comptable</p>
