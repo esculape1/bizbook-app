@@ -25,7 +25,7 @@ export function StatCard({ title, value, icon, description, className }: StatCar
         </div>
         <div className="space-y-1 relative z-10">
           <p className="text-sm font-medium opacity-80">{title}</p>
-          <h3 className="text-xl md:text-2xl lg:text-2xl xl:text-3xl font-extrabold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" title={value}>
+          <h3 className="text-lg sm:text-xl md:text-2xl xl:text-2xl font-extrabold tracking-tight whitespace-nowrap" title={value}>
             {value}
           </h3>
         </div>
