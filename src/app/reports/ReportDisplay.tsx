@@ -13,20 +13,20 @@ import { ClientStatementTemplate } from "@/components/report-templates/ClientSta
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import Image from 'next/image';
 
-const StatCard = ({ title, value, icon, className, colorClass }: { title: string, value: string, icon: React.ReactNode, className?: string, colorClass: string }) => (
-    <Card className={cn("overflow-hidden border-none shadow-md group relative transition-all hover:scale-[1.02]", className, colorClass)}>
+const StatCard = ({ title, value, icon, className, colorClass, iconBg }: { title: string, value: string, icon: React.ReactNode, className?: string, colorClass: string, iconBg: string }) => (
+    <Card className={cn("overflow-hidden border-2 shadow-sm group relative transition-all hover:scale-[1.02]", className, colorClass)}>
         <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
-                <div className="p-2.5 rounded-xl bg-white/20 text-white shadow-inner">
+                <div className={cn("p-2.5 rounded-xl shadow-inner", iconBg)}>
                     {icon}
                 </div>
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60">Indicateur Clé</span>
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40">Indicateur Clé</span>
             </div>
             <div className="space-y-1">
-                <p className="text-[11px] font-bold text-white/80 uppercase tracking-wider">{title}</p>
-                <p className="text-xl md:text-2xl font-black text-white tracking-tight">{value}</p>
+                <p className="text-[11px] font-bold opacity-60 uppercase tracking-wider">{title}</p>
+                <p className="text-xl md:text-2xl font-black tracking-tight">{value}</p>
             </div>
-            <div className="absolute -right-4 -bottom-4 opacity-10 scale-[2.5] text-white rotate-12 transition-transform group-hover:rotate-0 duration-500">
+            <div className="absolute -right-4 -bottom-4 opacity-[0.05] scale-[2.5] rotate-12 transition-transform group-hover:rotate-0 duration-500">
                 {icon}
             </div>
         </CardContent>
@@ -149,91 +149,34 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
         <StatCard 
             title="Chiffre d'Affaires" 
             value={formatCurrency(data.summary.grossSales, currency)} 
-            icon={<TrendingUp className="size-6" />}
-            colorClass="bg-gradient-to-br from-emerald-500 to-teal-600"
+            icon={<TrendingUp className="size-6 text-emerald-600" />}
+            colorClass="bg-emerald-50 border-emerald-100 text-emerald-900"
+            iconBg="bg-emerald-100"
         />
         <StatCard 
             title="Coût Marchandises" 
             value={formatCurrency(data.summary.costOfGoodsSold, currency)} 
-            icon={<Package className="size-6" />}
-            colorClass="bg-gradient-to-br from-orange-400 to-amber-600"
+            icon={<Package className="size-6 text-amber-600" />}
+            colorClass="bg-amber-50 border-amber-100 text-amber-900"
+            iconBg="bg-amber-100"
         />
         <StatCard 
             title="Total Dépenses" 
             value={formatCurrency(data.summary.totalExpenses, currency)} 
-            icon={<Wallet className="size-6" />}
-            colorClass="bg-gradient-to-br from-rose-500 to-red-600"
+            icon={<Wallet className="size-6 text-rose-600" />}
+            colorClass="bg-rose-50 border-rose-100 text-rose-900"
+            iconBg="bg-rose-100"
         />
         <StatCard 
             title="Bénéfice Net" 
             value={formatCurrency(data.summary.netProfit, currency)} 
-            icon={<Target className="size-6" />}
-            colorClass="bg-gradient-to-br from-blue-500 to-indigo-600"
+            icon={<Target className="size-6 text-blue-600" />}
+            colorClass="bg-blue-50 border-blue-100 text-blue-900"
+            iconBg="bg-blue-100"
         />
       </div>
 
-      <div className="grid gap-8 grid-cols-1 xl:grid-cols-3">
-        <Card className="xl:col-span-2 border-none shadow-premium bg-card overflow-hidden">
-            <CardHeader className="bg-white border-b py-5">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-primary/10 text-primary">
-                        <FileText className="size-5" />
-                    </div>
-                    <CardTitle className="text-xl font-black uppercase tracking-tight">Factures de la période</CardTitle>
-                </div>
-            </CardHeader>
-            <CardContent className="p-0">
-                <div className="max-h-[600px] overflow-auto custom-scrollbar">
-                    <Table>
-                        <TableHeader className="sticky top-0 bg-muted/50 backdrop-blur-md z-10">
-                            <TableRow className="hover:bg-transparent border-b-2">
-                                <TableHead className="py-4 font-black uppercase text-[10px] tracking-widest text-muted-foreground/70">N° Facture</TableHead>
-                                <TableHead className="py-4 font-black uppercase text-[10px] tracking-widest text-muted-foreground/70">Client</TableHead>
-                                <TableHead className="py-4 font-black uppercase text-[10px] tracking-widest text-muted-foreground/70">Date</TableHead>
-                                <TableHead className="py-4 text-center font-black uppercase text-[10px] tracking-widest text-muted-foreground/70">Statut</TableHead>
-                                <TableHead className="py-4 text-right font-black uppercase text-[10px] tracking-widest text-muted-foreground/70">Montant</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {data.allInvoices.length > 0 ? data.allInvoices.map((invoice) => (
-                                <TableRow key={invoice.id} className="group transition-all hover:bg-primary/5 border-l-4 border-l-transparent hover:border-l-primary border-b">
-                                    <TableCell className="py-5 font-black text-sm text-foreground uppercase tracking-tight">
-                                        {invoice.invoiceNumber}
-                                    </TableCell>
-                                    <TableCell className="py-5">
-                                        <p className="font-bold text-[11px] uppercase text-muted-foreground/80 leading-snug line-clamp-2 max-w-[200px]">
-                                            {invoice.clientName}
-                                        </p>
-                                    </TableCell>
-                                    <TableCell className="py-5 text-xs font-semibold text-muted-foreground">
-                                        {format(new Date(invoice.date), "dd/MM/yy")}
-                                    </TableCell>
-                                    <TableCell className="py-5 text-center">
-                                        <Badge 
-                                            variant={getStatusVariant(invoice.status)} 
-                                            className="font-black text-[9px] px-3 py-1 uppercase rounded-full tracking-wide shadow-sm"
-                                        >
-                                            {statusTranslations[invoice.status]}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="py-5 text-right">
-                                        <span className="font-black text-base text-primary tracking-tight">
-                                            {formatCurrency(invoice.totalAmount, currency)}
-                                        </span>
-                                    </TableCell>
-                                </TableRow>
-                            )) : (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="h-40 text-center text-muted-foreground italic">Aucune facture sur cette période.</TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div>
-            </CardContent>
-        </Card>
-
-        <div className="space-y-8">
+      <div className="grid gap-8 grid-cols-1 xl:grid-cols-2">
             <Card className="border-none shadow-premium bg-card overflow-hidden">
                 <CardHeader className="bg-amber-500/5 border-b border-amber-500/10 py-5">
                     <div className="flex items-center gap-3">
@@ -244,11 +187,11 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <div className="max-h-[350px] overflow-auto custom-scrollbar">
+                    <div className="max-h-[450px] overflow-auto custom-scrollbar">
                         <Table>
                             <TableBody>
                                 {data.productSales.map((sale, i) => (
-                                    <TableRow key={i} className="group transition-all hover:bg-amber-500/5 border-l-4 border-l-transparent hover:border-l-amber-500 border-b last:border-0">
+                                    <TableRow key={i} className="group transition-all hover:bg-amber-500/5 border-l-4 border-l-transparent hover:border-l-amber-500 border-b last:border-0 bg-white">
                                         <TableCell className="py-4 px-5">
                                             <p className="font-bold text-xs uppercase tracking-tight leading-snug text-foreground">
                                                 {sale.productName}
@@ -273,17 +216,17 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                         <div className="p-2 rounded-xl bg-rose-500 text-white shadow-lg shadow-rose-200">
                             <Wallet className="size-5" />
                         </div>
-                        <CardTitle className="text-lg font-black uppercase tracking-tight text-rose-900">Dernières Dépenses</CardTitle>
+                        <CardTitle className="text-lg font-black uppercase tracking-tight text-rose-900">Détail des Dépenses</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <div className="max-h-[350px] overflow-auto custom-scrollbar">
+                    <div className="max-h-[450px] overflow-auto custom-scrollbar">
                         <Table>
                             <TableBody>
                                 {data.expenses.length > 0 ? data.expenses.map((exp) => (
-                                    <TableRow key={exp.id} className="group transition-all hover:bg-rose-500/5 border-l-4 border-l-transparent hover:border-l-rose-500 border-b last:border-0">
+                                    <TableRow key={exp.id} className="group transition-all hover:bg-rose-500/5 border-l-4 border-l-transparent hover:border-l-rose-500 border-b last:border-0 bg-white">
                                         <TableCell className="py-4 px-5">
-                                            <p className="font-bold text-xs uppercase leading-none truncate max-w-[160px] text-foreground">{exp.description}</p>
+                                            <p className="font-bold text-xs uppercase leading-none truncate max-w-[200px] text-foreground">{exp.description}</p>
                                             <p className="text-[9px] font-black text-muted-foreground mt-1.5 uppercase tracking-widest flex items-center gap-1">
                                                 <ChevronRight className="size-2" /> {exp.category}
                                             </p>
@@ -304,7 +247,6 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
                     </div>
                 </CardContent>
             </Card>
-        </div>
       </div>
       
       {/* VERSION IMPRIMABLE AMÉLIORÉE */}
@@ -313,9 +255,16 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
           @media print {
             .printable-report { padding: 20mm; font-family: 'Inter', sans-serif; }
             .print-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
-            .print-card { border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; text-align: center; background-color: #f9fafb !important; -webkit-print-color-adjust: exact; }
+            .print-card { border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; text-align: center; -webkit-print-color-adjust: exact; }
             .print-card-title { font-size: 9px; text-transform: uppercase; color: #6b7280; font-weight: 800; margin-bottom: 5px; }
             .print-card-value { font-size: 16px; font-weight: 900; }
+            
+            /* Couleurs légères pour l'impression */
+            .bg-emerald-print { background-color: #ecfdf5 !important; border-color: #d1fae5 !important; }
+            .bg-amber-print { background-color: #fffbeb !important; border-color: #fef3c7 !important; }
+            .bg-rose-print { background-color: #fff1f2 !important; border-color: #ffe4e6 !important; }
+            .bg-blue-print { background-color: #eff6ff !important; border-color: #dbeafe !important; }
+
             .print-section-title { font-size: 14px; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 5px; margin: 30px 0 15px 0; }
             table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
             th { text-align: left; font-size: 10px; text-transform: uppercase; padding: 8px; background-color: #f3f4f6 !important; border: 1px solid #d1d5db; -webkit-print-color-adjust: exact; }
@@ -354,21 +303,21 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
         </header>
 
         <div className="print-grid">
-            <div className="print-card">
+            <div className="print-card bg-emerald-print">
                 <p className="print-card-title">Ventes (CA)</p>
-                <p className="print-card-value">{formatCurrency(data.summary.grossSales, currency)}</p>
+                <p className="print-card-value text-emerald-900">{formatCurrency(data.summary.grossSales, currency)}</p>
             </div>
-            <div className="print-card">
+            <div className="print-card bg-amber-print">
                 <p className="print-card-title">Coût Marchandises</p>
-                <p className="print-card-value">{formatCurrency(data.summary.costOfGoodsSold, currency)}</p>
+                <p className="print-card-value text-amber-900">{formatCurrency(data.summary.costOfGoodsSold, currency)}</p>
             </div>
-            <div className="print-card">
+            <div className="print-card bg-rose-print">
                 <p className="print-card-title">Total Dépenses</p>
-                <p className="print-card-value">{formatCurrency(data.summary.totalExpenses, currency)}</p>
+                <p className="print-card-value text-rose-900">{formatCurrency(data.summary.totalExpenses, currency)}</p>
             </div>
-            <div className="print-card" style={{ backgroundColor: '#000 !important', color: '#fff !important' }}>
-                <p className="print-card-title" style={{ color: '#ccc !important' }}>Bénéfice Net</p>
-                <p className="print-card-value">{formatCurrency(data.summary.netProfit, currency)}</p>
+            <div className="print-card bg-blue-print">
+                <p className="print-card-title">Bénéfice Net</p>
+                <p className="print-card-value text-blue-900">{formatCurrency(data.summary.netProfit, currency)}</p>
             </div>
         </div>
 
