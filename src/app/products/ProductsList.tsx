@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -83,11 +82,11 @@ export function ProductsList({
                             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-dashed">
                                 <div>
                                   <p className="text-[10px] font-bold text-muted-foreground uppercase">Prix Achat</p>
-                                  <p className="font-bold text-sm text-amber-700">{formatCurrency(product.purchasePrice || 0, settings.currency)}</p>
+                                  <p className="font-bold text-sm text-amber-700 whitespace-nowrap">{formatCurrency(product.purchasePrice || 0, settings.currency)}</p>
                                 </div>
                                 <div className="text-right">
                                   <p className="text-[10px] font-bold text-muted-foreground uppercase">Prix Vente</p>
-                                  <p className="font-black text-sm text-primary">{formatCurrency(product.unitPrice, settings.currency)}</p>
+                                  <p className="font-black text-sm text-primary whitespace-nowrap">{formatCurrency(product.unitPrice, settings.currency)}</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -138,13 +137,13 @@ export function ProductsList({
                       {canViewPrices && (
                         <>
                           <TableHead className="text-right py-4">
-                            <div className="flex items-center justify-end gap-2 text-primary font-black uppercase text-[11px] tracking-widest">
+                            <div className="flex items-center justify-end gap-2 text-primary font-black uppercase text-[11px] tracking-widest whitespace-nowrap">
                               <Wallet className="size-4" />
                               P. Achat
                             </div>
                           </TableHead>
                           <TableHead className="text-right py-4">
-                            <div className="flex items-center justify-end gap-2 text-primary font-black uppercase text-[11px] tracking-widest">
+                            <div className="flex items-center justify-end gap-2 text-primary font-black uppercase text-[11px] tracking-widest whitespace-nowrap">
                               <DollarSign className="size-4" />
                               P. Vente
                             </div>
@@ -192,8 +191,8 @@ export function ProductsList({
                         </TableCell>
                         {canViewPrices && (
                           <>
-                            <TableCell className="text-right font-bold text-amber-700">{formatCurrency(product.purchasePrice || 0, settings.currency)}</TableCell>
-                            <TableCell className="text-right font-black text-primary">{formatCurrency(product.unitPrice, settings.currency)}</TableCell>
+                            <TableCell className="text-right font-bold text-amber-700 whitespace-nowrap">{formatCurrency(product.purchasePrice || 0, settings.currency)}</TableCell>
+                            <TableCell className="text-right font-black text-primary whitespace-nowrap">{formatCurrency(product.unitPrice, settings.currency)}</TableCell>
                           </>
                         )}
                         <TableCell className="text-center">
