@@ -1,5 +1,5 @@
-
-import { getPurchases, getSuppliers, getProducts, getSettings, getSession } from "@/lib/data";
+import { getPurchases, getSuppliers, getProducts, getSettings } from "@/lib/data";
+import { getSession } from "@/lib/session";
 import { AppLayout } from "@/app/AppLayout";
 import { redirect } from "next/navigation";
 import { ROLES } from "@/lib/constants";
