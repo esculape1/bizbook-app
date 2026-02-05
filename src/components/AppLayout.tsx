@@ -65,11 +65,6 @@ export function AppLayout({
 
   const accessibleNavItems = navItems.filter(item => item.roles.includes(userRole));
 
-  const currentItem = navItems.find(item => 
-    item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
-  );
-  const currentPageLabel = currentItem?.label || 'Application';
-
   const Logo = ({ size = 32 }: { size?: number }) => (
     settings.logoUrl ? (
       <Image src={settings.logoUrl} alt="BizBook Logo" width={size} height={size} className="rounded-md object-contain shrink-0" data-ai-hint="logo" />
@@ -204,15 +199,6 @@ export function AppLayout({
 
       <main className="flex-1 flex flex-col items-center">
         <div className="w-full max-w-[1800px] p-4 lg:p-8 xl:px-10 xl:py-6">
-          <div className="hidden xl:flex items-center gap-3 mb-6">
-            <Logo size={32} />
-            <div className="flex items-center gap-2 text-sm">
-              <span className="font-bold text-primary/60">BizBook</span>
-              <span className="text-muted-foreground/40">/</span>
-              <span className="font-bold text-foreground">{currentPageLabel}</span>
-            </div>
-          </div>
-
           {children}
         </div>
       </main>
