@@ -48,7 +48,6 @@ const navItems = [
   { href: '/settlements', label: 'Règlements', icon: CreditCard, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN], color: 'text-lime-500', bg: 'hover:bg-lime-50' },
   { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN], color: 'text-red-500', bg: 'hover:bg-red-50' },
   { href: '/reports', label: 'Rapports', icon: BarChart3, roles: [ROLES.SUPER_ADMIN], color: 'text-cyan-500', bg: 'hover:bg-cyan-50' },
-  { href: '/settings', label: 'Paramètres', icon: Settings, roles: [ROLES.SUPER_ADMIN], color: 'text-slate-500', bg: 'hover:bg-slate-50' },
 ];
 
 export function AppLayout({ 
@@ -66,11 +65,16 @@ export function AppLayout({
 
   const accessibleNavItems = navItems.filter(item => item.roles.includes(userRole));
 
+  const currentItem = navItems.find(item => 
+    item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
+  );
+  const currentPageLabel = currentItem?.label || 'Application';
+
   const Logo = ({ size = 32 }: { size?: number }) => (
     settings.logoUrl ? (
-      <Image src={settings.logoUrl} alt="BizBook Logo" width={size} height={size} className="rounded-md object-contain" data-ai-hint="logo" />
+      <Image src={settings.logoUrl} alt="BizBook Logo" width={size} height={size} className="rounded-md object-contain shrink-0" data-ai-hint="logo" />
     ) : (
-      <div className="p-1 rounded-lg bg-primary shadow-sm text-white">
+      <div className="p-1 rounded-lg bg-primary shadow-sm text-white shrink-0">
         <svg xmlns="http://www.w3.org/2000/svg" width={size-10} height={size-8} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9.5a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0Z"/><path d="M12.5 4H15a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5"/><path d="m14 6-2.5 2.5"/><path d="m18 10-6 6"/></svg>
       </div>
     )
@@ -79,16 +83,15 @@ export function AppLayout({
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-40 w-full border-b bg-card/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 md:h-16 max-w-[1800px] items-center justify-between px-4 lg:px-6">
-          <div className="flex items-center gap-4 xl:gap-6">
-            <Link href="/" className="flex items-center gap-2 group shrink-0">
+        <div className="mx-auto flex h-16 max-w-[1800px] items-center justify-between px-4 lg:px-6">
+          <div className="flex items-center gap-4 xl:gap-6 overflow-hidden">
+            <Link href="/" className="flex items-center gap-2 group shrink-0 xl:hidden">
               <Logo size={32} />
-              <span className="hidden font-black text-lg tracking-tight text-primary lg:inline-block transition-transform group-hover:scale-105">
+              <span className="font-black text-lg tracking-tight text-primary">
                 BizBook
               </span>
             </Link>
 
-            {/* Desktop Horizontal Navigation - Compact & Colorful */}
             <nav className="hidden xl:flex items-center gap-0.5">
               {accessibleNavItems.map((item) => {
                 const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
@@ -159,7 +162,6 @@ export function AppLayout({
             <div className="flex items-center gap-3 shrink-0">
               <div className="hidden lg:flex flex-col items-end">
                   <p className="text-xs font-bold text-foreground leading-none">{user.name}</p>
-                  <p className="text-[9px] text-muted-foreground uppercase tracking-widest mt-1 font-bold">{user.role}</p>
               </div>
               <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -174,7 +176,8 @@ export function AppLayout({
                   <DropdownMenuLabel className="font-normal px-4 py-3">
                       <div className="flex flex-col space-y-1">
                       <p className="text-sm font-bold leading-none">{user.name}</p>
-                      <p className="text-xs leading-none text-muted-foreground truncate">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">{user.role}</p>
+                      <p className="text-xs leading-none text-muted-foreground truncate pt-1">
                           {user.email}
                       </p>
                       </div>
@@ -203,7 +206,17 @@ export function AppLayout({
       </header>
 
       <main className="flex-1 flex flex-col items-center">
-        <div className="w-full max-w-[1800px] p-4 lg:p-8 xl:p-10">
+        <div className="w-full max-w-[1800px] p-4 lg:p-8 xl:px-10 xl:py-6">
+          {/* Section Branding & Titre de page Desktop Compact */}
+          <div className="hidden xl:flex items-center gap-3 mb-6">
+            <Logo size={32} />
+            <div className="flex items-center gap-2 text-sm">
+              <span className="font-bold text-primary/60">BizBook</span>
+              <span className="text-muted-foreground/40">/</span>
+              <span className="font-bold text-foreground">{currentPageLabel}</span>
+            </div>
+          </div>
+
           {children}
         </div>
       </main>

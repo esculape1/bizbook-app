@@ -207,7 +207,6 @@ export function AppLayout({
 
       <main className="flex-1 flex flex-col items-center">
         <div className="w-full max-w-[1800px] p-4 lg:p-8 xl:px-10 xl:py-6">
-          {/* Section Branding & Titre de page Desktop Compact */}
           <div className="hidden xl:flex items-center gap-3 mb-6">
             <Logo size={32} />
             <div className="flex items-center gap-2 text-sm">

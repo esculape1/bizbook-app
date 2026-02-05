@@ -13,7 +13,7 @@ type StatCardProps = {
 export function StatCard({ title, value, icon, description, className }: StatCardProps) {
   return (
     <Card className={cn(
-      "overflow-hidden border-none shadow-premium hover:shadow-xl transition-all duration-300 group",
+      "overflow-hidden border-none shadow-premium hover:shadow-xl transition-all duration-300 group relative",
       className
     )}>
       <CardContent className="p-6">
@@ -23,13 +23,15 @@ export function StatCard({ title, value, icon, description, className }: StatCar
           </div>
           {description && <span className="text-[10px] uppercase tracking-widest font-bold opacity-60">{description}</span>}
         </div>
-        <div className="space-y-1">
+        <div className="space-y-1 relative z-10">
           <p className="text-sm font-medium opacity-80">{title}</p>
-          <h3 className="text-3xl font-extrabold tracking-tight">{value}</h3>
+          <h3 className="text-xl md:text-2xl lg:text-2xl xl:text-3xl font-extrabold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis" title={value}>
+            {value}
+          </h3>
         </div>
       </CardContent>
       {/* Decorative background element for desktop */}
-      <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-125 transition-transform duration-500">
+      <div className="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-125 transition-transform duration-500 pointer-events-none">
         <div className="scale-[3] transform-gpu">
             {icon}
         </div>
