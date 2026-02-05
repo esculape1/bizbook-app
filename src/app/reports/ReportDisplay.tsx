@@ -1,14 +1,14 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { ReportData, Settings, Client, Invoice } from "@/lib/types";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Printer, TrendingUp, Wallet, Package, Target, FileText, User as UserIcon, Calendar, ArrowRight, ChevronRight } from "lucide-react";
+import { Printer, TrendingUp, Wallet, Package, Target, ChevronRight, Calendar, ArrowRight } from "lucide-react";
 import { ClientStatementTemplate } from "@/components/report-templates/ClientStatementTemplate";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import Image from 'next/image';
@@ -32,27 +32,6 @@ const StatCard = ({ title, value, icon, className, colorClass, iconBg }: { title
         </CardContent>
     </Card>
 )
-
-const getStatusVariant = (status: Invoice['status']): "success" | "warning" | "destructive" | "outline" => {
-    switch (status) {
-      case 'Paid':
-        return 'success';
-      case 'Partially Paid':
-        return 'warning';
-      case 'Unpaid':
-        return 'destructive';
-      case 'Cancelled':
-      default:
-        return 'outline';
-    }
-}
-
-const statusTranslations: { [key: string]: string } = {
-    Paid: 'Payée',
-    Unpaid: 'Impayée',
-    'Partially Paid': 'Partiel',
-    Cancelled: 'Annulée'
-};
 
 export function ReportDisplay({ data, settings, currency, client }: { data: ReportData, settings: Settings, currency: Settings['currency'], client: Client | null }) {
   if (!data) return null;
@@ -249,26 +228,41 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
             </Card>
       </div>
       
-      {/* VERSION IMPRIMABLE AMÉLIORÉE */}
+      {/* VERSION IMPRIMABLE AMÉLIORÉE AVEC COULEURS LÉGÈRES */}
       <div id="report-display-content-printable" className="printable-report space-y-8 hidden print:block bg-white text-black">
         <style>{`
           @media print {
-            .printable-report { padding: 20mm; font-family: 'Inter', sans-serif; }
-            .print-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
-            .print-card { border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; text-align: center; -webkit-print-color-adjust: exact; }
-            .print-card-title { font-size: 9px; text-transform: uppercase; color: #6b7280; font-weight: 800; margin-bottom: 5px; }
-            .print-card-value { font-size: 16px; font-weight: 900; }
+            .printable-report { padding: 15mm; font-family: 'Inter', sans-serif; background: white !important; }
+            .print-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 25px; }
+            .print-card { 
+                border: 1px solid #e5e7eb; 
+                padding: 12px; 
+                border-radius: 8px; 
+                text-align: center; 
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important;
+            }
+            .print-card-title { font-size: 8pt; text-transform: uppercase; color: #4b5563; font-weight: 800; margin-bottom: 4px; }
+            .print-card-value { font-size: 13pt; font-weight: 900; }
             
-            /* Couleurs légères pour l'impression */
-            .bg-emerald-print { background-color: #ecfdf5 !important; border-color: #d1fae5 !important; }
-            .bg-amber-print { background-color: #fffbeb !important; border-color: #fef3c7 !important; }
-            .bg-rose-print { background-color: #fff1f2 !important; border-color: #ffe4e6 !important; }
-            .bg-blue-print { background-color: #eff6ff !important; border-color: #dbeafe !important; }
+            /* Couleurs pastel forcées pour l'impression PDF */
+            .bg-emerald-print { background-color: #f0fdf4 !important; border-color: #bbf7d0 !important; color: #065f46 !important; }
+            .bg-amber-print { background-color: #fffbeb !important; border-color: #fef3c7 !important; color: #92400e !important; }
+            .bg-rose-print { background-color: #fff1f2 !important; border-color: #fecdd3 !important; color: #9f1239 !important; }
+            .bg-blue-print { background-color: #eff6ff !important; border-color: #bfdbfe !important; color: #1e40af !important; }
 
-            .print-section-title { font-size: 14px; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 5px; margin: 30px 0 15px 0; }
-            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            th { text-align: left; font-size: 10px; text-transform: uppercase; padding: 8px; background-color: #f3f4f6 !important; border: 1px solid #d1d5db; -webkit-print-color-adjust: exact; }
-            td { padding: 8px; border: 1px solid #d1d5db; font-size: 11px; }
+            .print-section-title { 
+                font-size: 11pt; 
+                font-weight: 900; 
+                text-transform: uppercase; 
+                border-bottom: 2px solid #000; 
+                padding-bottom: 4px; 
+                margin: 25px 0 12px 0; 
+                color: #000;
+            }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+            th { text-align: left; font-size: 8pt; text-transform: uppercase; padding: 6px 8px; background-color: #f3f4f6 !important; border: 1px solid #d1d5db; -webkit-print-color-adjust: exact; }
+            td { padding: 6px 8px; border: 1px solid #d1d5db; font-size: 9pt; }
             .text-right { text-align: right; }
             .font-bold { font-weight: 700; }
           }
@@ -305,19 +299,19 @@ export function ReportDisplay({ data, settings, currency, client }: { data: Repo
         <div className="print-grid">
             <div className="print-card bg-emerald-print">
                 <p className="print-card-title">Ventes (CA)</p>
-                <p className="print-card-value text-emerald-900">{formatCurrency(data.summary.grossSales, currency)}</p>
+                <p className="print-card-value">{formatCurrency(data.summary.grossSales, currency)}</p>
             </div>
             <div className="print-card bg-amber-print">
                 <p className="print-card-title">Coût Marchandises</p>
-                <p className="print-card-value text-amber-900">{formatCurrency(data.summary.costOfGoodsSold, currency)}</p>
+                <p className="print-card-value">{formatCurrency(data.summary.costOfGoodsSold, currency)}</p>
             </div>
             <div className="print-card bg-rose-print">
                 <p className="print-card-title">Total Dépenses</p>
-                <p className="print-card-value text-rose-900">{formatCurrency(data.summary.totalExpenses, currency)}</p>
+                <p className="print-card-value">{formatCurrency(data.summary.totalExpenses, currency)}</p>
             </div>
             <div className="print-card bg-blue-print">
                 <p className="print-card-title">Bénéfice Net</p>
-                <p className="print-card-value text-blue-900">{formatCurrency(data.summary.netProfit, currency)}</p>
+                <p className="print-card-value">{formatCurrency(data.summary.netProfit, currency)}</p>
             </div>
         </div>
 
