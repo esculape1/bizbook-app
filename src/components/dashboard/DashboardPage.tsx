@@ -1,5 +1,3 @@
-
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SalesChart } from "@/components/dashboard/SalesChart";
@@ -10,7 +8,6 @@ import { formatCurrency } from "@/lib/utils";
 import { OverdueInvoicesTable } from "@/components/dashboard/OverdueInvoicesTable";
 import { DateTimeDisplay } from "@/components/dashboard/DateTimeDisplay";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import type { Product, Invoice } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,62 +61,64 @@ export default async function DashboardPage() {
   const invoicesForFiscalYear = invoices.filter(inv => new Date(inv.date) >= fiscalYearStartDate);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="relative flex flex-col md:flex-row justify-between items-center gap-4 border rounded-lg p-4 bg-gradient-to-r from-primary/5 via-card to-primary/5 shadow-inner">
-          <div className="hidden md:block md:flex-1"></div>
-
-          <div className="text-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2">
-              <h1 className="text-2xl md:text-3xl font-bold uppercase tracking-wider">Tableau de bord</h1>
+    <div className="flex flex-col gap-8 md:gap-10">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div>
+              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground">
+                Bonjour 👋
+              </h1>
+              <p className="text-muted-foreground mt-1">Voici l'état actuel de votre activité.</p>
           </div>
-          
-          <div className="md:flex-1 md:text-right">
+          <div className="glass-card border px-6 py-3 rounded-2xl shadow-premium">
               <DateTimeDisplay />
           </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         <StatCard 
           title="Chiffre d'affaires" 
           value={formatCurrency(stats.totalRevenue, settings.currency)} 
-          icon={<DollarSign />} 
-          description="Total facturé (exercice en cours)"
-          className="bg-green-500/10 text-green-700 border-green-500/20"
+          icon={<DollarSign className="size-6" />} 
+          description="EXERCICE"
+          className="bg-emerald-600 text-white"
         />
         <StatCard 
           title="Total Dépenses" 
           value={formatCurrency(stats.totalExpenses, settings.currency)} 
-          icon={<Wallet />}
-          description="Dépenses (exercice en cours)"
-          className="bg-red-500/10 text-red-700 border-red-500/20"
+          icon={<Wallet className="size-6" />}
+          description="EXERCICE"
+          className="bg-rose-600 text-white"
         />
         <StatCard 
           title="Clients Actifs" 
           value={stats.activeClients.toString()} 
-          icon={<Users />}
-          description={`${stats.totalClients} clients au total`}
-          className="bg-blue-500/10 text-blue-700 border-blue-500/20"
+          icon={<Users className="size-6" />}
+          description={`${stats.totalClients} TOTAL`}
+          className="bg-sky-600 text-white"
         />
         <StatCard 
           title="Produits en Stock" 
           value={stats.productCount.toString()} 
-          icon={<Box />}
-          description="Nombre de références uniques"
-          className="bg-orange-500/10 text-orange-700 border-orange-500/20"
+          icon={<Box className="size-6" />}
+          description="RÉFÉRENCES"
+          className="bg-amber-600 text-white"
         />
         <StatCard 
           title="Total Impayé" 
           value={formatCurrency(stats.totalDue, settings.currency)} 
-          icon={<Receipt />}
-          description={`${stats.unpaidInvoicesCount} factures non soldées`}
-          className="bg-yellow-500/10 text-yellow-700 border-yellow-500/20"
+          icon={<Receipt className="size-6" />}
+          description={`${stats.unpaidInvoicesCount} FACTURES`}
+          className="bg-indigo-600 text-white"
         />
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-            <Card className="bg-muted/30 h-full">
-                <CardHeader className="text-center">
-                    <CardTitle>Aperçu des Ventes (Exercice en cours)</CardTitle>
+            <Card className="shadow-premium border-none h-full bg-card/50 overflow-hidden">
+                <CardHeader className="border-b bg-card/80 py-6 px-8">
+                    <CardTitle className="text-xl font-bold">Performance des Ventes</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-8">
                     <SalesChart invoices={invoicesForFiscalYear} currency={settings.currency} />
                 </CardContent>
             </Card>
@@ -130,14 +129,10 @@ export default async function DashboardPage() {
         </div>
       </div>
       
-      <Card className="bg-yellow-500/5">
-        <CardHeader className="text-center">
-            <CardTitle>Clients avec Factures Échues</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <OverdueInvoicesTable invoices={invoices} settings={settings} />
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold px-1">Alertes de Recouvrement</h2>
+        <OverdueInvoicesTable invoices={invoices} settings={settings} />
+      </div>
     </div>
   );
 }

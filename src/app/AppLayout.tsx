@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -38,7 +37,7 @@ import { signOut } from '@/app/auth/actions';
 import { ROLES } from '@/lib/constants';
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: [ROLES.SUPER_ADMIN] },
+  { href: '/', label: 'Tableau de bord', icon: LayoutDashboard, roles: [ROLES.SUPER_ADMIN] },
   { href: '/clients', label: 'Clients', icon: Users, roles: [ROLES.SUPER_ADMIN, ROLES.USER] },
   { href: '/suppliers', label: 'Fournisseurs', icon: Briefcase, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN] },
   { href: '/purchases', label: 'Achats', icon: ShoppingCart, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN] },
@@ -69,70 +68,75 @@ export function AppLayout({
 
   const Logo = () => (
     settings.logoUrl ? (
-      <Image src={settings.logoUrl} alt="BizBook Logo" width={32} height={32} className="rounded-sm object-contain" data-ai-hint="logo" />
+      <Image src={settings.logoUrl} alt="BizBook Logo" width={36} height={36} className="rounded-md object-contain" data-ai-hint="logo" />
     ) : (
-      <div className="p-2 rounded-lg bg-primary/20 text-primary">
+      <div className="p-2 rounded-xl bg-primary shadow-lg shadow-primary/20 text-white">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-6"><path d="M2 9.5a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0Z"/><path d="M12.5 4H15a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5"/><path d="m14 6-2.5 2.5"/><path d="m18 10-6 6"/></svg>
       </div>
     )
   );
 
   return (
-    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-      <div className="hidden border-r bg-muted/40 md:block">
-        <div className="flex h-full max-h-screen flex-col gap-2">
-          <div className="flex h-16 items-center border-b px-4 lg:px-6">
-            <Link href="/" className="flex items-center gap-2 font-semibold">
+    <div className="grid min-h-screen w-full md:grid-cols-[240px_1fr] lg:grid-cols-[280px_1fr] bg-background">
+      <div className="hidden md:block border-r bg-card/50 backdrop-blur-md sticky top-0 h-screen">
+        <div className="flex h-full flex-col">
+          <div className="flex h-20 items-center border-b px-6">
+            <Link href="/" className="flex items-center gap-3 font-bold text-xl tracking-tight text-primary">
               <Logo />
-              <span className="">BizBook</span>
+              <span>BizBook</span>
             </Link>
           </div>
-          <div className="flex-1">
-            <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
+          <div className="flex-1 overflow-y-auto py-6">
+            <nav className="grid items-start px-4 text-sm font-medium gap-1">
               {accessibleNavItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                    (item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)) ? "bg-muted text-primary" : ""
+                    "flex items-center gap-3 rounded-xl px-4 py-2.5 transition-all duration-200 group",
+                    (item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)) 
+                      ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                      : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
                   )}
                 >
-                  <item.icon className="h-4 w-4" />
+                  <item.icon className={cn(
+                    "h-4 w-4 transition-transform group-hover:scale-110",
+                    (item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)) ? "text-white" : "text-muted-foreground group-hover:text-primary"
+                  )} />
                   {item.label}
                 </Link>
               ))}
             </nav>
           </div>
-          <div className="mt-auto p-4">
-             <footer className="w-full text-center text-xs text-muted-foreground">
-                <p className="mb-2">© {new Date().getFullYear()} BizBook.</p>
-                <p>By DLG Caverne Consortium</p>
+          <div className="p-6 border-t mt-auto">
+             <footer className="w-full text-center text-[10px] text-muted-foreground/60 uppercase tracking-widest font-bold">
+                <p className="mb-1">© {new Date().getFullYear()} BizBook</p>
+                <p>DLG Caverne Consortium</p>
              </footer>
           </div>
         </div>
       </div>
       <div className="flex flex-col">
-        <header className="flex h-16 items-center gap-4 border-b bg-muted/40 px-4 lg:px-6">
+        <header className="flex h-16 md:h-20 items-center gap-4 border-b bg-card/50 backdrop-blur-md px-4 lg:px-8 sticky top-0 z-30">
           <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
               <Button
                 variant="outline"
                 size="icon"
-                className="shrink-0 md:hidden"
+                className="shrink-0 md:hidden border-none bg-transparent hover:bg-primary/10"
               >
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle navigation menu</span>
+                <Menu className="h-6 w-6 text-primary" />
+                <span className="sr-only">Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="flex flex-col">
-              <nav className="grid gap-2 text-lg font-medium">
+            <SheetContent side="left" className="flex flex-col w-[300px]">
+              <nav className="grid gap-2 text-lg font-medium pt-4">
                 <Link
                   href="#"
-                  className="flex items-center gap-2 text-lg font-semibold mb-4"
+                  className="flex items-center gap-2 text-2xl font-bold mb-8 text-primary"
                 >
                   <Logo />
-                  <span >BizBook</span>
+                  <span>BizBook</span>
                 </Link>
                 {accessibleNavItems.map((item) => (
                   <Link
@@ -140,8 +144,10 @@ export function AppLayout({
                     href={item.href}
                     onClick={() => setSheetOpen(false)}
                     className={cn(
-                      "mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground",
-                      (item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)) ? "bg-muted text-foreground" : ""
+                      "flex items-center gap-4 rounded-xl px-4 py-3 transition-all",
+                      (item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)) 
+                        ? "bg-primary text-white" 
+                        : "text-muted-foreground"
                     )}
                   >
                     <item.icon className="h-5 w-5" />
@@ -153,48 +159,50 @@ export function AppLayout({
           </Sheet>
           
           <div className="w-full flex-1">
-             {/* Le titre de bienvenue redondant a été supprimé d'ici */}
+             {/* Espace pour barre de recherche ou titre dynamique si nécessaire */}
           </div>
           
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="secondary" size="icon" className="rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={`https://i.pravatar.cc/150?u=${user.email}`} alt={user.name} />
-                  <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <span className="sr-only">Toggle user menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user.name}</p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
-                  </p>
-                  <p className="text-xs leading-none text-muted-foreground pt-1 font-semibold">
-                      Rôle: {user.role}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/settings">Paramètres</Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <form action={signOut} className="w-full">
-                  <button type="submit" className="flex items-center w-full">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Déconnexion</span>
-                  </button>
-                </form>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-4">
+            <div className="hidden lg:flex flex-col items-end mr-2">
+                <p className="text-sm font-bold text-foreground leading-none">{user.name}</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">{user.role}</p>
+            </div>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 overflow-hidden border-2 border-primary/10 hover:border-primary/30 transition-all">
+                    <Avatar className="h-full w-full">
+                    <AvatarImage src={`https://i.pravatar.cc/150?u=${user.email}`} alt={user.name} />
+                    <AvatarFallback className="bg-primary/10 text-primary font-bold">{user.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 mt-2 rounded-xl shadow-premium border-primary/5">
+                <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-bold leading-none">{user.name}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                    </p>
+                    </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild className="rounded-lg cursor-pointer">
+                    <Link href="/settings" className="w-full">Paramètres</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild className="rounded-lg cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive">
+                    <form action={signOut} className="w-full">
+                    <button type="submit" className="flex items-center w-full">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Déconnexion</span>
+                    </button>
+                    </form>
+                </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </header>
-        <main className="flex flex-1 flex-col gap-6 p-4 lg:p-6 min-h-0 overflow-auto">
+        <main className="flex flex-1 flex-col gap-8 p-4 lg:p-8 xl:p-10 max-w-[1600px] mx-auto w-full">
           {children}
         </main>
       </div>
