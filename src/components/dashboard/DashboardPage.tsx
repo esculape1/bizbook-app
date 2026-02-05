@@ -79,14 +79,14 @@ export default async function DashboardPage() {
           title="Chiffre d'affaires" 
           value={formatCurrency(stats.totalRevenue, settings.currency)} 
           icon={<DollarSign className="size-6" />} 
-          description="EXERCICE"
+          description={`EXERCICE ${currentYear}`}
           className="bg-emerald-600 text-white"
         />
         <StatCard 
           title="Total Dépenses" 
           value={formatCurrency(stats.totalExpenses, settings.currency)} 
           icon={<Wallet className="size-6" />}
-          description="EXERCICE"
+          description={`EXERCICE ${currentYear}`}
           className="bg-rose-600 text-white"
         />
         <StatCard 
