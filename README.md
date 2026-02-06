@@ -38,9 +38,10 @@ BizBook évolue pour devenir une plateforme SaaS (Software as a Service) permett
 *   Isolation totale des données par entreprise via un identifiant unique (`tenantId`).
 *   Système d'inscription autonome pour les nouveaux entrepreneurs.
 
-#### **2. Monétisation & Abonnements**
-*   Intégration de passerelles de paiement (Stripe, Paystack ou Flutterwave).
-*   Plans tarifaires (Gratuit, Pro, Premium) basés sur le volume de facturation ou le nombre d'utilisateurs.
+#### **2. Monétisation & Abonnements (Contexte Afrique de l'Ouest)**
+*   Intégration de passerelles de paiement locales (CinetPay, Paystack ou Flutterwave).
+*   Support du **Mobile Money** (Orange Money, Moov Money) pour les abonnements.
+*   Plans tarifaires (Gratuit, Pro, Premium) adaptés aux besoins locaux.
 
 #### **3. Intelligence Artificielle (Genkit)**
 *   Assistant intelligent pour prédire les ruptures de stock.
@@ -54,3 +55,4 @@ BizBook évolue pour devenir une plateforme SaaS (Software as a Service) permett
 ### **IV. Support & Développement**
 Développé avec passion par **DLG Caverne Consortium**.
 Contact : dlgbiomed@gmail.com | +226 25 46 55 12
+Ouagadougou, Burkina Faso
