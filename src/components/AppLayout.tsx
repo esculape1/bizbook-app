@@ -31,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import type { User, Settings as AppSettings } from '@/lib/types';
 import { signOut } from '@/app/auth/actions';
@@ -70,7 +71,7 @@ export function AppLayout({
       <Image src={settings.logoUrl} alt="BizBook Logo" width={size} height={size} className="rounded-md object-contain shrink-0" data-ai-hint="logo" />
     ) : (
       <div className="p-1 rounded-lg bg-primary shadow-sm text-white shrink-0">
-        <svg xmlns="http://www.w3.org/2000/svg" width={size-10} height={size-8} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9.5a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0Z"/><path d="M12.5 4H15a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5"/><path d="m14 6-2.5 2.5"/><path d="m18 10-6 6"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width={size-10} height={size-8} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9.5a4.5 4.5 0 1 1 9 0 a4.5 4.5 0 0 1-9 0Z"/><path d="M12.5 4H15a2 2 0 0 1 2 2v12a2 2 0 0 1 2 2H7a2 2 0 0 1-2-2v-5"/><path d="m14 6-2.5 2.5"/><path d="m18 10-6 6"/></svg>
       </div>
     )
   );
@@ -124,33 +125,37 @@ export function AppLayout({
                   <span className="sr-only">Menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="flex flex-col w-[300px]">
-                <nav className="grid gap-2 text-lg font-medium pt-6">
+              <SheetContent side="left" className="flex flex-col w-[300px] p-0">
+                <div className="p-6 border-b">
                   <Link
                     href="/"
-                    className="flex items-center gap-3 text-2xl font-bold mb-10 text-primary"
+                    className="flex items-center gap-3 text-2xl font-bold text-primary"
                     onClick={() => setSheetOpen(false)}
                   >
                     <Logo size={40} />
                     <span>BizBook</span>
                   </Link>
-                  {accessibleNavItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setSheetOpen(false)}
-                      className={cn(
-                        "flex items-center gap-4 rounded-xl px-4 py-3.5 transition-all",
-                        (item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)) 
-                          ? "bg-primary text-white shadow-lg shadow-primary/20" 
-                          : "text-muted-foreground active:bg-primary/5"
-                      )}
-                    >
-                      <item.icon className={cn("h-5 w-5", (item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)) ? "text-white" : item.color)} />
-                      {item.label}
-                    </Link>
-                  ))}
-                </nav>
+                </div>
+                <ScrollArea className="flex-1">
+                  <nav className="grid gap-1 p-4 text-lg font-medium">
+                    {accessibleNavItems.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setSheetOpen(false)}
+                        className={cn(
+                          "flex items-center gap-4 rounded-xl px-4 py-3 transition-all",
+                          (item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)) 
+                            ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                            : "text-muted-foreground active:bg-primary/5 hover:bg-primary/5"
+                        )}
+                      >
+                        <item.icon className={cn("h-5 w-5", (item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)) ? "text-white" : item.color)} />
+                        {item.label}
+                      </Link>
+                    ))}
+                  </nav>
+                </ScrollArea>
               </SheetContent>
             </Sheet>
 
