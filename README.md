@@ -1,4 +1,3 @@
-git 
 # **BizBook : Pilotez votre entreprise avec une simplicité déconcertante**
 
 Oubliez la complexité des feuilles de calcul et les logiciels de gestion archaïques. BizBook est la solution tout-en-un conçue pour les entrepreneurs, artisans et PME qui veulent se concentrer sur leur métier, pas sur la paperasse. Notre mission : vous offrir des outils puissants, centralisés dans une interface intuitive et agréable à utiliser.
@@ -38,17 +37,19 @@ BizBook évolue pour devenir une plateforme SaaS (Software as a Service) permett
 *   Isolation totale des données par entreprise via un identifiant unique (`tenantId`).
 *   Système d'inscription autonome pour les nouveaux entrepreneurs.
 
-#### **2. Monétisation & Abonnements (Contexte Afrique de l'Ouest)**
-*   Intégration de passerelles de paiement locales (CinetPay, Paystack ou Flutterwave).
+#### **2. Solutions pour la Facturation Google Cloud (Contexte local)**
+Pour lever la limite du plan gratuit sans carte Visa fonctionnelle au Burkina Faso :
+*   **Revendeurs Google Cloud (Partners) :** Passer par un partenaire (ex: Orange Business, Devoteam ou revendeurs régionaux en Côte d'Ivoire/Sénégal). Ils gèrent le paiement en dollars pour vous et vous facturent en **FCFA** par virement bancaire ou chèque.
+*   **Cartes Virtuelles Fintech :** Utilisation de solutions comme Chipper Cash ou Pyypl pour générer des cartes virtuelles acceptées internationalement.
+
+#### **3. Monétisation & Abonnements**
+*   Intégration de passerelles de paiement locales (CinetPay ou FedaPay).
 *   Support du **Mobile Money** (Orange Money, Moov Money) pour les abonnements.
 *   Plans tarifaires (Gratuit, Pro, Premium) adaptés aux besoins locaux.
 
-#### **3. Intelligence Artificielle (Genkit)**
+#### **4. Intelligence Artificielle (Genkit)**
 *   Assistant intelligent pour prédire les ruptures de stock.
 *   Analyse automatique des dépenses par scan de reçus.
-
-#### **4. Expansion Mobile Native**
-*   Optimisation continue de la PWA et déploiement futur sur les stores (iOS/Android).
 
 ---
 
