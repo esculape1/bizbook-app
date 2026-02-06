@@ -16,33 +16,41 @@ Dès que vous vous connectez, BizBook vous accueille avec un tableau de bord int
     *   **Produits Uniques :** Connaissez l'étendue de votre catalogue.
     *   **Montant Impayé :** Gardez un œil vigilant sur les créances clients.
 
-*   **Aides à la Décision Visuelles :**
-    *   **Graphique des Ventes :** Identifiez instantanément vos produits stars.
-    *   **Liste des Factures Échues :** N'oubliez plus jamais une relance client.
-    *   **Alerte de Stock Faible :** Anticipez les ruptures et ne manquez plus jamais une vente.
-
 ---
 
 ### **II. Un Menu Complet pour une Gestion sans Faille**
 
-Chaque aspect de votre gestion commerciale a sa place dans une navigation logique et épurée. Accédez à tout ce dont vous avez besoin, exactement là où vous vous attendez à le trouver.
+Chaque aspect de votre gestion commerciale a sa place dans une navigation logique et épurée.
 
-*   **Dashboard :** Votre point de départ, le tableau de bord décrit ci-dessus.
+*   **Clients & Fournisseurs :** Centralisez vos contacts et suivez l'historique de vos échanges.
+*   **Achats & Stocks :** Automatisation de la mise à jour des stocks lors de la réception des commandes fournisseurs.
+*   **Ventes & Proforma :** Créez des devis professionnels et transformez-les en factures en un clic.
+*   **Règlements & Dépenses :** Suivi rigoureux des flux de trésorerie pour une rentabilité maîtrisée.
+*   **Rapports :** Analyse détaillée de l'activité, rapports d'inventaire et bénéfices nets.
 
-*   **Clients :** Centralisez et gérez votre atout le plus précieux. Ajoutez, modifiez et suivez chaque client (coordonnées, informations fiscales, statut) pour un service personnalisé et efficace.
+---
 
-*   **Fournisseurs :** Organisez toutes les informations sur vos partenaires. Contacts, adresses, interlocuteurs... tout est là pour simplifier vos processus d'approvisionnement.
+### **III. Vision 2.0 : Vers la Commercialisation (Roadmap)**
 
-*   **Achats :** Suivez vos commandes fournisseurs du début à la fin. En marquant un achat comme "Reçu", BizBook met automatiquement à jour vos stocks et le prix d'achat de vos produits, pour une gestion d'inventaire d'une précision absolue.
+BizBook évolue pour devenir une plateforme SaaS (Software as a Service) permettant à des milliers d'entreprises de gérer leur activité de manière autonome.
 
-*   **Produits :** Prenez le contrôle total de votre catalogue. Créez vos articles, fixez les prix d'achat et de vente, et surtout, maîtrisez vos stocks (quantité, point de commande, stock de sécurité) pour optimiser votre inventaire.
+#### **1. Architecture Multi-Entreprises (Multi-tenancy)**
+*   Isolation totale des données par entreprise via un identifiant unique (`tenantId`).
+*   Système d'inscription autonome pour les nouveaux entrepreneurs.
 
-*   **Proforma :** Créez des devis professionnels en quelques clics. Une fois le devis accepté, convertissez-le en facture d'un seul geste. Le stock est alors automatiquement déduit. C'est aussi simple que ça.
+#### **2. Monétisation & Abonnements**
+*   Intégration de passerelles de paiement (Stripe, Paystack ou Flutterwave).
+*   Plans tarifaires (Gratuit, Pro, Premium) basés sur le volume de facturation ou le nombre d'utilisateurs.
 
-*   **Factures :** Le cœur de votre réacteur financier. Générez des factures impeccables, enregistrez les paiements (partiels ou complets), éditez avant paiement et imprimez même les bordereaux de livraison.
+#### **3. Intelligence Artificielle (Genkit)**
+*   Assistant intelligent pour prédire les ruptures de stock.
+*   Analyse automatique des dépenses par scan de reçus.
 
-*   **Dépenses :** Gardez une trace de chaque sortie d'argent. Qu'il s'agisse de carburant, de salaires ou de loyer, chaque dépense est enregistrée pour une vision claire de votre rentabilité.
+#### **4. Expansion Mobile Native**
+*   Optimisation continue de la PWA et déploiement futur sur les stores (iOS/Android).
 
-*   **Rapports :** Prenez des décisions basées sur des données, pas des suppositions. Générez des rapports financiers détaillés sur n'importe quelle période, pour un client spécifique ou pour toute votre activité, et exportez-les en PDF.
+---
 
-*   **Paramètres :** Façonnez BizBook à l'image de votre entreprise. Configurez les informations de votre société, votre logo, la devise, les formats de numéros de facture et bien plus encore pour une expérience entièrement personnalisée.
+### **IV. Support & Développement**
+Développé avec passion par **DLG Caverne Consortium**.
+Contact : dlgbiomed@gmail.com | +226 25 46 55 12
