@@ -144,7 +144,7 @@ export function AppLayout({
                         href={item.href}
                         onClick={() => setSheetOpen(false)}
                         className={cn(
-                          "flex items-center gap-4 rounded-xl px-4 py-3 transition-all",
+                          "flex items-center gap-4 rounded-xl px-4 py-2.5 transition-all",
                           (item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)) 
                             ? "bg-primary text-white shadow-lg shadow-primary/20" 
                             : "text-muted-foreground active:bg-primary/5 hover:bg-primary/5"
