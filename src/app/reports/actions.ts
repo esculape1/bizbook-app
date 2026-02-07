@@ -1,8 +1,9 @@
 
 'use server';
 
-import { getInvoices, getExpenses, getProducts } from '@/lib/data';
-import type { ReportData, Invoice } from '@/lib/types';
+import { db } from '@/lib/firebase-admin';
+import { getExpenses, getProducts } from '@/lib/data';
+import type { ReportData, Invoice, Expense, Product } from '@/lib/types';
 import { isWithinInterval } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 
@@ -16,17 +17,31 @@ export async function generateReport(
       return { error: "La période est requise." };
     }
 
+    if (!db) return { error: "Connexion DB perdue." };
+
     const { from: startDate, to: endDate } = dateRange;
+    const startIso = startDate.toISOString();
+    const endIso = endDate.toISOString();
 
     try {
-        const [allInvoices, allExpenses, allProducts] = await Promise.all([
-          getInvoices(),
-          getExpenses(),
-          getProducts(),
+        // Optimized: Fetch only necessary data within the date range
+        const [invoicesSnapshot, expensesSnapshot, allProducts] = await Promise.all([
+          db.collection('invoices')
+            .where('date', '>=', startIso)
+            .where('date', '<=', endIso)
+            .get(),
+          db.collection('expenses')
+            .where('date', '>=', startIso)
+            .where('date', '<=', endIso)
+            .get(),
+          getProducts(), // Products are needed for cost calculation
         ]);
 
+        const allInvoices: Invoice[] = invoicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Invoice));
+        const allExpenses: Expense[] = expensesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
+
+        // Filter invoices by client and status in memory (complex composite filters are avoided to prevent index errors)
         const invoicesInPeriod = allInvoices.filter(inv => {
-            const inDate = isWithinInterval(new Date(inv.date), { start: startDate, end: endDate });
             const clientMatch = clientId === 'all' || inv.clientId === clientId;
             
             let statusMatch = true;
@@ -40,13 +55,9 @@ export async function generateReport(
                 }
             }
             
-            return inDate && clientMatch && statusMatch;
+            return clientMatch && statusMatch;
         });
         
-        const expensesInPeriod = allExpenses.filter(exp => 
-          isWithinInterval(new Date(exp.date), { start: startDate, end: endDate })
-        );
-
         const activeInvoices = invoicesInPeriod.filter(inv => inv.status !== 'Cancelled');
         
         const grossSales = activeInvoices
@@ -55,7 +66,7 @@ export async function generateReport(
         const totalUnpaid = activeInvoices
             .reduce((sum, inv) => sum + inv.totalAmount - (inv.amountPaid || 0), 0);
 
-        const totalExpenses = expensesInPeriod.reduce((sum, exp) => sum + exp.amount, 0);
+        const totalExpenses = allExpenses.reduce((sum, exp) => sum + exp.amount, 0);
 
         const productSales: { [key: string]: { productName: string, productNameForDisplay: string, quantitySold: number, totalValue: number } } = {};
         let costOfGoodsSold = 0;
@@ -64,20 +75,14 @@ export async function generateReport(
             inv.items.forEach(item => {
                 let itemCost = 0;
                 if (item.purchasePrice !== undefined && item.purchasePrice !== null) {
-                    // 1. Best case: historical purchase price was stored.
                     itemCost = item.purchasePrice;
                 } else {
-                    // 2. Fallback: Estimate historical cost based on current margin.
                     const product = allProducts.find(p => p.id === item.productId);
                     if (product && product.unitPrice > 0 && product.purchasePrice >= 0) {
-                        // This ratio represents (cost / price).
                         const currentCostToPriceRatio = product.purchasePrice / product.unitPrice;
-                        // Assumes the margin percentage has been stable over time.
                         const estimatedCost = item.unitPrice * currentCostToPriceRatio;
                         itemCost = isNaN(estimatedCost) ? 0 : estimatedCost;
                     } 
-                    // 3. Worst case is implicitly handled as itemCost remains 0.
-                    // This is much safer than using a potentially wrong, large current purchase price.
                 }
                 costOfGoodsSold += itemCost * item.quantity;
                 
@@ -85,7 +90,7 @@ export async function generateReport(
                 
                 if (!productSales[uniqueKey]) {
                     productSales[uniqueKey] = { 
-                        productName: item.productName, // Keep original name for stock lookup
+                        productName: item.productName,
                         productNameForDisplay: `${item.productName} (PU: ${item.unitPrice})`, 
                         quantitySold: 0, 
                         totalValue: 0,
@@ -97,7 +102,6 @@ export async function generateReport(
         });
         
         const finalProductSales = Object.values(productSales).map(sale => {
-            // Find the current product by its original name to get current stock level
             const currentProduct = allProducts.find(p => p.name === sale.productName);
             return {
                 productName: sale.productNameForDisplay,
@@ -111,8 +115,8 @@ export async function generateReport(
         const netProfit = grossProfit - totalExpenses;
 
         return {
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
+          startDate: startIso,
+          endDate: endIso,
           clientName,
           summary: {
               grossSales,
@@ -124,7 +128,7 @@ export async function generateReport(
           },
           productSales: finalProductSales.sort((a, b) => b.quantitySold - a.quantitySold),
           allInvoices: invoicesInPeriod,
-          expenses: expensesInPeriod,
+          expenses: allExpenses,
         };
     } catch(error) {
         console.error("Failed to generate report:", error);

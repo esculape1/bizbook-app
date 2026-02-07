@@ -2,6 +2,7 @@
 'use server';
 
 import { z } from 'zod';
+import { db } from '@/lib/firebase-admin';
 import {
   addInvoice,
   getClients,
@@ -67,6 +68,8 @@ export async function createInvoice(formData: unknown) {
     return { message: "Action non autorisée." };
   }
 
+  if (!db) return { message: "Connexion DB perdue." };
+
   const validatedFields = createInvoiceSchema.safeParse(formData);
 
   if (!validatedFields.success) {
@@ -78,19 +81,16 @@ export async function createInvoice(formData: unknown) {
   try {
     const { invoiceNumberSuffix, clientId, clientName, date, dueDate, items, vat, discount, retenue } = validatedFields.data;
     
-    const [products, allInvoices] = await Promise.all([
-        getProducts(),
-        getInvoices(),
-    ]);
-
     const currentYear = new Date().getFullYear();
     const invoiceNumber = `FACT-${currentYear}-${invoiceNumberSuffix}`;
 
-    // Check for duplicate invoice number
-    if (allInvoices.some(inv => inv.invoiceNumber === invoiceNumber)) {
+    // Optimized: Check for duplicate invoice number using targeted query
+    const duplicateCheck = await db.collection('invoices').where('invoiceNumber', '==', invoiceNumber).limit(1).get();
+    if (!duplicateCheck.empty) {
         return { message: `Le numéro de facture ${invoiceNumber} existe déjà.` };
     }
     
+    const products = await getProducts();
     const invoiceItems: InvoiceItem[] = [];
     for (const item of items) {
       const product = products.find(p => p.id === item.productId);

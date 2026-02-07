@@ -294,23 +294,24 @@ export async function addInvoice(invoiceData: Omit<Invoice, 'id'>): Promise<Invo
 
 /**
  * Unified helper to get the next sequential invoice number for the year.
+ * Optimized: Only fetches the latest invoice instead of all.
  */
 export async function getNextInvoiceNumber(): Promise<string> {
-    const allInvoices = await getInvoices();
+    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
     const currentYear = new Date().getFullYear();
     const yearPrefix = `FACT-${currentYear}-`;
 
-    const latestInvoiceForYear = allInvoices
-      .filter(inv => inv.invoiceNumber && inv.invoiceNumber.startsWith(yearPrefix))
-      .sort((a, b) => {
-        const numA = parseInt(a.invoiceNumber.replace(yearPrefix, ''), 10);
-        const numB = parseInt(b.invoiceNumber.replace(yearPrefix, ''), 10);
-        return numB - numA;
-      })[0];
+    const latestInvoiceSnap = await db.collection('invoices')
+      .where('invoiceNumber', '>=', yearPrefix)
+      .where('invoiceNumber', '<', `FACT-${currentYear + 1}-`)
+      .orderBy('invoiceNumber', 'desc')
+      .limit(1)
+      .get();
       
     let newInvoiceSuffix = 1;
-    if (latestInvoiceForYear) {
-        const lastSuffix = parseInt(latestInvoiceForYear.invoiceNumber.replace(yearPrefix, ''), 10);
+    if (!latestInvoiceSnap.empty) {
+        const latestInv = latestInvoiceSnap.docs[0].data() as Invoice;
+        const lastSuffix = parseInt(latestInv.invoiceNumber.replace(yearPrefix, ''), 10);
         if (!isNaN(lastSuffix)) {
             newInvoiceSuffix = lastSuffix + 1;
         }
@@ -504,67 +505,67 @@ export async function updateSettings(settingsData: Partial<Settings>): Promise<S
 }
 
 // AGGREGATION / STATS for Dashboard
+// Optimized: Uses filters and count() to minimize reads.
 export const getDashboardStats = cache(async () => {
   if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
   
-  const [invoicesSnapshot, expensesSnapshot, clientsSnapshot, productsSnapshot] = await Promise.all([
-    db.collection('invoices').get(),
-    db.collection('expenses').get(),
-    db.collection('clients').get(),
-    db.collection('products').get()
-  ]);
-
   const now = new Date();
   const currentYear = now.getFullYear();
   let fiscalYearStartDate: Date;
 
-  // Fiscal year starts on Dec 25.
   if (now.getMonth() < 11 || (now.getMonth() === 11 && now.getDate() < 25)) {
-    // We are in the fiscal year that started on Dec 25 of the previous calendar year.
     fiscalYearStartDate = new Date(currentYear - 1, 11, 25, 0, 0, 0, 0);
   } else {
-    // We are in the fiscal year that started on Dec 25 of the current calendar year.
     fiscalYearStartDate = new Date(currentYear, 11, 25, 0, 0, 0, 0);
   }
 
+  const fiscalStartDateIso = fiscalYearStartDate.toISOString();
+
+  const [
+    invoicesFiscalSnapshot,
+    unpaidInvoicesSnapshot,
+    expensesFiscalSnapshot,
+    totalClientsCount,
+    activeClientsCount,
+    totalProductsCount
+  ] = await Promise.all([
+    // Only fetch invoices for the current fiscal year for revenue
+    db.collection('invoices').where('date', '>=', fiscalStartDateIso).get(),
+    // Only fetch non-paid invoices for total due
+    db.collection('invoices').where('status', 'in', ['Unpaid', 'Partially Paid']).get(),
+    // Only fetch expenses for the current fiscal year
+    db.collection('expenses').where('date', '>=', fiscalStartDateIso).get(),
+    // Use count() for cheaper reads
+    db.collection('clients').count().get(),
+    db.collection('clients').where('status', '==', 'Active').count().get(),
+    db.collection('products').count().get()
+  ]);
+
   let totalRevenue = 0;
-  let totalDue = 0;
-  let unpaidInvoicesCount = 0;
-  
-  invoicesSnapshot.forEach(doc => {
+  invoicesFiscalSnapshot.forEach(doc => {
     const inv = doc.data() as Invoice;
-    const invDate = new Date(inv.date);
-    
-    // Calculate revenue based on non-cancelled invoices within the fiscal year.
-    if (inv.status !== 'Cancelled' && invDate >= fiscalYearStartDate) {
+    if (inv.status !== 'Cancelled') {
         totalRevenue += inv.totalAmount;
     }
-    
-    // Calculate total due amount for all non-cancelled invoices, regardless of date.
-    if (inv.status === 'Unpaid' || inv.status === 'Partially Paid') {
-      const due = inv.totalAmount - (inv.amountPaid || 0);
-      if (due > 0) {
-        totalDue += due;
-        unpaidInvoicesCount++;
-      }
+  });
+
+  let totalDue = 0;
+  let unpaidInvoicesCount = 0;
+  unpaidInvoicesSnapshot.forEach(doc => {
+    const inv = doc.data() as Invoice;
+    if (inv.status !== 'Cancelled') {
+        const due = inv.totalAmount - (inv.amountPaid || 0);
+        if (due > 0) {
+            totalDue += due;
+            unpaidInvoicesCount++;
+        }
     }
   });
 
   let totalExpenses = 0;
-  expensesSnapshot.forEach(doc => {
+  expensesFiscalSnapshot.forEach(doc => {
     const exp = doc.data() as Expense;
-    const expDate = new Date(exp.date);
-    if (expDate >= fiscalYearStartDate) {
-      totalExpenses += exp.amount;
-    }
-  });
-  
-  let activeClients = 0;
-  clientsSnapshot.forEach(doc => {
-    const client = doc.data() as Client;
-    if (client.status === 'Active') {
-      activeClients++;
-    }
+    totalExpenses += exp.amount;
   });
 
   return {
@@ -572,9 +573,9 @@ export const getDashboardStats = cache(async () => {
     totalDue,
     unpaidInvoicesCount,
     totalExpenses,
-    totalClients: clientsSnapshot.size,
-    activeClients,
-    productCount: productsSnapshot.size,
+    totalClients: totalClientsCount.data().count,
+    activeClients: activeClientsCount.data().count,
+    productCount: totalProductsCount.data().count,
   };
 },
 ['dashboard-stats'],
