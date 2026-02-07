@@ -37,15 +37,17 @@ BizBook évolue pour devenir une plateforme SaaS (Software as a Service) permett
 *   Isolation totale des données par entreprise via un identifiant unique (`tenantId`).
 *   Système d'inscription autonome pour les nouveaux entrepreneurs.
 
-#### **2. Solutions pour la Facturation Google Cloud (Contexte local)**
-Pour lever la limite du plan gratuit sans carte Visa fonctionnelle au Burkina Faso :
-*   **Revendeurs Google Cloud (Partners) :** Passer par un partenaire (ex: Orange Business, Devoteam ou revendeurs régionaux en Côte d'Ivoire/Sénégal). Ils gèrent le paiement en dollars pour vous et vous facturent en **FCFA** par virement bancaire ou chèque.
-*   **Cartes Virtuelles Fintech :** Utilisation de solutions comme Chipper Cash ou Pyypl pour générer des cartes virtuelles acceptées internationalement.
+#### **2. Solutions de Facturation pour le Burkina Faso**
+Pour lever la limite du plan gratuit sans carte Visa fonctionnelle :
+*   **Revendeurs Google Cloud (Recommandé) :** Ces entreprises paient Google pour vous et vous facturent en **FCFA**. 
+    *   **Orange Business Services :** Partenaire majeur, contactez votre agence Orange locale.
+    *   **Devoteam G Cloud :** Expert en Afrique Francophone (Sénégal/Côte d'Ivoire/Mali).
+    *   **Digicloud Africa :** Distributeur pour toute l'Afrique.
+*   **Cartes Virtuelles Fintech :** Utilisation de **Chipper Cash**, **Pyypl** ou **Flutterwave** pour générer des cartes virtuelles acceptées internationalement.
 
 #### **3. Monétisation & Abonnements**
 *   Intégration de passerelles de paiement locales (CinetPay ou FedaPay).
 *   Support du **Mobile Money** (Orange Money, Moov Money) pour les abonnements.
-*   Plans tarifaires (Gratuit, Pro, Premium) adaptés aux besoins locaux.
 
 #### **4. Intelligence Artificielle (Genkit)**
 *   Assistant intelligent pour prédire les ruptures de stock.

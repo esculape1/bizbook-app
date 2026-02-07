@@ -19,6 +19,7 @@ export type User = {
   email: string;
   phone?: string;
   role: Role;
+  tenantId: string; // ID de l'entreprise associée pour le multi-tenant
 };
 
 export type UserWithPassword = User & {
@@ -27,6 +28,7 @@ export type UserWithPassword = User & {
 
 export type Client = {
   id: string;
+  tenantId?: string; // Prévu pour le multi-tenant
   name: string;
   email?: string;
   phone?: string;
@@ -40,6 +42,7 @@ export type Client = {
 
 export type Supplier = {
   id: string;
+  tenantId?: string;
   name: string;
   email?: string;
   phone?: string;
@@ -50,6 +53,7 @@ export type Supplier = {
 
 export type Product = {
   id: string;
+  tenantId?: string;
   name:string;
   reference: string;
   category: string;
@@ -88,6 +92,7 @@ export type PurchaseItem = {
 
 export type Purchase = {
   id: string;
+  tenantId?: string;
   purchaseNumber: string;
   supplierId: string;
   supplierName: string;
@@ -103,6 +108,7 @@ export type Purchase = {
 
 export type Quote = {
   id: string;
+  tenantId?: string;
   quoteNumber: string;
   clientId: string;
   clientName: string;
@@ -131,6 +137,7 @@ export type Payment = {
 
 export type Invoice = {
   id: string;
+  tenantId?: string;
   invoiceNumber: string;
   clientId: string;
   clientName: string;
@@ -153,6 +160,7 @@ export type Invoice = {
 
 export type Expense = {
   id: string;
+  tenantId?: string;
   date: string;
   description: string;
   amount: number;
@@ -160,6 +168,8 @@ export type Expense = {
 };
 
 export type Settings = {
+  id?: string;
+  tenantId?: string;
   companyName: string;
   legalName: string;
   managerName: string;
@@ -218,6 +228,7 @@ export type ClientOrderItem = {
 
 export type ClientOrder = {
   id: string;
+  tenantId?: string;
   orderNumber: string;
   clientId: string;
   clientName: string;
