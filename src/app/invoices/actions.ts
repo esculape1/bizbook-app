@@ -1,8 +1,7 @@
-
 'use server';
 
 import { z } from 'zod';
-import { db } from '@/lib/firebase-admin';
+import { createClient } from '@/lib/supabase/server';
 import {
   addInvoice,
   getClients,
@@ -68,8 +67,6 @@ export async function createInvoice(formData: unknown) {
     return { message: "Action non autorisée." };
   }
 
-  if (!db) return { message: "Connexion DB perdue." };
-
   const validatedFields = createInvoiceSchema.safeParse(formData);
 
   if (!validatedFields.success) {
@@ -84,9 +81,16 @@ export async function createInvoice(formData: unknown) {
     const currentYear = new Date().getFullYear();
     const invoiceNumber = `FACT-${currentYear}-${invoiceNumberSuffix}`;
 
-    // Optimized: Check for duplicate invoice number using targeted query
-    const duplicateCheck = await db.collection('invoices').where('invoiceNumber', '==', invoiceNumber).limit(1).get();
-    if (!duplicateCheck.empty) {
+    // Check for duplicate invoice number
+    const supabase = createClient();
+    const { data: existingInvoice } = await supabase
+      .from('invoices')
+      .select('id')
+      .eq('invoice_number', invoiceNumber)
+      .limit(1)
+      .maybeSingle();
+
+    if (existingInvoice) {
         return { message: `Le numéro de facture ${invoiceNumber} existe déjà.` };
     }
     
@@ -252,9 +256,6 @@ export async function updateInvoice(id: string, formData: unknown) {
     const retenueAmount = totalAfterDiscount * (retenue / 100);
     const netAPayer = totalAmount - retenueAmount;
 
-    // Retain original status, as it's not editable from this form anymore
-    const status = originalInvoice.status;
-
     const invoiceData: Partial<Omit<Invoice, 'id'>> = {
       invoiceNumber,
       clientId,
@@ -310,7 +311,6 @@ export async function cancelInvoice(id: string) {
         return { success: false, message: 'Cette facture est déjà annulée.' };
     }
     
-    // Restore stock only if the invoice was not already cancelled
     const products = await getProducts();
     for (const item of invoiceToCancel.items) {
       const product = products.find(p => p.id === item.productId);
@@ -320,7 +320,6 @@ export async function cancelInvoice(id: string) {
       }
     }
     
-    // Update invoice status to 'Cancelled' and reset paid amount
     await updateInvoiceInDB(id, { status: 'Cancelled' });
 
     revalidateTag('invoices');

@@ -1,80 +1,91 @@
 
-import { db } from '@/lib/firebase-admin';
-import { FieldValue, Timestamp } from 'firebase-admin/firestore';
+import { createClient } from '@/lib/supabase/server';
 import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User, UserWithPassword, ClientOrder } from './types';
 import { unstable_cache as cache } from 'next/cache';
 
-const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Veuillez vérifier la configuration de Firebase ou vos quotas d'utilisation.";
+const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Veuillez vérifier la configuration de Supabase.";
 const REVALIDATION_TIME = 3600; // 1 heure en secondes
 
-// Helper to recursively convert Firestore Timestamps to ISO strings
-function convertTimestamps(data: any): any {
-  if (data instanceof Timestamp) {
-    return data.toDate().toISOString();
-  }
-  if (Array.isArray(data)) {
-    return data.map(item => convertTimestamps(item));
-  }
-  if (data !== null && typeof data === 'object') {
-    const newObj: { [key: string]: any } = {};
-    for (const key in data) {
-      if (Object.prototype.hasOwnProperty.call(data, key)) {
-          newObj[key] = convertTimestamps(data[key]);
-      }
-    }
-    return newObj;
-  }
-  return data;
+// ---- camelCase <-> snake_case mapping helpers ----
+
+function toSnakeCase(str: string): string {
+  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
 }
 
-function docToObject<T>(doc: FirebaseFirestore.DocumentSnapshot): T {
-    if (!doc.exists) {
-        return null as T;
-    }
-    const data = doc.data()!;
-    const convertedData = convertTimestamps(data);
-    return { id: doc.id, ...convertedData } as T;
+function toCamelCase(str: string): string {
+  return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 }
 
+function mapKeysToSnake(obj: Record<string, any>): Record<string, any> {
+  const result: Record<string, any> = {};
+  for (const key of Object.keys(obj)) {
+    result[toSnakeCase(key)] = obj[key];
+  }
+  return result;
+}
 
-// USERS
+function mapKeysToCamel(obj: Record<string, any>): Record<string, any> {
+  const result: Record<string, any> = {};
+  for (const key of Object.keys(obj)) {
+    result[toCamelCase(key)] = obj[key];
+  }
+  return result;
+}
+
+function rowToEntity<T>(row: Record<string, any>): T {
+  return mapKeysToCamel(row) as T;
+}
+
+function rowsToEntities<T>(rows: Record<string, any>[]): T[] {
+  return rows.map(row => rowToEntity<T>(row));
+}
+
+// ---- USERS ----
+
 export async function getUserByEmail(email: string): Promise<UserWithPassword | null> {
-    if (!db) {
-        console.error(DB_UNAVAILABLE_ERROR);
-        throw new Error(DB_UNAVAILABLE_ERROR);
-    }
-    try {
-        const usersCol = db.collection('users');
-        const q = usersCol.where('email', '==', email).limit(1);
-        const userSnapshot = await q.get();
+  try {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('app_users')
+      .select('*')
+      .eq('email', email)
+      .limit(1)
+      .single();
 
-        if (userSnapshot.empty) {
-            return null;
-        }
-        
-        return docToObject<UserWithPassword>(userSnapshot.docs[0]);
-
-    } catch (error) {
-        console.error(`Impossible de récupérer l'utilisateur avec l'email ${email}:`, error);
-        throw error;
+    if (error) {
+      if (error.code === 'PGRST116') return null; // No rows found
+      throw error;
     }
+
+    return data ? rowToEntity<UserWithPassword>(data) : null;
+  } catch (error) {
+    console.error(`Impossible de récupérer l'utilisateur avec l'email ${email}:`, error);
+    throw error;
+  }
 }
 
 export async function updateUserPassword(userId: string, hashedPassword: string): Promise<void> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const userDocRef = db.collection('users').doc(userId);
-  await userDocRef.update({ password: hashedPassword });
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('app_users')
+    .update({ password: hashedPassword })
+    .eq('id', userId);
+
+  if (error) throw error;
 }
 
+// ---- CLIENTS ----
 
-// CLIENTS
 export const getClients = cache(
   async (): Promise<Client[]> => {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const clientsCol = db.collection('clients');
-    const q = clientsCol.orderBy('registrationDate', 'desc');
-    const clientSnapshot = await q.get();
-    return clientSnapshot.docs.map(doc => docToObject<Client>(doc));
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .order('registration_date', { ascending: false });
+
+    if (error) throw new Error(DB_UNAVAILABLE_ERROR);
+    return rowsToEntities<Client>(data || []);
   },
   ['clients'],
   { revalidate: REVALIDATION_TIME, tags: ['clients'] }
@@ -82,116 +93,176 @@ export const getClients = cache(
 
 export const getClientById = cache(
   async (id: string): Promise<Client | null> => {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const clientDocRef = db.collection('clients').doc(id);
-    const clientDoc = await clientDocRef.get();
-    if (clientDoc.exists) {
-        return docToObject<Client>(clientDoc);
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw new Error(DB_UNAVAILABLE_ERROR);
     }
-    return null;
+    return data ? rowToEntity<Client>(data) : null;
   },
   ['client'],
   { revalidate: REVALIDATION_TIME, tags: ['clients'] }
 );
 
 export async function addClient(clientData: Omit<Client, 'id' | 'registrationDate' | 'status'>): Promise<Client> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const newClientData: Omit<Client, 'id'> = {
-    ...clientData,
-    registrationDate: new Date().toISOString(),
+  const supabase = createClient();
+  const insertData = {
+    ...mapKeysToSnake(clientData),
+    registration_date: new Date().toISOString(),
     status: 'Active',
   };
-  const docRef = await db.collection('clients').add(newClientData);
-  return { id: docRef.id, ...newClientData };
+
+  const { data, error } = await supabase
+    .from('clients')
+    .insert(insertData)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return rowToEntity<Client>(data);
 }
 
 export async function updateClient(id: string, clientData: Partial<Omit<Client, 'id' | 'registrationDate'>>): Promise<void> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const clientDocRef = db.collection('clients').doc(id);
-  await clientDocRef.set(clientData, { merge: true });
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('clients')
+    .update(mapKeysToSnake(clientData))
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
 export async function deleteClient(id: string): Promise<void> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const clientDocRef = db.collection('clients').doc(id);
-  await clientDocRef.delete();
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('clients')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
-// SUPPLIERS
+// ---- SUPPLIERS ----
+
 export const getSuppliers = cache(
   async (): Promise<Supplier[]> => {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const suppliersCol = db.collection('suppliers');
-    const q = suppliersCol.orderBy('registrationDate', 'desc');
-    const supplierSnapshot = await q.get();
-    return supplierSnapshot.docs.map(doc => docToObject<Supplier>(doc));
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('suppliers')
+      .select('*')
+      .order('registration_date', { ascending: false });
+
+    if (error) throw new Error(DB_UNAVAILABLE_ERROR);
+    return rowsToEntities<Supplier>(data || []);
   },
   ['suppliers'],
   { revalidate: REVALIDATION_TIME, tags: ['suppliers'] }
 );
 
 export async function addSupplier(supplierData: Omit<Supplier, 'id' | 'registrationDate'>): Promise<Supplier> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const newSupplierData: Omit<Supplier, 'id'> = {
-    ...supplierData,
-    registrationDate: new Date().toISOString(),
+  const supabase = createClient();
+  const insertData = {
+    ...mapKeysToSnake(supplierData),
+    registration_date: new Date().toISOString(),
   };
-  const docRef = await db.collection('suppliers').add(newSupplierData);
-  return { id: docRef.id, ...newSupplierData };
+
+  const { data, error } = await supabase
+    .from('suppliers')
+    .insert(insertData)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return rowToEntity<Supplier>(data);
 }
 
 export async function updateSupplier(id: string, supplierData: Partial<Omit<Supplier, 'id' | 'registrationDate'>>): Promise<void> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const supplierDocRef = db.collection('suppliers').doc(id);
-  await supplierDocRef.set(supplierData, { merge: true });
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('suppliers')
+    .update(mapKeysToSnake(supplierData))
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
 export async function deleteSupplier(id: string): Promise<void> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const supplierDocRef = db.collection('suppliers').doc(id);
-  await supplierDocRef.delete();
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('suppliers')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
+// ---- PRODUCTS ----
 
-// PRODUCTS
 export const getProducts = cache(
   async (): Promise<Product[]> => {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const productsCol = db.collection('products');
-    const q = productsCol.orderBy('name');
-    const productSnapshot = await q.get();
-    return productSnapshot.docs.map(doc => docToObject<Product>(doc));
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('name');
+
+    if (error) throw new Error(DB_UNAVAILABLE_ERROR);
+    return rowsToEntities<Product>(data || []);
   },
   ['products'],
   { revalidate: REVALIDATION_TIME, tags: ['products'] }
 );
 
 export async function addProduct(productData: Omit<Product, 'id'>): Promise<Product> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const docRef = await db.collection('products').add(productData);
-  return { id: docRef.id, ...productData };
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('products')
+    .insert(mapKeysToSnake(productData))
+    .select()
+    .single();
+
+  if (error) throw error;
+  return rowToEntity<Product>(data);
 }
 
 export async function updateProduct(id: string, productData: Partial<Omit<Product, 'id'>>): Promise<void> {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const productDocRef = db.collection('products').doc(id);
-    await productDocRef.set(productData, { merge: true });
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('products')
+    .update(mapKeysToSnake(productData))
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
 export async function deleteProduct(id: string): Promise<void> {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const productDocRef = db.collection('products').doc(id);
-    await productDocRef.delete();
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('products')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
-// QUOTES
+// ---- QUOTES ----
+
 export const getQuotes = cache(
   async (): Promise<Quote[]> => {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const quotesCol = db.collection('quotes');
-    const q = quotesCol.orderBy('date', 'desc');
-    const quoteSnapshot = await q.get();
-    return quoteSnapshot.docs.map(doc => docToObject<Quote>(doc));
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('quotes')
+      .select('*')
+      .order('date', { ascending: false });
+
+    if (error) throw new Error(DB_UNAVAILABLE_ERROR);
+    return rowsToEntities<Quote>(data || []);
   },
   ['quotes'],
   { revalidate: REVALIDATION_TIME, tags: ['quotes'] }
@@ -199,73 +270,95 @@ export const getQuotes = cache(
 
 export const getQuoteById = cache(
   async (id: string): Promise<Quote | null> => {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const quoteDocRef = db.collection('quotes').doc(id);
-    const quoteDoc = await quoteDocRef.get();
-    if (quoteDoc.exists) {
-        return docToObject<Quote>(quoteDoc);
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('quotes')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw new Error(DB_UNAVAILABLE_ERROR);
     }
-    return null;
+    return data ? rowToEntity<Quote>(data) : null;
   },
   ['quote'],
   { revalidate: REVALIDATION_TIME, tags: ['quotes'] }
 );
 
 export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>): Promise<Quote> {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const quotesCol = db.collection('quotes');
-    
-    const currentYear = new Date().getFullYear();
-    const prefix = `PRO${currentYear}-`;
+  const supabase = createClient();
 
-    const q = quotesCol
-        .where('quoteNumber', '>=', prefix)
-        .where('quoteNumber', '<', `PRO${currentYear + 1}-`)
-        .orderBy('quoteNumber', 'desc')
-        .limit(1);
+  const currentYear = new Date().getFullYear();
+  const prefix = `PRO${currentYear}-`;
 
-    const latestQuoteSnap = await q.get();
-    
-    let latestNumber = 0;
-    if (!latestQuoteSnap.empty) {
-        const lastQuote = latestQuoteSnap.docs[0].data() as Quote;
-        const numberPart = lastQuote.quoteNumber.split('-')[1];
-        if (numberPart) {
-            latestNumber = parseInt(numberPart, 10);
-        }
+  // Get the latest quote number for this year
+  const { data: latestQuotes } = await supabase
+    .from('quotes')
+    .select('quote_number')
+    .gte('quote_number', prefix)
+    .lt('quote_number', `PRO${currentYear + 1}-`)
+    .order('quote_number', { ascending: false })
+    .limit(1);
+
+  let latestNumber = 0;
+  if (latestQuotes && latestQuotes.length > 0) {
+    const numberPart = latestQuotes[0].quote_number.split('-')[1];
+    if (numberPart) {
+      latestNumber = parseInt(numberPart, 10);
     }
+  }
 
-    const newQuoteNumber = `${prefix}${(latestNumber + 1).toString().padStart(3, '0')}`;
+  const newQuoteNumber = `${prefix}${(latestNumber + 1).toString().padStart(3, '0')}`;
 
-    const newQuoteData: Omit<Quote, 'id'> = {
-        ...quoteData,
-        quoteNumber: newQuoteNumber,
-    };
+  const insertData = {
+    ...mapKeysToSnake(quoteData),
+    quote_number: newQuoteNumber,
+  };
 
-    const docRef = await quotesCol.add(newQuoteData);
-    return { id: docRef.id, ...newQuoteData };
+  const { data, error } = await supabase
+    .from('quotes')
+    .insert(insertData)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return rowToEntity<Quote>(data);
 }
 
 export async function updateQuote(id: string, quoteData: Partial<Omit<Quote, 'id'>>): Promise<void> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const quoteDocRef = db.collection('quotes').doc(id);
-  await quoteDocRef.set(quoteData, { merge: true });
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('quotes')
+    .update(mapKeysToSnake(quoteData))
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
 export async function deleteQuote(id: string): Promise<void> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const quoteDocRef = db.collection('quotes').doc(id);
-  await quoteDocRef.delete();
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('quotes')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
-// INVOICES
+// ---- INVOICES ----
+
 export const getInvoices = cache(
   async (): Promise<Invoice[]> => {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const invoicesCol = db.collection('invoices');
-    const q = invoicesCol.orderBy('date', 'desc');
-    const invoiceSnapshot = await q.get();
-    return invoiceSnapshot.docs.map(doc => docToObject<Invoice>(doc));
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('invoices')
+      .select('*')
+      .order('date', { ascending: false });
+
+    if (error) throw new Error(DB_UNAVAILABLE_ERROR);
+    return rowsToEntities<Invoice>(data || []);
   },
   ['invoices'],
   { revalidate: REVALIDATION_TIME, tags: ['invoices'] }
@@ -273,74 +366,94 @@ export const getInvoices = cache(
 
 export const getInvoiceById = cache(
   async (id: string): Promise<Invoice | null> => {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const invoiceDocRef = db.collection('invoices').doc(id);
-    const invoiceDoc = await invoiceDocRef.get();
-    if (invoiceDoc.exists) {
-        return docToObject<Invoice>(invoiceDoc);
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('invoices')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw new Error(DB_UNAVAILABLE_ERROR);
     }
-    return null;
+    return data ? rowToEntity<Invoice>(data) : null;
   },
   ['invoice'],
   { revalidate: REVALIDATION_TIME, tags: ['invoices'] }
 );
 
 export async function addInvoice(invoiceData: Omit<Invoice, 'id'>): Promise<Invoice> {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const invoicesCol = db.collection('invoices');
-    const docRef = await invoicesCol.add(invoiceData);
-    return { id: docRef.id, ...invoiceData };
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('invoices')
+    .insert(mapKeysToSnake(invoiceData))
+    .select()
+    .single();
+
+  if (error) throw error;
+  return rowToEntity<Invoice>(data);
 }
 
 /**
- * Unified helper to get the next sequential invoice number for the year.
- * Optimized: Only fetches the latest invoice instead of all.
+ * Get the next sequential invoice number for the year.
  */
 export async function getNextInvoiceNumber(): Promise<string> {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const currentYear = new Date().getFullYear();
-    const yearPrefix = `FACT-${currentYear}-`;
+  const supabase = createClient();
+  const currentYear = new Date().getFullYear();
+  const yearPrefix = `FACT-${currentYear}-`;
 
-    const latestInvoiceSnap = await db.collection('invoices')
-      .where('invoiceNumber', '>=', yearPrefix)
-      .where('invoiceNumber', '<', `FACT-${currentYear + 1}-`)
-      .orderBy('invoiceNumber', 'desc')
-      .limit(1)
-      .get();
-      
-    let newInvoiceSuffix = 1;
-    if (!latestInvoiceSnap.empty) {
-        const latestInv = latestInvoiceSnap.docs[0].data() as Invoice;
-        const lastSuffix = parseInt(latestInv.invoiceNumber.replace(yearPrefix, ''), 10);
-        if (!isNaN(lastSuffix)) {
-            newInvoiceSuffix = lastSuffix + 1;
-        }
+  const { data: latestInvoices } = await supabase
+    .from('invoices')
+    .select('invoice_number')
+    .gte('invoice_number', yearPrefix)
+    .lt('invoice_number', `FACT-${currentYear + 1}-`)
+    .order('invoice_number', { ascending: false })
+    .limit(1);
+
+  let newInvoiceSuffix = 1;
+  if (latestInvoices && latestInvoices.length > 0) {
+    const lastSuffix = parseInt(latestInvoices[0].invoice_number.replace(yearPrefix, ''), 10);
+    if (!isNaN(lastSuffix)) {
+      newInvoiceSuffix = lastSuffix + 1;
     }
-    
-    return `${yearPrefix}${newInvoiceSuffix.toString().padStart(4, '0')}`;
+  }
+
+  return `${yearPrefix}${newInvoiceSuffix.toString().padStart(4, '0')}`;
 }
 
 export async function updateInvoice(id: string, invoiceData: Partial<Omit<Invoice, 'id'>>): Promise<void> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const invoiceDocRef = db.collection('invoices').doc(id);
-  await invoiceDocRef.set(invoiceData, { merge: true });
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('invoices')
+    .update(mapKeysToSnake(invoiceData))
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
 export async function deleteInvoice(id: string): Promise<void> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const invoiceDocRef = db.collection('invoices').doc(id);
-  await invoiceDocRef.delete();
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('invoices')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
+// ---- PURCHASES ----
 
-// PURCHASES
 export const getPurchases = cache(
   async (): Promise<Purchase[]> => {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const purchasesCol = db.collection('purchases');
-    const q = purchasesCol.orderBy('date', 'desc');
-    const purchaseSnapshot = await q.get();
-    return purchaseSnapshot.docs.map(doc => docToObject<Purchase>(doc));
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('purchases')
+      .select('*')
+      .order('date', { ascending: false });
+
+    if (error) throw new Error(DB_UNAVAILABLE_ERROR);
+    return rowsToEntities<Purchase>(data || []);
   },
   ['purchases'],
   { revalidate: REVALIDATION_TIME, tags: ['purchases'] }
@@ -348,97 +461,133 @@ export const getPurchases = cache(
 
 export const getPurchaseById = cache(
   async (id: string): Promise<Purchase | null> => {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const purchaseDocRef = db.collection('purchases').doc(id);
-    const purchaseDoc = await purchaseDocRef.get();
-    if (purchaseDoc.exists) {
-        return docToObject<Purchase>(purchaseDoc);
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('purchases')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw new Error(DB_UNAVAILABLE_ERROR);
     }
-    return null;
+    return data ? rowToEntity<Purchase>(data) : null;
   },
   ['purchase'],
   { revalidate: REVALIDATION_TIME, tags: ['purchases'] }
 );
 
 export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'purchaseNumber'>): Promise<Purchase> {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const purchasesCol = db.collection('purchases');
+  const supabase = createClient();
 
-    const currentYear = new Date().getFullYear();
-    const prefix = `ACH${currentYear}-`;
+  const currentYear = new Date().getFullYear();
+  const prefix = `ACH${currentYear}-`;
 
-    const q = purchasesCol
-        .where('purchaseNumber', '>=', prefix)
-        .where('purchaseNumber', '<', `ACH${currentYear + 1}-`)
-        .orderBy('purchaseNumber', 'desc')
-        .limit(1);
+  const { data: latestPurchases } = await supabase
+    .from('purchases')
+    .select('purchase_number')
+    .gte('purchase_number', prefix)
+    .lt('purchase_number', `ACH${currentYear + 1}-`)
+    .order('purchase_number', { ascending: false })
+    .limit(1);
 
-    const latestPurchaseSnap = await q.get();
-    
-    let latestPurchaseNumber = 0;
-    if (!latestPurchaseSnap.empty) {
-        const lastPurchase = latestPurchaseSnap.docs[0].data() as Purchase;
-        if (lastPurchase.purchaseNumber && lastPurchase.purchaseNumber.includes('-')) {
-            latestPurchaseNumber = parseInt(lastPurchase.purchaseNumber.split('-')[1], 10);
-        }
+  let latestPurchaseNumber = 0;
+  if (latestPurchases && latestPurchases.length > 0) {
+    const num = latestPurchases[0].purchase_number;
+    if (num && num.includes('-')) {
+      latestPurchaseNumber = parseInt(num.split('-')[1], 10);
     }
+  }
 
-    const newPurchaseNumber = `${prefix}${(latestPurchaseNumber + 1).toString().padStart(3, '0')}`;
+  const newPurchaseNumber = `${prefix}${(latestPurchaseNumber + 1).toString().padStart(3, '0')}`;
 
-    const newPurchaseData: Omit<Purchase, 'id'> = {
-        ...purchaseData,
-        purchaseNumber: newPurchaseNumber,
-    };
-    const docRef = await purchasesCol.add(newPurchaseData);
-    return { id: docRef.id, ...newPurchaseData };
+  const insertData = {
+    ...mapKeysToSnake(purchaseData),
+    purchase_number: newPurchaseNumber,
+  };
+
+  const { data, error } = await supabase
+    .from('purchases')
+    .insert(insertData)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return rowToEntity<Purchase>(data);
 }
 
 export async function updatePurchase(id: string, purchaseData: Partial<Omit<Purchase, 'id'>>): Promise<void> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const purchaseDocRef = db.collection('purchases').doc(id);
-  await purchaseDocRef.set(purchaseData, { merge: true });
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('purchases')
+    .update(mapKeysToSnake(purchaseData))
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
+// ---- EXPENSES ----
 
-// EXPENSES
 export const getExpenses = cache(
   async (): Promise<Expense[]> => {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const expensesCol = db.collection('expenses');
-    const q = expensesCol.orderBy('date', 'desc');
-    const expenseSnapshot = await q.get();
-    return expenseSnapshot.docs.map(doc => docToObject<Expense>(doc));
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('expenses')
+      .select('*')
+      .order('date', { ascending: false });
+
+    if (error) throw new Error(DB_UNAVAILABLE_ERROR);
+    return rowsToEntities<Expense>(data || []);
   },
   ['expenses'],
   { revalidate: REVALIDATION_TIME, tags: ['expenses'] }
 );
 
 export async function addExpense(expenseData: Omit<Expense, 'id'>): Promise<Expense> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const docRef = await db.collection('expenses').add(expenseData);
-  return { id: docRef.id, ...expenseData };
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('expenses')
+    .insert(mapKeysToSnake(expenseData))
+    .select()
+    .single();
+
+  if (error) throw error;
+  return rowToEntity<Expense>(data);
 }
 
 export async function updateExpense(id: string, expenseData: Partial<Omit<Expense, 'id'>>): Promise<void> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const expenseDocRef = db.collection('expenses').doc(id);
-  await expenseDocRef.set(expenseData, { merge: true });
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('expenses')
+    .update(mapKeysToSnake(expenseData))
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
 export async function deleteExpense(id: string): Promise<void> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const expenseDocRef = db.collection('expenses').doc(id);
-  await expenseDocRef.delete();
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('expenses')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
-// CLIENT ORDERS
+// ---- CLIENT ORDERS ----
+
 export const getClientOrders = cache(
   async (): Promise<ClientOrder[]> => {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const ordersCol = db.collection('clientOrders');
-    const q = ordersCol.orderBy('date', 'desc');
-    const orderSnapshot = await q.get();
-    return orderSnapshot.docs.map(doc => docToObject<ClientOrder>(doc));
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('client_orders')
+      .select('*')
+      .order('date', { ascending: false });
+
+    if (error) throw new Error(DB_UNAVAILABLE_ERROR);
+    return rowsToEntities<ClientOrder>(data || []);
   },
   ['client-orders'],
   { revalidate: REVALIDATION_TIME, tags: ['client-orders'] }
@@ -446,24 +595,35 @@ export const getClientOrders = cache(
 
 export const getClientOrderById = cache(
   async (id: string): Promise<ClientOrder | null> => {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const orderDocRef = db.collection('clientOrders').doc(id);
-    const orderDoc = await orderDocRef.get();
-    if (orderDoc.exists) {
-        return docToObject<ClientOrder>(orderDoc);
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('client_orders')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw new Error(DB_UNAVAILABLE_ERROR);
     }
-    return null;
+    return data ? rowToEntity<ClientOrder>(data) : null;
   },
   ['client-order'],
   { revalidate: REVALIDATION_TIME, tags: ['client-orders'] }
 );
 
 export async function updateClientOrder(id: string, data: Partial<Omit<ClientOrder, 'id'>>): Promise<void> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  await db.collection('clientOrders').doc(id).set(data, { merge: true });
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('client_orders')
+    .update(mapKeysToSnake(data))
+    .eq('id', id);
+
+  if (error) throw error;
 }
 
-// SETTINGS
+// ---- SETTINGS ----
+
 const defaultSettings: Settings = {
   companyName: 'BizBook Inc.',
   legalName: 'BizBook Incorporated',
@@ -480,35 +640,49 @@ const defaultSettings: Settings = {
 
 export const getSettings = cache(
   async (): Promise<Settings> => {
-    if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-    const settingsDocRef = db.collection('settings').doc('main');
-    const settingsDoc = await settingsDocRef.get();
-    if (settingsDoc.exists) {
-        const data = settingsDoc.data();
-        return { ...defaultSettings, ...data } as Settings;
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('settings')
+      .select('*')
+      .eq('id', 'main')
+      .single();
+
+    if (error || !data) {
+      // Insert default settings if none exist
+      const { data: insertedData, error: insertError } = await supabase
+        .from('settings')
+        .upsert({ id: 'main', ...mapKeysToSnake(defaultSettings) })
+        .select()
+        .single();
+
+      if (insertError || !insertedData) return defaultSettings;
+      return { ...defaultSettings, ...rowToEntity<Settings>(insertedData) };
     }
-    await settingsDocRef.set(defaultSettings);
-    return defaultSettings;
+
+    return { ...defaultSettings, ...rowToEntity<Settings>(data) };
   },
   ['settings'],
   { revalidate: REVALIDATION_TIME, tags: ['settings'] }
 );
 
-
 export async function updateSettings(settingsData: Partial<Settings>): Promise<Settings> {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  const settingsDocRef = db.collection('settings').doc('main');
+  const supabase = createClient();
   const currentSettings = await getSettings();
   const newSettings = { ...currentSettings, ...settingsData };
-  await settingsDocRef.set(newSettings, { merge: true });
+
+  const { error } = await supabase
+    .from('settings')
+    .upsert({ id: 'main', ...mapKeysToSnake(newSettings) });
+
+  if (error) throw error;
   return newSettings;
 }
 
-// AGGREGATION / STATS for Dashboard
-// Optimized: Uses filters and count() to minimize reads.
+// ---- DASHBOARD STATS ----
+
 export const getDashboardStats = cache(async () => {
-  if (!db) throw new Error(DB_UNAVAILABLE_ERROR);
-  
+  const supabase = createClient();
+
   const now = new Date();
   const currentYear = now.getFullYear();
   let fiscalYearStartDate: Date;
@@ -522,60 +696,81 @@ export const getDashboardStats = cache(async () => {
   const fiscalStartDateIso = fiscalYearStartDate.toISOString();
 
   const [
-    invoicesFiscalSnapshot,
-    unpaidInvoicesSnapshot,
-    expensesFiscalSnapshot,
-    totalClientsCount,
-    activeClientsCount,
-    totalProductsCount
+    invoicesFiscalResult,
+    unpaidInvoicesResult,
+    expensesFiscalResult,
+    totalClientsResult,
+    activeClientsResult,
+    totalProductsResult,
   ] = await Promise.all([
-    // Only fetch invoices for the current fiscal year for revenue
-    db.collection('invoices').where('date', '>=', fiscalStartDateIso).get(),
-    // Only fetch non-paid invoices for total due
-    db.collection('invoices').where('status', 'in', ['Unpaid', 'Partially Paid']).get(),
-    // Only fetch expenses for the current fiscal year
-    db.collection('expenses').where('date', '>=', fiscalStartDateIso).get(),
-    // Use count() for cheaper reads
-    db.collection('clients').count().get(),
-    db.collection('clients').where('status', '==', 'Active').count().get(),
-    db.collection('products').count().get()
+    // Invoices for the current fiscal year
+    supabase
+      .from('invoices')
+      .select('total_amount, status')
+      .gte('date', fiscalStartDateIso),
+    // Unpaid invoices
+    supabase
+      .from('invoices')
+      .select('total_amount, amount_paid, status')
+      .in('status', ['Unpaid', 'Partially Paid']),
+    // Expenses for the current fiscal year
+    supabase
+      .from('expenses')
+      .select('amount')
+      .gte('date', fiscalStartDateIso),
+    // Total clients count
+    supabase
+      .from('clients')
+      .select('id', { count: 'exact', head: true }),
+    // Active clients count
+    supabase
+      .from('clients')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'Active'),
+    // Total products count
+    supabase
+      .from('products')
+      .select('id', { count: 'exact', head: true }),
   ]);
 
   let totalRevenue = 0;
-  invoicesFiscalSnapshot.forEach(doc => {
-    const inv = doc.data() as Invoice;
-    if (inv.status !== 'Cancelled') {
-        totalRevenue += inv.totalAmount;
+  if (invoicesFiscalResult.data) {
+    for (const inv of invoicesFiscalResult.data) {
+      if (inv.status !== 'Cancelled') {
+        totalRevenue += Number(inv.total_amount) || 0;
+      }
     }
-  });
+  }
 
   let totalDue = 0;
   let unpaidInvoicesCount = 0;
-  unpaidInvoicesSnapshot.forEach(doc => {
-    const inv = doc.data() as Invoice;
-    if (inv.status !== 'Cancelled') {
-        const due = inv.totalAmount - (inv.amountPaid || 0);
+  if (unpaidInvoicesResult.data) {
+    for (const inv of unpaidInvoicesResult.data) {
+      if (inv.status !== 'Cancelled') {
+        const due = (Number(inv.total_amount) || 0) - (Number(inv.amount_paid) || 0);
         if (due > 0) {
-            totalDue += due;
-            unpaidInvoicesCount++;
+          totalDue += due;
+          unpaidInvoicesCount++;
         }
+      }
     }
-  });
+  }
 
   let totalExpenses = 0;
-  expensesFiscalSnapshot.forEach(doc => {
-    const exp = doc.data() as Expense;
-    totalExpenses += exp.amount;
-  });
+  if (expensesFiscalResult.data) {
+    for (const exp of expensesFiscalResult.data) {
+      totalExpenses += Number(exp.amount) || 0;
+    }
+  }
 
   return {
     totalRevenue,
     totalDue,
     unpaidInvoicesCount,
     totalExpenses,
-    totalClients: totalClientsCount.data().count,
-    activeClients: activeClientsCount.data().count,
-    productCount: totalProductsCount.data().count,
+    totalClients: totalClientsResult.count ?? 0,
+    activeClients: activeClientsResult.count ?? 0,
+    productCount: totalProductsResult.count ?? 0,
   };
 },
 ['dashboard-stats'],

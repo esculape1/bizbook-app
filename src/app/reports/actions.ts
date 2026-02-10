@@ -1,11 +1,45 @@
-
 'use server';
 
-import { db } from '@/lib/firebase-admin';
+import { createClient } from '@/lib/supabase/server';
 import { getExpenses, getProducts } from '@/lib/data';
 import type { ReportData, Invoice, Expense, Product } from '@/lib/types';
 import { isWithinInterval } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
+
+// Helper to map snake_case DB rows to camelCase Invoice type
+function mapInvoiceRow(row: any): Invoice {
+  return {
+    id: row.id,
+    invoiceNumber: row.invoice_number,
+    clientId: row.client_id,
+    clientName: row.client_name,
+    date: row.date,
+    dueDate: row.due_date,
+    items: row.items || [],
+    subTotal: Number(row.sub_total) || 0,
+    vat: Number(row.vat) || 0,
+    vatAmount: Number(row.vat_amount) || 0,
+    discount: Number(row.discount) || 0,
+    discountAmount: Number(row.discount_amount) || 0,
+    totalAmount: Number(row.total_amount) || 0,
+    retenue: Number(row.retenue) || 0,
+    retenueAmount: Number(row.retenue_amount) || 0,
+    netAPayer: Number(row.net_a_payer) || 0,
+    status: row.status,
+    amountPaid: Number(row.amount_paid) || 0,
+    payments: row.payments || [],
+  };
+}
+
+function mapExpenseRow(row: any): Expense {
+  return {
+    id: row.id,
+    date: row.date,
+    description: row.description,
+    amount: Number(row.amount) || 0,
+    category: row.category,
+  };
+}
 
 export async function generateReport(
     dateRange: DateRange | undefined, 
@@ -17,30 +51,30 @@ export async function generateReport(
       return { error: "La période est requise." };
     }
 
-    if (!db) return { error: "Connexion DB perdue." };
-
     const { from: startDate, to: endDate } = dateRange;
     const startIso = startDate.toISOString();
     const endIso = endDate.toISOString();
 
     try {
-        // Optimized: Fetch only necessary data within the date range
-        const [invoicesSnapshot, expensesSnapshot, allProducts] = await Promise.all([
-          db.collection('invoices')
-            .where('date', '>=', startIso)
-            .where('date', '<=', endIso)
-            .get(),
-          db.collection('expenses')
-            .where('date', '>=', startIso)
-            .where('date', '<=', endIso)
-            .get(),
-          getProducts(), // Products are needed for cost calculation
+        const supabase = createClient();
+
+        const [invoicesResult, expensesResult, allProducts] = await Promise.all([
+          supabase
+            .from('invoices')
+            .select('*')
+            .gte('date', startIso)
+            .lte('date', endIso),
+          supabase
+            .from('expenses')
+            .select('*')
+            .gte('date', startIso)
+            .lte('date', endIso),
+          getProducts(),
         ]);
 
-        const allInvoices: Invoice[] = invoicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Invoice));
-        const allExpenses: Expense[] = expensesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
+        const allInvoices: Invoice[] = (invoicesResult.data || []).map(mapInvoiceRow);
+        const allExpenses: Expense[] = (expensesResult.data || []).map(mapExpenseRow);
 
-        // Filter invoices by client and status in memory (complex composite filters are avoided to prevent index errors)
         const invoicesInPeriod = allInvoices.filter(inv => {
             const clientMatch = clientId === 'all' || inv.clientId === clientId;
             

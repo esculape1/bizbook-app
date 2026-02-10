@@ -1,13 +1,10 @@
-
 'use server';
 
-import { db } from '@/lib/firebase-admin';
-import { getInvoices, addInvoice, updateProduct, updateClientOrder, getProducts, getNextInvoiceNumber } from '@/lib/data';
+import { getInvoices, addInvoice, updateProduct, updateClientOrder, getProducts, getNextInvoiceNumber, getClientOrderById } from '@/lib/data';
 import { getSession } from '@/lib/session';
 import { ROLES, CLIENT_ORDER_STATUS } from '@/lib/constants';
 import { revalidateTag } from 'next/cache';
 import type { ClientOrder, InvoiceItem } from '@/lib/types';
-import { FieldValue } from 'firebase-admin/firestore';
 
 export async function convertOrderToInvoice(orderId: string): Promise<{ success: boolean; message?: string }> {
   const session = await getSession();
@@ -15,23 +12,15 @@ export async function convertOrderToInvoice(orderId: string): Promise<{ success:
     return { success: false, message: "Action non autorisée." };
   }
 
-  if (!db) {
-    return { success: false, message: "La connexion à la base de données a échoué." };
-  }
-
-  const orderRef = db.collection('clientOrders').doc(orderId);
-
   try {
-    const [orderDoc, allProducts] = await Promise.all([
-        orderRef.get(),
+    const [order, allProducts] = await Promise.all([
+        getClientOrderById(orderId),
         getProducts()
     ]);
     
-    if (!orderDoc.exists) {
+    if (!order) {
       return { success: false, message: "Commande non trouvée." };
     }
-
-    const order = { id: orderDoc.id, ...orderDoc.data() } as ClientOrder;
 
     if (order.status !== CLIENT_ORDER_STATUS.PENDING) {
       return { success: false, message: `Cette commande a déjà le statut "${order.status}".` };
@@ -77,10 +66,11 @@ export async function convertOrderToInvoice(orderId: string): Promise<{ success:
 
     // Update stock for each product
     for (const item of order.items) {
-      const productRef = db.collection('products').doc(item.productId);
-      await productRef.update({
-        quantityInStock: FieldValue.increment(-item.quantity)
-      });
+      const product = allProducts.find(p => p.id === item.productId);
+      if (product) {
+        const newStock = product.quantityInStock - item.quantity;
+        await updateProduct(item.productId, { quantityInStock: newStock });
+      }
     }
 
     // Update order status to 'Processed'
@@ -107,17 +97,13 @@ export async function cancelClientOrder(orderId: string): Promise<{ success: boo
   }
 
   try {
-    if (!db) throw new Error("La connexion à la base de données a échoué.");
-    
-    const orderRef = db.collection('clientOrders').doc(orderId);
-    const orderDoc = await orderRef.get();
-    if (!orderDoc.exists) {
+    const order = await getClientOrderById(orderId);
+    if (!order) {
       return { success: false, message: "Commande non trouvée." };
     }
 
-    const orderData = orderDoc.data() as ClientOrder;
-    if (orderData.status !== CLIENT_ORDER_STATUS.PENDING) {
-      return { success: false, message: `Cette commande ne peut pas être annulée car son statut est "${orderData.status}".` };
+    if (order.status !== CLIENT_ORDER_STATUS.PENDING) {
+      return { success: false, message: `Cette commande ne peut pas être annulée car son statut est "${order.status}".` };
     }
 
     await updateClientOrder(orderId, { status: CLIENT_ORDER_STATUS.CANCELLED });

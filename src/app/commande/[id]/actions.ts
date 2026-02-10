@@ -1,15 +1,12 @@
-
 'use server';
 
 import { z } from 'zod';
-import { db } from '@/lib/firebase-admin';
+import { createClient } from '@/lib/supabase/server';
 import { getClientById, getProducts } from '@/lib/data';
 import { revalidateTag } from 'next/cache';
 import type { ClientOrderItem } from '@/lib/types';
 import { redirect } from 'next/navigation';
 
-// The schema now only accepts the essential data from the client.
-// Price and product name will be fetched on the server for security.
 const clientOrderItemSchema = z.object({
   productId: z.string(),
   quantity: z.number().int().positive(),
@@ -33,9 +30,8 @@ export async function submitClientOrder(payload: ClientOrderPayload): Promise<{ 
   let newOrderId: string;
 
   try {
-    if (!db) throw new Error("La connexion à la base de données a échoué.");
+    const supabase = createClient();
     
-    // Fetch all necessary data from the server to build a secure order object.
     const [client, allProducts] = await Promise.all([
       getClientById(clientId),
       getProducts()
@@ -48,11 +44,9 @@ export async function submitClientOrder(payload: ClientOrderPayload): Promise<{ 
     const orderItems: ClientOrderItem[] = [];
     let totalAmount = 0;
 
-    // Re-construct the order items on the server to ensure data integrity (especially price).
     for (const item of items) {
       const product = allProducts.find(p => p.id === item.productId);
       if (!product) {
-        // This should not happen if the frontend is in sync, but it's a good safeguard.
         return { message: `Le produit avec l'ID ${item.productId} n'a pas été trouvé.` };
       }
       const itemTotal = product.unitPrice * item.quantity;
@@ -68,35 +62,44 @@ export async function submitClientOrder(payload: ClientOrderPayload): Promise<{ 
     }
 
     // Generate a unique, sequential order number for the current year.
-    const ordersCol = db.collection('clientOrders');
     const currentYear = new Date().getFullYear();
     const prefix = `CMD-${currentYear}-`;
-    const q = ordersCol.where('orderNumber', '>=', prefix).where('orderNumber', '<', `CMD-${currentYear + 1}-`).orderBy('orderNumber', 'desc').limit(1);
-    const latestOrderSnap = await q.get();
-    
+
+    const { data: latestOrders } = await supabase
+      .from('client_orders')
+      .select('order_number')
+      .gte('order_number', prefix)
+      .lt('order_number', `CMD-${currentYear + 1}-`)
+      .order('order_number', { ascending: false })
+      .limit(1);
+
     let latestNumber = 0;
-    if (!latestOrderSnap.empty) {
-      const lastOrder = latestOrderSnap.docs[0].data();
-      const numberPart = lastOrder.orderNumber.split('-')[2];
+    if (latestOrders && latestOrders.length > 0) {
+      const numberPart = latestOrders[0].order_number.split('-')[2];
       if (numberPart) {
         latestNumber = parseInt(numberPart, 10);
       }
     }
     const newOrderNumber = `${prefix}${(latestNumber + 1).toString().padStart(4, '0')}`;
 
-    // Create the final order document in the new 'clientOrders' collection.
-    const newOrderRef = await ordersCol.add({
-      orderNumber: newOrderNumber,
-      clientId: client.id,
-      clientName: client.name,
-      date: new Date().toISOString(),
-      items: orderItems,
-      totalAmount,
-      status: 'Pending', // Initial status is 'Pending'
-    });
-    newOrderId = newOrderRef.id;
+    // Create the order in client_orders table
+    const { data: newOrder, error } = await supabase
+      .from('client_orders')
+      .insert({
+        order_number: newOrderNumber,
+        client_id: client.id,
+        client_name: client.name,
+        date: new Date().toISOString(),
+        items: orderItems,
+        total_amount: totalAmount,
+        status: 'Pending',
+      })
+      .select('id')
+      .single();
 
-    // Revalidate the tag for client orders so the admin interface can update.
+    if (error) throw error;
+    newOrderId = newOrder.id;
+
     revalidateTag('client-orders');
     
   } catch (error) {
@@ -105,6 +108,5 @@ export async function submitClientOrder(payload: ClientOrderPayload): Promise<{ 
     return { message };
   }
 
-  // On success, redirect to a dedicated success page
   redirect(`/commande/succes/${newOrderId}`);
 }

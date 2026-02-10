@@ -38,7 +38,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
-    "firebase-admin": "^12.4.0",
+    "@supabase/supabase-js": "^2.49.1",
     "genkit": "^1.27.0",
     "html2canvas": "^1.4.1",
     "jsbarcode": "^3.11.6",
