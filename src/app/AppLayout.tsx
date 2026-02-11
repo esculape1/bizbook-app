@@ -19,6 +19,7 @@ import {
   ShoppingCart,
   CreditCard,
   PackageSearch,
+  UserCog,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -49,6 +50,7 @@ const navItems = [
   { href: '/settlements', label: 'Règlements', icon: CreditCard, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN], color: 'text-lime-500', bg: 'hover:bg-lime-50' },
   { href: '/expenses', label: 'Dépenses', icon: Wallet, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN], color: 'text-red-500', bg: 'hover:bg-red-50' },
   { href: '/reports', label: 'Rapports', icon: BarChart3, roles: [ROLES.SUPER_ADMIN], color: 'text-cyan-500', bg: 'hover:bg-cyan-50' },
+  { href: '/team', label: 'Equipe', icon: UserCog, roles: [ROLES.SUPER_ADMIN, ROLES.ADMIN], color: 'text-teal-500', bg: 'hover:bg-teal-50' },
 ];
 
 export function AppLayout({ 

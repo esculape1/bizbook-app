@@ -10,15 +10,13 @@ import { getSession } from "@/lib/session";
 export default async function InvoiceDetailPage({ params }: { params: { id: string } }) {
   const { id } = params;
   
-  const [invoice, user, settings] = await Promise.all([
-    getInvoiceById(id),
-    getSession(),
-    getSettings()
-  ]);
+  const user = await getSession();
+  if (!user) redirect('/login');
 
-  if (!user || !settings) {
-    redirect('/login');
-  }
+  const [invoice, settings] = await Promise.all([
+    getInvoiceById(id),
+    getSettings(user.organizationId),
+  ]);
 
   if (!invoice) {
     notFound();

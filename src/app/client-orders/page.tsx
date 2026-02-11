@@ -9,15 +9,13 @@ import { ROLES } from "@/lib/constants";
 export const dynamic = 'force-dynamic';
 
 export default async function ClientOrdersPage() {
-  const [user, settings, orders] = await Promise.all([
-    getSession(),
-    getSettings(),
-    getClientOrders(),
-  ]);
+  const user = await getSession();
+  if (!user) redirect('/login');
 
-  if (!user || !settings) {
-    redirect('/login');
-  }
+  const [settings, orders] = await Promise.all([
+    getSettings(user.organizationId),
+    getClientOrders(user.organizationId),
+  ]);
 
   const canAccess = user.role === ROLES.SUPER_ADMIN || user.role === ROLES.USER;
   if (!canAccess) {

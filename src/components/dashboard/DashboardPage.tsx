@@ -46,7 +46,7 @@ export default async function DashboardPage() {
         <AlertTriangle className="h-4 w-4" />
         <AlertTitle>Erreur de connexion à la base de données</AlertTitle>
         <AlertDescription>
-          <p>Impossible de récupérer les données de l'application. Cela peut être dû à un problème de connexion ou à un dépassement des quotas d'utilisation de Firebase.</p>
+          <p>{"Impossible de recuperer les donnees de l'application. Verifiez la connexion a la base de donnees Supabase."}</p>
           <p className="mt-2 text-xs">Détail de l'erreur : {error}</p>
         </AlertDescription>
       </Alert>

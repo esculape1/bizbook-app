@@ -5,37 +5,25 @@ import { AppLayout } from '@/app/AppLayout';
 import { getSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import { ROLES } from '@/lib/constants';
-import { PageHeader } from '@/components/PageHeader';
 
 export const dynamic = 'force-dynamic';
 
-async function ReportsContent() {
-  const [clients, settings] = await Promise.all([
-    getClients(),
-    getSettings()
-  ]);
-  
-  if (!settings) {
-      return null;
-  }
-  
-  return <ReportGenerator clients={clients} settings={settings} />;
-}
-
 export default async function ReportsPage() {
-  const [user, settings] = await Promise.all([getSession(), getSettings()]);
-
-  if (!user || !settings) {
-    redirect('/login');
-  }
+  const user = await getSession();
+  if (!user) redirect('/login');
 
   if (user.role !== ROLES.SUPER_ADMIN) {
     redirect('/');
   }
 
+  const [clients, settings] = await Promise.all([
+    getClients(user.organizationId),
+    getSettings(user.organizationId),
+  ]);
+
   return (
     <AppLayout user={user} settings={settings}>
-      <ReportsContent />
+      <ReportGenerator clients={clients} settings={settings} />
     </AppLayout>
   );
 }

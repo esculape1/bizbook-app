@@ -8,34 +8,19 @@ import { ROLES } from '@/lib/constants';
 
 export const dynamic = 'force-dynamic';
 
-async function SettingsContent() {
-  const [settings, user] = await Promise.all([
-    getSettings(),
-    getSession()
-  ]);
-
-  if (!settings) {
-      return null; // Or some error/loading state
-  }
-
-  return <SettingsForm initialSettings={settings} userRole={user?.role} />;
-}
-
-
 export default async function SettingsPage() {
-  const [user, settings] = await Promise.all([getSession(), getSettings()]);
-
-  if (!user || !settings) {
-    redirect('/login');
-  }
+  const user = await getSession();
+  if (!user) redirect('/login');
 
   if (user.role !== ROLES.SUPER_ADMIN) {
     redirect('/');
   }
 
+  const settings = await getSettings(user.organizationId);
+
   return (
     <AppLayout user={user} settings={settings}>
-      <SettingsContent />
+      <SettingsForm initialSettings={settings} userRole={user.role} />
     </AppLayout>
   );
 }

@@ -45,13 +45,15 @@ const getFiscalMonthKey = (date: Date): string => {
 };
 
 async function ExpensesContent() {
-  const [expenses, settings, user] = await Promise.all([
-    getExpenses(),
-    getSettings(),
-    getSession()
+  const user = await getSession();
+  if (!user) return null;
+
+  const [expenses, settings] = await Promise.all([
+    getExpenses(user.organizationId),
+    getSettings(user.organizationId),
   ]);
 
-  if (!user || !settings) {
+  if (!settings) {
     return null;
   }
 
@@ -185,11 +187,10 @@ async function ExpensesContent() {
 }
 
 export default async function ExpensesPage() {
-  const [user, settings] = await Promise.all([getSession(), getSettings()]);
-
-  if (!user || !settings) {
-    redirect('/login');
-  }
+  const user = await getSession();
+  if (!user) redirect('/login');
+  
+  const settings = await getSettings(user.organizationId);
 
   const canEdit = user?.role === ROLES.ADMIN || user?.role === ROLES.SUPER_ADMIN;
 

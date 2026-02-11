@@ -1,5 +1,6 @@
 
 import { getClientOrderById, getClientById, getSettings } from "@/lib/data";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { notFound } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,9 +29,14 @@ export default async function OrderSuccessPage({ params }: { params: { orderId: 
         notFound();
     }
 
+    // Get org_id from the order's client record for the public portal
+    const admin = createAdminClient();
+    const { data: clientRow } = await admin.from('clients').select('organization_id').eq('id', order.clientId).single();
+    const orgId = clientRow?.organization_id;
+
     const [client, settings] = await Promise.all([
         getClientById(order.clientId),
-        getSettings()
+        orgId ? getSettings(orgId) : Promise.resolve(null),
     ]);
     
     if (!client || !settings) {
