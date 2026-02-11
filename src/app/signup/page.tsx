@@ -1,7 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useFormState, useFormStatus } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
@@ -36,7 +35,7 @@ function SubmitButton() {
 function SignupForm() {
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get('invite');
-  const [state, formAction] = useActionState(signUp, undefined);
+  const [state, formAction] = useFormState(signUp, undefined);
 
   const isInvite = !!inviteToken;
 
