@@ -13,15 +13,15 @@ import Link from 'next/link';
 function LoginButton() {
   const { pending } = useFormStatus();
   return (
-    <Button 
-      type="submit" 
-      className="w-full h-11 text-sm font-black uppercase tracking-tight shadow-lg shadow-primary/20 transition-all active:scale-95" 
+    <Button
+      type="submit"
+      className="w-full h-11 text-sm font-black uppercase tracking-tight shadow-lg shadow-primary/20 transition-all active:scale-95"
       disabled={pending}
     >
       {pending ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Authentification...
+          {'Authentification...'}
         </>
       ) : (
         'Se connecter'
@@ -31,13 +31,14 @@ function LoginButton() {
 }
 
 export default function LoginPage() {
+  // useFormState is the React 18 / Next.js 14 equivalent of useActionState
   const [state, formAction] = useFormState(signIn, undefined);
 
   return (
     <div className="relative min-h-screen w-full flex flex-col items-center justify-center p-4 overflow-x-hidden bg-background">
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] pointer-events-none select-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-sky-500/10 rounded-full blur-[120px] pointer-events-none select-none" />
-      
+
       <div className="w-full max-w-[400px] z-10 space-y-5">
         <div className="flex flex-col items-center space-y-2">
           <div className="p-2.5 rounded-2xl bg-primary shadow-xl shadow-primary/20 ring-4 ring-primary/5">
@@ -64,11 +65,11 @@ export default function LoginPage() {
 
             <form action={formAction} className="space-y-3.5">
               <div className="space-y-1">
-                <Label htmlFor="email" className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email</Label>
+                <Label htmlFor="login-email" className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email</Label>
                 <div className="relative group">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
                   <Input
-                    id="email"
+                    id="login-email"
                     name="email"
                     type="email"
                     placeholder="nom@entreprise.com"
@@ -77,13 +78,13 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-1">
-                <Label htmlFor="password" className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Mot de Passe</Label>
+                <Label htmlFor="login-password" className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-1">Mot de Passe</Label>
                 <div className="relative group">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
                   <Input
-                    id="password"
+                    id="login-password"
                     name="password"
                     type="password"
                     placeholder="Min. 6 caracteres"
@@ -126,7 +127,7 @@ export default function LoginPage() {
               <span>+226 25 46 55 12</span>
             </div>
           </div>
-          
+
           <p className="text-[7px] font-black text-muted-foreground/30 uppercase tracking-[0.4em] pt-1">
             {'© '}{new Date().getFullYear()}{' BizBook Edition'}
           </p>
