@@ -36,7 +36,7 @@ const settlementPayloadSchema = z.object({
   invoiceIds: z.array(z.string()).min(1),
   paymentAmount: z.coerce.number().positive(),
   paymentDate: z.date(),
-  paymentMethod: z.enum(['Especes', 'Virement bancaire', 'Cheque', 'Autre']),
+  paymentMethod: z.enum(['Espèces', 'Virement bancaire', 'Chèque', 'Autre']),
   paymentNotes: z.string().optional(),
 });
 
