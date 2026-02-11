@@ -46,7 +46,7 @@ export async function createPurchase(formData: unknown) {
 
     const totalAmount = premierVersement + deuxiemeVersement + transportCost + otherFees;
     await addPurchase({
-      purchaseNumber: '', supplierId, supplierName: supplier.name, date: date.toISOString(),
+      supplierId, supplierName: supplier.name, date: date.toISOString(),
       items: purchaseItems, premierVersement, deuxiemeVersement, transportCost, otherFees,
       totalAmount, status: 'Pending',
     }, orgId);
