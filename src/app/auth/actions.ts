@@ -23,6 +23,7 @@ export async function signIn(prevState: State | undefined, formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
+    console.log("[v0] signIn error:", error.message);
     return { message: 'Email ou mot de passe incorrect.' };
   }
 
@@ -59,28 +60,25 @@ export async function signUp(prevState: State | undefined, formData: FormData) {
       .single();
 
     if (invErr || !invitation) {
-      return { message: 'Lien d\'invitation invalide ou expire.' };
+      return { message: "Lien d'invitation invalide ou expire." };
     }
 
-    // Check expiration
     if (new Date(invitation.expires_at) < new Date()) {
-      return { message: 'Ce lien d\'invitation a expire.' };
+      return { message: "Ce lien d'invitation a expire." };
     }
 
-    // Create Supabase Auth user
-    const supabase = await createClient();
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // Create user via admin API (email auto-confirmed, no email sent)
+    const { data: authData, error: authError } = await admin.auth.admin.createUser({
       email,
       password,
-      options: {
-        data: { full_name: fullName },
-        emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-          `${process.env.NEXT_PUBLIC_SUPABASE_URL ? 'https://' + new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname.replace('.supabase.co', '.vercel.app') : ''}/`,
-      },
+      email_confirm: true,
+      user_metadata: { full_name: fullName },
     });
 
+    console.log("[v0] signUp invite: createUser result:", { userId: authData?.user?.id, authError: authError?.message });
+
     if (authError || !authData.user) {
-      return { message: authError?.message || 'Erreur lors de la creation du compte.' };
+      return { message: 'Erreur: ' + (authError?.message || 'Impossible de creer le compte.') };
     }
 
     // Create profile linked to the invitation's organization
@@ -93,11 +91,16 @@ export async function signUp(prevState: State | undefined, formData: FormData) {
     });
 
     if (profileErr) {
+      console.log("[v0] signUp invite: profile error:", profileErr.message);
       return { message: 'Erreur lors de la creation du profil: ' + profileErr.message };
     }
 
     // Mark invitation as used
     await admin.from('invitations').update({ used: true }).eq('id', invitation.id);
+
+    // Sign in the newly created user to establish a session
+    const supabase = await createClient();
+    await supabase.auth.signInWithPassword({ email, password });
 
     revalidatePath('/', 'layout');
     redirect('/');
@@ -105,8 +108,10 @@ export async function signUp(prevState: State | undefined, formData: FormData) {
 
   // ── Normal signup: requires a license code and creates a new organization ──
   if (!licenseCode || !companyName) {
-    return { message: 'Le code de licence et le nom de l\'entreprise sont requis pour creer un nouveau compte.' };
+    return { message: "Le code de licence et le nom de l'entreprise sont requis pour creer un nouveau compte." };
   }
+
+  console.log("[v0] signUp: looking for license code:", licenseCode);
 
   // Validate license
   const { data: license, error: licErr } = await admin
@@ -115,6 +120,8 @@ export async function signUp(prevState: State | undefined, formData: FormData) {
     .eq('code', licenseCode)
     .eq('is_used', false)
     .single();
+
+  console.log("[v0] signUp: license query result:", { license, licErr: licErr?.message });
 
   if (licErr || !license) {
     return { message: 'Code de licence invalide ou deja utilise.' };
@@ -127,8 +134,10 @@ export async function signUp(prevState: State | undefined, formData: FormData) {
     .select('id')
     .single();
 
+  console.log("[v0] signUp: org creation result:", { org, orgErr: orgErr?.message });
+
   if (orgErr || !org) {
-    return { message: 'Erreur lors de la creation de l\'organisation.' };
+    return { message: "Erreur lors de la creation de l'organisation: " + (orgErr?.message || 'unknown') };
   }
 
   // Mark license as used
@@ -146,24 +155,22 @@ export async function signUp(prevState: State | undefined, formData: FormData) {
     manager_name: fullName,
   });
 
-  // Create Supabase Auth user
-  const supabase = await createClient();
-  const { data: authData, error: authError } = await supabase.auth.signUp({
+  // Create user via admin API (email auto-confirmed, no email sent)
+  const { data: authData, error: authError } = await admin.auth.admin.createUser({
     email,
     password,
-    options: {
-      data: { full_name: fullName },
-      emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL ? 'https://' + new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname.replace('.supabase.co', '.vercel.app') : ''}/`,
-    },
+    email_confirm: true,
+    user_metadata: { full_name: fullName },
   });
+
+  console.log("[v0] signUp: createUser result:", { userId: authData?.user?.id, authError: authError?.message });
 
   if (authError || !authData.user) {
     // Cleanup: delete org if auth fails
     await admin.from('settings').delete().eq('organization_id', org.id);
     await admin.from('organizations').delete().eq('id', org.id);
     await admin.from('licenses').update({ is_used: false, used_by_org_id: null }).eq('id', license.id);
-    return { message: authError?.message || 'Erreur lors de la creation du compte.' };
+    return { message: 'Erreur auth: ' + (authError?.message || 'user null') };
   }
 
   // Create profile as SuperAdmin of the new organization
@@ -175,8 +182,20 @@ export async function signUp(prevState: State | undefined, formData: FormData) {
     organization_id: org.id,
   });
 
+  console.log("[v0] signUp: profile result:", { profileErr: profileErr?.message });
+
   if (profileErr) {
     return { message: 'Compte cree mais erreur de profil: ' + profileErr.message };
+  }
+
+  // Sign in the newly created user to establish a session
+  const supabase = await createClient();
+  const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+
+  console.log("[v0] signUp: auto sign-in result:", { signInError: signInError?.message });
+
+  if (signInError) {
+    return { message: 'Compte cree avec succes. Veuillez vous connecter.' };
   }
 
   revalidatePath('/', 'layout');
@@ -193,7 +212,7 @@ export async function signOut() {
 // ─── CREATE INVITATION ──────────────────────────────────────────────────
 export async function createInvitation(prevState: State | undefined, formData: FormData) {
   const email = formData.get('email') as string;
-  
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { message: 'Non authentifie.' };
@@ -206,10 +225,9 @@ export async function createInvitation(prevState: State | undefined, formData: F
     .single();
 
   if (!profile || (profile.role !== ROLES.SUPER_ADMIN && profile.role !== ROLES.ADMIN)) {
-    return { message: 'Vous n\'avez pas les droits pour inviter des membres.' };
+    return { message: "Vous n'avez pas les droits pour inviter des membres." };
   }
 
-  // Generate a random invite token
   const token = crypto.randomUUID();
 
   const { error } = await admin.from('invitations').insert({
@@ -220,12 +238,11 @@ export async function createInvitation(prevState: State | undefined, formData: F
   });
 
   if (error) {
-    return { message: 'Erreur lors de la creation de l\'invitation: ' + error.message };
+    return { message: "Erreur lors de la creation de l'invitation: " + error.message };
   }
 
-  // Return the invite link
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  return { 
-    message: `Lien d'invitation cree: ${baseUrl}/signup?invite=${token}` 
+  return {
+    message: `Lien d'invitation cree: ${baseUrl}/signup?invite=${token}`,
   };
 }
