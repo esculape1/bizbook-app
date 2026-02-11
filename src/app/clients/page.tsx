@@ -13,15 +13,13 @@ import { ROLES } from "@/lib/constants";
 export const dynamic = 'force-dynamic';
 
 export default async function ClientsPage() {
-  const [clients, user, settings] = await Promise.all([
-    getClients(),
-    getSession(),
-    getSettings(),
-  ]);
+  const user = await getSession();
+  if (!user) redirect('/login');
 
-  if (!user || !settings) {
-    redirect('/login');
-  }
+  const [clients, settings] = await Promise.all([
+    getClients(user.organizationId),
+    getSettings(user.organizationId),
+  ]);
 
   const canEdit = user.role === ROLES.SUPER_ADMIN || user.role === ROLES.USER;
 

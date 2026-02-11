@@ -1,4 +1,3 @@
-
 'use server';
 
 import { z } from 'zod';
@@ -19,70 +18,56 @@ type NewSupplier = z.infer<typeof supplierSchema>;
 
 export async function createSupplier(data: NewSupplier) {
   const session = await getSession();
-  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
-    return { message: "Action non autorisée." };
+  if (!session || (session.role !== ROLES.ADMIN && session.role !== ROLES.SUPER_ADMIN)) {
+    return { message: "Action non autorisee." };
   }
-
   const validatedFields = supplierSchema.safeParse(data);
-
   if (!validatedFields.success) {
-    return {
-      message: 'Certains champs sont invalides. Impossible de créer le fournisseur.',
-    };
+    return { message: 'Certains champs sont invalides.' };
   }
-
   try {
-    await addSupplier(validatedFields.data);
+    await addSupplier(validatedFields.data, session.organizationId);
     revalidateTag('suppliers');
     return {};
   } catch (error) {
     console.error('Failed to create supplier:', error);
-    const message = error instanceof Error ? error.message : 'Erreur de la base de données: Impossible de créer le fournisseur.';
+    const message = error instanceof Error ? error.message : 'Erreur de la base de donnees.';
     return { message };
   }
 }
 
 export async function updateSupplier(id: string, data: NewSupplier) {
   const session = await getSession();
-  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
-    return { message: "Action non autorisée." };
+  if (!session || (session.role !== ROLES.ADMIN && session.role !== ROLES.SUPER_ADMIN)) {
+    return { message: "Action non autorisee." };
   }
-
   const validatedFields = supplierSchema.safeParse(data);
-
   if (!validatedFields.success) {
-    return {
-      message: 'Certains champs sont invalides. Impossible de mettre à jour le fournisseur.',
-    };
+    return { message: 'Certains champs sont invalides.' };
   }
-
   try {
     await updateSupplierInDB(id, validatedFields.data);
     revalidateTag('suppliers');
     return {};
   } catch (error) {
     console.error('Failed to update supplier:', error);
-    const message = error instanceof Error ? error.message : 'Erreur de la base de données: Impossible de mettre à jour le fournisseur.';
+    const message = error instanceof Error ? error.message : 'Erreur de la base de donnees.';
     return { message };
   }
 }
 
 export async function deleteSupplier(id: string) {
   const session = await getSession();
-  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
-    return { message: "Action non autorisée." };
+  if (!session || (session.role !== ROLES.ADMIN && session.role !== ROLES.SUPER_ADMIN)) {
+    return { message: "Action non autorisee." };
   }
-    
   try {
     await deleteSupplierFromDB(id);
     revalidateTag('suppliers');
     return { success: true };
   } catch (error) {
     console.error('Failed to delete supplier:', error);
-    const message = error instanceof Error ? error.message : 'Erreur de la base de données: Impossible de supprimer le fournisseur.';
-    return {
-      success: false,
-      message,
-    };
+    const message = error instanceof Error ? error.message : 'Erreur de la base de donnees.';
+    return { success: false, message };
   }
 }

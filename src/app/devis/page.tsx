@@ -10,17 +10,15 @@ import { QuotesList } from "./QuotesList";
 export const dynamic = 'force-dynamic';
 
 export default async function DevisPage() {
-  const [user, settings, clients, products, quotes] = await Promise.all([
-    getSession(), 
-    getSettings(),
-    getClients(),
-    getProducts(),
-    getQuotes()
-  ]);
+  const user = await getSession();
+  if (!user) redirect('/login');
 
-  if (!user || !settings) {
-    redirect('/login');
-  }
+  const [settings, clients, products, quotes] = await Promise.all([
+    getSettings(user.organizationId),
+    getClients(user.organizationId),
+    getProducts(user.organizationId),
+    getQuotes(user.organizationId),
+  ]);
   
   const canEdit = user.role === ROLES.SUPER_ADMIN || user.role === ROLES.USER;
 

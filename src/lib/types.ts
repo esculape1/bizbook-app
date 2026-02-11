@@ -1,4 +1,3 @@
-
 import {
   Role,
   ClientStatus,
@@ -14,11 +13,12 @@ import {
 
 
 export type User = {
-  id: string; // This is the Firestore document ID
+  id: string;
   name: string;
   email: string;
   phone?: string;
   role: Role;
+  organizationId: string;
 };
 
 export type UserWithPassword = User & {
@@ -110,12 +110,12 @@ export type Quote = {
   expiryDate: string;
   items: QuoteItem[];
   subTotal: number;
-  vat: number; // as a percentage
+  vat: number;
   vatAmount: number;
-  discount: number; // as a percentage
+  discount: number;
   discountAmount: number;
   totalAmount: number;
-  retenue: number; // as a percentage
+  retenue: number;
   retenueAmount: number;
   netAPayer: number;
   status: QuoteStatus;
@@ -138,12 +138,12 @@ export type Invoice = {
   dueDate: string;
   items: InvoiceItem[];
   subTotal: number;
-  vat: number; // as a percentage
+  vat: number;
   vatAmount: number;
-  discount: number; // as a percentage
+  discount: number;
   discountAmount: number;
   totalAmount: number;
-  retenue: number; // as a percentage
+  retenue: number;
   retenueAmount: number;
   netAPayer: number;
   status: InvoiceStatus;
@@ -206,13 +206,12 @@ export type PaymentHistoryItem = {
   payment: Payment;
 };
 
-// Types for the new Client Order Portal feature
 export type ClientOrderItem = {
   productId: string;
   productName: string;
   reference: string;
   quantity: number;
-  unitPrice: number; // Price at the time of order
+  unitPrice: number;
   total: number;
 };
 
@@ -225,4 +224,31 @@ export type ClientOrder = {
   items: ClientOrderItem[];
   totalAmount: number;
   status: 'Pending' | 'Processed' | 'Cancelled';
+};
+
+export type Organization = {
+  id: string;
+  name: string;
+  licenseCode: string | null;
+  createdAt: string;
+};
+
+export type Profile = {
+  id: string;
+  fullName: string;
+  email: string | null;
+  role: Role;
+  organizationId: string;
+  createdAt: string;
+};
+
+export type Invitation = {
+  id: string;
+  organizationId: string;
+  token: string;
+  invitedBy: string | null;
+  email: string | null;
+  used: boolean;
+  createdAt: string;
+  expiresAt: string;
 };

@@ -1,20 +1,17 @@
-
 'use server';
 
 import { z } from 'zod';
 import { updateSettings } from '@/lib/data';
 import { revalidateTag } from 'next/cache';
 import { getSession } from '@/lib/session';
-import type { Settings } from '@/lib/types';
 import { ROLES } from '@/lib/constants';
 
-// This schema is for server-side validation only. It is NOT exported to the client.
 const settingsSchema = z.object({
   companyName: z.string().min(1, { message: "Le nom de l'entreprise est requis." }),
   legalName: z.string().min(1, { message: "La raison sociale est requise." }),
-  managerName: z.string().min(1, { message: "Le nom du gérant est requis." }),
+  managerName: z.string().min(1, { message: "Le nom du gerant est requis." }),
   companyAddress: z.string().min(1, { message: "L'adresse est requise." }),
-  companyPhone: z.string().min(1, { message: "Le téléphone est requis." }),
+  companyPhone: z.string().min(1, { message: "Le telephone est requis." }),
   companyIfu: z.string().min(1, { message: "L'IFU est requis." }),
   companyRccm: z.string().min(1, { message: "Le RCCM est requis." }),
   currency: z.enum(['EUR', 'USD', 'GBP', 'XOF']),
@@ -27,23 +24,19 @@ export type SettingsFormValues = z.infer<typeof settingsSchema>;
 
 export async function saveSettings(formData: SettingsFormValues) {
   const session = await getSession();
-  if (session?.role !== ROLES.SUPER_ADMIN) {
-    return { success: false, message: "Action non autorisée." };
+  if (!session || session.role !== ROLES.SUPER_ADMIN) {
+    return { success: false, message: "Action non autorisee." };
   }
-  
   try {
     const validatedData = settingsSchema.parse(formData);
-    await updateSettings(validatedData);
-    
+    await updateSettings(validatedData, session.organizationId);
     revalidateTag('settings');
     return { success: true };
   } catch (error) {
     console.error('Failed to save settings:', error);
-    
     if (error instanceof z.ZodError) {
-        return { success: false, message: "Les données sont invalides." };
+      return { success: false, message: "Les donnees sont invalides." };
     }
-
     const message = error instanceof Error ? error.message : "Erreur lors de la sauvegarde.";
     return { success: false, message };
   }

@@ -1,4 +1,3 @@
-
 'use server';
 
 import { z } from 'zod';
@@ -21,63 +20,52 @@ type NewClient = z.infer<typeof clientSchema>;
 
 export async function createClient(data: NewClient) {
   const session = await getSession();
-  if (session?.role !== ROLES.SUPER_ADMIN && session?.role !== ROLES.USER) {
-    return { message: "Action non autorisée." };
+  if (!session || (session.role !== ROLES.SUPER_ADMIN && session.role !== ROLES.USER)) {
+    return { message: "Action non autorisee." };
   }
-
   const validatedFields = clientSchema.safeParse(data);
-
   if (!validatedFields.success) {
-    return {
-      message: 'Certains champs sont invalides. Impossible de créer le client.',
-    };
+    return { message: 'Certains champs sont invalides. Impossible de creer le client.' };
   }
-
   try {
-    await addClient(validatedFields.data);
+    await addClient(validatedFields.data, session.organizationId);
     revalidateTag('clients');
     revalidateTag('dashboard-stats');
-    return {}; // Indique le succès
+    return {};
   } catch (error) {
     console.error('Failed to create client:', error);
-    const message = error instanceof Error ? error.message : 'Erreur de la base de données: Impossible de créer le client.';
+    const message = error instanceof Error ? error.message : 'Erreur de la base de donnees.';
     return { message };
   }
 }
 
 export async function updateClient(id: string, data: NewClient) {
   const session = await getSession();
-  if (session?.role !== ROLES.SUPER_ADMIN && session?.role !== ROLES.USER) {
-    return { message: "Action non autorisée." };
+  if (!session || (session.role !== ROLES.SUPER_ADMIN && session.role !== ROLES.USER)) {
+    return { message: "Action non autorisee." };
   }
-
   const validatedFields = clientSchema.safeParse(data);
-
   if (!validatedFields.success) {
-    return {
-      message: 'Certains champs sont invalides. Impossible de mettre à jour le client.',
-    };
+    return { message: 'Certains champs sont invalides.' };
   }
-
   try {
     await updateClientInDB(id, validatedFields.data);
     revalidateTag('clients');
     revalidateTag('dashboard-stats');
-    revalidateTag('invoices'); // Client name might be displayed on invoices page
-    return {}; // Indique le succès
+    revalidateTag('invoices');
+    return {};
   } catch (error) {
     console.error('Failed to update client:', error);
-    const message = error instanceof Error ? error.message : 'Erreur de la base de données: Impossible de mettre à jour le client.';
+    const message = error instanceof Error ? error.message : 'Erreur de la base de donnees.';
     return { message };
   }
 }
 
 export async function deleteClient(id: string) {
   const session = await getSession();
-  if (session?.role !== ROLES.SUPER_ADMIN && session?.role !== ROLES.USER) {
-    return { message: "Action non autorisée." };
+  if (!session || (session.role !== ROLES.SUPER_ADMIN && session.role !== ROLES.USER)) {
+    return { message: "Action non autorisee." };
   }
-    
   try {
     await deleteClientFromDB(id);
     revalidateTag('clients');
@@ -86,10 +74,7 @@ export async function deleteClient(id: string) {
     return { success: true };
   } catch (error) {
     console.error('Failed to delete client:', error);
-    const message = error instanceof Error ? error.message : 'Erreur de la base de données: Impossible de supprimer le client.';
-    return {
-      success: false,
-      message,
-    };
+    const message = error instanceof Error ? error.message : 'Erreur de la base de donnees.';
+    return { success: false, message };
   }
 }

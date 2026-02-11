@@ -1,10 +1,7 @@
+import { createAdminClient } from '@/lib/supabase/admin';
+import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, ClientOrder } from './types';
 
-import { createClient } from '@/lib/supabase/server';
-import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, User, UserWithPassword, ClientOrder } from './types';
-import { unstable_cache as cache } from 'next/cache';
-
-const DB_UNAVAILABLE_ERROR = "La connexion à la base de données a échoué. Veuillez vérifier la configuration de Supabase.";
-const REVALIDATION_TIME = 3600; // 1 heure en secondes
+const DB_UNAVAILABLE_ERROR = "La connexion a la base de donnees a echoue. Veuillez verifier la configuration de Supabase.";
 
 // ---- camelCase <-> snake_case mapping helpers ----
 
@@ -40,82 +37,42 @@ function rowsToEntities<T>(rows: Record<string, any>[]): T[] {
   return rows.map(row => rowToEntity<T>(row));
 }
 
-// ---- USERS ----
-
-export async function getUserByEmail(email: string): Promise<UserWithPassword | null> {
-  try {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('app_users')
-      .select('*')
-      .eq('email', email)
-      .limit(1)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') return null; // No rows found
-      throw error;
-    }
-
-    return data ? rowToEntity<UserWithPassword>(data) : null;
-  } catch (error) {
-    console.error(`Impossible de récupérer l'utilisateur avec l'email ${email}:`, error);
-    throw error;
-  }
-}
-
-export async function updateUserPassword(userId: string, hashedPassword: string): Promise<void> {
-  const supabase = createClient();
-  const { error } = await supabase
-    .from('app_users')
-    .update({ password: hashedPassword })
-    .eq('id', userId);
-
-  if (error) throw error;
-}
-
 // ---- CLIENTS ----
 
-export const getClients = cache(
-  async (): Promise<Client[]> => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('clients')
-      .select('*')
-      .order('registration_date', { ascending: false });
+export async function getClients(orgId: string): Promise<Client[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('clients')
+    .select('*')
+    .eq('organization_id', orgId)
+    .order('registration_date', { ascending: false });
 
-    if (error) throw new Error(DB_UNAVAILABLE_ERROR);
-    return rowsToEntities<Client>(data || []);
-  },
-  ['clients'],
-  { revalidate: REVALIDATION_TIME, tags: ['clients'] }
-);
+  if (error) throw new Error(DB_UNAVAILABLE_ERROR);
+  return rowsToEntities<Client>(data || []);
+}
 
-export const getClientById = cache(
-  async (id: string): Promise<Client | null> => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('clients')
-      .select('*')
-      .eq('id', id)
-      .single();
+export async function getClientById(id: string): Promise<Client | null> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('clients')
+    .select('*')
+    .eq('id', id)
+    .single();
 
-    if (error) {
-      if (error.code === 'PGRST116') return null;
-      throw new Error(DB_UNAVAILABLE_ERROR);
-    }
-    return data ? rowToEntity<Client>(data) : null;
-  },
-  ['client'],
-  { revalidate: REVALIDATION_TIME, tags: ['clients'] }
-);
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw new Error(DB_UNAVAILABLE_ERROR);
+  }
+  return data ? rowToEntity<Client>(data) : null;
+}
 
-export async function addClient(clientData: Omit<Client, 'id' | 'registrationDate' | 'status'>): Promise<Client> {
-  const supabase = createClient();
+export async function addClient(clientData: Omit<Client, 'id' | 'registrationDate' | 'status'>, orgId: string): Promise<Client> {
+  const supabase = createAdminClient();
   const insertData = {
     ...mapKeysToSnake(clientData),
     registration_date: new Date().toISOString(),
     status: 'Active',
+    organization_id: orgId,
   };
 
   const { data, error } = await supabase
@@ -129,7 +86,7 @@ export async function addClient(clientData: Omit<Client, 'id' | 'registrationDat
 }
 
 export async function updateClient(id: string, clientData: Partial<Omit<Client, 'id' | 'registrationDate'>>): Promise<void> {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from('clients')
     .update(mapKeysToSnake(clientData))
@@ -139,7 +96,7 @@ export async function updateClient(id: string, clientData: Partial<Omit<Client, 
 }
 
 export async function deleteClient(id: string): Promise<void> {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from('clients')
     .delete()
@@ -150,26 +107,24 @@ export async function deleteClient(id: string): Promise<void> {
 
 // ---- SUPPLIERS ----
 
-export const getSuppliers = cache(
-  async (): Promise<Supplier[]> => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('suppliers')
-      .select('*')
-      .order('registration_date', { ascending: false });
+export async function getSuppliers(orgId: string): Promise<Supplier[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('suppliers')
+    .select('*')
+    .eq('organization_id', orgId)
+    .order('registration_date', { ascending: false });
 
-    if (error) throw new Error(DB_UNAVAILABLE_ERROR);
-    return rowsToEntities<Supplier>(data || []);
-  },
-  ['suppliers'],
-  { revalidate: REVALIDATION_TIME, tags: ['suppliers'] }
-);
+  if (error) throw new Error(DB_UNAVAILABLE_ERROR);
+  return rowsToEntities<Supplier>(data || []);
+}
 
-export async function addSupplier(supplierData: Omit<Supplier, 'id' | 'registrationDate'>): Promise<Supplier> {
-  const supabase = createClient();
+export async function addSupplier(supplierData: Omit<Supplier, 'id' | 'registrationDate'>, orgId: string): Promise<Supplier> {
+  const supabase = createAdminClient();
   const insertData = {
     ...mapKeysToSnake(supplierData),
     registration_date: new Date().toISOString(),
+    organization_id: orgId,
   };
 
   const { data, error } = await supabase
@@ -183,7 +138,7 @@ export async function addSupplier(supplierData: Omit<Supplier, 'id' | 'registrat
 }
 
 export async function updateSupplier(id: string, supplierData: Partial<Omit<Supplier, 'id' | 'registrationDate'>>): Promise<void> {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from('suppliers')
     .update(mapKeysToSnake(supplierData))
@@ -193,7 +148,7 @@ export async function updateSupplier(id: string, supplierData: Partial<Omit<Supp
 }
 
 export async function deleteSupplier(id: string): Promise<void> {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from('suppliers')
     .delete()
@@ -204,26 +159,38 @@ export async function deleteSupplier(id: string): Promise<void> {
 
 // ---- PRODUCTS ----
 
-export const getProducts = cache(
-  async (): Promise<Product[]> => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('name');
-
-    if (error) throw new Error(DB_UNAVAILABLE_ERROR);
-    return rowsToEntities<Product>(data || []);
-  },
-  ['products'],
-  { revalidate: REVALIDATION_TIME, tags: ['products'] }
-);
-
-export async function addProduct(productData: Omit<Product, 'id'>): Promise<Product> {
-  const supabase = createClient();
+export async function getProducts(orgId: string): Promise<Product[]> {
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from('products')
-    .insert(mapKeysToSnake(productData))
+    .select('*')
+    .eq('organization_id', orgId)
+    .order('name');
+
+  if (error) throw new Error(DB_UNAVAILABLE_ERROR);
+  return rowsToEntities<Product>(data || []);
+}
+
+export async function getProductById(id: string): Promise<Product | null> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw new Error(DB_UNAVAILABLE_ERROR);
+  }
+  return data ? rowToEntity<Product>(data) : null;
+}
+
+export async function addProduct(productData: Omit<Product, 'id'>, orgId: string): Promise<Product> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('products')
+    .insert({ ...mapKeysToSnake(productData), organization_id: orgId })
     .select()
     .single();
 
@@ -232,7 +199,7 @@ export async function addProduct(productData: Omit<Product, 'id'>): Promise<Prod
 }
 
 export async function updateProduct(id: string, productData: Partial<Omit<Product, 'id'>>): Promise<void> {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from('products')
     .update(mapKeysToSnake(productData))
@@ -242,7 +209,7 @@ export async function updateProduct(id: string, productData: Partial<Omit<Produc
 }
 
 export async function deleteProduct(id: string): Promise<void> {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from('products')
     .delete()
@@ -253,50 +220,43 @@ export async function deleteProduct(id: string): Promise<void> {
 
 // ---- QUOTES ----
 
-export const getQuotes = cache(
-  async (): Promise<Quote[]> => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('quotes')
-      .select('*')
-      .order('date', { ascending: false });
+export async function getQuotes(orgId: string): Promise<Quote[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('quotes')
+    .select('*')
+    .eq('organization_id', orgId)
+    .order('date', { ascending: false });
 
-    if (error) throw new Error(DB_UNAVAILABLE_ERROR);
-    return rowsToEntities<Quote>(data || []);
-  },
-  ['quotes'],
-  { revalidate: REVALIDATION_TIME, tags: ['quotes'] }
-);
+  if (error) throw new Error(DB_UNAVAILABLE_ERROR);
+  return rowsToEntities<Quote>(data || []);
+}
 
-export const getQuoteById = cache(
-  async (id: string): Promise<Quote | null> => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('quotes')
-      .select('*')
-      .eq('id', id)
-      .single();
+export async function getQuoteById(id: string): Promise<Quote | null> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('quotes')
+    .select('*')
+    .eq('id', id)
+    .single();
 
-    if (error) {
-      if (error.code === 'PGRST116') return null;
-      throw new Error(DB_UNAVAILABLE_ERROR);
-    }
-    return data ? rowToEntity<Quote>(data) : null;
-  },
-  ['quote'],
-  { revalidate: REVALIDATION_TIME, tags: ['quotes'] }
-);
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw new Error(DB_UNAVAILABLE_ERROR);
+  }
+  return data ? rowToEntity<Quote>(data) : null;
+}
 
-export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>): Promise<Quote> {
-  const supabase = createClient();
+export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>, orgId: string): Promise<Quote> {
+  const supabase = createAdminClient();
 
   const currentYear = new Date().getFullYear();
   const prefix = `PRO${currentYear}-`;
 
-  // Get the latest quote number for this year
   const { data: latestQuotes } = await supabase
     .from('quotes')
     .select('quote_number')
+    .eq('organization_id', orgId)
     .gte('quote_number', prefix)
     .lt('quote_number', `PRO${currentYear + 1}-`)
     .order('quote_number', { ascending: false })
@@ -315,6 +275,7 @@ export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>): Pr
   const insertData = {
     ...mapKeysToSnake(quoteData),
     quote_number: newQuoteNumber,
+    organization_id: orgId,
   };
 
   const { data, error } = await supabase
@@ -328,7 +289,7 @@ export async function addQuote(quoteData: Omit<Quote, 'id' | 'quoteNumber'>): Pr
 }
 
 export async function updateQuote(id: string, quoteData: Partial<Omit<Quote, 'id'>>): Promise<void> {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from('quotes')
     .update(mapKeysToSnake(quoteData))
@@ -338,7 +299,7 @@ export async function updateQuote(id: string, quoteData: Partial<Omit<Quote, 'id
 }
 
 export async function deleteQuote(id: string): Promise<void> {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from('quotes')
     .delete()
@@ -349,45 +310,38 @@ export async function deleteQuote(id: string): Promise<void> {
 
 // ---- INVOICES ----
 
-export const getInvoices = cache(
-  async (): Promise<Invoice[]> => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('invoices')
-      .select('*')
-      .order('date', { ascending: false });
-
-    if (error) throw new Error(DB_UNAVAILABLE_ERROR);
-    return rowsToEntities<Invoice>(data || []);
-  },
-  ['invoices'],
-  { revalidate: REVALIDATION_TIME, tags: ['invoices'] }
-);
-
-export const getInvoiceById = cache(
-  async (id: string): Promise<Invoice | null> => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('invoices')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') return null;
-      throw new Error(DB_UNAVAILABLE_ERROR);
-    }
-    return data ? rowToEntity<Invoice>(data) : null;
-  },
-  ['invoice'],
-  { revalidate: REVALIDATION_TIME, tags: ['invoices'] }
-);
-
-export async function addInvoice(invoiceData: Omit<Invoice, 'id'>): Promise<Invoice> {
-  const supabase = createClient();
+export async function getInvoices(orgId: string): Promise<Invoice[]> {
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from('invoices')
-    .insert(mapKeysToSnake(invoiceData))
+    .select('*')
+    .eq('organization_id', orgId)
+    .order('date', { ascending: false });
+
+  if (error) throw new Error(DB_UNAVAILABLE_ERROR);
+  return rowsToEntities<Invoice>(data || []);
+}
+
+export async function getInvoiceById(id: string): Promise<Invoice | null> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('invoices')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw new Error(DB_UNAVAILABLE_ERROR);
+  }
+  return data ? rowToEntity<Invoice>(data) : null;
+}
+
+export async function addInvoice(invoiceData: Omit<Invoice, 'id'>, orgId: string): Promise<Invoice> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('invoices')
+    .insert({ ...mapKeysToSnake(invoiceData), organization_id: orgId })
     .select()
     .single();
 
@@ -395,17 +349,15 @@ export async function addInvoice(invoiceData: Omit<Invoice, 'id'>): Promise<Invo
   return rowToEntity<Invoice>(data);
 }
 
-/**
- * Get the next sequential invoice number for the year.
- */
-export async function getNextInvoiceNumber(): Promise<string> {
-  const supabase = createClient();
+export async function getNextInvoiceNumber(orgId: string): Promise<string> {
+  const supabase = createAdminClient();
   const currentYear = new Date().getFullYear();
   const yearPrefix = `FACT-${currentYear}-`;
 
   const { data: latestInvoices } = await supabase
     .from('invoices')
     .select('invoice_number')
+    .eq('organization_id', orgId)
     .gte('invoice_number', yearPrefix)
     .lt('invoice_number', `FACT-${currentYear + 1}-`)
     .order('invoice_number', { ascending: false })
@@ -423,7 +375,7 @@ export async function getNextInvoiceNumber(): Promise<string> {
 }
 
 export async function updateInvoice(id: string, invoiceData: Partial<Omit<Invoice, 'id'>>): Promise<void> {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from('invoices')
     .update(mapKeysToSnake(invoiceData))
@@ -433,7 +385,7 @@ export async function updateInvoice(id: string, invoiceData: Partial<Omit<Invoic
 }
 
 export async function deleteInvoice(id: string): Promise<void> {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from('invoices')
     .delete()
@@ -444,42 +396,35 @@ export async function deleteInvoice(id: string): Promise<void> {
 
 // ---- PURCHASES ----
 
-export const getPurchases = cache(
-  async (): Promise<Purchase[]> => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('purchases')
-      .select('*')
-      .order('date', { ascending: false });
+export async function getPurchases(orgId: string): Promise<Purchase[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('purchases')
+    .select('*')
+    .eq('organization_id', orgId)
+    .order('date', { ascending: false });
 
-    if (error) throw new Error(DB_UNAVAILABLE_ERROR);
-    return rowsToEntities<Purchase>(data || []);
-  },
-  ['purchases'],
-  { revalidate: REVALIDATION_TIME, tags: ['purchases'] }
-);
+  if (error) throw new Error(DB_UNAVAILABLE_ERROR);
+  return rowsToEntities<Purchase>(data || []);
+}
 
-export const getPurchaseById = cache(
-  async (id: string): Promise<Purchase | null> => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('purchases')
-      .select('*')
-      .eq('id', id)
-      .single();
+export async function getPurchaseById(id: string): Promise<Purchase | null> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('purchases')
+    .select('*')
+    .eq('id', id)
+    .single();
 
-    if (error) {
-      if (error.code === 'PGRST116') return null;
-      throw new Error(DB_UNAVAILABLE_ERROR);
-    }
-    return data ? rowToEntity<Purchase>(data) : null;
-  },
-  ['purchase'],
-  { revalidate: REVALIDATION_TIME, tags: ['purchases'] }
-);
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw new Error(DB_UNAVAILABLE_ERROR);
+  }
+  return data ? rowToEntity<Purchase>(data) : null;
+}
 
-export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'purchaseNumber'>): Promise<Purchase> {
-  const supabase = createClient();
+export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'purchaseNumber'>, orgId: string): Promise<Purchase> {
+  const supabase = createAdminClient();
 
   const currentYear = new Date().getFullYear();
   const prefix = `ACH${currentYear}-`;
@@ -487,6 +432,7 @@ export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'purchaseN
   const { data: latestPurchases } = await supabase
     .from('purchases')
     .select('purchase_number')
+    .eq('organization_id', orgId)
     .gte('purchase_number', prefix)
     .lt('purchase_number', `ACH${currentYear + 1}-`)
     .order('purchase_number', { ascending: false })
@@ -505,6 +451,7 @@ export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'purchaseN
   const insertData = {
     ...mapKeysToSnake(purchaseData),
     purchase_number: newPurchaseNumber,
+    organization_id: orgId,
   };
 
   const { data, error } = await supabase
@@ -518,7 +465,7 @@ export async function addPurchase(purchaseData: Omit<Purchase, 'id' | 'purchaseN
 }
 
 export async function updatePurchase(id: string, purchaseData: Partial<Omit<Purchase, 'id'>>): Promise<void> {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from('purchases')
     .update(mapKeysToSnake(purchaseData))
@@ -529,26 +476,23 @@ export async function updatePurchase(id: string, purchaseData: Partial<Omit<Purc
 
 // ---- EXPENSES ----
 
-export const getExpenses = cache(
-  async (): Promise<Expense[]> => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('expenses')
-      .select('*')
-      .order('date', { ascending: false });
-
-    if (error) throw new Error(DB_UNAVAILABLE_ERROR);
-    return rowsToEntities<Expense>(data || []);
-  },
-  ['expenses'],
-  { revalidate: REVALIDATION_TIME, tags: ['expenses'] }
-);
-
-export async function addExpense(expenseData: Omit<Expense, 'id'>): Promise<Expense> {
-  const supabase = createClient();
+export async function getExpenses(orgId: string): Promise<Expense[]> {
+  const supabase = createAdminClient();
   const { data, error } = await supabase
     .from('expenses')
-    .insert(mapKeysToSnake(expenseData))
+    .select('*')
+    .eq('organization_id', orgId)
+    .order('date', { ascending: false });
+
+  if (error) throw new Error(DB_UNAVAILABLE_ERROR);
+  return rowsToEntities<Expense>(data || []);
+}
+
+export async function addExpense(expenseData: Omit<Expense, 'id'>, orgId: string): Promise<Expense> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('expenses')
+    .insert({ ...mapKeysToSnake(expenseData), organization_id: orgId })
     .select()
     .single();
 
@@ -557,7 +501,7 @@ export async function addExpense(expenseData: Omit<Expense, 'id'>): Promise<Expe
 }
 
 export async function updateExpense(id: string, expenseData: Partial<Omit<Expense, 'id'>>): Promise<void> {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from('expenses')
     .update(mapKeysToSnake(expenseData))
@@ -567,7 +511,7 @@ export async function updateExpense(id: string, expenseData: Partial<Omit<Expens
 }
 
 export async function deleteExpense(id: string): Promise<void> {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from('expenses')
     .delete()
@@ -578,42 +522,35 @@ export async function deleteExpense(id: string): Promise<void> {
 
 // ---- CLIENT ORDERS ----
 
-export const getClientOrders = cache(
-  async (): Promise<ClientOrder[]> => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('client_orders')
-      .select('*')
-      .order('date', { ascending: false });
+export async function getClientOrders(orgId: string): Promise<ClientOrder[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('client_orders')
+    .select('*')
+    .eq('organization_id', orgId)
+    .order('date', { ascending: false });
 
-    if (error) throw new Error(DB_UNAVAILABLE_ERROR);
-    return rowsToEntities<ClientOrder>(data || []);
-  },
-  ['client-orders'],
-  { revalidate: REVALIDATION_TIME, tags: ['client-orders'] }
-);
+  if (error) throw new Error(DB_UNAVAILABLE_ERROR);
+  return rowsToEntities<ClientOrder>(data || []);
+}
 
-export const getClientOrderById = cache(
-  async (id: string): Promise<ClientOrder | null> => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('client_orders')
-      .select('*')
-      .eq('id', id)
-      .single();
+export async function getClientOrderById(id: string): Promise<ClientOrder | null> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('client_orders')
+    .select('*')
+    .eq('id', id)
+    .single();
 
-    if (error) {
-      if (error.code === 'PGRST116') return null;
-      throw new Error(DB_UNAVAILABLE_ERROR);
-    }
-    return data ? rowToEntity<ClientOrder>(data) : null;
-  },
-  ['client-order'],
-  { revalidate: REVALIDATION_TIME, tags: ['client-orders'] }
-);
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw new Error(DB_UNAVAILABLE_ERROR);
+  }
+  return data ? rowToEntity<ClientOrder>(data) : null;
+}
 
 export async function updateClientOrder(id: string, data: Partial<Omit<ClientOrder, 'id'>>): Promise<void> {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { error } = await supabase
     .from('client_orders')
     .update(mapKeysToSnake(data))
@@ -627,52 +564,48 @@ export async function updateClientOrder(id: string, data: Partial<Omit<ClientOrd
 const defaultSettings: Settings = {
   companyName: 'BizBook Inc.',
   legalName: 'BizBook Incorporated',
-  managerName: 'Nom du Gérant',
-  companyAddress: 'Votre adresse complète',
-  companyPhone: 'Votre numéro de téléphone',
-  companyIfu: 'Votre numéro IFU',
-  companyRccm: 'Votre numéro RCCM',
+  managerName: 'Nom du Gerant',
+  companyAddress: 'Votre adresse complete',
+  companyPhone: 'Votre numero de telephone',
+  companyIfu: 'Votre numero IFU',
+  companyRccm: 'Votre numero RCCM',
   currency: 'XOF',
   logoUrl: null,
   invoiceNumberFormat: 'PREFIX-YEAR-NUM',
   invoiceTemplate: 'detailed',
 };
 
-export const getSettings = cache(
-  async (): Promise<Settings> => {
-    const supabase = createClient();
-    const { data, error } = await supabase
+export async function getSettings(orgId: string): Promise<Settings> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from('settings')
+    .select('*')
+    .eq('organization_id', orgId)
+    .single();
+
+  if (error || !data) {
+    // Insert default settings for this org if none exist
+    const { data: insertedData, error: insertError } = await supabase
       .from('settings')
-      .select('*')
-      .eq('id', 'main')
+      .upsert({ id: `settings_${orgId}`, organization_id: orgId, ...mapKeysToSnake(defaultSettings) })
+      .select()
       .single();
 
-    if (error || !data) {
-      // Insert default settings if none exist
-      const { data: insertedData, error: insertError } = await supabase
-        .from('settings')
-        .upsert({ id: 'main', ...mapKeysToSnake(defaultSettings) })
-        .select()
-        .single();
+    if (insertError || !insertedData) return defaultSettings;
+    return { ...defaultSettings, ...rowToEntity<Settings>(insertedData) };
+  }
 
-      if (insertError || !insertedData) return defaultSettings;
-      return { ...defaultSettings, ...rowToEntity<Settings>(insertedData) };
-    }
+  return { ...defaultSettings, ...rowToEntity<Settings>(data) };
+}
 
-    return { ...defaultSettings, ...rowToEntity<Settings>(data) };
-  },
-  ['settings'],
-  { revalidate: REVALIDATION_TIME, tags: ['settings'] }
-);
-
-export async function updateSettings(settingsData: Partial<Settings>): Promise<Settings> {
-  const supabase = createClient();
-  const currentSettings = await getSettings();
+export async function updateSettings(settingsData: Partial<Settings>, orgId: string): Promise<Settings> {
+  const supabase = createAdminClient();
+  const currentSettings = await getSettings(orgId);
   const newSettings = { ...currentSettings, ...settingsData };
 
   const { error } = await supabase
     .from('settings')
-    .upsert({ id: 'main', ...mapKeysToSnake(newSettings) });
+    .upsert({ id: `settings_${orgId}`, organization_id: orgId, ...mapKeysToSnake(newSettings) });
 
   if (error) throw error;
   return newSettings;
@@ -680,8 +613,8 @@ export async function updateSettings(settingsData: Partial<Settings>): Promise<S
 
 // ---- DASHBOARD STATS ----
 
-export const getDashboardStats = cache(async () => {
-  const supabase = createClient();
+export async function getDashboardStats(orgId: string) {
+  const supabase = createAdminClient();
 
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -703,34 +636,34 @@ export const getDashboardStats = cache(async () => {
     activeClientsResult,
     totalProductsResult,
   ] = await Promise.all([
-    // Invoices for the current fiscal year
     supabase
       .from('invoices')
       .select('total_amount, status')
+      .eq('organization_id', orgId)
       .gte('date', fiscalStartDateIso),
-    // Unpaid invoices
     supabase
       .from('invoices')
       .select('total_amount, amount_paid, status')
+      .eq('organization_id', orgId)
       .in('status', ['Unpaid', 'Partially Paid']),
-    // Expenses for the current fiscal year
     supabase
       .from('expenses')
       .select('amount')
+      .eq('organization_id', orgId)
       .gte('date', fiscalStartDateIso),
-    // Total clients count
-    supabase
-      .from('clients')
-      .select('id', { count: 'exact', head: true }),
-    // Active clients count
     supabase
       .from('clients')
       .select('id', { count: 'exact', head: true })
+      .eq('organization_id', orgId),
+    supabase
+      .from('clients')
+      .select('id', { count: 'exact', head: true })
+      .eq('organization_id', orgId)
       .eq('status', 'Active'),
-    // Total products count
     supabase
       .from('products')
-      .select('id', { count: 'exact', head: true }),
+      .select('id', { count: 'exact', head: true })
+      .eq('organization_id', orgId),
   ]);
 
   let totalRevenue = 0;
@@ -772,6 +705,4 @@ export const getDashboardStats = cache(async () => {
     activeClients: activeClientsResult.count ?? 0,
     productCount: totalProductsResult.count ?? 0,
   };
-},
-['dashboard-stats'],
-{ revalidate: REVALIDATION_TIME, tags: ['invoices', 'expenses', 'clients', 'products'] });
+}

@@ -11,17 +11,15 @@ import { formatCurrency } from "@/lib/utils";
 export const dynamic = 'force-dynamic';
 
 export default async function PurchasesPage() {
-  const [user, settings, suppliers, products, purchases] = await Promise.all([
-    getSession(), 
-    getSettings(),
-    getSuppliers(),
-    getProducts(),
-    getPurchases()
-  ]);
+  const user = await getSession();
+  if (!user) redirect('/login');
 
-  if (!user || !settings) {
-    redirect('/login');
-  }
+  const [settings, suppliers, products, purchases] = await Promise.all([
+    getSettings(user.organizationId),
+    getSuppliers(user.organizationId),
+    getProducts(user.organizationId),
+    getPurchases(user.organizationId),
+  ]);
   
   const canEdit = user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN;
   

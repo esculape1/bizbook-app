@@ -1,16 +1,10 @@
 'use server';
 
 import { z } from 'zod';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import {
-  addInvoice,
-  getClients,
-  getProducts,
-  updateInvoice as updateInvoiceInDB,
-  getInvoiceById,
-  updateProduct,
-  getInvoices,
-  getNextInvoiceNumber,
+  addInvoice, getClients, getProducts, updateInvoice as updateInvoiceInDB,
+  getInvoiceById, updateProduct, getNextInvoiceNumber,
 } from '@/lib/data';
 import { revalidateTag } from 'next/cache';
 import type { InvoiceItem, Invoice } from '@/lib/types';
@@ -18,111 +12,62 @@ import { getSession } from '@/lib/session';
 import { ROLES } from '@/lib/constants';
 
 const invoiceItemSchemaForCreate = z.object({
-  productId: z.string(),
-  productName: z.string(),
-  quantity: z.coerce.number(),
-  unitPrice: z.coerce.number(),
-  purchasePrice: z.coerce.number(),
-  total: z.coerce.number(),
+  productId: z.string(), productName: z.string(), quantity: z.coerce.number(),
+  unitPrice: z.coerce.number(), purchasePrice: z.coerce.number(), total: z.coerce.number(),
 });
 
 const createInvoiceSchema = z.object({
-  invoiceNumberSuffix: z.string().min(1, { message: "Le numéro de facture est requis." }),
-  clientId: z.string(),
-  clientName: z.string(),
-  date: z.date(),
-  dueDate: z.date(),
-  items: z.array(invoiceItemSchemaForCreate),
-  vat: z.coerce.number(),
-  discount: z.coerce.number(),
-  retenue: z.coerce.number().min(0).default(0),
+  invoiceNumberSuffix: z.string().min(1, { message: "Le numero de facture est requis." }),
+  clientId: z.string(), clientName: z.string(), date: z.date(), dueDate: z.date(),
+  items: z.array(invoiceItemSchemaForCreate), vat: z.coerce.number(),
+  discount: z.coerce.number(), retenue: z.coerce.number().min(0).default(0),
 });
 
 const updateInvoiceItemSchema = z.object({
-    productId: z.string(),
-    productName: z.string(),
-    reference: z.string(),
-    quantity: z.coerce.number(),
-    unitPrice: z.coerce.number(),
-    total: z.coerce.number(),
-    purchasePrice: z.coerce.number(),
+  productId: z.string(), productName: z.string(), reference: z.string(),
+  quantity: z.coerce.number(), unitPrice: z.coerce.number(), total: z.coerce.number(),
+  purchasePrice: z.coerce.number(),
 });
 
 const updateInvoiceSchema = z.object({
-    invoiceNumber: z.string().min(1, "Le numéro de facture est requis."),
-    clientId: z.string(),
-    date: z.date(),
-    dueDate: z.date(),
-    items: z.array(updateInvoiceItemSchema),
-    vat: z.coerce.number(),
-    discount: z.coerce.number(),
-    retenue: z.coerce.number().min(0).default(0),
+  invoiceNumber: z.string().min(1), clientId: z.string(), date: z.date(), dueDate: z.date(),
+  items: z.array(updateInvoiceItemSchema), vat: z.coerce.number(),
+  discount: z.coerce.number(), retenue: z.coerce.number().min(0).default(0),
 });
-
 
 export async function createInvoice(formData: unknown) {
   const session = await getSession();
-  const allowedRoles = [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER];
-  if (!session || !allowedRoles.includes(session.role)) {
-    return { message: "Action non autorisée." };
-  }
+  if (!session) return { message: "Action non autorisee." };
+  const orgId = session.organizationId;
 
   const validatedFields = createInvoiceSchema.safeParse(formData);
-
-  if (!validatedFields.success) {
-    return {
-      message: 'Certains champs sont invalides. Impossible de créer la facture.',
-    };
-  }
+  if (!validatedFields.success) return { message: 'Champs invalides.' };
 
   try {
     const { invoiceNumberSuffix, clientId, clientName, date, dueDate, items, vat, discount, retenue } = validatedFields.data;
-    
     const currentYear = new Date().getFullYear();
     const invoiceNumber = `FACT-${currentYear}-${invoiceNumberSuffix}`;
 
-    // Check for duplicate invoice number
-    const supabase = createClient();
-    const { data: existingInvoice } = await supabase
-      .from('invoices')
-      .select('id')
-      .eq('invoice_number', invoiceNumber)
-      .limit(1)
-      .maybeSingle();
+    const admin = createAdminClient();
+    const { data: existingInvoice } = await admin
+      .from('invoices').select('id').eq('invoice_number', invoiceNumber)
+      .eq('organization_id', orgId).limit(1).maybeSingle();
+    if (existingInvoice) return { message: `Le numero ${invoiceNumber} existe deja.` };
 
-    if (existingInvoice) {
-        return { message: `Le numéro de facture ${invoiceNumber} existe déjà.` };
-    }
-    
-    const products = await getProducts();
+    const products = await getProducts(orgId);
     const invoiceItems: InvoiceItem[] = [];
     for (const item of items) {
       const product = products.find(p => p.id === item.productId);
-      if (!product) throw new Error(`Produit non trouvé: ${item.productId}`);
-      
+      if (!product) throw new Error(`Produit non trouve: ${item.productId}`);
       if (product.quantityInStock < item.quantity) {
-          return {
-              message: `Stock insuffisant pour ${product.name}. Stock actuel: ${product.quantityInStock}, demandé: ${item.quantity}.`,
-          };
+        return { message: `Stock insuffisant pour ${product.name}. Stock: ${product.quantityInStock}, demande: ${item.quantity}.` };
       }
-      
-      if (item.unitPrice < (product.purchasePrice ?? 0)) {
-        return {
-          message: `Le prix de vente pour ${product.name} ne peut être inférieur au prix d'achat.`,
-        };
-      }
-
       invoiceItems.push({
-        productId: item.productId,
-        productName: product.name,
-        reference: product.reference,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        total: item.quantity * item.unitPrice,
-        purchasePrice: product.purchasePrice ?? 0,
+        productId: item.productId, productName: product.name, reference: product.reference,
+        quantity: item.quantity, unitPrice: item.unitPrice,
+        total: item.quantity * item.unitPrice, purchasePrice: product.purchasePrice ?? 0,
       });
     }
-
 
     const subTotal = invoiceItems.reduce((sum, item) => sum + item.total, 0);
     const discountAmount = subTotal * (discount / 100);
@@ -132,121 +77,65 @@ export async function createInvoice(formData: unknown) {
     const retenueAmount = totalAfterDiscount * (retenue / 100);
     const netAPayer = totalAmount - retenueAmount;
 
-
-    // 1. Create invoice
     await addInvoice({
-      invoiceNumber: invoiceNumber,
-      clientId,
-      clientName: clientName,
-      date: date.toISOString(),
-      dueDate: dueDate.toISOString(),
-      items: invoiceItems,
-      subTotal,
-      vat,
-      vatAmount,
-      discount,
-      discountAmount,
-      totalAmount,
-      retenue,
-      retenueAmount,
-      netAPayer,
-      status: 'Unpaid',
-      amountPaid: 0,
-      payments: [],
-    });
+      invoiceNumber, clientId, clientName, date: date.toISOString(), dueDate: dueDate.toISOString(),
+      items: invoiceItems, subTotal, vat, vatAmount, discount, discountAmount, totalAmount,
+      retenue, retenueAmount, netAPayer, status: 'Unpaid', amountPaid: 0, payments: [],
+    }, orgId);
 
-    // 2. Update stock
     for (const item of invoiceItems) {
-        const product = products.find(p => p.id === item.productId)!;
-        const newStock = product.quantityInStock - item.quantity;
-        await updateProduct(item.productId, { quantityInStock: newStock });
+      const product = products.find(p => p.id === item.productId)!;
+      await updateProduct(item.productId, { quantityInStock: product.quantityInStock - item.quantity });
     }
 
-    // 3. Revalidate tags
-    revalidateTag('invoices');
-    revalidateTag('products');
-    revalidateTag('dashboard-stats');
+    revalidateTag('invoices'); revalidateTag('products'); revalidateTag('dashboard-stats');
     return {};
   } catch (error) {
     console.error('Failed to create invoice:', error);
-    const message = error instanceof Error ? error.message : 'Erreur de la base de données: Impossible de créer la facture.';
-    return { message };
+    return { message: error instanceof Error ? error.message : 'Erreur de base de donnees.' };
   }
 }
 
 export async function updateInvoice(id: string, formData: unknown) {
   const session = await getSession();
-  const allowedRoles = [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER];
-  if (!session || !allowedRoles.includes(session.role)) {
-    return { message: "Action non autorisée." };
-  }
+  if (!session) return { message: "Action non autorisee." };
+  const orgId = session.organizationId;
 
   const validatedFields = updateInvoiceSchema.safeParse(formData);
-
-  if (!validatedFields.success) {
-    return {
-      message: 'Certains champs sont invalides. Impossible de mettre à jour la facture.',
-    };
-  }
+  if (!validatedFields.success) return { message: 'Champs invalides.' };
 
   try {
     const { clientId, date, dueDate, items, vat, discount, invoiceNumber, retenue } = validatedFields.data;
-    
     const originalInvoice = await getInvoiceById(id);
-    if (!originalInvoice) {
-        return { message: 'Facture originale non trouvée.' };
-    }
+    if (!originalInvoice) return { message: 'Facture non trouvee.' };
     if (originalInvoice.status === 'Paid' || originalInvoice.status === 'Cancelled') {
-        return { message: 'Les factures payées ou annulées ne peuvent pas être modifiées.' };
+      return { message: 'Les factures payees ou annulees ne peuvent pas etre modifiees.' };
     }
 
-    const clients = await getClients();
-    const products = await getProducts();
-
+    const clients = await getClients(orgId);
+    const products = await getProducts(orgId);
     const client = clients.find(c => c.id === clientId);
-    if (!client) {
-      return { message: 'Client non trouvé.' };
+    if (!client) return { message: 'Client non trouve.' };
+
+    const productsToUpdate: { [productId: string]: number } = {};
+    for (const product of products) productsToUpdate[product.id] = product.quantityInStock;
+    for (const item of originalInvoice.items) {
+      if (productsToUpdate[item.productId] !== undefined) productsToUpdate[item.productId] += item.quantity;
+    }
+    for (const item of items) {
+      const avail = productsToUpdate[item.productId];
+      if (avail === undefined || avail < item.quantity) {
+        const product = products.find(p => p.id === item.productId);
+        return { message: `Stock insuffisant pour ${product?.name}. Disponible: ${avail ?? 0}, demande: ${item.quantity}.` };
+      }
+      productsToUpdate[item.productId] -= item.quantity;
     }
 
-    // --- Stock management ---
-    const productsToUpdate: { [productId: string]: number } = {};
-    for (const product of products) {
-        productsToUpdate[product.id] = product.quantityInStock;
-    }
-    for (const item of originalInvoice.items) {
-        if (productsToUpdate[item.productId] !== undefined) {
-            productsToUpdate[item.productId] += item.quantity;
-        }
-    }
-    for (const item of items) {
-        const availableStock = productsToUpdate[item.productId];
-        const product = products.find(p => p.id === item.productId);
-        if (availableStock === undefined || availableStock < item.quantity) {
-            return {
-                message: `Stock insuffisant pour ${product?.name}. Stock disponible: ${availableStock ?? 0}, demandé: ${item.quantity}.`
-            }
-        }
-        productsToUpdate[item.productId] -= item.quantity;
-    }
-    
-    const invoiceItems: InvoiceItem[] = [];
-    for (const item of items) {
-        const product = products.find(p => p.id === item.productId)!;
-        
-        if (item.unitPrice < item.purchasePrice) {
-            throw new Error(`Le prix de vente pour ${product.name} ne peut être inférieur au prix d'achat.`);
-        }
-        
-        invoiceItems.push({
-            productId: item.productId,
-            productName: item.productName,
-            reference: item.reference,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            total: item.quantity * item.unitPrice,
-            purchasePrice: item.purchasePrice,
-        });
-    }
+    const invoiceItems: InvoiceItem[] = items.map(item => ({
+      productId: item.productId, productName: item.productName, reference: item.reference,
+      quantity: item.quantity, unitPrice: item.unitPrice,
+      total: item.quantity * item.unitPrice, purchasePrice: item.purchasePrice,
+    }));
 
     const subTotal = invoiceItems.reduce((sum, item) => sum + item.total, 0);
     const discountAmount = subTotal * (discount / 100);
@@ -256,82 +145,48 @@ export async function updateInvoice(id: string, formData: unknown) {
     const retenueAmount = totalAfterDiscount * (retenue / 100);
     const netAPayer = totalAmount - retenueAmount;
 
-    const invoiceData: Partial<Omit<Invoice, 'id'>> = {
-      invoiceNumber,
-      clientId,
-      clientName: client.name,
-      date: date.toISOString(),
-      dueDate: dueDate.toISOString(),
-      items: invoiceItems,
-      subTotal,
-      vat,
-      vatAmount,
-      discount,
-      discountAmount,
-      totalAmount,
-      retenue,
-      retenueAmount,
-      netAPayer,
-    }
-
-    await updateInvoiceInDB(id, invoiceData);
+    await updateInvoiceInDB(id, {
+      invoiceNumber, clientId, clientName: client.name, date: date.toISOString(),
+      dueDate: dueDate.toISOString(), items: invoiceItems, subTotal, vat, vatAmount,
+      discount, discountAmount, totalAmount, retenue, retenueAmount, netAPayer,
+    });
 
     for (const productId in productsToUpdate) {
-        const originalProduct = products.find(p => p.id === productId)!;
-        if (originalProduct.quantityInStock !== productsToUpdate[productId]) {
-              await updateProduct(productId, { quantityInStock: productsToUpdate[productId] });
-        }
+      const orig = products.find(p => p.id === productId)!;
+      if (orig.quantityInStock !== productsToUpdate[productId]) {
+        await updateProduct(productId, { quantityInStock: productsToUpdate[productId] });
+      }
     }
 
-    revalidateTag('invoices');
-    revalidateTag('products');
-    revalidateTag('dashboard-stats');
+    revalidateTag('invoices'); revalidateTag('products'); revalidateTag('dashboard-stats');
     return {};
   } catch (error) {
     console.error('Failed to update invoice:', error);
-    const message = error instanceof Error ? error.message : 'Erreur de la base de données: Impossible de mettre à jour la facture.';
-    return { message };
+    return { message: error instanceof Error ? error.message : 'Erreur de base de donnees.' };
   }
 }
 
 export async function cancelInvoice(id: string) {
   const session = await getSession();
-  const allowedRoles = [ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.USER];
-  if (!session || !allowedRoles.includes(session.role)) {
-    return { message: "Action non autorisée." };
-  }
+  if (!session) return { message: "Action non autorisee." };
+  const orgId = session.organizationId;
 
   try {
     const invoiceToCancel = await getInvoiceById(id);
-    if (!invoiceToCancel) {
-      throw new Error("Facture non trouvée pour l'annulation.");
-    }
+    if (!invoiceToCancel) throw new Error("Facture non trouvee.");
+    if (invoiceToCancel.status === 'Cancelled') return { success: false, message: 'Deja annulee.' };
 
-    if (invoiceToCancel.status === 'Cancelled') {
-        return { success: false, message: 'Cette facture est déjà annulée.' };
-    }
-    
-    const products = await getProducts();
+    const products = await getProducts(orgId);
     for (const item of invoiceToCancel.items) {
       const product = products.find(p => p.id === item.productId);
-      if (product) {
-        const newStock = product.quantityInStock + item.quantity;
-        await updateProduct(item.productId, { quantityInStock: newStock });
-      }
+      if (product) await updateProduct(item.productId, { quantityInStock: product.quantityInStock + item.quantity });
     }
-    
-    await updateInvoiceInDB(id, { status: 'Cancelled' });
 
-    revalidateTag('invoices');
-    revalidateTag('products');
-    revalidateTag('dashboard-stats');
+    await updateInvoiceInDB(id, { status: 'Cancelled' });
+    revalidateTag('invoices'); revalidateTag('products'); revalidateTag('dashboard-stats');
     return { success: true };
   } catch (error) {
-    console.error("Échec de l'annulation de la facture:", error);
-    const message = error instanceof Error ? error.message : "Erreur de la base de données: Impossible d'annuler la facture.";
-    return {
-      success: false,
-      message,
-    };
+    console.error("Failed to cancel invoice:", error);
+    return { success: false, message: error instanceof Error ? error.message : 'Erreur de base de donnees.' };
   }
 }

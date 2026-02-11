@@ -9,15 +9,13 @@ import { ROLES } from "@/lib/constants";
 export const dynamic = 'force-dynamic';
 
 export default async function SettlementsPage() {
-  const [user, settings, clients] = await Promise.all([
-    getSession(),
-    getSettings(),
-    getClients(),
-  ]);
+  const user = await getSession();
+  if (!user) redirect('/login');
 
-  if (!user || !settings) {
-    redirect('/login');
-  }
+  const [settings, clients] = await Promise.all([
+    getSettings(user.organizationId),
+    getClients(user.organizationId),
+  ]);
 
   const canSettle = user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN;
   if (!canSettle) {

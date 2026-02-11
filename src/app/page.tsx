@@ -18,7 +18,7 @@ export default async function Home() {
         return redirect('/login');
     }
 
-    const settings = await getSettings();
+    const settings = await getSettings(user.organizationId);
 
     if (!settings) {
         return (

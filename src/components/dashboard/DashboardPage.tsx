@@ -4,6 +4,7 @@ import { SalesChart } from "@/components/dashboard/SalesChart";
 import { LowStockTable } from "@/components/dashboard/LowStockTable";
 import { DollarSign, Users, Box, Receipt, Wallet, AlertTriangle, TrendingUp } from "lucide-react";
 import { getDashboardStats, getProducts, getInvoices, getSettings } from "@/lib/data";
+import { getSession } from "@/lib/session";
 import { formatCurrency } from "@/lib/utils";
 import { OverdueInvoicesTable } from "@/components/dashboard/OverdueInvoicesTable";
 import { DateTimeDisplay } from "@/components/dashboard/DateTimeDisplay";
@@ -14,11 +15,14 @@ export const dynamic = 'force-dynamic';
 
 async function getDashboardData() {
   try {
+    const session = await getSession();
+    if (!session) throw new Error("Non authentifie");
+    const orgId = session.organizationId;
     const [stats, products, invoices, settings] = await Promise.all([
-      getDashboardStats(),
-      getProducts(),
-      getInvoices(),
-      getSettings(),
+      getDashboardStats(orgId),
+      getProducts(orgId),
+      getInvoices(orgId),
+      getSettings(orgId),
     ]);
     return { stats, products, invoices, settings, error: null };
   } catch (error: any) {

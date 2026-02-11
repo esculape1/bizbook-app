@@ -12,15 +12,13 @@ import { ProductsList } from "./ProductsList";
 export const dynamic = 'force-dynamic';
 
 export default async function ProductsPage() {
-  const [user, settings, products] = await Promise.all([
-    getSession(), 
-    getSettings(),
-    getProducts()
-  ]);
+  const user = await getSession();
+  if (!user) redirect('/login');
 
-  if (!user || !settings) {
-    redirect('/login');
-  }
+  const [settings, products] = await Promise.all([
+    getSettings(user.organizationId),
+    getProducts(user.organizationId),
+  ]);
   
   const canManageProducts = user.role === ROLES.ADMIN || user.role === ROLES.SUPER_ADMIN || user.role === ROLES.USER;
   

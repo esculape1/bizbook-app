@@ -1,14 +1,15 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Loader2, Lock, Mail, ShieldCheck } from 'lucide-react';
 import { signIn } from '../auth/actions';
-import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 function LoginButton() {
   const { pending } = useFormStatus();
@@ -31,11 +32,10 @@ function LoginButton() {
 }
 
 export default function LoginPage() {
-  const [state, formAction] = useFormState(signIn, undefined);
+  const [state, formAction] = useActionState(signIn, undefined);
 
   return (
     <div className="relative min-h-screen w-full flex flex-col items-center justify-center p-4 overflow-x-hidden bg-background">
-      {/* Background Decorative Elements - Constrained */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] pointer-events-none select-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-sky-500/10 rounded-full blur-[120px] pointer-events-none select-none" />
       
@@ -52,7 +52,7 @@ export default function LoginPage() {
 
         <Card className="border-primary/10 shadow-2xl shadow-black/5 bg-card/80 backdrop-blur-xl rounded-[1.5rem] overflow-hidden">
           <CardHeader className="pt-5 px-6 pb-0 text-center space-y-0">
-            <CardTitle className="text-lg font-black tracking-tight">Accès Sécurisé</CardTitle>
+            <CardTitle className="text-lg font-black tracking-tight">{'Acces Securise'}</CardTitle>
             <CardDescription className="text-[10px] font-medium italic">Renseignez vos identifiants</CardDescription>
           </CardHeader>
           <CardContent className="p-6 pt-2">
@@ -87,7 +87,7 @@ export default function LoginPage() {
                     id="password"
                     name="password"
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="Min. 6 caracteres"
                     required
                     className="pl-10 h-10 bg-muted/20 border-primary/5 focus-visible:ring-primary focus-visible:bg-white transition-all rounded-xl text-sm"
                   />
@@ -102,12 +102,18 @@ export default function LoginPage() {
 
               <LoginButton />
             </form>
+
+            <div className="mt-4 text-center">
+              <Link href="/signup" className="text-xs font-bold text-primary hover:underline">
+                {'Creer un compte avec un code de licence'}
+              </Link>
+            </div>
           </CardContent>
         </Card>
 
         <footer className="pt-1 flex flex-col items-center gap-3">
           <div className="flex flex-col items-center text-center gap-0.5">
-            <p className="text-[8px] font-bold text-muted-foreground/60 uppercase tracking-widest leading-none">Développé par</p>
+            <p className="text-[8px] font-bold text-muted-foreground/60 uppercase tracking-widest leading-none">{'Developpe par'}</p>
             <p className="text-[11px] font-black text-foreground tracking-tight">DLG Caverne Consortium</p>
           </div>
 
@@ -123,7 +129,7 @@ export default function LoginPage() {
           </div>
           
           <p className="text-[7px] font-black text-muted-foreground/30 uppercase tracking-[0.4em] pt-1">
-            © {new Date().getFullYear()} BizBook Edition
+            {'© '}{new Date().getFullYear()}{' BizBook Edition'}
           </p>
         </footer>
       </div>
