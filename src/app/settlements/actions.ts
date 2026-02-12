@@ -9,7 +9,7 @@ import type { Invoice, Payment, PaymentHistoryItem } from '@/lib/types';
 import { randomUUID } from 'crypto';
 import { db } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { ROLES } from '@/lib/constants';
+import { ROLES, PAYMENT_METHODS } from '@/lib/constants';
 
 export async function getUnpaidInvoicesForClient(clientId: string): Promise<Invoice[]> {
   const allInvoices = await getInvoices();
@@ -22,7 +22,6 @@ export async function getUnpaidInvoicesForClient(clientId: string): Promise<Invo
 
 export async function getPaymentHistoryForClient(clientId: string): Promise<PaymentHistoryItem[]> {
   const allInvoices = await getInvoices();
-  // Handle cases where `payments` might not be an array on older documents.
   const clientInvoices = allInvoices.filter(inv => inv.clientId === clientId && Array.isArray(inv.payments) && inv.payments.length > 0);
 
   const paymentHistory: PaymentHistoryItem[] = [];
@@ -37,7 +36,6 @@ export async function getPaymentHistoryForClient(clientId: string): Promise<Paym
     });
   });
 
-  // Sort by payment date, most recent first
   return paymentHistory.sort((a, b) => new Date(b.payment.date).getTime() - new Date(a.payment.date).getTime());
 }
 
@@ -47,7 +45,7 @@ const settlementPayloadSchema = z.object({
   invoiceIds: z.array(z.string()).min(1, "Au moins une facture doit être sélectionnée."),
   paymentAmount: z.coerce.number().positive("Le montant du paiement doit être positif."),
   paymentDate: z.date(),
-  paymentMethod: z.enum(['Espèces', 'Virement bancaire', 'Chèque', 'Autre']),
+  paymentMethod: z.enum([PAYMENT_METHODS.CASH, PAYMENT_METHODS.TRANSFER, PAYMENT_METHODS.CHECK, PAYMENT_METHODS.OTHER]),
   paymentNotes: z.string().optional(),
 });
 
@@ -72,7 +70,6 @@ export async function processMultipleInvoicePayments(payload: SettlementPayload)
     }
     const batch = db.batch();
     
-    // Fetch and verify all selected invoices
     const invoiceRefs = invoiceIds.map(id => db.collection('invoices').doc(id));
     const invoiceDocs = await db.getAll(...invoiceRefs);
     
@@ -94,7 +91,7 @@ export async function processMultipleInvoicePayments(payload: SettlementPayload)
         return sum + (netToPay - (inv.amountPaid || 0));
     }, 0);
     
-    if (paymentAmount > totalDueOnSelected + 0.01) { // Add small tolerance for float issues
+    if (paymentAmount > totalDueOnSelected + 0.01) {
         return { success: false, message: `Le montant du paiement (${paymentAmount}) dépasse le total dû (${totalDueOnSelected}) des factures sélectionnées.` };
     }
 
@@ -110,7 +107,6 @@ export async function processMultipleInvoicePayments(payload: SettlementPayload)
 
         if (paymentForThisInvoice > 0) {
             const newAmountPaid = (invoice.amountPaid || 0) + paymentForThisInvoice;
-            // The status becomes 'Paid' if the total paid reaches the Net à Payer
             const newStatus: Invoice['status'] = newAmountPaid >= netToPay - 0.01 ? 'Paid' : 'Partially Paid';
             
             const newPayment: Payment = {

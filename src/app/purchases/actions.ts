@@ -246,7 +246,6 @@ export async function cancelPurchase(id: string) {
       return { success: false, message: 'Cet achat est déjà annulé.' };
     }
     
-    // Si l'achat a été reçu, on doit déduire les quantités du stock
     if (purchaseToCancel.status === 'Received' && db) {
         const batch = db.batch();
         const purchaseRef = db.collection('purchases').doc(id);

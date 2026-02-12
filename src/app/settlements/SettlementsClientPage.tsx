@@ -25,11 +25,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { PaymentHistory } from './PaymentHistory';
+import { PAYMENT_METHODS } from '@/lib/constants';
 
 const settlementSchema = z.object({
   paymentAmount: z.coerce.number().positive("Le montant doit être positif."),
   paymentDate: z.date({ required_error: "La date est requise." }),
-  paymentMethod: z.enum(['Espèces', 'Virement bancaire', 'Chèque', 'Autre'], { required_error: "La méthode est requise." }),
+  paymentMethod: z.enum([PAYMENT_METHODS.CASH, PAYMENT_METHODS.TRANSFER, PAYMENT_METHODS.CHECK, PAYMENT_METHODS.OTHER], { required_error: "La méthode est requise." }),
   paymentNotes: z.string().optional(),
 });
 
@@ -49,7 +50,7 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
     defaultValues: {
       paymentAmount: 0,
       paymentDate: new Date(),
-      paymentMethod: 'Espèces',
+      paymentMethod: PAYMENT_METHODS.CASH,
       paymentNotes: '',
     },
   });
@@ -136,7 +137,6 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
           title: "Règlement enregistré",
           description: "Le paiement a été appliqué avec succès.",
         });
-        // Refetch invoices and history for the client
         startFetchingInvoices(async () => {
             const [unpaidInvoices, history] = await Promise.all([
                 getUnpaidInvoicesForClient(selectedClient.id),
@@ -148,7 +148,7 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
             form.reset({
                 paymentAmount: 0,
                 paymentDate: new Date(),
-                paymentMethod: 'Espèces',
+                paymentMethod: PAYMENT_METHODS.CASH,
                 paymentNotes: '',
             });
         });
@@ -214,7 +214,6 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
                     </div>
                 </CardHeader>
                 <CardContent>
-                    {/* Mobile View */}
                     <div className="md:hidden">
                         <div className="flex items-center justify-end px-1 pb-2">
                             <Button variant="link" size="sm" onClick={handleSelectAll} disabled={invoices.length === 0} className="font-bold">
@@ -255,7 +254,6 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
                         </div>
                     </div>
 
-                    {/* Desktop View */}
                     <div className="hidden md:block border rounded-xl bg-white/40 backdrop-blur-sm max-h-[500px] overflow-auto custom-scrollbar shadow-inner">
                     <Table>
                         <TableHeader className="sticky top-0 bg-amber-500/10 z-10">
@@ -374,10 +372,10 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        <SelectItem value="Espèces" className="font-medium">Espèces</SelectItem>
-                                        <SelectItem value="Virement bancaire" className="font-medium">Virement bancaire</SelectItem>
-                                        <SelectItem value="Chèque" className="font-medium">Chèque</SelectItem>
-                                        <SelectItem value="Autre" className="font-medium">Autre</SelectItem>
+                                        <SelectItem value={PAYMENT_METHODS.CASH} className="font-medium">Espèces</SelectItem>
+                                        <SelectItem value={PAYMENT_METHODS.TRANSFER} className="font-medium">Virement bancaire</SelectItem>
+                                        <SelectItem value={PAYMENT_METHODS.CHECK} className="font-medium">Chèque</SelectItem>
+                                        <SelectItem value={PAYMENT_METHODS.OTHER} className="font-medium">Autre</SelectItem>
                                     </SelectContent>
                                     </Select>
                                     <FormMessage />

@@ -76,9 +76,9 @@ export const CLIENT_ORDER_STATUS_TRANSLATIONS: { [key in ClientOrderStatus]: str
 
 
 export const PAYMENT_METHODS = {
-  CASH: 'Espèces',
+  CASH: 'Especes',
   TRANSFER: 'Virement bancaire',
-  CHECK: 'Chèque',
+  CHECK: 'Cheque',
   OTHER: 'Autre',
 } as const;
 
