@@ -1,4 +1,3 @@
-
 import { db } from './firebase-admin';
 import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, UserWithPassword, ClientOrder } from './types';
 
