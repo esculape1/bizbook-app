@@ -1,4 +1,3 @@
-
 import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
@@ -8,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Pilotez votre entreprise avec une simplicité déconcertante',
     start_url: '/',
     display: 'standalone',
-    background_color: '#ffffff',
-    theme_color: '#2563eb',
+    background_color: '#F0EDF7',
+    theme_color: '#947BD3',
     icons: [
       {
         src: '/icon',

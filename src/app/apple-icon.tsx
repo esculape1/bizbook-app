@@ -1,28 +1,22 @@
+
 import { ImageResponse } from 'next/og';
 
-// Configuration du segment de route
 export const runtime = 'edge';
-
-// Métadonnées de l'image pour mobile (Apple recommande 180x180)
-export const size = {
-  width: 180,
-  height: 180,
-};
+export const size = { width: 180, height: 180 };
 export const contentType = 'image/png';
 
-// Génération de l'icône haute résolution pour mobile
 export default function Icon() {
   return new ImageResponse(
     (
       <div
         style={{
-          background: '#2563eb', // Couleur primaire de BizBook
+          background: '#2563eb',
           width: '100%',
           height: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          borderRadius: '40px', // Bordures plus arrondies pour mobile
+          borderRadius: '40px',
         }}
       >
         <svg
@@ -42,8 +36,6 @@ export default function Icon() {
         </svg>
       </div>
     ),
-    {
-      ...size,
-    }
+    { ...size }
   );
 }

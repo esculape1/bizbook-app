@@ -13,15 +13,6 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'BizBook',
   description: 'Gestion commerciale simplifiée',
-  manifest: '/manifest',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'BizBook',
-  },
-  formatDetection: {
-    telephone: false,
-  },
 };
 
 export const viewport: Viewport = {

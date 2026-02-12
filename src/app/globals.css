@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
+    --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -20,19 +20,13 @@
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --success: 142 71% 45%;
-    --success-foreground: 210 40% 98%;
-    --warning: 45 93% 47%;
-    --warning-foreground: 45 100% 2%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    --border: 214.3 32% 91.4%;
+    --input: 214.3 32% 91.4%;
     --ring: 221.2 83.2% 53.3%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 221 83% 53%;
-    --chart-3: 160 60% 45%;
-    --chart-4: 48 96% 53%;
-    --chart-5: 310 67% 56%;
-    --radius: 1rem;
+    --radius: 0.5rem;
+    
+    --success: 142 71% 45%;
+    --warning: 38 92% 50%;
   }
   .dark {
     --background: 222.2 84% 4.9%;
@@ -51,13 +45,9 @@
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --success: 142 61% 65%;
-    --success-foreground: 210 40% 98%;
-    --warning: 45 83% 67%;
-    --warning-foreground: 45 100% 2%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 217.2 91.2% 59.8%;
+    --ring: 224.3 76.3% 48%;
   }
 
   * {
@@ -67,6 +57,7 @@
   body {
     @apply text-foreground antialiased;
     background-color: hsl(var(--background));
+    font-family: 'Inter', sans-serif;
   }
 }
 
@@ -77,11 +68,16 @@
   .glass-card {
     @apply bg-white/80 backdrop-blur-md border-white/20;
   }
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
   }
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-primary/20 rounded-full;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary/40;
   }
 }

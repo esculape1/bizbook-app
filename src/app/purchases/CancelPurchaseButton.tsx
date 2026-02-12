@@ -30,7 +30,7 @@ export function CancelPurchaseButton({ id, purchaseNumber, purchaseStatus, userR
       if (result?.success) {
         toast({
           title: "Achat annulé",
-          description: `L'achat ${purchaseNumber} a été annulé avec succès.`,
+          description: `L'achat ${purchaseNumber} a été annulé avec succès. Le stock a été mis à jour si nécessaire.`,
         });
       } else {
         toast({
@@ -55,7 +55,8 @@ export function CancelPurchaseButton({ id, purchaseNumber, purchaseStatus, userR
         <AlertDialogHeader>
           <AlertDialogTitle>Êtes-vous sûr de vouloir annuler cet achat ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Cette action est irréversible. L'achat "{purchaseNumber}" sera marqué comme annulé. Les administrateurs peuvent annuler un achat même s'il a été réceptionné, mais cette action ne modifiera pas le stock.
+            Cette action est irréversible. L'achat "{purchaseNumber}" sera marqué comme annulé. 
+            {purchaseStatus === 'Received' ? " Comme cet achat a déjà été réceptionné, les quantités seront déduites de votre stock actuel." : " Cet achat n'ayant pas été réceptionné, le stock ne sera pas impacté."}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

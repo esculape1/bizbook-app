@@ -1,0 +1,141 @@
+
+{
+  "entities": {
+    "Client": {
+      "title": "Client",
+      "description": "Un client de l'entreprise",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "ifu": { "type": "string" },
+        "rccm": { "type": "string" },
+        "taxRegime": { "type": "string" },
+        "registrationDate": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["Active", "Inactive"] }
+      },
+      "required": ["name", "registrationDate", "status"]
+    },
+    "Supplier": {
+      "title": "Fournisseur",
+      "description": "Un fournisseur de marchandises",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "contactPerson": { "type": "string" },
+        "registrationDate": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "registrationDate"]
+    },
+    "Product": {
+      "title": "Produit",
+      "description": "Un produit ou service vendu par l'entreprise",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "reference": { "type": "string" },
+        "category": { "type": "string" },
+        "purchasePrice": { "type": "number" },
+        "unitPrice": { "type": "number" },
+        "quantityInStock": { "type": "number" },
+        "reorderPoint": { "type": "number" },
+        "safetyStock": { "type": "number" }
+      },
+      "required": ["name", "reference", "unitPrice", "quantityInStock"]
+    },
+    "Invoice": {
+      "title": "Facture",
+      "description": "Une facture de vente",
+      "type": "object",
+      "properties": {
+        "invoiceNumber": { "type": "string" },
+        "clientId": { "type": "string" },
+        "clientName": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "dueDate": { "type": "string", "format": "date-time" },
+        "subTotal": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "amountPaid": { "type": "number" },
+        "status": { "type": "string", "enum": ["Paid", "Unpaid", "Partially Paid", "Cancelled"] }
+      },
+      "required": ["invoiceNumber", "clientId", "date", "totalAmount", "status"]
+    },
+    "Expense": {
+      "title": "Dépense",
+      "description": "Une dépense d'exploitation",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date-time" },
+        "description": { "type": "string" },
+        "amount": { "type": "number" },
+        "category": { "type": "string" }
+      },
+      "required": ["date", "description", "amount", "category"]
+    },
+    "ClientOrder": {
+      "title": "Commande Client",
+      "description": "Une commande passée par un client via le portail",
+      "type": "object",
+      "properties": {
+        "orderNumber": { "type": "string" },
+        "clientId": { "type": "string" },
+        "clientName": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "items": { "type": "array", "items": { "$ref": "#/entities/ClientOrderItem" } },
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string", "enum": ["Pending", "Processed", "Cancelled"] }
+      },
+      "required": ["orderNumber", "clientId", "date", "items", "totalAmount", "status"]
+    },
+    "ClientOrderItem": {
+      "title": "Article de Commande",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string" },
+        "productName": { "type": "string" },
+        "reference": { "type": "string" },
+        "quantity": { "type": "number" },
+        "unitPrice": { "type": "number" },
+        "total": { "type": "number" }
+      }
+    }
+  },
+  "auth": {
+    "providers": ["password"]
+  },
+  "firestore": {
+    "/clients/{clientId}": {
+      "schema": { "$ref": "#/entities/Client" },
+      "description": "Données des clients"
+    },
+    "/suppliers/{supplierId}": {
+      "schema": { "$ref": "#/entities/Supplier" },
+      "description": "Données des fournisseurs"
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Inventaire des produits"
+    },
+    "/invoices/{invoiceId}": {
+      "schema": { "$ref": "#/entities/Invoice" },
+      "description": "Factures de vente"
+    },
+    "/expenses/{expenseId}": {
+      "schema": { "$ref": "#/entities/Expense" },
+      "description": "Suivi des dépenses"
+    },
+    "/clientOrders/{orderId}": {
+      "schema": { "$ref": "#/entities/ClientOrder" },
+      "description": "Commandes passées par les clients"
+    },
+    "/settings/global": {
+      "schema": { "type": "object" },
+      "description": "Paramètres globaux de l'application"
+    }
+  }
+}

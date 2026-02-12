@@ -1,23 +1,16 @@
+
 import { ImageResponse } from 'next/og';
 
-// Configuration du segment de route
 export const runtime = 'edge';
-
-// Métadonnées de l'image
-export const size = {
-  width: 32,
-  height: 32,
-};
+export const size = { width: 32, height: 32 };
 export const contentType = 'image/png';
 
-// Génération de l'icône
 export default function Icon() {
   return new ImageResponse(
     (
-      // Élément JSX pour ImageResponse
       <div
         style={{
-          background: '#2563eb', // Couleur primaire (blue-600 approx.)
+          background: '#2563eb',
           width: '100%',
           height: '100%',
           display: 'flex',
@@ -43,8 +36,6 @@ export default function Icon() {
         </svg>
       </div>
     ),
-    {
-      ...size,
-    }
+    { ...size }
   );
 }

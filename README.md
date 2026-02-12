@@ -4,58 +4,17 @@ Oubliez la complexité des feuilles de calcul et les logiciels de gestion archa�
 
 ---
 
-### **I. Le Tableau de Bord : Votre Vision 360° en un Coup d'Œil**
+### **I. Fonctionnalités Clés**
 
-Dès que vous vous connectez, BizBook vous accueille avec un tableau de bord intelligent qui transforme vos données brutes en informations capitales. C'est votre centre de contrôle, vous donnant une vue claire et instantanée de la santé de votre activité.
-
-*   **Indicateurs Clés de Performance (KPIs) :**
-    *   **Chiffre d'affaires :** Suivez ce que vous encaissez réellement.
-    *   **Total Dépenses :** Maîtrisez vos coûts pour maximiser votre rentabilité.
-    *   **Clients Actifs :** Visualisez la croissance de votre clientèle.
-    *   **Produits Uniques :** Connaissez l'étendue de votre catalogue.
-    *   **Montant Impayé :** Gardez un œil vigilant sur les créances clients.
+*   **Tableau de Bord Intelligent :** Vision 360° de votre CA, dépenses, et impayés.
+*   **Gestion Commerciale :** Clients, Devis (Proforma), Factures et Commandes.
+*   **Approvisionnements :** Suivi des fournisseurs, achats et stocks.
+*   **Trésorerie :** Enregistrement des règlements et suivi des dépenses mensuelles.
+*   **Rapports :** Analyse de rentabilité et rapports d'inventaire.
 
 ---
 
-### **II. Un Menu Complet pour une Gestion sans Faille**
-
-Chaque aspect de votre gestion commerciale a sa place dans une navigation logique et épurée.
-
-*   **Clients & Fournisseurs :** Centralisez vos contacts et suivez l'historique de vos échanges.
-*   **Achats & Stocks :** Automatisation de la mise à jour des stocks lors de la réception des commandes fournisseurs.
-*   **Ventes & Proforma :** Créez des devis professionnels et transformez-les en factures en un clic.
-*   **Règlements & Dépenses :** Suivi rigoureux des flux de trésorerie pour une rentabilité maîtrisée.
-*   **Rapports :** Analyse détaillée de l'activité, rapports d'inventaire et bénéfices nets.
-
----
-
-### **III. Vision 2.0 : Vers la Commercialisation (Roadmap)**
-
-BizBook évolue pour devenir une plateforme SaaS (Software as a Service) permettant à des milliers d'entreprises de gérer leur activité de manière autonome.
-
-#### **1. Architecture Multi-Entreprises (Multi-tenancy)**
-*   Isolation totale des données par entreprise via un identifiant unique (`tenantId`).
-*   Système d'inscription autonome pour les nouveaux entrepreneurs.
-
-#### **2. Solutions de Facturation pour le Burkina Faso**
-Pour lever la limite du plan gratuit sans carte Visa fonctionnelle :
-*   **Revendeurs Google Cloud (Recommandé) :** Ces entreprises paient Google pour vous et vous facturent en **FCFA**. 
-    *   **Orange Business Services :** Partenaire majeur, contactez votre agence Orange locale.
-    *   **Devoteam G Cloud :** Expert en Afrique Francophone (Sénégal/Côte d'Ivoire/Mali).
-    *   **Digicloud Africa :** Distributeur pour toute l'Afrique.
-*   **Cartes Virtuelles Fintech :** Utilisation de **Chipper Cash**, **Pyypl** ou **Flutterwave** pour générer des cartes virtuelles acceptées internationalement.
-
-#### **3. Monétisation & Abonnements**
-*   Intégration de passerelles de paiement locales (CinetPay ou FedaPay).
-*   Support du **Mobile Money** (Orange Money, Moov Money) pour les abonnements.
-
-#### **4. Intelligence Artificielle (Genkit)**
-*   Assistant intelligent pour prédire les ruptures de stock.
-*   Analyse automatique des dépenses par scan de reçus.
-
----
-
-### **IV. Support & Développement**
-Développé avec passion par **DLG Caverne Consortium**.
+### **II. Support & Développement**
+Développé par **DLG Caverne Consortium**.
 Contact : dlgbiomed@gmail.com | +226 25 46 55 12
 Ouagadougou, Burkina Faso

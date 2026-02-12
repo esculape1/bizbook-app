@@ -96,7 +96,6 @@ export async function createPurchase(formData: unknown) {
   }
 }
 
-// Internal update function without status change logic
 async function performPurchaseUpdate(id: string, purchaseData: Partial<Omit<Purchase, 'id'>>) {
     if (!db) throw new Error("La connexion à la base de données a échoué.");
     await updatePurchaseInDB(id, purchaseData);
@@ -108,12 +107,10 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
     return { message: "Action non autorisée." };
   }
 
-  // Schema for editing doesn't include status
   const editPurchaseSchema = purchaseSchema.extend({});
   const validatedFields = editPurchaseSchema.safeParse(formData);
 
   if (!validatedFields.success) {
-    console.log(validatedFields.error.flatten().fieldErrors);
     return { message: 'Champs invalides. Impossible de mettre à jour l\'achat.' };
   }
   
@@ -249,7 +246,23 @@ export async function cancelPurchase(id: string) {
       return { success: false, message: 'Cet achat est déjà annulé.' };
     }
     
-    await updatePurchaseInDB(id, { status: 'Cancelled' });
+    // Si l'achat a été reçu, on doit déduire les quantités du stock
+    if (purchaseToCancel.status === 'Received' && db) {
+        const batch = db.batch();
+        const purchaseRef = db.collection('purchases').doc(id);
+        
+        for (const item of purchaseToCancel.items) {
+            const productRef = db.collection('products').doc(item.productId);
+            batch.update(productRef, {
+                quantityInStock: FieldValue.increment(-item.quantity)
+            });
+        }
+        
+        batch.update(purchaseRef, { status: 'Cancelled' });
+        await batch.commit();
+    } else {
+        await updatePurchaseInDB(id, { status: 'Cancelled' });
+    }
 
     revalidateTag('purchases');
     revalidateTag('products');
