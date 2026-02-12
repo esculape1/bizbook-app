@@ -89,9 +89,12 @@ export async function processMultipleInvoicePayments(payload: SettlementPayload)
       return { success: false, message: "Certaines factures sélectionnées sont invalides ou n'appartiennent pas au client." };
     }
     
-    const totalDueOnSelected = invoicesToSettle.reduce((sum, inv) => sum + (inv.totalAmount - (inv.amountPaid || 0)), 0);
+    const totalDueOnSelected = invoicesToSettle.reduce((sum, inv) => {
+        const netToPay = inv.netAPayer ?? inv.totalAmount;
+        return sum + (netToPay - (inv.amountPaid || 0));
+    }, 0);
     
-    if (paymentAmount > totalDueOnSelected + 0.001) { // Add tolerance for float issues
+    if (paymentAmount > totalDueOnSelected + 0.01) { // Add small tolerance for float issues
         return { success: false, message: `Le montant du paiement (${paymentAmount}) dépasse le total dû (${totalDueOnSelected}) des factures sélectionnées.` };
     }
 
@@ -101,12 +104,14 @@ export async function processMultipleInvoicePayments(payload: SettlementPayload)
         if (amountToApply <= 0) break;
 
         const invoiceRef = db.collection('invoices').doc(invoice.id);
-        const dueOnInvoice = invoice.totalAmount - (invoice.amountPaid || 0);
+        const netToPay = invoice.netAPayer ?? invoice.totalAmount;
+        const dueOnInvoice = netToPay - (invoice.amountPaid || 0);
         const paymentForThisInvoice = Math.min(amountToApply, dueOnInvoice);
 
         if (paymentForThisInvoice > 0) {
             const newAmountPaid = (invoice.amountPaid || 0) + paymentForThisInvoice;
-            const newStatus: Invoice['status'] = newAmountPaid >= invoice.totalAmount - 0.001 ? 'Paid' : 'Partially Paid';
+            // The status becomes 'Paid' if the total paid reaches the Net à Payer
+            const newStatus: Invoice['status'] = newAmountPaid >= netToPay - 0.01 ? 'Paid' : 'Partially Paid';
             
             const newPayment: Payment = {
                 id: randomUUID(),
@@ -130,7 +135,7 @@ export async function processMultipleInvoicePayments(payload: SettlementPayload)
 
     revalidateTag('invoices');
     revalidateTag('dashboard-stats');
-    revalidateTag('settlements'); // Revalidate this page too
+    revalidateTag('settlements');
 
     return { success: true };
 

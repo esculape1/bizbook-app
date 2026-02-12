@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useTransition, useEffect, useMemo } from 'react';
@@ -77,7 +78,8 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
     let totalDueOnSelected = 0;
     let totalDueForAll = 0;
     invoices.forEach(inv => {
-      const due = inv.totalAmount - inv.amountPaid;
+      const netToPay = inv.netAPayer ?? inv.totalAmount;
+      const due = netToPay - (inv.amountPaid || 0);
       totalDueForAll += due;
       if (selectedInvoiceIds.has(inv.id)) {
         totalDueOnSelected += due;
@@ -105,7 +107,7 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
   };
 
   const handleSelectAll = () => {
-    if (selectedInvoiceIds.size === invoices.length) {
+    if (selectedInvoiceIds.size === invoices.length && invoices.length > 0) {
       setSelectedInvoiceIds(new Set());
     } else {
       setSelectedInvoiceIds(new Set(invoices.map(inv => inv.id)));
@@ -221,7 +223,8 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
                         </div>
                         <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
                         {invoices.length > 0 ? invoices.map(invoice => {
-                            const due = invoice.totalAmount - invoice.amountPaid;
+                            const netToPay = invoice.netAPayer ?? invoice.totalAmount;
+                            const due = netToPay - (invoice.amountPaid || 0);
                             const isSelected = selectedInvoiceIds.has(invoice.id);
                             return (
                             <div 
@@ -272,7 +275,8 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
                         </TableHeader>
                         <TableBody>
                         {invoices.length > 0 ? invoices.map(invoice => {
-                            const due = invoice.totalAmount - invoice.amountPaid;
+                            const netToPay = invoice.netAPayer ?? invoice.totalAmount;
+                            const due = netToPay - (invoice.amountPaid || 0);
                             const isSelected = selectedInvoiceIds.has(invoice.id);
                             return (
                             <TableRow 

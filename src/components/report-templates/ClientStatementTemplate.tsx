@@ -16,10 +16,10 @@ export function ClientStatementTemplate({ data, client, settings }: { data: Repo
   const startDate = parseISO(data.startDate);
   const endDate = parseISO(data.endDate);
 
-  
-  const totalInvoiced = data.allInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
-  const totalPaid = data.allInvoices.reduce((sum, inv) => sum + inv.amountPaid, 0);
-  const balanceDue = totalInvoiced - totalPaid;
+  // Focus on Net à Payer for all client debt calculations
+  const totalInvoicedNet = data.allInvoices.reduce((sum, inv) => sum + (inv.netAPayer ?? inv.totalAmount), 0);
+  const totalPaid = data.allInvoices.reduce((sum, inv) => sum + (inv.amountPaid || 0), 0);
+  const balanceDue = totalInvoicedNet - totalPaid;
 
   return (
     <>
@@ -53,60 +53,75 @@ export function ClientStatementTemplate({ data, client, settings }: { data: Repo
             <p className="text-xs">Tél: {settings.companyPhone}</p>
           </div>
           <div className="text-right">
-            <h1 className="text-2xl font-bold">Relevé de Compte</h1>
+            <h1 className="text-2xl font-bold">Relevé de Compte Client</h1>
             <p className="text-sm">Date: {format(reportDate, 'd MMMM yyyy', { locale: fr })}</p>
             <p className="text-sm">Période du {format(startDate, 'dd/MM/yy')} au {format(endDate, 'dd/MM/yy')}</p>
           </div>
         </header>
 
         <div className="mb-8 p-4 bg-gray-100 rounded-md">
-            <h3 className="font-bold text-lg">Client</h3>
-            <p className="font-semibold">{client.name}</p>
-            <p>{client.address}</p>
-            <p>Tel: {client.phone}</p>
-            <p>IFU: {client.ifu}</p>
+            <h3 className="font-bold text-lg">Détails du Client</h3>
+            <p className="font-semibold uppercase">{client.name}</p>
+            <p className="text-xs mt-1">{client.address || 'Pas d\'adresse spécifiée'}</p>
+            <p className="text-xs">Tel: {client.phone || 'N/A'}</p>
+            {client.ifu && <p className="text-xs">IFU: {client.ifu}</p>}
         </div>
 
         <main>
           <table className="w-full text-left border-collapse text-sm">
             <thead className="bg-gray-200">
               <tr>
-                <th className="p-2 border font-semibold">Date Facture</th>
-                <th className="p-2 border font-semibold">N° Facture</th>
-                <th className="p-2 border font-semibold">Montant Total</th>
-                <th className="p-2 border font-semibold">Montant Payé</th>
-                <th className="p-2 border font-semibold">Solde Dû</th>
+                <th className="p-2 border font-bold uppercase text-[9px]">Date</th>
+                <th className="p-2 border font-bold uppercase text-[9px]">N° Facture</th>
+                <th className="p-2 border font-bold uppercase text-[9px] text-right">Net à Payer</th>
+                <th className="p-2 border font-bold uppercase text-[9px] text-right">Montant Payé</th>
+                <th className="p-2 border font-bold uppercase text-[9px] text-right">Solde Restant</th>
               </tr>
             </thead>
             <tbody>
-              {data.allInvoices.map(invoice => (
-                <tr key={invoice.id}>
-                  <td className="p-2 border">{format(new Date(invoice.date), 'dd/MM/yyyy')}</td>
-                  <td className="p-2 border">{invoice.invoiceNumber}</td>
-                  <td className="p-2 border text-right">{formatCurrency(invoice.totalAmount, settings.currency)}</td>
-                  <td className="p-2 border text-right">{formatCurrency(invoice.amountPaid, settings.currency)}</td>
-                  <td className="p-2 border text-right font-medium">{formatCurrency(invoice.totalAmount - invoice.amountPaid, settings.currency)}</td>
-                </tr>
-              ))}
+              {data.allInvoices.map(invoice => {
+                const netToPay = invoice.netAPayer ?? invoice.totalAmount;
+                const due = netToPay - (invoice.amountPaid || 0);
+                return (
+                  <tr key={invoice.id} className={invoice.status === 'Cancelled' ? 'opacity-50 line-through' : ''}>
+                    <td className="p-2 border text-xs">{format(new Date(invoice.date), 'dd/MM/yyyy')}</td>
+                    <td className="p-2 border text-xs font-semibold">{invoice.invoiceNumber}</td>
+                    <td className="p-2 border text-right text-xs">{formatCurrency(netToPay, settings.currency)}</td>
+                    <td className="p-2 border text-right text-xs">{formatCurrency(invoice.amountPaid || 0, settings.currency)}</td>
+                    <td className="p-2 border text-right text-xs font-bold">{formatCurrency(due > 0.01 ? due : 0, settings.currency)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
             <tfoot>
-              <tr className="bg-gray-200 font-bold">
-                <td className="p-2 border text-right" colSpan={2}>Totaux</td>
-                <td className="p-2 border text-right">{formatCurrency(totalInvoiced, settings.currency)}</td>
-                <td className="p-2 border text-right">{formatCurrency(totalPaid, settings.currency)}</td>
-                <td className="p-2 border text-right">{formatCurrency(balanceDue, settings.currency)}</td>
+              <tr className="bg-gray-100 font-black">
+                <td className="p-2 border text-right uppercase text-[9px]" colSpan={2}>Totaux de la Période</td>
+                <td className="p-2 border text-right text-xs">{formatCurrency(totalInvoicedNet, settings.currency)}</td>
+                <td className="p-2 border text-right text-xs">{formatCurrency(totalPaid, settings.currency)}</td>
+                <td className="p-2 border text-right text-xs text-destructive">{formatCurrency(balanceDue > 0.01 ? balanceDue : 0, settings.currency)}</td>
               </tr>
             </tfoot>
           </table>
         </main>
         
-        <div className="mt-8 p-4 text-center bg-gray-800 text-white rounded-md">
-            <p className="font-bold text-lg">Solde Total Dû</p>
-            <p className="font-bold text-2xl">{formatCurrency(balanceDue, settings.currency)}</p>
+        <div className="mt-8 p-6 text-center border-2 border-black rounded-xl">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1">Position Nette du Compte</p>
+            <p className="font-black text-3xl">{formatCurrency(balanceDue > 0.01 ? balanceDue : 0, settings.currency)}</p>
+            <p className="text-[10px] text-muted-foreground mt-2 italic">
+                {balanceDue > 0.01 ? 'Le solde ci-dessus est en attente de règlement.' : 'Le compte est actuellement soldé.'}
+            </p>
         </div>
 
-        <footer className="text-center text-xs text-gray-500 mt-12 pt-4 border-t">
-          Merci pour votre confiance.
+        <footer className="mt-12 pt-4 border-t flex justify-between items-start">
+            <div className="text-xs text-gray-500">
+                <p>Arrêté le présent relevé à la date du {format(reportDate, 'dd/MM/yyyy')}</p>
+                <p className="mt-4 italic">Document généré par BizBook Management Suite</p>
+            </div>
+            <div className="text-center w-1/3">
+                <p className="text-xs font-bold uppercase underline">La Gérance</p>
+                <div className="mt-16 border-b border-gray-300"></div>
+                <p className="text-[10px] mt-1">{settings.managerName}</p>
+            </div>
         </footer>
       </div>
     </>

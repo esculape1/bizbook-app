@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -79,7 +80,8 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
                 {filteredInvoices.map((invoice, index) => {
                 const client = initialClients.find(c => c.id === invoice.clientId);
-                const amountDue = invoice.totalAmount - (invoice.amountPaid || 0);
+                const netToPay = invoice.netAPayer ?? invoice.totalAmount;
+                const amountDue = netToPay - (invoice.amountPaid || 0);
                 const isLocked = invoice.status === 'Cancelled' || invoice.status === 'Paid';
                 const cardColorClass = invoice.status === 'Cancelled' ? 'bg-muted/50 text-muted-foreground' : cardColors[index % cardColors.length];
                 
@@ -104,12 +106,12 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                             <p className="flex items-center gap-2"><Calendar className="size-3 opacity-70" /> {new Date(invoice.date).toLocaleDateString('fr-FR')}</p>
                             <Separator className="my-2 opacity-20" />
                             <div className="flex justify-between items-center text-sm pt-1">
-                                <span className="font-bold opacity-70">TOTAL:</span>
-                                <span className="font-black text-lg">{formatCurrency(invoice.totalAmount, initialSettings.currency)}</span>
+                                <span className="font-bold opacity-70">TOTAL NET:</span>
+                                <span className="font-black text-lg">{formatCurrency(netToPay, initialSettings.currency)}</span>
                             </div>
                             <div className="flex justify-between items-center text-xs">
                                 <span className="text-destructive font-bold">RESTE À PAYER:</span>
-                                <span className="font-bold text-destructive">{formatCurrency(amountDue > 0 ? amountDue : 0, initialSettings.currency)}</span>
+                                <span className="font-bold text-destructive">{formatCurrency(amountDue > 0.01 ? amountDue : 0, initialSettings.currency)}</span>
                             </div>
                         </CardContent>
                         {client && canManageInvoices && (
@@ -159,13 +161,13 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                                         <TableHead className="text-right py-4">
                                             <div className="flex items-center justify-end gap-2 text-primary font-black uppercase text-[11px] tracking-widest">
                                                 <DollarSign className="size-4" />
-                                                Total
+                                                Net à Payer
                                             </div>
                                         </TableHead>
                                         <TableHead className="text-right py-4">
                                             <div className="flex items-center justify-end gap-2 text-primary font-black uppercase text-[11px] tracking-widest">
                                                 <DollarSign className="size-4" />
-                                                Dû
+                                                Solde Dû
                                             </div>
                                         </TableHead>
                                         {canManageInvoices && (
@@ -181,7 +183,8 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                                 <TableBody>
                                     {filteredInvoices.map((invoice) => {
                                         const client = initialClients.find(c => c.id === invoice.clientId);
-                                        const amountDue = invoice.totalAmount - (invoice.amountPaid || 0);
+                                        const netToPay = invoice.netAPayer ?? invoice.totalAmount;
+                                        const amountDue = netToPay - (invoice.amountPaid || 0);
                                         const isLocked = invoice.status === 'Cancelled' || invoice.status === 'Paid';
                                         return (
                                             <TableRow key={invoice.id} className={cn(
@@ -204,8 +207,8 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                                                         {INVOICE_STATUS_TRANSLATIONS[invoice.status] || invoice.status}
                                                     </Badge>
                                                 </TableCell>
-                                                <TableCell className="text-right font-black">{formatCurrency(invoice.totalAmount, initialSettings.currency)}</TableCell>
-                                                <TableCell className="text-right font-black text-destructive">{formatCurrency(amountDue > 0 ? amountDue : 0, initialSettings.currency)}</TableCell>
+                                                <TableCell className="text-right font-black">{formatCurrency(netToPay, initialSettings.currency)}</TableCell>
+                                                <TableCell className="text-right font-black text-destructive">{formatCurrency(amountDue > 0.01 ? amountDue : 0, initialSettings.currency)}</TableCell>
                                                 {canManageInvoices && (
                                                     <TableCell className="text-right">
                                                         <div className="flex items-center justify-end gap-1">
