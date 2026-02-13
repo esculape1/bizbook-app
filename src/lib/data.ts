@@ -1,3 +1,4 @@
+
 import { db } from './firebase-admin';
 import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, UserWithPassword, ClientOrder } from './types';
 
@@ -139,9 +140,13 @@ export async function deleteQuote(id: string) {
   await db.collection('quotes').doc(id).delete();
 }
 
-export async function getInvoices(): Promise<Invoice[]> {
+export async function getInvoices(startDate?: string): Promise<Invoice[]> {
   if (!db) return [];
-  const snap = await db.collection('invoices').orderBy('date', 'desc').get();
+  let query = db.collection('invoices').orderBy('date', 'desc');
+  if (startDate) {
+    query = query.where('date', '>=', startDate);
+  }
+  const snap = await query.get();
   return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Invoice));
 }
 
@@ -217,9 +222,13 @@ export async function getPurchaseById(id: string): Promise<Purchase | null> {
   return { id: doc.id, ...doc.data() } as Purchase;
 }
 
-export async function getExpenses(): Promise<Expense[]> {
+export async function getExpenses(startDate?: string): Promise<Expense[]> {
   if (!db) return [];
-  const snap = await db.collection('expenses').orderBy('date', 'desc').get();
+  let query = db.collection('expenses').orderBy('date', 'desc');
+  if (startDate) {
+    query = query.where('date', '>=', startDate);
+  }
+  const snap = await query.get();
   return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
 }
 
@@ -288,60 +297,65 @@ export async function updateSettings(data: Partial<Settings>) {
   await db.collection('settings').doc('global').set(data, { merge: true });
 }
 
+/**
+ * Calcule les statistiques du tableau de bord à partir de données déjà chargées
+ * pour éviter les lectures Firestore inutiles.
+ */
+export function calculateDashboardStats(
+  invoices: Invoice[], 
+  expenses: Expense[], 
+  clients: Client[], 
+  products: Product[],
+  fiscalYearStartDate: string
+) {
+  const invoicesForFiscalYear = invoices.filter(inv => 
+    inv.date >= fiscalYearStartDate && inv.status !== 'Cancelled'
+  );
+
+  const expensesForFiscalYear = expenses.filter(exp => 
+    exp.date >= fiscalYearStartDate
+  );
+
+  const totalRevenue = invoicesForFiscalYear.reduce((sum, i) => sum + (i.netAPayer ?? i.totalAmount), 0);
+  const totalExpenses = expensesForFiscalYear.reduce((sum, e) => sum + e.amount, 0);
+
+  const activeInvoices = invoices.filter(i => i.status !== 'Cancelled');
+  const totalDue = activeInvoices.reduce((sum, i) => sum + ((i.netAPayer ?? i.totalAmount) - (i.amountPaid || 0)), 0);
+  const unpaidInvoicesCount = activeInvoices.filter(i => i.status === 'Unpaid' || i.status === 'Partially Paid').length;
+
+  return {
+    totalRevenue,
+    totalDue,
+    unpaidInvoicesCount,
+    totalExpenses,
+    totalClients: clients.length,
+    activeClients: clients.filter(c => c.status === 'Active').length,
+    productCount: products.length,
+  };
+}
+
+// Fonction legacy maintenue pour compatibilité mais optimisée
 export async function getDashboardStats() {
-  if (!db) return { totalRevenue: 0, totalDue: 0, unpaidInvoicesCount: 0, totalExpenses: 0, totalClients: 0, activeClients: 0, productCount: 0 };
+  if (!db) return null;
   
-  try {
-    const [invoices, expenses, clients, products] = await Promise.all([
-      getInvoices(),
-      getExpenses(),
-      getClients(),
-      getProducts()
-    ]);
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  let fiscalYearStartDate: Date;
 
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    let fiscalYearStartDate: Date;
-
-    // Logique de l'exercice : commence le 25 décembre de l'année précédente
-    if (now.getMonth() < 11 || (now.getMonth() === 11 && now.getDate() < 25)) {
-      fiscalYearStartDate = new Date(currentYear - 1, 11, 25, 0, 0, 0, 0);
-    } else {
-      fiscalYearStartDate = new Date(currentYear, 11, 25, 0, 0, 0, 0);
-    }
-
-    const invoicesForFiscalYear = invoices.filter(inv => {
-        const invDate = new Date(inv.date);
-        return invDate >= fiscalYearStartDate && inv.status !== 'Cancelled';
-    });
-
-    const expensesForFiscalYear = expenses.filter(exp => {
-        const expDate = new Date(exp.date);
-        return expDate >= fiscalYearStartDate;
-    });
-
-    // CA Net (après retenue) pour l'exercice en cours
-    const totalRevenue = invoicesForFiscalYear.reduce((sum, i) => sum + (i.netAPayer ?? i.totalAmount), 0);
-    
-    // Dépenses pour l'exercice en cours
-    const totalExpenses = expensesForFiscalYear.reduce((sum, e) => sum + e.amount, 0);
-
-    // Dettes globales (indépendamment de l'exercice pour le recouvrement)
-    const activeInvoices = invoices.filter(i => i.status !== 'Cancelled');
-    const totalDue = activeInvoices.reduce((sum, i) => sum + ((i.netAPayer ?? i.totalAmount) - i.amountPaid), 0);
-    const unpaidInvoicesCount = activeInvoices.filter(i => i.status === 'Unpaid' || i.status === 'Partially Paid').length;
-
-    return {
-      totalRevenue,
-      totalDue,
-      unpaidInvoicesCount,
-      totalExpenses,
-      totalClients: clients.length,
-      activeClients: clients.filter(c => c.status === 'Active').length,
-      productCount: products.length,
-    };
-  } catch (error) {
-    console.error("Failed to fetch dashboard stats:", error);
-    return { totalRevenue: 0, totalDue: 0, unpaidInvoicesCount: 0, totalExpenses: 0, totalClients: 0, activeClients: 0, productCount: 0 };
+  if (now.getMonth() < 11 || (now.getMonth() === 11 && now.getDate() < 25)) {
+    fiscalYearStartDate = new Date(currentYear - 1, 11, 25, 0, 0, 0, 0);
+  } else {
+    fiscalYearStartDate = new Date(currentYear, 11, 25, 0, 0, 0, 0);
   }
+
+  const startDateIso = fiscalYearStartDate.toISOString();
+
+  const [invoices, expenses, clients, products] = await Promise.all([
+    getInvoices(), // Pour le recouvrement on a besoin de tout, mais on pourrait filtrer sur 'Unpaid'
+    getExpenses(startDateIso),
+    getClients(),
+    getProducts()
+  ]);
+
+  return calculateDashboardStats(invoices, expenses, clients, products, startDateIso);
 }

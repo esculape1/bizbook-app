@@ -3,7 +3,7 @@ import { StatCard } from "@/components/dashboard/StatCard";
 import { SalesChart } from "@/components/dashboard/SalesChart";
 import { LowStockTable } from "@/components/dashboard/LowStockTable";
 import { DollarSign, Users, Box, Receipt, Wallet, AlertTriangle, TrendingUp } from "lucide-react";
-import { getDashboardStats, getProducts, getInvoices, getSettings } from "@/lib/data";
+import { getProducts, getInvoices, getSettings, getExpenses, getClients, calculateDashboardStats } from "@/lib/data";
 import { formatCurrency } from "@/lib/utils";
 import { OverdueInvoicesTable } from "@/components/dashboard/OverdueInvoicesTable";
 import { DateTimeDisplay } from "@/components/dashboard/DateTimeDisplay";
@@ -14,13 +14,32 @@ export const dynamic = 'force-dynamic';
 
 async function getDashboardData() {
   try {
-    const [stats, products, invoices, settings] = await Promise.all([
-      getDashboardStats(),
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    let fiscalYearStartDate: Date;
+
+    // Calcul de la date de début d'exercice (25 Décembre)
+    if (now.getMonth() < 11 || (now.getMonth() === 11 && now.getDate() < 25)) {
+      fiscalYearStartDate = new Date(currentYear - 1, 11, 25, 0, 0, 0, 0);
+    } else {
+      fiscalYearStartDate = new Date(currentYear, 11, 25, 0, 0, 0, 0);
+    }
+
+    const startDateIso = fiscalYearStartDate.toISOString();
+
+    // On récupère tout en UNE SEULE FOIS pour économiser les lectures
+    const [invoices, expenses, clients, products, settings] = await Promise.all([
+      getInvoices(), // Besoin de tout pour les alertes de recouvrement
+      getExpenses(startDateIso), // Filtré à la source !
+      getClients(),
       getProducts(),
-      getInvoices(),
       getSettings(),
     ]);
-    return { stats, products, invoices, settings, error: null };
+
+    // Calcul des stats localement sans relire la DB
+    const stats = calculateDashboardStats(invoices, expenses, clients, products, startDateIso);
+
+    return { stats, products, invoices, settings, startDateIso, error: null };
   } catch (error: any) {
     console.error("Erreur de récupération des données du tableau de bord:", error);
     return { 
@@ -28,47 +47,39 @@ async function getDashboardData() {
       products: [], 
       invoices: [], 
       settings: null, 
+      startDateIso: '',
       error: error.message || "Une erreur inconnue est survenue." 
     };
   }
 }
 
 export default async function DashboardPage() {
-  const { stats, products, invoices, settings, error } = await getDashboardData();
+  const { stats, products, invoices, settings, startDateIso, error } = await getDashboardData();
   
   if (error || !settings || !stats) {
     return (
        <Alert variant="destructive" className="mt-10">
         <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Erreur de connexion à la base de données</AlertTitle>
+        <AlertTitle>Erreur de connexion</AlertTitle>
         <AlertDescription>
-          <p>Impossible de récupérer les données de l'application. Cela peut être dû à un problème de connexion ou à un dépassement des quotas d'utilisation de Firebase.</p>
-          <p className="mt-2 text-xs">Détail de l'erreur : {error}</p>
+          <p>Impossible de récupérer les données. Vérifiez votre connexion Firestore ou vos quotas.</p>
+          <p className="mt-2 text-xs">Détail : {error}</p>
         </AlertDescription>
       </Alert>
     )
   }
 
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  let fiscalYearStartDate: Date;
-
-  if (now.getMonth() < 11 || (now.getMonth() === 11 && now.getDate() < 25)) {
-    fiscalYearStartDate = new Date(currentYear - 1, 11, 25, 0, 0, 0, 0);
-  } else {
-    fiscalYearStartDate = new Date(currentYear, 11, 25, 0, 0, 0, 0);
-  }
-
-  const invoicesForFiscalYear = invoices.filter(inv => new Date(inv.date) >= fiscalYearStartDate);
+  const currentYear = new Date().getFullYear();
+  const invoicesForFiscalYear = invoices.filter(inv => inv.date >= startDateIso);
 
   return (
     <div className="flex flex-col gap-8 md:gap-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
               <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground">
-                Bonjour 👋
+                Tableau de Bord
               </h1>
-              <p className="text-muted-foreground mt-1">Voici l'état actuel de votre activité.</p>
+              <p className="text-muted-foreground mt-1">Exercice fiscal débuté le 25 Déc. {currentYear - 1}</p>
           </div>
           <div className="glass-card border px-6 py-3 rounded-2xl shadow-premium">
               <DateTimeDisplay />
@@ -80,14 +91,14 @@ export default async function DashboardPage() {
           title="Chiffre d'affaires" 
           value={formatCurrency(stats.totalRevenue, settings.currency)} 
           icon={<DollarSign className="size-6" />} 
-          description={`EXERCICE ${currentYear}`}
+          description="NET ENCAISSABLE"
           className="bg-emerald-600 text-white"
         />
         <StatCard 
           title="Total Dépenses" 
           value={formatCurrency(stats.totalExpenses, settings.currency)} 
           icon={<Wallet className="size-6" />}
-          description={`EXERCICE ${currentYear}`}
+          description="SORTIES RÉELLES"
           className="bg-rose-600 text-white"
         />
         <StatCard 
@@ -121,7 +132,7 @@ export default async function DashboardPage() {
                         <div className="p-2 rounded-lg bg-primary text-white">
                             <TrendingUp className="size-5" />
                         </div>
-                        <CardTitle className="text-xl font-bold text-primary">Performance des Ventes</CardTitle>
+                        <CardTitle className="text-xl font-bold text-primary">Performance des Ventes (An)</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent className="p-8">

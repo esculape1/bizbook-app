@@ -3,26 +3,38 @@
 
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
+import { getUserByEmail } from '@/lib/data';
 
 export type State = {
   message?: string;
 };
 
 /**
- * LOGIN : Crée un cookie de session
+ * LOGIN : Vérifie les identifiants dans la collection 'users' de Firestore
  */
 export async function signIn(prevState: State | undefined, formData: FormData) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
 
-  if (email === 'demo@bizbook.com' && password === '123') {
-    cookies().set('bizbook_session', email, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24 * 7, // 1 week
-      path: '/',
-    });
-    redirect('/');
+  try {
+    const user = await getUserByEmail(email);
+
+    // Vérification simple du mot de passe (à améliorer avec bcrypt en production)
+    if (user && user.password === password) {
+      cookies().set('bizbook_session', email, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 60 * 60 * 24 * 7, // 1 week
+        path: '/',
+      });
+      redirect('/');
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
+      throw error;
+    }
+    console.error('Auth error:', error);
+    return { message: 'Une erreur est survenue lors de la connexion.' };
   }
 
   return { message: 'Identifiants invalides.' };

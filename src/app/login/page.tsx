@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useFormState, useFormStatus } from 'react-dom';
@@ -35,14 +36,14 @@ export default function LoginPage() {
 
   return (
     <div className="relative min-h-screen w-full flex flex-col items-center justify-center p-4 overflow-x-hidden bg-background">
-      {/* Background Decorative Elements - Constrained */}
+      {/* Background Decorative Elements */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] pointer-events-none select-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-sky-500/10 rounded-full blur-[120px] pointer-events-none select-none" />
       
       <div className="w-full max-w-[400px] z-10 space-y-5">
         <div className="flex flex-col items-center space-y-2">
           <div className="p-2.5 rounded-2xl bg-primary shadow-xl shadow-primary/20 ring-4 ring-primary/5">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9.5a4.5 4.5 0 1 1 9 0 a4.5 4.5 0 0 1-9 0Z"/><path d="M12.5 4H15a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5"/><path d="m14 6-2.5 2.5"/><path d="m18 10-6 6"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9.5a4.5 4.5 0 1 1 9 0 a4.5 4.5 0 0 1-9 0Z"/><path d="M12.5 4H15a2 2 0 0 1 2 2v12a2 2 0 0 1 2 2H7a2 2 0 0 1-2-2v-5"/><path d="m14 6-2.5 2.5"/><path d="m18 10-6 6"/></svg>
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-black tracking-tighter text-primary leading-none">BizBook</h1>
@@ -72,7 +73,7 @@ export default function LoginPage() {
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="nom@entreprise.com"
+                    placeholder="votre@email.com"
                     required
                     className="pl-10 h-10 bg-muted/20 border-primary/5 focus-visible:ring-primary focus-visible:bg-white transition-all rounded-xl text-sm"
                   />
