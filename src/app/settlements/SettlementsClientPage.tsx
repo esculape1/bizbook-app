@@ -137,20 +137,19 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
           title: "Règlement enregistré",
           description: "Le paiement a été appliqué avec succès.",
         });
-        startFetchingInvoices(async () => {
-            const [unpaidInvoices, history] = await Promise.all([
-                getUnpaidInvoicesForClient(selectedClient.id),
-                getPaymentHistoryForClient(selectedClient.id),
-            ]);
-            setInvoices(unpaidInvoices);
-            setPaymentHistory(history);
-            setSelectedInvoiceIds(new Set());
-            form.reset({
-                paymentAmount: 0,
-                paymentDate: new Date(),
-                paymentMethod: PAYMENT_METHODS.CASH,
-                paymentNotes: '',
-            });
+        // Rafraîchissement des données localement
+        const [unpaidInvoices, history] = await Promise.all([
+            getUnpaidInvoicesForClient(selectedClient.id),
+            getPaymentHistoryForClient(selectedClient.id),
+        ]);
+        setInvoices(unpaidInvoices);
+        setPaymentHistory(history);
+        setSelectedInvoiceIds(new Set());
+        form.reset({
+            paymentAmount: 0,
+            paymentDate: new Date(),
+            paymentMethod: PAYMENT_METHODS.CASH,
+            paymentNotes: '',
         });
       } else {
         toast({
@@ -171,8 +170,8 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
               <CreditCard className="size-6" />
             </div>
             <div>
-              <CardTitle className="text-xl font-black tracking-tight text-indigo-900">Nouvel Encaissement</CardTitle>
-              <CardDescription className="text-indigo-700/70 font-medium">Sélectionnez un client pour voir ses factures impayées et enregistrer un règlement.</CardDescription>
+              <CardTitle className="text-xl font-black tracking-tight text-indigo-900">Encaissements Clients</CardTitle>
+              <CardDescription className="text-indigo-700/70 font-medium">Enregistrez les règlements basés sur le Net à Payer.</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -181,7 +180,7 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
             <ClientPicker
               clients={clients}
               onClientSelect={handleClientSelect}
-              selectedClientName={selectedClient?.name || "Cliquer ici pour sélectionner un client..."}
+              selectedClientName={selectedClient?.name || "Cliquer pour sélectionner un client..."}
             />
           </div>
         </CardContent>
@@ -190,7 +189,7 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
       {isFetchingInvoices && (
         <div className="flex flex-col items-center justify-center p-20 gap-4">
           <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <p className="text-muted-foreground font-bold animate-pulse">Récupération du dossier client...</p>
+          <p className="text-muted-foreground font-bold animate-pulse">Chargement du dossier...</p>
         </div>
       )}
 
@@ -204,57 +203,17 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
                         <div className="p-2 rounded-lg bg-amber-500 text-white">
                             <Banknote className="size-5" />
                         </div>
-                        <CardTitle className="font-black uppercase tracking-tight">Factures pour {selectedClient.name}</CardTitle>
+                        <CardTitle className="font-black uppercase tracking-tight">Factures Impayées</CardTitle>
                     </div>
                     <div className="flex justify-between items-center text-sm font-bold pt-2 border-t border-amber-500/10">
-                        <span>Solde total dû: <span className="text-destructive font-black text-lg">{formatCurrency(totalDueForAll, settings.currency)}</span></span>
+                        <span>Solde Net dû: <span className="text-destructive font-black text-lg">{formatCurrency(totalDueForAll, settings.currency)}</span></span>
                         <Badge variant="outline" className="bg-white/50 border-amber-200">
                             Sélection: {formatCurrency(totalDueOnSelected, settings.currency)}
                         </Badge>
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <div className="md:hidden">
-                        <div className="flex items-center justify-end px-1 pb-2">
-                            <Button variant="link" size="sm" onClick={handleSelectAll} disabled={invoices.length === 0} className="font-bold">
-                                {selectedInvoiceIds.size > 0 && selectedInvoiceIds.size === invoices.length ? 'Tout Désélectionner' : 'Tout Sélectionner'}
-                            </Button>
-                        </div>
-                        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-                        {invoices.length > 0 ? invoices.map(invoice => {
-                            const netToPay = invoice.netAPayer ?? invoice.totalAmount;
-                            const due = netToPay - (invoice.amountPaid || 0);
-                            const isSelected = selectedInvoiceIds.has(invoice.id);
-                            return (
-                            <div 
-                                key={invoice.id} 
-                                className={cn(
-                                    "flex items-center gap-4 rounded-xl border-2 p-4 transition-all cursor-pointer",
-                                    isSelected ? "bg-white border-primary shadow-md scale-[1.02]" : "bg-white/50 border-transparent hover:border-amber-200"
-                                )} 
-                                onClick={() => handleInvoiceSelect(invoice.id)}
-                            >
-                                <Checkbox
-                                    checked={isSelected}
-                                    onCheckedChange={() => handleInvoiceSelect(invoice.id)}
-                                    className="rounded-full size-5"
-                                />
-                                <div className="flex-1 min-w-0">
-                                    <p className="font-black text-sm uppercase tracking-tight">{invoice.invoiceNumber}</p>
-                                    <p className="text-[10px] font-bold text-muted-foreground uppercase">{format(new Date(invoice.date), 'dd/MM/yyyy')}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="font-black text-destructive">{formatCurrency(due, settings.currency)}</p>
-                                </div>
-                            </div>
-                            );
-                        }) : (
-                            <p className="text-center text-muted-foreground py-10 italic">Aucune facture impayée pour ce client.</p>
-                        )}
-                        </div>
-                    </div>
-
-                    <div className="hidden md:block border rounded-xl bg-white/40 backdrop-blur-sm max-h-[500px] overflow-auto custom-scrollbar shadow-inner">
+                    <div className="border rounded-xl bg-white/40 backdrop-blur-sm max-h-[500px] overflow-auto custom-scrollbar shadow-inner">
                     <Table>
                         <TableHeader className="sticky top-0 bg-amber-500/10 z-10">
                         <TableRow className="hover:bg-transparent">
@@ -267,8 +226,7 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
                             />
                             </TableHead>
                             <TableHead className="font-black uppercase text-[10px] tracking-widest text-amber-900">N° Facture</TableHead>
-                            <TableHead className="font-black uppercase text-[10px] tracking-widest text-amber-900">Date</TableHead>
-                            <TableHead className="text-right font-black uppercase text-[10px] tracking-widest text-amber-900">Montant Dû</TableHead>
+                            <TableHead className="font-black uppercase text-[10px] tracking-widest text-amber-900 text-right">Reste Net à Payer</TableHead>
                         </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -293,13 +251,12 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
                                 />
                                 </TableCell>
                                 <TableCell className="font-black text-sm uppercase tracking-tight">{invoice.invoiceNumber}</TableCell>
-                                <TableCell className="text-xs font-bold text-muted-foreground uppercase">{format(new Date(invoice.date), 'dd/MM/yyyy')}</TableCell>
                                 <TableCell className="text-right font-black text-destructive">{formatCurrency(due, settings.currency)}</TableCell>
                             </TableRow>
                             );
                         }) : (
                             <TableRow>
-                            <TableCell colSpan={4} className="text-center h-32 italic text-muted-foreground">Aucune facture impayée pour ce client.</TableCell>
+                            <TableCell colSpan={3} className="text-center h-32 italic text-muted-foreground">Aucune facture impayée.</TableCell>
                             </TableRow>
                         )}
                         </TableBody>
@@ -316,7 +273,7 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
                         <div className="p-2 rounded-lg bg-sky-600 text-white">
                             <Wallet className="size-5" />
                         </div>
-                        <CardTitle className="font-black uppercase tracking-tight">Enregistrer le Paiement</CardTitle>
+                        <CardTitle className="font-black uppercase tracking-tight">Règlement</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -327,82 +284,39 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
                         name="paymentAmount"
                         render={({ field }) => (
                             <FormItem>
-                            <FormLabel className="font-black uppercase text-[10px] tracking-wider text-sky-900">Montant à encaisser ({settings.currency})</FormLabel>
+                            <FormLabel className="font-black uppercase text-[10px] tracking-wider text-sky-900">Montant ({settings.currency})</FormLabel>
                             <FormControl>
-                                <Input type="number" step="0.01" {...field} className="h-12 text-lg font-black bg-white border-sky-200 focus-visible:ring-sky-500" />
+                                <Input type="number" step="0.01" {...field} className="h-12 text-lg font-black bg-white border-sky-200" />
                             </FormControl>
                             <FormMessage />
                             </FormItem>
                         )}
                         />
-                        <div className="grid grid-cols-1 gap-4">
-                            <FormField
-                                control={form.control}
-                                name="paymentDate"
-                                render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                    <FormLabel className="font-black uppercase text-[10px] tracking-wider text-sky-900">Date du paiement</FormLabel>
-                                    <Popover>
-                                    <PopoverTrigger asChild>
-                                        <FormControl>
-                                        <Button variant={"outline"} className={cn("w-full h-11 pl-3 text-left font-bold bg-white border-sky-200", !field.value && "text-muted-foreground")}>
-                                            {field.value ? (format(field.value, 'PPP', { locale: fr })) : (<span>Choisir une date</span>)}
-                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                        </Button>
-                                        </FormControl>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
-                                    </PopoverContent>
-                                    </Popover>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="paymentMethod"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel className="font-black uppercase text-[10px] tracking-wider text-sky-900">Méthode de paiement</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                        <SelectTrigger className="h-11 bg-white border-sky-200 font-bold">
-                                        <SelectValue placeholder="Sélectionner" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        <SelectItem value={PAYMENT_METHODS.CASH} className="font-medium">Espèces</SelectItem>
-                                        <SelectItem value={PAYMENT_METHODS.TRANSFER} className="font-medium">Virement bancaire</SelectItem>
-                                        <SelectItem value={PAYMENT_METHODS.CHECK} className="font-medium">Chèque</SelectItem>
-                                        <SelectItem value={PAYMENT_METHODS.OTHER} className="font-medium">Autre</SelectItem>
-                                    </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                        </div>
                         <FormField
                             control={form.control}
-                            name="paymentNotes"
+                            name="paymentMethod"
                             render={({ field }) => (
                             <FormItem>
-                                <FormLabel className="font-black uppercase text-[10px] tracking-wider text-sky-900">Notes & Références</FormLabel>
+                                <FormLabel className="font-black uppercase text-[10px] tracking-wider text-sky-900">Méthode</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
-                                <Textarea placeholder="Ex: Réf. de transaction, Chèque N°..." {...field} className="bg-white border-sky-200 resize-none h-20" />
+                                    <SelectTrigger className="h-11 bg-white border-sky-200 font-bold">
+                                    <SelectValue placeholder="Sélectionner" />
+                                    </SelectTrigger>
                                 </FormControl>
+                                <SelectContent>
+                                    <SelectItem value={PAYMENT_METHODS.CASH}>Espèces</SelectItem>
+                                    <SelectItem value={PAYMENT_METHODS.TRANSFER}>Virement bancaire</SelectItem>
+                                    <SelectItem value={PAYMENT_METHODS.CHECK}>Chèque</SelectItem>
+                                    <SelectItem value={PAYMENT_METHODS.OTHER}>Autre</SelectItem>
+                                </SelectContent>
+                                </Select>
                                 <FormMessage />
                             </FormItem>
                             )}
                         />
-                        <Button type="submit" className="w-full h-14 text-lg font-black shadow-lg shadow-sky-200 transition-all active:scale-95" disabled={isProcessing || selectedInvoiceIds.size === 0}>
-                            {isProcessing ? (
-                                <>
-                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                    Validation...
-                                </>
-                            ) : 'Valider le règlement'}
+                        <Button type="submit" className="w-full h-14 text-lg font-black shadow-lg" disabled={isProcessing || selectedInvoiceIds.size === 0}>
+                            {isProcessing ? <Loader2 className="animate-spin" /> : 'Valider'}
                         </Button>
                     </form>
                     </Form>
@@ -411,7 +325,7 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
               </div>
             </div>
             
-            <div className="pt-4 animate-in fade-in slide-in-from-bottom-6 duration-700">
+            <div className="pt-4">
                 <PaymentHistory 
                     history={paymentHistory} 
                     client={selectedClient} 

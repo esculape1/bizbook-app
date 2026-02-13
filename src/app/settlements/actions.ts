@@ -51,6 +51,9 @@ const settlementPayloadSchema = z.object({
 
 type SettlementPayload = z.infer<typeof settlementPayloadSchema>;
 
+/**
+ * Traite les paiements de factures en se basant sur le Net à Payer.
+ */
 export async function processMultipleInvoicePayments(payload: SettlementPayload): Promise<{ success: boolean; message?: string }> {
   const session = await getSession();
   if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
@@ -65,11 +68,9 @@ export async function processMultipleInvoicePayments(payload: SettlementPayload)
   const { clientId, invoiceIds, paymentAmount, paymentDate, paymentMethod, paymentNotes } = validatedPayload.data;
 
   try {
-    if (!db) {
-        throw new Error("La connexion à la base de données a échoué.");
-    }
-    const batch = db.batch();
+    if (!db) throw new Error("La connexion à la base de données a échoué.");
     
+    const batch = db.batch();
     const invoiceRefs = invoiceIds.map(id => db.collection('invoices').doc(id));
     const invoiceDocs = await db.getAll(...invoiceRefs);
     
@@ -83,7 +84,7 @@ export async function processMultipleInvoicePayments(payload: SettlementPayload)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     if (invoicesToSettle.length !== invoiceIds.length) {
-      return { success: false, message: "Certaines factures sélectionnées sont invalides ou n'appartiennent pas au client." };
+      return { success: false, message: "Certaines factures sélectionnées sont invalides." };
     }
     
     const totalDueOnSelected = invoicesToSettle.reduce((sum, inv) => {
@@ -92,7 +93,7 @@ export async function processMultipleInvoicePayments(payload: SettlementPayload)
     }, 0);
     
     if (paymentAmount > totalDueOnSelected + 0.01) {
-        return { success: false, message: `Le montant du paiement (${paymentAmount}) dépasse le total dû (${totalDueOnSelected}) des factures sélectionnées.` };
+        return { success: false, message: `Le montant (${paymentAmount}) dépasse le total dû (${totalDueOnSelected.toFixed(2)}).` };
     }
 
     let amountToApply = paymentAmount;
@@ -107,6 +108,7 @@ export async function processMultipleInvoicePayments(payload: SettlementPayload)
 
         if (paymentForThisInvoice > 0) {
             const newAmountPaid = (invoice.amountPaid || 0) + paymentForThisInvoice;
+            // Statut 'Paid' si le montant payé atteint le Net à Payer
             const newStatus: Invoice['status'] = newAmountPaid >= netToPay - 0.01 ? 'Paid' : 'Partially Paid';
             
             const newPayment: Payment = {
@@ -137,7 +139,7 @@ export async function processMultipleInvoicePayments(payload: SettlementPayload)
 
   } catch (error) {
     console.error("Failed to process settlement:", error);
-    const message = error instanceof Error ? error.message : "Une erreur est survenue lors du traitement du règlement.";
+    const message = error instanceof Error ? error.message : "Erreur technique lors du traitement.";
     return { success: false, message };
   }
 }

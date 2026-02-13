@@ -18,7 +18,7 @@ async function getDashboardData() {
     const currentYear = now.getFullYear();
     let fiscalYearStartDate: Date;
 
-    // Calcul de la date de début d'exercice (25 Décembre)
+    // Calcul de la date de début d'exercice (25 Décembre de l'année précédente)
     if (now.getMonth() < 11 || (now.getMonth() === 11 && now.getDate() < 25)) {
       fiscalYearStartDate = new Date(currentYear - 1, 11, 25, 0, 0, 0, 0);
     } else {
@@ -27,29 +27,22 @@ async function getDashboardData() {
 
     const startDateIso = fiscalYearStartDate.toISOString();
 
-    // On récupère tout en UNE SEULE FOIS pour économiser les lectures
+    // On récupère tout en UNE SEULE FOIS avec filtrage Firestore pour les dépenses
     const [invoices, expenses, clients, products, settings] = await Promise.all([
-      getInvoices(), // Besoin de tout pour les alertes de recouvrement
-      getExpenses(startDateIso), // Filtré à la source !
+      getInvoices(), // On garde tout pour les alertes de recouvrement historiques
+      getExpenses(startDateIso), // Filtrage à la source pour les quotas
       getClients(),
       getProducts(),
       getSettings(),
     ]);
 
-    // Calcul des stats localement sans relire la DB
+    // Calcul des stats localement pour économiser les lectures
     const stats = calculateDashboardStats(invoices, expenses, clients, products, startDateIso);
 
     return { stats, products, invoices, settings, startDateIso, error: null };
   } catch (error: any) {
-    console.error("Erreur de récupération des données du tableau de bord:", error);
-    return { 
-      stats: null, 
-      products: [], 
-      invoices: [], 
-      settings: null, 
-      startDateIso: '',
-      error: error.message || "Une erreur inconnue est survenue." 
-    };
+    console.error("Dashboard error:", error);
+    return { stats: null, products: [], invoices: [], settings: null, startDateIso: '', error: error.message };
   }
 }
 
@@ -60,11 +53,8 @@ export default async function DashboardPage() {
     return (
        <Alert variant="destructive" className="mt-10">
         <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Erreur de connexion</AlertTitle>
-        <AlertDescription>
-          <p>Impossible de récupérer les données. Vérifiez votre connexion Firestore ou vos quotas.</p>
-          <p className="mt-2 text-xs">Détail : {error}</p>
-        </AlertDescription>
+        <AlertTitle>Erreur</AlertTitle>
+        <AlertDescription>{error || "Impossible de charger les données."}</AlertDescription>
       </Alert>
     )
   }
@@ -76,9 +66,7 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-8 md:gap-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
-              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground">
-                Tableau de Bord
-              </h1>
+              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground">Tableau de Bord</h1>
               <p className="text-muted-foreground mt-1">Exercice fiscal débuté le 25 Déc. {currentYear - 1}</p>
           </div>
           <div className="glass-card border px-6 py-3 rounded-2xl shadow-premium">
@@ -91,25 +79,25 @@ export default async function DashboardPage() {
           title="Chiffre d'affaires" 
           value={formatCurrency(stats.totalRevenue, settings.currency)} 
           icon={<DollarSign className="size-6" />} 
-          description="NET ENCAISSABLE"
+          description="NET (APRÈS RETENUE)"
           className="bg-emerald-600 text-white"
         />
         <StatCard 
           title="Total Dépenses" 
           value={formatCurrency(stats.totalExpenses, settings.currency)} 
           icon={<Wallet className="size-6" />}
-          description="SORTIES RÉELLES"
+          description="SUR L'EXERCICE"
           className="bg-rose-600 text-white"
         />
         <StatCard 
           title="Clients Actifs" 
           value={stats.activeClients.toString()} 
           icon={<Users className="size-6" />}
-          description={`${stats.totalClients} TOTAL`}
+          description="PORTEFEUILLE"
           className="bg-sky-600 text-white"
         />
         <StatCard 
-          title="Produits en Stock" 
+          title="Produits" 
           value={stats.productCount.toString()} 
           icon={<Box className="size-6" />}
           description="RÉFÉRENCES"
@@ -119,7 +107,7 @@ export default async function DashboardPage() {
           title="Total Impayé" 
           value={formatCurrency(stats.totalDue, settings.currency)} 
           icon={<Receipt className="size-6" />}
-          description={`${stats.unpaidInvoicesCount} FACTURES`}
+          description="RESTE À PAYER"
           className="bg-indigo-600 text-white"
         />
       </div>
@@ -132,7 +120,7 @@ export default async function DashboardPage() {
                         <div className="p-2 rounded-lg bg-primary text-white">
                             <TrendingUp className="size-5" />
                         </div>
-                        <CardTitle className="text-xl font-bold text-primary">Performance des Ventes (An)</CardTitle>
+                        <CardTitle className="text-xl font-bold text-primary">Ventes de l'Exercice</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent className="p-8">
@@ -140,12 +128,10 @@ export default async function DashboardPage() {
                 </CardContent>
             </Card>
         </div>
-        
         <div className="lg:col-span-1">
           <LowStockTable products={products} />
         </div>
       </div>
-      
       <OverdueInvoicesTable invoices={invoices} settings={settings} />
     </div>
   );

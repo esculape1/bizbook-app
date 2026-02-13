@@ -6,6 +6,9 @@ import { getProducts } from '@/lib/data';
 import type { ReportData, Invoice, Expense, Product } from '@/lib/types';
 import type { DateRange } from 'react-day-picker';
 
+/**
+ * Génère un rapport d'activité en se basant sur le Net à Payer pour le CA.
+ */
 export async function generateReport(
     dateRange: DateRange | undefined, 
     clientId: string,
@@ -39,9 +42,9 @@ export async function generateReport(
         
         const activeInvoices = invoicesInPeriod.filter(inv => inv.status !== 'Cancelled');
         
-        // Utilisation du netAPayer pour le CA réel
+        // Chiffre d'affaires basé sur le Net à Payer (après retenue)
         const grossSales = activeInvoices.reduce((sum, inv) => sum + (inv.netAPayer ?? inv.totalAmount), 0);
-        const totalUnpaid = activeInvoices.reduce((sum, inv) => sum + (inv.netAPayer ?? inv.totalAmount) - (inv.amountPaid || 0), 0);
+        const totalUnpaid = activeInvoices.reduce((sum, inv) => sum + ((inv.netAPayer ?? inv.totalAmount) - (inv.amountPaid || 0)), 0);
         const totalExpenses = allExpenses.reduce((sum, exp) => sum + exp.amount, 0);
 
         const productSales: Record<string, any> = {};

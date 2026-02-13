@@ -3,7 +3,7 @@ import { db } from './firebase-admin';
 import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, UserWithPassword, ClientOrder } from './types';
 
 /**
- * RÉCUPÉRATION DES DONNÉES DEPUIS FIRESTORE
+ * RÉCUPÉRATION DES DONNÉES DEPUIS FIRESTORE AVEC OPTIMISATION DES QUOTAS
  */
 
 export async function getUserByEmail(email: string): Promise<UserWithPassword | null> {
@@ -12,11 +12,6 @@ export async function getUserByEmail(email: string): Promise<UserWithPassword | 
   if (snap.empty) return null;
   const doc = snap.docs[0];
   return { id: doc.id, ...doc.data() } as UserWithPassword;
-}
-
-export async function updateUserPassword(userId: string, hashedPassword: string): Promise<void> {
-  if (!db) return;
-  await db.collection('users').doc(userId).update({ password: hashedPassword });
 }
 
 export async function getClients(): Promise<Client[]> {
@@ -300,6 +295,7 @@ export async function updateSettings(data: Partial<Settings>) {
 /**
  * Calcule les statistiques du tableau de bord à partir de données déjà chargées
  * pour éviter les lectures Firestore inutiles.
+ * Utilise désormais le Net à Payer pour le CA et les alertes.
  */
 export function calculateDashboardStats(
   invoices: Invoice[], 
@@ -334,7 +330,7 @@ export function calculateDashboardStats(
   };
 }
 
-// Fonction legacy maintenue pour compatibilité mais optimisée
+// Fonction optimisée pour le tableau de bord
 export async function getDashboardStats() {
   if (!db) return null;
   
@@ -350,8 +346,9 @@ export async function getDashboardStats() {
 
   const startDateIso = fiscalYearStartDate.toISOString();
 
+  // On récupère tout en une fois pour économiser les lectures
   const [invoices, expenses, clients, products] = await Promise.all([
-    getInvoices(), // Pour le recouvrement on a besoin de tout, mais on pourrait filtrer sur 'Unpaid'
+    getInvoices(), // Pour le recouvrement on a besoin de tout
     getExpenses(startDateIso),
     getClients(),
     getProducts()

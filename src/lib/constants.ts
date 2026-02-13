@@ -1,8 +1,8 @@
 
 export const ROLES = {
-  SUPER_ADMIN: 'SuperAdmin', // Accès total
-  ADMIN: 'Admin',           // Rôle "Finance/Achats" : Fournisseurs, Achats, Dépenses, Règlements
-  USER: 'User',             // Rôle "Ventes" : Clients, Devis, Commandes, Facturation
+  SUPER_ADMIN: 'SuperAdmin',
+  ADMIN: 'Admin',
+  USER: 'User',
 } as const;
 
 export type Role = typeof ROLES[keyof typeof ROLES];
@@ -74,7 +74,7 @@ export const CLIENT_ORDER_STATUS_TRANSLATIONS: { [key in ClientOrderStatus]: str
     [CLIENT_ORDER_STATUS.CANCELLED]: 'Annulé',
 };
 
-
+// Harmonisation des clés sans accents pour éviter les erreurs de type build
 export const PAYMENT_METHODS = {
   CASH: 'Especes',
   TRANSFER: 'Virement',
