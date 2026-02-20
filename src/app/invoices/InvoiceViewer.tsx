@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
@@ -34,9 +33,12 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
       }
     };
 
-    updateScale();
+    const timer = setTimeout(updateScale, 100);
     window.addEventListener('resize', updateScale);
-    return () => window.removeEventListener('resize', updateScale);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', updateScale);
+    };
   }, []);
 
   const handlePrint = () => {
@@ -65,11 +67,6 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
       }, 500);
     }
   };
-
-  const renderTemplate = () => {
-    // On utilise DetailedTemplate par défaut pour l'instant car c'est le plus complet
-    return <DetailedTemplate invoice={invoice} client={client} settings={settings} />;
-  }
 
   return (
     <div className="flex flex-col items-center gap-8 max-w-4xl mx-auto w-full pb-20">
@@ -105,7 +102,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
                         }}
                     >
                         <div className="shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-sm bg-white overflow-hidden ring-1 ring-black/5">
-                            {renderTemplate()}
+                            <DetailedTemplate invoice={invoice} client={client} settings={settings} />
                         </div>
                     </div>
                 </div>

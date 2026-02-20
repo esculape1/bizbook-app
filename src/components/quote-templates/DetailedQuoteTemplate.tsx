@@ -130,7 +130,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                       <tr>
                         <th className="py-1 px-2 text-left font-bold w-[15%] border-r border-white whitespace-nowrap">REFERENCE</th>
                         <th className="py-1 px-2 text-left font-bold w-[45%] border-r border-white">DESIGNATION</th>
-                        <th className="py-1 px-2 text-right font-bold w-[15%] border-r border-white whitespace-nowrap">PRIX U.</th>
+                        <th className="py-1 px-2 text-right font-bold w-[15%] border-r border-white whitespace-nowrap">PRIX U..</th>
                         <th className="py-1 px-2 text-center font-bold w-[10%] border-r border-white">Qté</th>
                         <th className="py-1 px-2 text-right font-bold w-[15%] whitespace-nowrap">TOTAL</th>
                       </tr>

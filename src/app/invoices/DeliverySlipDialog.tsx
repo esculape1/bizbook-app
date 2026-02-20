@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -6,7 +5,7 @@ import type { Invoice, Client, Settings } from '@/lib/types';
 import { DeliverySlipTemplate } from '@/components/delivery-slip/DeliverySlipTemplate';
 import { Button } from '@/components/ui/button';
 import { Truck, Printer, X } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 type DeliverySlipDialogProps = {
   invoice: Invoice;
@@ -33,7 +32,6 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
         }
       };
 
-      // Délai pour laisser le temps au dialogue de s'ouvrir et calculer la largeur
       const timer = setTimeout(updateScale, 100);
       window.addEventListener('resize', updateScale);
       return () => {
