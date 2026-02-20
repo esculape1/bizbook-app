@@ -12,7 +12,7 @@ import {
   updateProduct,
 } from '@/lib/data';
 import { revalidateTag } from 'next/cache';
-import type { PurchaseItem, Purchase, Product } from '@/lib/types';
+import type { PurchaseItem, Purchase } from '@/lib/types';
 import { getSession } from '@/lib/session';
 import { ROLES } from '@/lib/constants';
 
@@ -57,7 +57,6 @@ export async function createPurchase(formData: unknown) {
 
     const totalAmount = premierVersement + deuxiemeVersement + transportCost + otherFees;
 
-    // Le purchaseNumber est généré automatiquement par addPurchase dans lib/data.ts
     await addPurchase({
         supplierId,
         supplierName: supplier.name,
@@ -166,7 +165,6 @@ export async function cancelPurchase(id: string) {
     const purchase = await getPurchaseById(id);
     if (!purchase) return { message: "Achat non trouvé." };
 
-    // Si l'achat a été réceptionné, il faut retirer les quantités du stock
     if (purchase.status === 'Received') {
         const products = await getProducts();
         for (const item of purchase.items) {
