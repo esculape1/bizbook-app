@@ -19,15 +19,10 @@ export const dynamic = 'force-dynamic';
 const getFiscalStartDate = () => {
   const now = new Date();
   const year = now.getFullYear();
-  // Le 25 Décembre de l'année en cours
-  const cutoffThisYear = new Date(year, 11, 25); // 11 = Décembre (0-indexed)
-  
-  // Si on est avant le 25 décembre, l'exercice a commencé le 25 décembre de l'année dernière
+  const cutoffThisYear = new Date(year, 11, 25);
   if (now < cutoffThisYear) {
     return new Date(year - 1, 11, 25);
   }
-  
-  // Sinon, un nouvel exercice vient de commencer le 25 décembre de cette année
   return cutoffThisYear;
 };
 
@@ -35,9 +30,10 @@ export default async function DashboardPage() {
   const fiscalStart = getFiscalStartDate();
   const startIso = fiscalStart.toISOString();
 
-  // Optimisation : On ne lit que les documents de l'exercice fiscal annuel en cours
+  // On récupère TOUTES les factures pour le calcul des impayés globaux
+  // Et toutes les dépenses de l'exercice pour le CA/Profit
   const [invSnap, expSnap, clients, products, settings] = await Promise.all([
-    db.collection('invoices').where('date', '>=', startIso).get(),
+    db.collection('invoices').get(), // Global pour les impayés
     db.collection('expenses').where('date', '>=', startIso).get(),
     getClients(),
     getProducts(),
@@ -46,10 +42,16 @@ export default async function DashboardPage() {
 
   if (!settings) return null;
 
-  const invoices = invSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Invoice));
-  const expenses = expSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
+  const allInvoices = invSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Invoice));
+  const fiscalExpenses = expSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
 
-  const stats = calculateDashboardStats(invoices, expenses, clients, products);
+  // Filtrage des factures pour l'exercice fiscal (pour le CA uniquement)
+  const fiscalInvoices = allInvoices.filter(inv => inv.date >= startIso);
+
+  // Statistiques calculées
+  // Le CA utilise fiscalInvoices
+  // Le Total Impayé utilise allInvoices
+  const stats = calculateDashboardStats(fiscalInvoices, fiscalExpenses, clients, products, allInvoices);
 
   return (
     <div className="flex flex-col gap-8">
@@ -68,18 +70,18 @@ export default async function DashboardPage() {
         <StatCard title="Dépenses" value={formatCurrency(stats.totalExpenses, settings.currency)} icon={<Wallet />} className="bg-rose-600 text-white" description="Exercice en cours" />
         <StatCard title="Clients Actifs" value={stats.activeClients.toString()} icon={<Users />} className="bg-sky-600 text-white" />
         <StatCard title="Produits" value={stats.productCount.toString()} icon={<Box />} className="bg-amber-600 text-white" />
-        <StatCard title="Total Impayé Net" value={formatCurrency(stats.totalDue, settings.currency)} icon={<Receipt />} className="bg-indigo-600 text-white" description="Global" />
+        <StatCard title="Total Impayé Net" value={formatCurrency(stats.totalDue, settings.currency)} icon={<Receipt />} className="bg-indigo-600 text-white" description="Historique Global" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
-          <SalesChart invoices={invoices} currency={settings.currency} />
+          <SalesChart invoices={fiscalInvoices} currency={settings.currency} />
         </div>
         <div className="lg:col-span-1">
           <LowStockTable products={products} />
         </div>
       </div>
-      <OverdueInvoicesTable invoices={invoices} settings={settings} />
+      <OverdueInvoicesTable invoices={allInvoices} settings={settings} />
     </div>
   );
 }

@@ -285,32 +285,29 @@ export async function updateSettings(data: Partial<Settings>) {
 }
 
 export function calculateDashboardStats(
-  invoices: Invoice[], 
+  fiscalInvoices: Invoice[], 
   expenses: Expense[], 
   clients: Client[], 
-  products: Product[]
+  products: Product[],
+  allInvoices?: Invoice[]
 ) {
-  const activeInvoices = invoices.filter(i => i.status !== 'Cancelled');
+  const activeFiscalInvoices = fiscalInvoices.filter(i => i.status !== 'Cancelled');
+  const globalInvoices = allInvoices || fiscalInvoices;
+  const activeGlobalInvoices = globalInvoices.filter(i => i.status !== 'Cancelled');
   
-  // CA basé sur le Net à Payer (montant réel attendu)
-  const totalRevenue = activeInvoices.reduce((sum, i) => sum + (i.netAPayer ?? i.totalAmount), 0);
+  // CA basé sur le Net à Payer de l'exercice fiscal en cours
+  const totalRevenue = activeFiscalInvoices.reduce((sum, i) => sum + (i.netAPayer ?? i.totalAmount), 0);
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
   
-  // Total dû basé sur le Net à Payer moins ce qui a déjà été réglé
-  const totalDue = activeInvoices.reduce((sum, i) => {
+  // Total dû basé sur le Net à Payer historique (global) moins ce qui a déjà été réglé
+  const totalDue = activeGlobalInvoices.reduce((sum, i) => {
       const net = i.netAPayer ?? i.totalAmount;
       return sum + (net - (i.amountPaid || 0));
   }, 0);
   
-  const unpaidInvoicesCount = activeInvoices.filter(i => {
-      const net = i.netAPayer ?? i.totalAmount;
-      return i.amountPaid < net - 0.05 && (i.status === 'Unpaid' || i.status === 'Partially Paid');
-  }).length;
-
   return {
     totalRevenue,
     totalDue,
-    unpaidInvoicesCount,
     totalExpenses,
     totalClients: clients.length,
     activeClients: clients.filter(c => c.status === 'Active').length,
