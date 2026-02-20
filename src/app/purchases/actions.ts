@@ -1,4 +1,3 @@
-
 'use server';
 
 import { z } from 'zod';
@@ -57,7 +56,6 @@ export async function createPurchase(formData: unknown) {
 
     const totalAmount = premierVersement + deuxiemeVersement + transportCost + otherFees;
 
-    // addPurchase génère le purchaseNumber, on ne le passe pas ici.
     await addPurchase({
         supplierId,
         supplierName: supplier.name,

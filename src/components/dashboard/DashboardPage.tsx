@@ -1,4 +1,3 @@
-
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SalesChart } from "@/components/dashboard/SalesChart";
 import { LowStockTable } from "@/components/dashboard/LowStockTable";
@@ -30,10 +29,8 @@ export default async function DashboardPage() {
   const fiscalStart = getFiscalStartDate();
   const startIso = fiscalStart.toISOString();
 
-  // On récupère TOUTES les factures pour le calcul des impayés globaux
-  // Et toutes les dépenses de l'exercice pour le CA/Profit
   const [invSnap, expSnap, clients, products, settings] = await Promise.all([
-    db.collection('invoices').get(), // Global pour les impayés
+    db.collection('invoices').get(),
     db.collection('expenses').where('date', '>=', startIso).get(),
     getClients(),
     getProducts(),
@@ -48,9 +45,7 @@ export default async function DashboardPage() {
   // Filtrage des factures pour l'exercice fiscal (pour le CA uniquement)
   const fiscalInvoices = allInvoices.filter(inv => inv.date >= startIso);
 
-  // Statistiques calculées
-  // Le CA utilise fiscalInvoices
-  // Le Total Impayé utilise allInvoices (Global)
+  // Statistiques : CA sur fiscalInvoices, Impayés sur allInvoices (Global)
   const stats = calculateDashboardStats(fiscalInvoices, fiscalExpenses, clients, products, allInvoices);
 
   return (
