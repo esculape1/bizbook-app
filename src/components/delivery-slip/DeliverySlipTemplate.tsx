@@ -12,7 +12,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
     <>
       <style>{`
         .slip-wrapper {
-          width: 210mm; /* Fixer la largeur pour le ResponsiveA4Wrapper */
+          width: 210mm;
           margin: 0 auto;
           background: white;
           font-family: 'Inter', sans-serif;
@@ -31,8 +31,8 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
           background-color: #002060;
         }
         .content-inner {
-          padding: 10mm 10mm 15mm 15mm;
-          min-height: 297mm;
+          padding: 8mm 10mm 10mm 15mm;
+          min-height: 285mm;
           display: flex;
           flex-direction: column;
         }
@@ -46,7 +46,8 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
         .col-obs { width: 25%; }
 
         @media print {
-          .slip-wrapper { max-width: none; width: 210mm; box-shadow: none; margin: 0; }
+          @page { size: A4; margin: 0; }
+          .slip-wrapper { width: 210mm; height: 297mm; box-shadow: none; margin: 0; }
           .blue-bar { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .item-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }

@@ -24,7 +24,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
     <>
       <style>{`
         .invoice-wrapper {
-          width: 210mm; /* Fixer la largeur pour le ResponsiveA4Wrapper */
+          width: 210mm;
           margin: 0 auto;
           background: white;
           font-family: 'Inter', sans-serif;
@@ -43,8 +43,8 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
           background-color: #002060;
         }
         .content-inner {
-          padding: 10mm 10mm 15mm 15mm;
-          min-height: 297mm;
+          padding: 8mm 10mm 10mm 15mm;
+          min-height: 285mm;
           display: flex;
           flex-direction: column;
         }
@@ -59,13 +59,14 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
         .col-tot { width: 15%; }
 
         .totals-table { width: 100%; max-width: 280px; margin-left: auto; border: 2px solid black; border-collapse: collapse; }
-        .totals-table td { padding: 5px 8px; font-size: 9pt; border-bottom: 1px solid #eee; }
+        .totals-table td { padding: 4px 8px; font-size: 9pt; border-bottom: 1px solid #eee; }
         
         @media print {
-          .invoice-wrapper { max-width: none; width: 210mm; box-shadow: none; margin: 0; }
+          @page { size: A4; margin: 0; }
+          .invoice-wrapper { width: 210mm; height: 297mm; box-shadow: none; margin: 0; }
           .blue-bar { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .item-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .net-a-payer-row { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .net-a-payer-row { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: #111 !important; color: white !important; }
         }
       `}</style>
 
@@ -96,7 +97,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
               <p className="text-[7pt] opacity-70">IFU: {settings.companyIfu} / RCCM: {settings.companyRccm}</p>
             </div>
             <div className="flex-1 border-l-2 border-[#1f4e78] pl-2">
-              <p className="font-black text-[#1f4e78] uppercase mb-1">Client</p>
+              <p className="font-black text-[#1f4e78] uppercase mb-1 underline">Client</p>
               <p className="font-black uppercase">{client.name}</p>
               <p className="italic line-clamp-2">{client.address || '-'}</p>
               <p>Tel: {client.phone || '-'}</p>
@@ -172,12 +173,8 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
               </p>
             </div>
 
-            <div className="flex justify-between items-start mt-10 text-center">
-              <div className="w-[120px]">
-                <p className="font-black uppercase text-[7pt] md:text-[8pt] underline mb-12">Le Client</p>
-                <div className="border-b border-gray-400"></div>
-              </div>
-              <div className="w-[120px]">
+            <div className="flex justify-end items-start mt-8 text-center">
+              <div className="w-[150px]">
                 <p className="font-black uppercase text-[7pt] md:text-[8pt] underline mb-12">La Gérance</p>
                 <div className="border-b border-gray-400"></div>
                 <p className="font-bold mt-2 text-[8pt] md:text-[9pt]">{settings.managerName}</p>

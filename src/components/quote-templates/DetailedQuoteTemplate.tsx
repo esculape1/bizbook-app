@@ -24,7 +24,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
     <>
       <style>{`
         .quote-wrapper {
-          width: 210mm; /* Fixer la largeur pour le ResponsiveA4Wrapper */
+          width: 210mm;
           margin: 0 auto;
           background: white;
           font-family: 'Inter', sans-serif;
@@ -43,8 +43,8 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
           background-color: #002060;
         }
         .content-inner {
-          padding: 10mm 10mm 15mm 15mm;
-          min-height: 297mm;
+          padding: 8mm 10mm 10mm 15mm;
+          min-height: 285mm;
           display: flex;
           flex-direction: column;
         }
@@ -59,10 +59,11 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
         .col-tot { width: 15%; }
 
         .totals-table { width: 100%; max-width: 280px; margin-left: auto; border: 2px solid black; border-collapse: collapse; }
-        .totals-table td { padding: 5px 8px; font-size: 9pt; border-bottom: 1px solid #eee; }
+        .totals-table td { padding: 4px 8px; font-size: 9pt; border-bottom: 1px solid #eee; }
         
         @media print {
-          .quote-wrapper { max-width: none; width: 210mm; box-shadow: none; margin: 0; }
+          @page { size: A4; margin: 0; }
+          .quote-wrapper { width: 210mm; height: 297mm; box-shadow: none; margin: 0; }
           .blue-bar { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .item-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
@@ -156,7 +157,7 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                     <td className="text-right tabular-nums">-{formatCurrency(retenueAmount, settings.currency)}</td>
                   </tr>
                 )}
-                <tr className="bg-gray-900 text-white font-black">
+                <tr className="bg-gray-900 text-white font-black net-a-payer-row">
                   <td className="uppercase text-[9pt] md:text-[10pt]">NET À PAYER:</td>
                   <td className="text-right text-[10pt] md:text-[11pt] tabular-nums">{formatCurrency(netAPayer, settings.currency)}</td>
                 </tr>
@@ -170,14 +171,11 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
               </p>
             </div>
 
-            <div className="flex justify-between items-start mt-10 text-center">
-              <div className="w-[120px]">
-                <div className="mt-12 border-b-2 border-gray-400"></div>
-                <p className="font-bold mt-1 uppercase text-[7pt] md:text-[8pt]">{settings.managerName}</p>
-              </div>
-              <div className="w-[120px]">
-                <p className="font-black uppercase text-[7pt] md:text-[8pt] underline mb-12">Le Client</p>
-                <div className="border-b-2 border-gray-400"></div>
+            <div className="flex justify-end items-start mt-8 text-center">
+              <div className="w-[150px]">
+                <p className="font-black uppercase text-[7pt] md:text-[8pt] underline mb-12">La Gérance</p>
+                <div className="border-b border-gray-400"></div>
+                <p className="font-bold mt-2 text-[8pt] md:text-[9pt]">{settings.managerName}</p>
               </div>
             </div>
           </div>
