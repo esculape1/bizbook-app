@@ -34,7 +34,7 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
           console.warn('Could not read stylesheet for printing', e);
         }
       });
-      printWindow?.document.write('</head><body>');
+      printWindow?.document.write('<body class="p-0 m-0">');
       printWindow?.document.write(content.innerHTML);
       printWindow?.document.write('</body></html>');
       printWindow?.document.close();
@@ -47,23 +47,29 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">
-          <Truck className="mr-2 h-4 w-4" />
+        <Button 
+            variant="outline" 
+            size="lg" 
+            className="w-full h-14 text-lg font-black uppercase tracking-tight border-2 border-primary/10 hover:bg-primary/5 shadow-sm transition-all active:scale-95"
+        >
+          <Truck className="mr-3 h-6 w-6 text-primary" />
           Bordereau de Livraison
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[95vw] sm:max-w-4xl p-0">
-        <div className="p-6">
+      <DialogContent className="w-[95vw] sm:max-w-4xl p-0 overflow-hidden border-none shadow-2xl">
+        <div className="p-6 border-b bg-muted/30">
             <DialogHeader>
-            <DialogTitle>Bordereau de Livraison - {`BL-${invoice.invoiceNumber}`}</DialogTitle>
+                <DialogTitle className="text-xl font-black uppercase tracking-tight">Bordereau de Livraison - {`BL-${invoice.invoiceNumber}`}</DialogTitle>
             </DialogHeader>
         </div>
-        <div className="max-h-[70vh] overflow-auto bg-gray-50">
-            <DeliverySlipTemplate invoice={invoice} client={client} settings={settings} />
+        <div className="max-h-[70vh] overflow-auto bg-gray-100 p-4 md:p-8 flex justify-center">
+            <div className="shadow-xl bg-white w-full max-w-[210mm]">
+                <DeliverySlipTemplate invoice={invoice} client={client} settings={settings} />
+            </div>
         </div>
-        <DialogFooter className="p-6 bg-white border-t">
-            <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>Fermer</Button>
-             <Button onClick={handlePrint}>
+        <DialogFooter className="p-6 bg-white border-t flex-row gap-2">
+            <Button type="button" variant="secondary" onClick={() => setIsOpen(false)} className="flex-1 font-bold">Fermer</Button>
+             <Button onClick={handlePrint} className="flex-1 font-black">
                 <Printer className="mr-2 h-4 w-4" />
                 Imprimer / PDF
             </Button>
