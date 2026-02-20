@@ -19,30 +19,41 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     const content = document.getElementById('invoice-content');
     if (content) {
       const printWindow = window.open('', '_blank');
-      printWindow?.document.write('<html><head><title>Impression Facture</title>');
+      if (!printWindow) return;
+      
+      printWindow.document.write('<html><head><title>Facture ' + invoice.invoiceNumber + '</title>');
+      
+      // Inject all styles
       Array.from(document.styleSheets).forEach(styleSheet => {
         try {
           if (styleSheet.href) {
-            printWindow?.document.write(`<link rel="stylesheet" href="${styleSheet.href}">`);
+            printWindow.document.write(`<link rel="stylesheet" href="${styleSheet.href}">`);
           } else if (styleSheet.cssRules) {
-            printWindow?.document.write(`<style>${Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('')}</style>`);
+            printWindow.document.write(`<style>${Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('')}</style>`);
           }
-        } catch (e) {}
+        } catch (e) {
+            console.warn('Could not read stylesheet', e);
+        }
       });
-      printWindow?.document.write('</head><body>');
-      printWindow?.document.write(content.innerHTML);
-      printWindow?.document.write('</body></html>');
-      printWindow?.document.close();
-      setTimeout(() => printWindow?.print(), 500);
+      
+      printWindow.document.write('</head><body class="p-0 bg-white">');
+      printWindow.document.write(content.innerHTML);
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+      }, 1000);
     }
   };
 
   return (
     <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap justify-between items-center bg-card p-4 rounded-xl border shadow-sm sticky top-0 z-10 gap-4">
+        <div className="flex flex-wrap justify-between items-center bg-card p-4 rounded-2xl border shadow-sm sticky top-0 z-10 gap-4">
             <div className="flex gap-2">
-                <Button onClick={handlePrint} className="font-black">
-                    <Printer className="mr-2 h-4 w-4" /> Imprimer Facture
+                <Button onClick={handlePrint} className="font-black h-10 px-6 shadow-lg shadow-primary/20 transition-all active:scale-95">
+                    <Printer className="mr-2 h-4 w-4" /> Imprimer la Facture
                 </Button>
                 <DeliverySlipDialog invoice={invoice} client={client} settings={settings} />
             </div>
@@ -50,8 +61,10 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
                 <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} asTextButton />
             </div>
         </div>
-        <div className="bg-white p-4 md:p-8 rounded-lg border shadow-lg overflow-auto">
-            <div className="max-w-[210mm] mx-auto">
+        
+        {/* Container pour l'aperçu à l'écran */}
+        <div className="bg-muted/30 p-2 md:p-10 rounded-3xl border shadow-inner overflow-auto">
+            <div className="max-w-[210mm] mx-auto shadow-2xl bg-white p-0 rounded-sm">
                 <DetailedTemplate invoice={invoice} client={client} settings={settings} />
             </div>
         </div>
