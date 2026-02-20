@@ -3,9 +3,10 @@
 import type { Invoice, Client, Settings } from '@/lib/types';
 import { DetailedTemplate } from '@/components/invoice-templates/DetailedTemplate';
 import { Button } from '@/components/ui/button';
-import { Printer, Truck, FileText } from 'lucide-react';
+import { Printer } from 'lucide-react';
 import { DeliverySlipDialog } from './DeliverySlipDialog';
 import { ShippingLabelsDialog } from './ShippingLabelsDialog';
+import { ResponsiveA4Wrapper } from '@/components/ResponsiveA4Wrapper';
 
 type InvoiceViewerProps = {
   invoice: Invoice;
@@ -42,11 +43,10 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
   };
 
   return (
-    <div className="flex flex-col items-center gap-8 max-w-5xl mx-auto w-full pb-20">
-        {/* Actions au sommet - Design Premium optimisé mobile */}
+    <div className="flex flex-col items-center gap-6 max-w-5xl mx-auto w-full pb-20">
+        {/* Actions au sommet */}
         <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 px-4 mt-2">
             <DeliverySlipDialog invoice={invoice} client={client} settings={settings} />
-            
             <Button 
                 onClick={handlePrint} 
                 size="lg" 
@@ -61,12 +61,14 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
             <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} asTextButton />
         </div>
 
-        {/* Zone de prévisualisation responsive sans scaling JS complexe */}
+        {/* Zone de prévisualisation avec ResponsiveA4Wrapper */}
         <div className="w-full px-2">
-            <div className="bg-muted/30 rounded-[2.5rem] p-2 md:p-10 border-2 border-dashed border-primary/10 shadow-inner overflow-x-hidden">
-                <div className="shadow-2xl mx-auto overflow-hidden rounded-sm ring-1 ring-black/5 bg-white">
-                    <DetailedTemplate invoice={invoice} client={client} settings={settings} />
-                </div>
+            <div className="bg-muted/30 rounded-[2rem] p-2 md:p-10 border-2 border-dashed border-primary/10 shadow-inner overflow-hidden">
+                <ResponsiveA4Wrapper>
+                    <div className="shadow-2xl mx-auto overflow-hidden rounded-sm ring-1 ring-black/5 bg-white">
+                        <DetailedTemplate invoice={invoice} client={client} settings={settings} />
+                    </div>
+                </ResponsiveA4Wrapper>
             </div>
         </div>
     </div>

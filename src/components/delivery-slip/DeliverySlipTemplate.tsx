@@ -12,8 +12,7 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
     <>
       <style>{`
         .slip-wrapper {
-          width: 100%;
-          max-width: 210mm;
+          width: 210mm; /* Fixer la largeur pour le ResponsiveA4Wrapper */
           margin: 0 auto;
           background: white;
           font-family: 'Inter', sans-serif;
@@ -45,13 +44,6 @@ export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: I
         .col-qty-cmd { width: 15%; }
         .col-qty-liv { width: 15%; }
         .col-obs { width: 25%; }
-
-        @media (max-width: 480px) {
-          .slip-wrapper { font-size: 8.5pt; }
-          .content-inner { padding: 8mm 5mm 10mm 10mm; }
-          .item-table td { font-size: 7.5pt; padding: 6px 2px; }
-          .item-table th { font-size: 6.5pt; }
-        }
 
         @media print {
           .slip-wrapper { max-width: none; width: 210mm; box-shadow: none; margin: 0; }

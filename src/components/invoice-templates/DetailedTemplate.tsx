@@ -24,8 +24,7 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
     <>
       <style>{`
         .invoice-wrapper {
-          width: 100%;
-          max-width: 210mm;
+          width: 210mm; /* Fixer la largeur pour le ResponsiveA4Wrapper */
           margin: 0 auto;
           background: white;
           font-family: 'Inter', sans-serif;
@@ -62,15 +61,6 @@ export function DetailedTemplate({ invoice, client, settings }: { invoice: Invoi
         .totals-table { width: 100%; max-width: 280px; margin-left: auto; border: 2px solid black; border-collapse: collapse; }
         .totals-table td { padding: 5px 8px; font-size: 9pt; border-bottom: 1px solid #eee; }
         
-        @media (max-width: 480px) {
-          .invoice-wrapper { font-size: 8.5pt; }
-          .content-inner { padding: 8mm 5mm 10mm 10mm; }
-          .item-table td { font-size: 7.5pt; padding: 4px 2px; }
-          .item-table th { font-size: 6.5pt; }
-          .totals-table td { font-size: 8pt; padding: 4px 6px; }
-          .net-a-payer-row { font-size: 9pt !important; }
-        }
-
         @media print {
           .invoice-wrapper { max-width: none; width: 210mm; box-shadow: none; margin: 0; }
           .blue-bar { -webkit-print-color-adjust: exact; print-color-adjust: exact; }

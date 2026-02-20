@@ -6,6 +6,7 @@ import { DeliverySlipTemplate } from '@/components/delivery-slip/DeliverySlipTem
 import { Button } from '@/components/ui/button';
 import { Truck, Printer, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ResponsiveA4Wrapper } from '@/components/ResponsiveA4Wrapper';
 
 type DeliverySlipDialogProps = {
   invoice: Invoice;
@@ -75,8 +76,12 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
         </div>
 
         <div className="flex-1 overflow-y-auto p-2 md:p-10 bg-muted/10">
-            <div className="max-w-[210mm] mx-auto shadow-2xl rounded-sm ring-1 ring-black/5 overflow-hidden bg-white">
-                <DeliverySlipTemplate invoice={invoice} client={client} settings={settings} />
+            <div className="max-w-[210mm] mx-auto">
+                <ResponsiveA4Wrapper>
+                    <div className="shadow-2xl rounded-sm ring-1 ring-black/5 overflow-hidden bg-white">
+                        <DeliverySlipTemplate invoice={invoice} client={client} settings={settings} />
+                    </div>
+                </ResponsiveA4Wrapper>
             </div>
         </div>
       </DialogContent>
