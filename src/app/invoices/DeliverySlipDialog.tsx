@@ -1,12 +1,12 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { Invoice, Client, Settings } from '@/lib/types';
 import { DeliverySlipTemplate } from '@/components/delivery-slip/DeliverySlipTemplate';
 import { Button } from '@/components/ui/button';
-import { Truck, Printer } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Truck, Printer, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 type DeliverySlipDialogProps = {
   invoice: Invoice;
@@ -16,6 +16,32 @@ type DeliverySlipDialogProps = {
 
 export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    if (isOpen) {
+      const updateScale = () => {
+        if (containerRef.current) {
+          const containerWidth = containerRef.current.clientWidth;
+          const targetWidth = 800; // Largeur cible A4
+          if (containerWidth < targetWidth) {
+            setScale(containerWidth / targetWidth);
+          } else {
+            setScale(1);
+          }
+        }
+      };
+
+      // Délai pour laisser le temps au dialogue de s'ouvrir et calculer la largeur
+      const timer = setTimeout(updateScale, 100);
+      window.addEventListener('resize', updateScale);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('resize', updateScale);
+      };
+    }
+  }, [isOpen]);
 
   const handlePrint = () => {
     const content = document.getElementById('delivery-slip-content');
@@ -56,24 +82,42 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
           Bordereau de Livraison
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[95vw] sm:max-w-4xl p-0 overflow-hidden border-none shadow-2xl">
-        <div className="p-6 border-b bg-muted/30">
-            <DialogHeader>
-                <DialogTitle className="text-xl font-black uppercase tracking-tight">Bordereau de Livraison - {`BL-${invoice.invoiceNumber}`}</DialogTitle>
-            </DialogHeader>
-        </div>
-        <div className="max-h-[70vh] overflow-auto bg-gray-100 p-4 md:p-8 flex justify-center">
-            <div className="shadow-xl bg-white w-full max-w-[210mm]">
-                <DeliverySlipTemplate invoice={invoice} client={client} settings={settings} />
+      <DialogContent className="w-[98vw] max-w-5xl p-0 overflow-hidden border-none shadow-2xl h-[95vh] flex flex-col bg-muted/20">
+        <div className="p-4 border-b bg-white flex justify-between items-center shrink-0">
+            <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                    <Truck className="size-5" />
+                </div>
+                <DialogTitle className="text-lg font-black uppercase tracking-tight">Bordereau - {`BL-${invoice.invoiceNumber}`}</DialogTitle>
+            </div>
+            <div className="flex items-center gap-2">
+                <Button onClick={handlePrint} className="font-black h-10 px-6 shadow-lg shadow-primary/20">
+                    <Printer className="mr-2 h-4 w-4" />
+                    Imprimer
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="rounded-full">
+                    <X className="size-5" />
+                </Button>
             </div>
         </div>
-        <DialogFooter className="p-6 bg-white border-t flex-row gap-2">
-            <Button type="button" variant="secondary" onClick={() => setIsOpen(false)} className="flex-1 font-bold">Fermer</Button>
-             <Button onClick={handlePrint} className="flex-1 font-black">
-                <Printer className="mr-2 h-4 w-4" />
-                Imprimer / PDF
-            </Button>
-        </DialogFooter>
+
+        <div className="flex-1 overflow-y-auto p-4 md:p-10 flex justify-center bg-muted/30">
+            <div ref={containerRef} className="w-full flex justify-center">
+                <div 
+                    className="origin-top transition-all duration-500 ease-out"
+                    style={{ 
+                        width: '210mm', 
+                        transform: `scale(${scale})`,
+                        height: `${297 * scale}mm`,
+                        marginBottom: scale < 1 ? `-${297 * (1 - scale)}mm` : '0' 
+                    }}
+                >
+                    <div className="shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-sm bg-white overflow-hidden ring-1 ring-black/5">
+                        <DeliverySlipTemplate invoice={invoice} client={client} settings={settings} />
+                    </div>
+                </div>
+            </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
