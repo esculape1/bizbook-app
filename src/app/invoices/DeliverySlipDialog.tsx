@@ -17,18 +17,18 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
+  
+  const ITEMS_PER_PAGE = 13;
+  const numPages = Math.max(1, Math.ceil(invoice.items.length / ITEMS_PER_PAGE));
 
   useEffect(() => {
     if (isOpen) {
       const updateScale = () => {
         if (containerRef.current) {
           const containerWidth = containerRef.current.clientWidth;
-          const targetWidth = 800; // Largeur cible A4
-          if (containerWidth < targetWidth) {
-            setScale(containerWidth / targetWidth);
-          } else {
-            setScale(1);
-          }
+          const targetWidth = 800;
+          const newScale = containerWidth / targetWidth;
+          setScale(newScale > 1 ? 1 : newScale);
         }
       };
 
@@ -106,13 +106,12 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
                     style={{ 
                         width: '210mm', 
                         transform: `scale(${scale})`,
-                        height: `${297 * scale}mm`,
-                        marginBottom: scale < 1 ? `-${297 * (1 - scale)}mm` : '0' 
+                        height: `calc(297mm * ${numPages} * ${scale})`,
+                        backgroundColor: 'white',
+                        boxShadow: '0 20px 50px rgba(0,0,0,0.15)'
                     }}
                 >
-                    <div className="shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-sm bg-white overflow-hidden ring-1 ring-black/5">
-                        <DeliverySlipTemplate invoice={invoice} client={client} settings={settings} />
-                    </div>
+                    <DeliverySlipTemplate invoice={invoice} client={client} settings={settings} />
                 </div>
             </div>
         </div>
