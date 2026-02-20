@@ -50,7 +50,7 @@ export default async function DashboardPage() {
 
   // Statistiques calculées
   // Le CA utilise fiscalInvoices
-  // Le Total Impayé utilise allInvoices
+  // Le Total Impayé utilise allInvoices (Global)
   const stats = calculateDashboardStats(fiscalInvoices, fiscalExpenses, clients, products, allInvoices);
 
   return (

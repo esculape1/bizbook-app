@@ -24,6 +24,15 @@ type InvoicesListProps = {
     headerActions?: React.ReactNode;
 };
 
+const cardColors = [
+    "bg-sky-500/10 border-sky-500/20 text-sky-800",
+    "bg-emerald-500/10 border-emerald-500/20 text-emerald-800",
+    "bg-amber-500/10 border-amber-500/20 text-amber-800",
+    "bg-rose-500/10 border-rose-500/20 text-rose-800",
+    "bg-violet-500/10 border-violet-500/20 text-violet-800",
+    "bg-teal-500/10 border-teal-500/20 text-teal-800",
+];
+
 export default function InvoicesList({ initialInvoices, initialClients, initialProducts, initialSettings, user, headerActions }: InvoicesListProps) {
     const [searchTerm, setSearchTerm] = useState('');
     const canManageInvoices = user?.role === ROLES.SUPER_ADMIN || user?.role === ROLES.ADMIN || user?.role === ROLES.USER;
@@ -63,29 +72,31 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
-                {filteredInvoices.map((invoice) => {
+                {filteredInvoices.map((invoice, index) => {
                 const client = initialClients.find(c => c.id === invoice.clientId);
                 const netToPay = invoice.netAPayer ?? invoice.totalAmount;
                 const amountDue = netToPay - (invoice.amountPaid || 0);
                 return (
-                    <Card key={invoice.id} className="flex flex-col">
+                    <Card key={invoice.id} className={cn("flex flex-col border-2 shadow-md", cardColors[index % cardColors.length])}>
                         <CardHeader className="pb-3">
                             <div className="flex justify-between items-start">
                                 <div className="min-w-0">
-                                    <CardTitle className="text-base truncate">
+                                    <CardTitle className="text-base truncate font-black uppercase tracking-tight">
                                       <Link href={`/invoices/${invoice.id}`} className="hover:underline">{invoice.invoiceNumber}</Link>
                                     </CardTitle>
-                                    <CardDescription className="truncate">{invoice.clientName}</CardDescription>
+                                    <CardDescription className="truncate font-bold text-current/70">{invoice.clientName}</CardDescription>
                                 </div>
-                                <Badge variant={getStatusVariant(invoice.status)}>{INVOICE_STATUS_TRANSLATIONS[invoice.status]}</Badge>
+                                <Badge variant={getStatusVariant(invoice.status)} className="font-black px-2 py-0.5">
+                                    {INVOICE_STATUS_TRANSLATIONS[invoice.status]}
+                                </Badge>
                             </div>
                         </CardHeader>
-                        <CardContent className="flex-grow space-y-2 text-sm">
-                            <div className="flex justify-between"><span>NET À PAYER:</span><span className="font-bold">{formatCurrency(netToPay, initialSettings.currency)}</span></div>
-                            <div className="flex justify-between"><span>SOLDE DÛ:</span><span className={cn("font-bold", amountDue > 0 ? "text-destructive" : "text-emerald-600")}>{formatCurrency(amountDue > 0.05 ? amountDue : 0, initialSettings.currency)}</span></div>
+                        <CardContent className="flex-grow space-y-2 text-xs">
+                            <div className="flex justify-between font-medium"><span>NET À PAYER:</span><span className="font-black">{formatCurrency(netToPay, initialSettings.currency)}</span></div>
+                            <div className="flex justify-between font-medium"><span>SOLDE DÛ:</span><span className={cn("font-black", amountDue > 0.05 ? "text-destructive" : "text-emerald-700")}>{formatCurrency(amountDue > 0.05 ? amountDue : 0, initialSettings.currency)}</span></div>
                         </CardContent>
                         {client && canManageInvoices && (
-                            <CardFooter className="flex items-center justify-end gap-1 p-2 bg-muted/50 border-t mt-auto">
+                            <CardFooter className="flex items-center justify-end gap-1 p-2 bg-black/5 border-t mt-auto">
                                 <ShippingLabelsDialog invoice={invoice} client={client} settings={initialSettings} />
                                 <EditInvoiceForm invoice={invoice} clients={initialClients} products={initialProducts} settings={initialSettings} />
                                 <CancelInvoiceButton id={invoice.id} invoiceNumber={invoice.invoiceNumber} disabled={invoice.status === 'Cancelled' || invoice.status === 'Paid'} />
@@ -95,18 +106,18 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                 )})}
             </div>
 
-            <Card className="hidden md:block">
+            <Card className="hidden md:block border-none shadow-premium bg-card/50">
                 <CardContent className="p-0">
                     <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>N° Facture</TableHead>
-                                <TableHead>Client</TableHead>
-                                <TableHead>Date</TableHead>
-                                <TableHead>Statut</TableHead>
-                                <TableHead className="text-right">Net à Payer</TableHead>
-                                <TableHead className="text-right">Solde Dû</TableHead>
-                                {canManageInvoices && <TableHead className="text-right">Actions</TableHead>}
+                        <TableHeader className="bg-muted/50 border-b-2 border-primary/10">
+                            <TableRow className="hover:bg-transparent">
+                                <TableHead className="font-black uppercase text-[11px] tracking-widest text-primary">N° Facture</TableHead>
+                                <TableHead className="font-black uppercase text-[11px] tracking-widest text-primary">Client</TableHead>
+                                <TableHead className="font-black uppercase text-[11px] tracking-widest text-primary">Date</TableHead>
+                                <TableHead className="font-black uppercase text-[11px] tracking-widest text-primary text-center">Statut</TableHead>
+                                <TableHead className="text-right font-black uppercase text-[11px] tracking-widest text-primary">Net à Payer</TableHead>
+                                <TableHead className="text-right font-black uppercase text-[11px] tracking-widest text-primary">Solde Dû</TableHead>
+                                {canManageInvoices && <TableHead className="text-right font-black uppercase text-[11px] tracking-widest text-primary">Actions</TableHead>}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -115,13 +126,13 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                                 const netToPay = invoice.netAPayer ?? invoice.totalAmount;
                                 const amountDue = netToPay - (invoice.amountPaid || 0);
                                 return (
-                                    <TableRow key={invoice.id}>
-                                        <TableCell><Link href={`/invoices/${invoice.id}`} className="text-primary hover:underline">{invoice.invoiceNumber}</Link></TableCell>
-                                        <TableCell>{invoice.clientName}</TableCell>
-                                        <TableCell>{new Date(invoice.date).toLocaleDateString('fr-FR')}</TableCell>
-                                        <TableCell><Badge variant={getStatusVariant(invoice.status)}>{INVOICE_STATUS_TRANSLATIONS[invoice.status]}</Badge></TableCell>
-                                        <TableCell className="text-right">{formatCurrency(netToPay, initialSettings.currency)}</TableCell>
-                                        <TableCell className={cn("text-right font-bold", amountDue > 0 ? "text-destructive" : "text-emerald-600")}>{formatCurrency(amountDue > 0.05 ? amountDue : 0, initialSettings.currency)}</TableCell>
+                                    <TableRow key={invoice.id} className="group hover:bg-primary/5 transition-colors">
+                                        <TableCell className="font-extrabold uppercase tracking-tight"><Link href={`/invoices/${invoice.id}`} className="text-primary hover:underline">{invoice.invoiceNumber}</Link></TableCell>
+                                        <TableCell className="font-bold text-xs uppercase text-muted-foreground">{invoice.clientName}</TableCell>
+                                        <TableCell className="text-xs">{new Date(invoice.date).toLocaleDateString('fr-FR')}</TableCell>
+                                        <TableCell className="text-center"><Badge variant={getStatusVariant(invoice.status)} className="font-black px-2.5">{INVOICE_STATUS_TRANSLATIONS[invoice.status]}</Badge></TableCell>
+                                        <TableCell className="text-right font-black text-foreground">{formatCurrency(netToPay, initialSettings.currency)}</TableCell>
+                                        <TableCell className={cn("text-right font-black", amountDue > 0.05 ? "text-destructive" : "text-emerald-600")}>{formatCurrency(amountDue > 0.05 ? amountDue : 0, initialSettings.currency)}</TableCell>
                                         {canManageInvoices && (
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-1">

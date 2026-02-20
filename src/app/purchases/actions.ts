@@ -57,6 +57,7 @@ export async function createPurchase(formData: unknown) {
 
     const totalAmount = premierVersement + deuxiemeVersement + transportCost + otherFees;
 
+    // We do NOT specify purchaseNumber here as addPurchase generates it.
     await addPurchase({
         supplierId,
         supplierName: supplier.name,
