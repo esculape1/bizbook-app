@@ -4,7 +4,7 @@
 import type { Invoice, Client, Settings } from '@/lib/types';
 import { DetailedTemplate } from '@/components/invoice-templates/DetailedTemplate';
 import { Button } from '@/components/ui/button';
-import { Printer, Truck } from 'lucide-react';
+import { Printer } from 'lucide-react';
 import { DeliverySlipDialog } from './DeliverySlipDialog';
 import { ShippingLabelsDialog } from './ShippingLabelsDialog';
 
@@ -23,7 +23,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
       
       printWindow.document.write('<html><head><title>Facture ' + invoice.invoiceNumber + '</title>');
       
-      // Inject all styles
+      // Injection robuste des styles pour l'impression
       Array.from(document.styleSheets).forEach(styleSheet => {
         try {
           if (styleSheet.href) {
@@ -62,7 +62,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
             </div>
         </div>
         
-        {/* Container pour l'aperçu à l'écran */}
+        {/* Affichage standard sans transformation distordue */}
         <div className="bg-muted/30 p-2 md:p-10 rounded-3xl border shadow-inner overflow-auto">
             <div className="max-w-[210mm] mx-auto shadow-2xl bg-white p-0 rounded-sm">
                 <DetailedTemplate invoice={invoice} client={client} settings={settings} />

@@ -1,3 +1,4 @@
+
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SalesChart } from "@/components/dashboard/SalesChart";
 import { LowStockTable } from "@/components/dashboard/LowStockTable";
@@ -18,10 +19,14 @@ export const dynamic = 'force-dynamic';
 const getFiscalStartDate = () => {
   const now = new Date();
   const year = now.getFullYear();
-  const cutoffThisYear = new Date(year, 11, 25);
+  // On crée la date pivot (25 déc) de l'année en cours
+  const cutoffThisYear = new Date(year, 11, 25); // Mois 11 = Décembre
+  
+  // Si on est avant le 25 déc, l'exercice a commencé le 25 déc de l'année précédente
   if (now < cutoffThisYear) {
     return new Date(year - 1, 11, 25);
   }
+  // Sinon, l'exercice a commencé le 25 déc de cette année
   return cutoffThisYear;
 };
 
@@ -45,7 +50,7 @@ export default async function DashboardPage() {
   // Filtrage des factures pour l'exercice fiscal (pour le CA uniquement)
   const fiscalInvoices = allInvoices.filter(inv => inv.date >= startIso);
 
-  // Statistiques : CA sur fiscalInvoices, Impayés sur allInvoices (Global)
+  // Statistiques : CA sur fiscalInvoices, Impayés sur allInvoices (Global historique)
   const stats = calculateDashboardStats(fiscalInvoices, fiscalExpenses, clients, products, allInvoices);
 
   return (
@@ -61,11 +66,29 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        <StatCard title="CA (Net à Payer)" value={formatCurrency(stats.totalRevenue, settings.currency)} icon={<DollarSign />} className="bg-emerald-600 text-white" description="Exercice en cours" />
-        <StatCard title="Dépenses" value={formatCurrency(stats.totalExpenses, settings.currency)} icon={<Wallet />} className="bg-rose-600 text-white" description="Exercice en cours" />
+        <StatCard 
+            title="CA (Net à Payer)" 
+            value={formatCurrency(stats.totalRevenue, settings.currency)} 
+            icon={<DollarSign />} 
+            className="bg-emerald-600 text-white" 
+            description="Exercice en cours" 
+        />
+        <StatCard 
+            title="Dépenses" 
+            value={formatCurrency(stats.totalExpenses, settings.currency)} 
+            icon={<Wallet />} 
+            className="bg-rose-600 text-white" 
+            description="Exercice en cours" 
+        />
         <StatCard title="Clients Actifs" value={stats.activeClients.toString()} icon={<Users />} className="bg-sky-600 text-white" />
         <StatCard title="Produits" value={stats.productCount.toString()} icon={<Box />} className="bg-amber-600 text-white" />
-        <StatCard title="Total Impayé Net" value={formatCurrency(stats.totalDue, settings.currency)} icon={<Receipt />} className="bg-indigo-600 text-white" description="Historique Global" />
+        <StatCard 
+            title="Total Impayé Net" 
+            value={formatCurrency(stats.totalDue, settings.currency)} 
+            icon={<Receipt />} 
+            className="bg-indigo-600 text-white" 
+            description="Historique Global" 
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
