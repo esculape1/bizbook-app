@@ -292,9 +292,11 @@ export function calculateDashboardStats(
 ) {
   const activeInvoices = invoices.filter(i => i.status !== 'Cancelled');
   
-  // Utilisation systématique du netAPayer pour le CA et le reste dû
+  // CA basé sur le Net à Payer (montant réel attendu)
   const totalRevenue = activeInvoices.reduce((sum, i) => sum + (i.netAPayer ?? i.totalAmount), 0);
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+  
+  // Total dû basé sur le Net à Payer moins ce qui a déjà été réglé
   const totalDue = activeInvoices.reduce((sum, i) => {
       const net = i.netAPayer ?? i.totalAmount;
       return sum + (net - (i.amountPaid || 0));
