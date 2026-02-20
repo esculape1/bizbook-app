@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -6,7 +7,6 @@ import { DeliverySlipTemplate } from '@/components/delivery-slip/DeliverySlipTem
 import { Button } from '@/components/ui/button';
 import { Truck, Printer, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ResponsiveA4Wrapper } from '@/components/ResponsiveA4Wrapper';
 
 type DeliverySlipDialogProps = {
   invoice: Invoice;
@@ -49,11 +49,10 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
       <DialogTrigger asChild>
         <Button 
             variant="outline" 
-            size="lg" 
-            className="w-full h-14 text-lg font-black uppercase tracking-tight border-2 border-primary/10 hover:bg-primary/5 shadow-sm transition-all active:scale-95"
+            className="font-black uppercase border-2 border-primary/10 hover:bg-primary/5 shadow-sm transition-all"
         >
-          <Truck className="mr-3 h-6 w-6 text-primary" />
-          Bordereau de Livraison
+          <Truck className="mr-2 h-4 w-4 text-primary" />
+          Bordereau
         </Button>
       </DialogTrigger>
       <DialogContent className="w-[98vw] max-w-5xl p-0 overflow-hidden border-none shadow-2xl h-[95vh] flex flex-col bg-muted/20">
@@ -76,12 +75,8 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
         </div>
 
         <div className="flex-1 overflow-y-auto p-2 md:p-10 bg-muted/10">
-            <div className="max-w-[210mm] mx-auto">
-                <ResponsiveA4Wrapper>
-                    <div className="shadow-2xl rounded-sm ring-1 ring-black/5 overflow-hidden bg-white">
-                        <DeliverySlipTemplate invoice={invoice} client={client} settings={settings} />
-                    </div>
-                </ResponsiveA4Wrapper>
+            <div className="max-w-[210mm] mx-auto bg-white p-8 shadow-2xl">
+                <DeliverySlipTemplate invoice={invoice} client={client} settings={settings} />
             </div>
         </div>
       </DialogContent>

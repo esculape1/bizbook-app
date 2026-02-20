@@ -4,7 +4,7 @@
 import type { Invoice, Client, Settings } from '@/lib/types';
 import { DetailedTemplate } from '@/components/invoice-templates/DetailedTemplate';
 import { Button } from '@/components/ui/button';
-import { Printer } from 'lucide-react';
+import { Printer, Truck } from 'lucide-react';
 import { DeliverySlipDialog } from './DeliverySlipDialog';
 import { ShippingLabelsDialog } from './ShippingLabelsDialog';
 
@@ -39,15 +39,21 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
 
   return (
     <div className="flex flex-col gap-6">
-        <div className="flex justify-between items-center bg-card p-4 rounded-lg border shadow-sm sticky top-0 z-10">
+        <div className="flex flex-wrap justify-between items-center bg-card p-4 rounded-xl border shadow-sm sticky top-0 z-10 gap-4">
             <div className="flex gap-2">
-                <Button onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> Imprimer</Button>
+                <Button onClick={handlePrint} className="font-black">
+                    <Printer className="mr-2 h-4 w-4" /> Imprimer Facture
+                </Button>
                 <DeliverySlipDialog invoice={invoice} client={client} settings={settings} />
             </div>
-            <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} asTextButton />
+            <div className="flex gap-2">
+                <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} asTextButton />
+            </div>
         </div>
         <div className="bg-white p-4 md:p-8 rounded-lg border shadow-lg overflow-auto">
-            <DetailedTemplate invoice={invoice} client={client} settings={settings} />
+            <div className="max-w-[210mm] mx-auto">
+                <DetailedTemplate invoice={invoice} client={client} settings={settings} />
+            </div>
         </div>
     </div>
   );

@@ -44,7 +44,10 @@ export async function generateReport(
         
         // Chiffre d'affaires basé sur le Net à Payer (après retenue)
         const grossSales = activeInvoices.reduce((sum, inv) => sum + (inv.netAPayer ?? inv.totalAmount), 0);
-        const totalUnpaid = activeInvoices.reduce((sum, inv) => sum + ((inv.netAPayer ?? inv.totalAmount) - (inv.amountPaid || 0)), 0);
+        const totalUnpaid = activeInvoices.reduce((sum, inv) => {
+            const net = inv.netAPayer ?? inv.totalAmount;
+            return sum + (net - (inv.amountPaid || 0));
+        }, 0);
         const totalExpenses = allExpenses.reduce((sum, exp) => sum + exp.amount, 0);
 
         const productSales: Record<string, any> = {};

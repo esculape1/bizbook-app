@@ -9,7 +9,7 @@ import Image from 'next/image';
 
 export function ClientStatementTemplate({ data, client, settings }: { data: ReportData, client: Client, settings: Settings }) {
   if (!data) {
-    return null; // Return early if data is null to prevent runtime errors
+    return null;
   }
   
   const reportDate = new Date();
@@ -88,7 +88,7 @@ export function ClientStatementTemplate({ data, client, settings }: { data: Repo
                     <td className="p-2 border text-xs font-semibold">{invoice.invoiceNumber}</td>
                     <td className="p-2 border text-right text-xs">{formatCurrency(netToPay, settings.currency)}</td>
                     <td className="p-2 border text-right text-xs">{formatCurrency(invoice.amountPaid || 0, settings.currency)}</td>
-                    <td className="p-2 border text-right text-xs font-bold">{formatCurrency(due > 0.01 ? due : 0, settings.currency)}</td>
+                    <td className="p-2 border text-right text-xs font-bold">{formatCurrency(due > 0.05 ? due : 0, settings.currency)}</td>
                   </tr>
                 );
               })}
@@ -98,7 +98,7 @@ export function ClientStatementTemplate({ data, client, settings }: { data: Repo
                 <td className="p-2 border text-right uppercase text-[9px]" colSpan={2}>Totaux de la Période</td>
                 <td className="p-2 border text-right text-xs">{formatCurrency(totalInvoicedNet, settings.currency)}</td>
                 <td className="p-2 border text-right text-xs">{formatCurrency(totalPaid, settings.currency)}</td>
-                <td className="p-2 border text-right text-xs text-destructive">{formatCurrency(balanceDue > 0.01 ? balanceDue : 0, settings.currency)}</td>
+                <td className="p-2 border text-right text-xs text-destructive">{formatCurrency(balanceDue > 0.05 ? balanceDue : 0, settings.currency)}</td>
               </tr>
             </tfoot>
           </table>
@@ -106,9 +106,9 @@ export function ClientStatementTemplate({ data, client, settings }: { data: Repo
         
         <div className="mt-8 p-6 text-center border-2 border-black rounded-xl">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1">Position Nette du Compte</p>
-            <p className="font-black text-3xl">{formatCurrency(balanceDue > 0.01 ? balanceDue : 0, settings.currency)}</p>
+            <p className="font-black text-3xl">{formatCurrency(balanceDue > 0.05 ? balanceDue : 0, settings.currency)}</p>
             <p className="text-[10px] text-muted-foreground mt-2 italic">
-                {balanceDue > 0.01 ? 'Le solde ci-dessus est en attente de règlement.' : 'Le compte est actuellement soldé.'}
+                {balanceDue > 0.05 ? 'Le solde ci-dessus est en attente de règlement.' : 'Le compte est actuellement soldé.'}
             </p>
         </div>
 

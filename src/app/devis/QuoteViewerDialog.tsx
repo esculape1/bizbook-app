@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -6,7 +7,6 @@ import { DetailedQuoteTemplate } from '@/components/quote-templates/DetailedQuot
 import { Button } from '@/components/ui/button';
 import { Eye, Printer, FileClock, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ResponsiveA4Wrapper } from '@/components/ResponsiveA4Wrapper';
 
 type QuoteViewerDialogProps = {
   quote: Quote;
@@ -72,12 +72,8 @@ export function QuoteViewerDialog({ quote, client, settings }: QuoteViewerDialog
         </div>
 
         <div className="flex-1 overflow-y-auto p-2 md:p-10 bg-muted/10">
-            <div className="max-w-[210mm] mx-auto">
-                <ResponsiveA4Wrapper>
-                    <div className="shadow-2xl rounded-sm ring-1 ring-black/5 overflow-hidden bg-white">
-                        <DetailedQuoteTemplate quote={quote} client={client} settings={settings} />
-                    </div>
-                </ResponsiveA4Wrapper>
+            <div className="max-w-[210mm] mx-auto shadow-2xl bg-white p-8">
+                <DetailedQuoteTemplate quote={quote} client={client} settings={settings} />
             </div>
         </div>
       </DialogContent>

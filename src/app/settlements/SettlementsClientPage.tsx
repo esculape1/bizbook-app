@@ -10,9 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, CreditCard, Wallet, Banknote } from 'lucide-react';
-import { cn, formatCurrency } from '@/lib/utils';
+import { Loader2, CreditCard } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
 import { getUnpaidInvoicesForClient, processMultipleInvoicePayments, getPaymentHistoryForClient } from './actions';
 import type { Client, Invoice, Settings, PaymentHistoryItem } from '@/lib/types';
@@ -69,7 +68,8 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
     let totalDueOnSelected = 0;
     let totalDueForAll = 0;
     invoices.forEach(inv => {
-      const due = inv.totalAmount - (inv.amountPaid || 0);
+      const netToPay = inv.netAPayer ?? inv.totalAmount;
+      const due = netToPay - (inv.amountPaid || 0);
       totalDueForAll += due;
       if (selectedInvoiceIds.has(inv.id)) {
         totalDueOnSelected += due;
@@ -123,7 +123,11 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
         setInvoices(unpaidInvoices);
         setPaymentHistory(history);
         setSelectedInvoiceIds(new Set());
-        form.reset();
+        form.reset({
+            ...data,
+            paymentAmount: 0,
+            paymentNotes: '',
+        });
       } else {
         toast({ variant: "destructive", title: "Erreur", description: result.message });
       }
@@ -137,7 +141,7 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="size-5" /> Encaisser un règlement
           </CardTitle>
-          <CardDescription>Sélectionnez un client pour voir ses factures impayées.</CardDescription>
+          <CardDescription>Sélectionnez un client pour voir ses factures impayées (calculées sur le Net à Payer).</CardDescription>
         </CardHeader>
         <CardContent>
           <ClientPicker
@@ -154,7 +158,7 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
             <CardHeader>
               <CardTitle>Factures Impayées ({invoices.length})</CardTitle>
               <div className="flex justify-between font-bold text-sm">
-                <span>Total dû: {formatCurrency(totalDueForAll, settings.currency)}</span>
+                <span>Total dû net: {formatCurrency(totalDueForAll, settings.currency)}</span>
                 <span className="text-primary">Sélection: {formatCurrency(totalDueOnSelected, settings.currency)}</span>
               </div>
             </CardHeader>
@@ -164,18 +168,22 @@ export function SettlementsClientPage({ clients, settings }: { clients: Client[]
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[50px]">
-                        <Checkbox checked={selectedInvoiceIds.size === invoices.length} onCheckedChange={handleSelectAll} />
+                        <Checkbox checked={selectedInvoiceIds.size === invoices.length && invoices.length > 0} onCheckedChange={handleSelectAll} />
                       </TableHead>
                       <TableHead>Facture</TableHead>
-                      <TableHead className="text-right">Reste dû</TableHead>
+                      <TableHead className="text-right">Reste dû net</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {invoices.map(invoice => (
+                    {invoices.length === 0 ? (
+                        <TableRow>
+                            <TableCell colSpan={3} className="text-center py-8 text-muted-foreground italic">Aucune facture impayée.</TableCell>
+                        </TableRow>
+                    ) : invoices.map(invoice => (
                       <TableRow key={invoice.id} onClick={() => handleInvoiceSelect(invoice.id)} className="cursor-pointer">
                         <TableCell><Checkbox checked={selectedInvoiceIds.has(invoice.id)} /></TableCell>
                         <TableCell>{invoice.invoiceNumber}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(invoice.totalAmount - (invoice.amountPaid || 0), settings.currency)}</TableCell>
+                        <TableCell className="text-right">{formatCurrency((invoice.netAPayer ?? invoice.totalAmount) - (invoice.amountPaid || 0), settings.currency)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

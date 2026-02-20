@@ -19,7 +19,7 @@ export async function signIn(prevState: State | undefined, formData: FormData) {
   try {
     const user = await getUserByEmail(email);
 
-    // Vérification simple du mot de passe (à améliorer avec bcrypt en production)
+    // Vérification simple du mot de passe
     if (user && user.password === password) {
       cookies().set('bizbook_session', email, {
         httpOnly: true,

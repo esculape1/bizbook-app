@@ -15,7 +15,9 @@ export async function getUnpaidInvoicesForClient(clientId: string): Promise<Invo
   const allInvoices = await getInvoices();
   return allInvoices
     .filter(inv => 
-      inv.clientId === clientId && (inv.status === 'Unpaid' || inv.status === 'Partially Paid')
+      inv.clientId === clientId && 
+      inv.status !== 'Cancelled' &&
+      (inv.amountPaid || 0) < (inv.netAPayer ?? inv.totalAmount) - 0.01
     )
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }
@@ -77,7 +79,7 @@ export async function processMultipleInvoicePayments(payload: SettlementPayload)
           if (!data) return null;
           return { id: doc.id, ...data } as Invoice;
       })
-      .filter((inv): inv is Invoice => inv !== null && inv.clientId === clientId && (inv.status === 'Unpaid' || inv.status === 'Partially Paid'))
+      .filter((inv): inv is Invoice => inv !== null && inv.clientId === clientId && inv.status !== 'Cancelled')
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     if (invoicesToSettle.length !== invoiceIds.length) {
@@ -85,10 +87,11 @@ export async function processMultipleInvoicePayments(payload: SettlementPayload)
     }
     
     const totalDueOnSelected = invoicesToSettle.reduce((sum, inv) => {
-        return sum + (inv.totalAmount - (inv.amountPaid || 0));
+        const netToPay = inv.netAPayer ?? inv.totalAmount;
+        return sum + (netToPay - (inv.amountPaid || 0));
     }, 0);
     
-    if (paymentAmount > totalDueOnSelected + 0.01) {
+    if (paymentAmount > totalDueOnSelected + 0.05) {
         return { success: false, message: `Le montant (${paymentAmount}) dépasse le total dû (${totalDueOnSelected.toFixed(2)}).` };
     }
 
@@ -98,12 +101,13 @@ export async function processMultipleInvoicePayments(payload: SettlementPayload)
         if (amountToApply <= 0) break;
 
         const invoiceRef = db.collection('invoices').doc(invoice.id);
-        const dueOnInvoice = invoice.totalAmount - (invoice.amountPaid || 0);
+        const netToPay = invoice.netAPayer ?? invoice.totalAmount;
+        const dueOnInvoice = netToPay - (invoice.amountPaid || 0);
         const paymentForThisInvoice = Math.min(amountToApply, dueOnInvoice);
 
         if (paymentForThisInvoice > 0) {
             const newAmountPaid = (invoice.amountPaid || 0) + paymentForThisInvoice;
-            const newStatus: Invoice['status'] = newAmountPaid >= invoice.totalAmount - 0.01 ? 'Paid' : 'Partially Paid';
+            const newStatus: Invoice['status'] = newAmountPaid >= netToPay - 0.05 ? 'Paid' : 'Partially Paid';
             
             const newPayment: Payment = {
                 id: randomUUID(),

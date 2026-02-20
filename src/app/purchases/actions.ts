@@ -115,11 +115,27 @@ export async function cancelPurchase(id: string) {
   }
 
   try {
+    const purchase = await getPurchaseById(id);
+    if (!purchase) return { message: "Achat non trouvé." };
+
+    // Si l'achat a été réceptionné, il faut retirer les quantités du stock
+    if (purchase.status === 'Received') {
+        const products = await getProducts();
+        for (const item of purchase.items) {
+            const product = products.find(p => p.id === item.productId);
+            if (product) {
+                const newStock = Math.max(0, product.quantityInStock - item.quantity);
+                await updateProduct(item.productId, { quantityInStock: newStock });
+            }
+        }
+    }
+
     await updatePurchaseInDB(id, { status: 'Cancelled' });
     revalidateTag('purchases');
+    revalidateTag('products');
     revalidateTag('dashboard-stats');
     return { success: true };
   } catch (error) {
-    return { success: false, message: "Erreur." };
+    return { success: false, message: "Erreur technique lors de l'annulation." };
   }
 }

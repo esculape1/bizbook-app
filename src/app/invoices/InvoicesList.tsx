@@ -11,11 +11,9 @@ import { EditInvoiceForm } from "./EditInvoiceForm";
 import { CancelInvoiceButton } from "./DeleteInvoiceButton";
 import type { Invoice, Client, Product, Settings, User } from "@/lib/types";
 import { ShippingLabelsDialog } from "./ShippingLabelsDialog";
-import { Separator } from "@/components/ui/separator";
 import { ROLES, INVOICE_STATUS_TRANSLATIONS } from "@/lib/constants";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, FileText, User as UserIcon, Calendar, Activity, DollarSign, Settings2 } from "lucide-react";
+import { Search } from "lucide-react";
 
 type InvoicesListProps = {
     initialInvoices: Invoice[];
@@ -67,7 +65,8 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
                 {filteredInvoices.map((invoice) => {
                 const client = initialClients.find(c => c.id === invoice.clientId);
-                const amountDue = invoice.totalAmount - (invoice.amountPaid || 0);
+                const netToPay = invoice.netAPayer ?? invoice.totalAmount;
+                const amountDue = netToPay - (invoice.amountPaid || 0);
                 return (
                     <Card key={invoice.id} className="flex flex-col">
                         <CardHeader className="pb-3">
@@ -82,8 +81,8 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                             </div>
                         </CardHeader>
                         <CardContent className="flex-grow space-y-2 text-sm">
-                            <div className="flex justify-between"><span>TOTAL TTC:</span><span className="font-bold">{formatCurrency(invoice.totalAmount, initialSettings.currency)}</span></div>
-                            <div className="flex justify-between"><span>SOLDE DÛ:</span><span className="font-bold text-destructive">{formatCurrency(amountDue, initialSettings.currency)}</span></div>
+                            <div className="flex justify-between"><span>NET À PAYER:</span><span className="font-bold">{formatCurrency(netToPay, initialSettings.currency)}</span></div>
+                            <div className="flex justify-between"><span>SOLDE DÛ:</span><span className={cn("font-bold", amountDue > 0 ? "text-destructive" : "text-emerald-600")}>{formatCurrency(amountDue > 0.05 ? amountDue : 0, initialSettings.currency)}</span></div>
                         </CardContent>
                         {client && canManageInvoices && (
                             <CardFooter className="flex items-center justify-end gap-1 p-2 bg-muted/50 border-t mt-auto">
@@ -105,7 +104,7 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                                 <TableHead>Client</TableHead>
                                 <TableHead>Date</TableHead>
                                 <TableHead>Statut</TableHead>
-                                <TableHead className="text-right">Total TTC</TableHead>
+                                <TableHead className="text-right">Net à Payer</TableHead>
                                 <TableHead className="text-right">Solde Dû</TableHead>
                                 {canManageInvoices && <TableHead className="text-right">Actions</TableHead>}
                             </TableRow>
@@ -113,15 +112,16 @@ export default function InvoicesList({ initialInvoices, initialClients, initialP
                         <TableBody>
                             {filteredInvoices.map((invoice) => {
                                 const client = initialClients.find(c => c.id === invoice.clientId);
-                                const amountDue = invoice.totalAmount - (invoice.amountPaid || 0);
+                                const netToPay = invoice.netAPayer ?? invoice.totalAmount;
+                                const amountDue = netToPay - (invoice.amountPaid || 0);
                                 return (
                                     <TableRow key={invoice.id}>
                                         <TableCell><Link href={`/invoices/${invoice.id}`} className="text-primary hover:underline">{invoice.invoiceNumber}</Link></TableCell>
                                         <TableCell>{invoice.clientName}</TableCell>
                                         <TableCell>{new Date(invoice.date).toLocaleDateString('fr-FR')}</TableCell>
                                         <TableCell><Badge variant={getStatusVariant(invoice.status)}>{INVOICE_STATUS_TRANSLATIONS[invoice.status]}</Badge></TableCell>
-                                        <TableCell className="text-right">{formatCurrency(invoice.totalAmount, initialSettings.currency)}</TableCell>
-                                        <TableCell className="text-right text-destructive font-bold">{formatCurrency(amountDue, initialSettings.currency)}</TableCell>
+                                        <TableCell className="text-right">{formatCurrency(netToPay, initialSettings.currency)}</TableCell>
+                                        <TableCell className={cn("text-right font-bold", amountDue > 0 ? "text-destructive" : "text-emerald-600")}>{formatCurrency(amountDue > 0.05 ? amountDue : 0, initialSettings.currency)}</TableCell>
                                         {canManageInvoices && (
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-1">
