@@ -57,8 +57,8 @@ export async function createPurchase(formData: unknown) {
 
     const totalAmount = premierVersement + deuxiemeVersement + transportCost + otherFees;
 
+    // Le purchaseNumber est généré automatiquement par addPurchase dans lib/data.ts
     await addPurchase({
-        purchaseNumber: '',
         supplierId,
         supplierName: supplier.name,
         date: date.toISOString(),
@@ -75,7 +75,8 @@ export async function createPurchase(formData: unknown) {
     revalidateTag('dashboard-stats');
     return {};
   } catch (error) {
-    return { message: 'Erreur technique.' };
+    console.error('Failed to create purchase:', error);
+    return { message: 'Erreur technique lors de la création de l\'achat.' };
   }
 }
 
@@ -120,6 +121,7 @@ export async function updatePurchase(id: string, purchaseNumber: string, formDat
     revalidateTag('dashboard-stats');
     return {};
   } catch (error) {
+    console.error('Failed to update purchase:', error);
     return { message: 'Erreur technique lors de la mise à jour.' };
   }
 }
@@ -149,7 +151,8 @@ export async function receivePurchase(id: string) {
       revalidateTag('dashboard-stats');
       return { success: true };
     } catch (error) {
-      return { success: false, message: "Erreur." };
+      console.error('Failed to receive purchase:', error);
+      return { success: false, message: "Erreur lors de la réception." };
     }
 }
 
@@ -181,6 +184,7 @@ export async function cancelPurchase(id: string) {
     revalidateTag('dashboard-stats');
     return { success: true };
   } catch (error) {
+    console.error('Failed to cancel purchase:', error);
     return { success: false, message: "Erreur technique lors de l'annulation." };
   }
 }
