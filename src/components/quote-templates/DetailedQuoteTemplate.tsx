@@ -32,6 +32,19 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
   return (
     <>
       <style>{`
+        @media screen {
+          .quote-container {
+            width: 100%;
+            max-width: 100vw;
+            margin: 0 auto;
+          }
+          @media (max-width: 480px) {
+            .printable-area { font-size: 8pt !important; }
+            .text-2xl { font-size: 1.25rem !important; }
+            th, td { padding: 4px 2px !important; }
+            .total-box { width: 100% !important; }
+          }
+        }
         @media print {
           @page {
             size: A4;
@@ -55,8 +68,15 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
             page-break-inside: avoid;
           }
         }
+        .item-table { table-layout: fixed; width: 100%; }
+        .total-table { table-layout: fixed; width: 100%; }
+        .col-ref { width: 18%; }
+        .col-des { width: 42%; }
+        .col-pu { width: 15%; }
+        .col-qty { width: 10%; }
+        .col-tot { width: 15%; }
       `}</style>
-      <div id="quote-content" className="printable-area bg-gray-50 text-black font-sans text-[10pt]">
+      <div id="quote-content" className="quote-container bg-white text-black font-sans text-[10pt] leading-tight printable-area">
         {pages.map((pageItems, pageIndex) => {
           const isLastPage = pageIndex === pages.length - 1;
           const emptyRowsCount = isLastPage ? ITEMS_PER_PAGE - pageItems.length : 0;
@@ -79,11 +99,11 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                   display: 'flex',
                   flexDirection: 'column',
                   flexGrow: 1,
-                  paddingLeft: '5mm', // Space for the blue bar
+                  paddingLeft: '5mm',
                 }}>
                 <header className="mb-4">
-                  <div className="flex justify-between items-start">
-                      <div className="w-2/3">
+                  <div className="flex justify-between items-start gap-2">
+                      <div className="flex-1">
                           {settings.logoUrl && (
                               <Image 
                                   src={settings.logoUrl} 
@@ -94,64 +114,60 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
                                   data-ai-hint="logo"
                               />
                           )}
-                           <h1 className="text-2xl font-bold text-[#1f4e78] mt-2">FACTURE PROFORMA</h1>
+                           <h1 className="text-xl md:text-2xl font-bold text-[#1f4e78] mt-2">FACTURE PROFORMA</h1>
                       </div>
-                      <div className="w-1/3 text-right text-xs">
-                          <p><strong>DATE:</strong> {format(new Date(quote.date), 'dd/MM/yyyy', { locale: fr })}</p>
-                          <p><strong>N°:</strong> {quote.quoteNumber}</p>
-                          <p><strong>Valable jusqu'au:</strong> {format(new Date(quote.expiryDate), 'dd/MM/yyyy', { locale: fr })}</p>
+                      <div className="text-right text-[8pt] md:text-[9pt] shrink-0 font-bold">
+                          <p>DATE: {format(new Date(quote.date), 'dd/MM/yyyy', { locale: fr })}</p>
+                          <p>N°: {quote.quoteNumber}</p>
+                          <p className="text-[#1f4e78]">Valable jusqu'au: {format(new Date(quote.expiryDate), 'dd/MM/yyyy', { locale: fr })}</p>
                       </div>
                   </div>
-                  <div className="flex justify-between items-start mt-4 text-xs">
-                    <div className="w-1/2">
-                      <p className="font-bold text-sm text-[#1f4e78]">{settings.legalName || settings.companyName}</p>
-                      <p>{settings.companyAddress}</p>
+                  <div className="flex justify-between items-start mt-4 text-[8pt] md:text-[9pt] gap-4">
+                    <div className="flex-1">
+                      <p className="font-bold text-[#1f4e78] uppercase border-b border-[#1f4e78] mb-1 pb-0.5">Émetteur</p>
+                      <p className="font-bold">{settings.legalName || settings.companyName}</p>
+                      <p className="line-clamp-2">{settings.companyAddress}</p>
                       <p>Tel: {settings.companyPhone}</p>
-                      <p>IFU: {settings.companyIfu} / RCCM: {settings.companyRccm}</p>
-                      <p>Régime fiscal: CME DGI Ouaga II</p>
+                      <p className="text-[7pt] md:text-[8pt]">IFU: {settings.companyIfu} / RCCM: {settings.companyRccm}</p>
                     </div>
-                    <div className="w-1/2 pl-4">
-                      <p className="font-bold underline">Client:</p>
-                      <p className="font-bold">{client.name}</p>
-                      <p>{client.address}</p>
+                    <div className="flex-1">
+                      <p className="font-bold underline uppercase border-b border-[#1f4e78] mb-1 pb-0.5">Client</p>
+                      <p className="font-bold uppercase">{client.name}</p>
+                      <p className="line-clamp-2">{client.address}</p>
                       <p>Tel: {client.phone}</p>
-                      <p>IFU: {client.ifu}</p>
-                      <p>RCCM: {client.rccm}</p>
+                      <p className="text-[7pt] md:text-[8pt]">IFU: {client.ifu} / RCCM: {client.rccm}</p>
                     </div>
                   </div>
-                   <div className="text-xs mt-2">
-                        <p><strong>Libellé:</strong> Vente de matériel médical</p>
-                   </div>
                 </header>
                 
-                <main className="flex flex-col">
-                  <table className="w-full border-collapse text-xs">
+                <main className="flex flex-col overflow-x-hidden">
+                  <table className="item-table border-collapse text-[8pt] md:text-[9pt]">
                     <thead className="bg-[#002060] text-white">
                       <tr>
-                        <th className="py-1 px-2 text-left font-bold w-[15%] border-r border-white whitespace-nowrap">REFERENCE</th>
-                        <th className="py-1 px-2 text-left font-bold w-[45%] border-r border-white">DESIGNATION</th>
-                        <th className="py-1 px-2 text-right font-bold w-[15%] border-r border-white whitespace-nowrap">PRIX U..</th>
-                        <th className="py-1 px-2 text-center font-bold w-[10%] border-r border-white">Qté</th>
-                        <th className="py-1 px-2 text-right font-bold w-[15%] whitespace-nowrap">TOTAL</th>
+                        <th className="col-ref py-1 px-1 md:px-2 text-left font-bold border-r border-white uppercase">RÉF</th>
+                        <th className="col-des py-1 px-1 md:px-2 text-left font-bold border-r border-white uppercase">DÉSIGNATION</th>
+                        <th className="col-pu py-1 px-1 md:px-2 text-right font-bold border-r border-white uppercase">PRIX U.</th>
+                        <th className="col-qty py-1 px-1 md:px-2 text-center font-bold border-r border-white uppercase">Qté</th>
+                        <th className="col-tot py-1 px-1 md:px-2 text-right font-bold uppercase">TOTAL</th>
                       </tr>
                     </thead>
                     <tbody>
                       {pageItems.map((item, index) => (
                         <tr key={index} className="border-b border-gray-400">
-                          <td className="py-1 px-2 border-l border-r border-gray-400 align-middle whitespace-nowrap">{item.reference}</td>
-                          <td className="py-1 px-2 border-r border-gray-400 align-middle font-bold">{item.productName}</td>
-                          <td className="py-1 px-2 border-r border-gray-400 text-right align-middle whitespace-nowrap">{formatCurrency(item.unitPrice, settings.currency)}</td>
-                          <td className="py-1 px-2 border-r border-gray-400 text-center align-middle whitespace-nowrap">{item.quantity}</td>
-                          <td className="py-1 px-2 border-r border-gray-400 text-right align-middle font-semibold whitespace-nowrap">{formatCurrency(item.total, settings.currency)}</td>
+                          <td className="py-1 px-1 md:px-2 border-l border-r border-gray-400 align-middle truncate">{item.reference}</td>
+                          <td className="py-1 px-1 md:px-2 border-r border-gray-400 align-middle font-bold uppercase truncate">{item.productName}</td>
+                          <td className="py-1 px-1 md:px-2 border-r border-gray-400 text-right align-middle tabular-nums">{formatCurrency(item.unitPrice, settings.currency)}</td>
+                          <td className="py-1 px-1 md:px-2 border-r border-gray-400 text-center align-middle">{item.quantity}</td>
+                          <td className="py-1 px-1 md:px-2 border-r border-gray-400 text-right align-middle font-semibold tabular-nums">{formatCurrency(item.total, settings.currency)}</td>
                         </tr>
                       ))}
                       {isLastPage && emptyRowsCount > 0 && Array.from({ length: emptyRowsCount }).map((_, index) => (
                         <tr key={`empty-${index}`} className="border-b border-gray-400">
-                          <td className="py-1 px-2 border-l border-r border-gray-400">&nbsp;</td>
-                          <td className="py-1 px-2 border-r border-gray-400"></td>
-                          <td className="py-1 px-2 border-r border-gray-400"></td>
-                          <td className="py-1 px-2 border-r border-gray-400"></td>
-                          <td className="py-1 px-2 border-r border-gray-400"></td>
+                          <td className="py-1 px-1 md:px-2 border-l border-r border-gray-400">&nbsp;</td>
+                          <td className="py-1 px-1 md:px-2 border-r border-gray-400"></td>
+                          <td className="py-1 px-1 md:px-2 border-r border-gray-400"></td>
+                          <td className="py-1 px-1 md:px-2 border-r border-gray-400"></td>
+                          <td className="py-1 px-1 md:px-2 border-r border-gray-400"></td>
                         </tr>
                       ))}
                     </tbody>
@@ -160,47 +176,47 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
 
                 {isLastPage && (
                     <div className="no-break mt-4">
-                        <div className="flex justify-end text-xs">
-                            <div className="w-3/5 space-y-1">
-                                <table className="w-full border-collapse text-xs">
+                        <div className="flex justify-end">
+                            <div className="total-box w-full max-w-[280px]">
+                                <table className="total-table border-collapse text-[8pt] md:text-[9pt] border-2 border-black">
                                     <tbody>
-                                        <tr className="border border-gray-400">
-                                            <td className="p-1 pr-2 font-bold whitespace-nowrap">SOUS-TOTAL:</td>
-                                            <td className="p-1 text-right font-semibold whitespace-nowrap">{formatCurrency(quote.subTotal, settings.currency)}</td>
+                                        <tr className="border-b border-gray-300">
+                                            <td className="p-1 pr-2 font-bold uppercase w-1/2">SOUS-TOTAL:</td>
+                                            <td className="p-1 text-right font-semibold tabular-nums w-1/2">{formatCurrency(quote.subTotal, settings.currency)}</td>
                                         </tr>
-                                        <tr className="border border-gray-400">
-                                            <td className="p-1 pr-2 font-bold whitespace-nowrap">REMISE {quote.discount}%:</td>
-                                            <td className="p-1 text-right font-semibold whitespace-nowrap">{formatCurrency(quote.discountAmount, settings.currency)}</td>
+                                        <tr className="border-b border-gray-300">
+                                            <td className="p-1 pr-2 uppercase">REMISE {quote.discount}%:</td>
+                                            <td className="p-1 text-right font-semibold tabular-nums">-{formatCurrency(quote.discountAmount, settings.currency)}</td>
                                         </tr>
-                                        <tr className="border border-gray-400">
-                                            <td className="p-1 pr-2 font-bold whitespace-nowrap">TVA {quote.vat}%:</td>
-                                            <td className="p-1 text-right font-semibold whitespace-nowrap">{formatCurrency(quote.vatAmount, settings.currency)}</td>
+                                        <tr className="border-b border-gray-300">
+                                            <td className="p-1 pr-2 uppercase">TVA {quote.vat}%:</td>
+                                            <td className="p-1 text-right font-semibold tabular-nums">+{formatCurrency(quote.vatAmount, settings.currency)}</td>
                                         </tr>
-                                        <tr className="border border-gray-400 font-semibold">
-                                            <td className="p-1 pr-2 whitespace-nowrap">TOTAL TTC:</td>
-                                            <td className="p-1 text-right font-semibold whitespace-nowrap">{formatCurrency(quote.totalAmount, settings.currency)}</td>
+                                        <tr className="border-b border-black font-bold">
+                                            <td className="p-1 pr-2 uppercase">TOTAL TTC:</td>
+                                            <td className="p-1 text-right font-semibold tabular-nums">{formatCurrency(quote.totalAmount, settings.currency)}</td>
                                         </tr>
-                                        <tr className="border border-gray-400">
-                                            <td className="p-1 pr-2 font-bold text-black whitespace-nowrap">RETENUE {retenue}%:</td>
-                                            <td className="p-1 text-right font-semibold whitespace-nowrap">-{formatCurrency(retenueAmount, settings.currency)}</td>
+                                        <tr className="border-b border-gray-300 text-destructive">
+                                            <td className="p-1 pr-2 font-bold uppercase">RETENUE {retenue}%:</td>
+                                            <td className="p-1 text-right font-semibold tabular-nums">-{formatCurrency(retenueAmount, settings.currency)}</td>
                                         </tr>
-                                        <tr className="border border-gray-400 bg-gray-200 font-bold">
-                                            <td className="p-1 pr-2 whitespace-nowrap">NET A PAYER:</td>
-                                            <td className="p-1 text-right font-semibold whitespace-nowrap">{formatCurrency(netAPayer, settings.currency)}</td>
+                                        <tr className="border border-gray-400 bg-gray-900 text-white font-black">
+                                            <td className="p-1.5 pr-2 uppercase text-[9pt] md:text-[10pt]">NET À PAYER:</td>
+                                            <td className="p-1.5 text-right font-black tabular-nums text-[10pt] md:text-[11pt]">{formatCurrency(netAPayer, settings.currency)}</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                         
-                        <div className="flex justify-between items-baseline mt-4 text-xs">
-                           <div className="w-2/5 text-center">
+                        <div className="flex justify-between items-baseline mt-4 text-[8pt] md:text-[9pt] gap-4">
+                           <div className="w-1/3 text-center">
                                <div className="mt-12 border-b-2 border-gray-400"></div>
-                               <p className="font-bold mt-1">{settings.managerName}</p>
+                               <p className="font-bold mt-1 uppercase text-[7pt] md:text-[8pt]">{settings.managerName}</p>
                            </div>
-                           <div className="w-3/5 pl-4">
-                                <p className="font-semibold">Arrêtée la présente proforma à la somme de :</p>
-                                <p className="italic">{totalInWordsString}</p>
+                           <div className="w-2/3 pl-4">
+                                <p className="font-semibold underline">Arrêtée la présente proforma à la somme de :</p>
+                                <p className="italic font-medium text-[9pt] uppercase tracking-tight text-[#002060]">{totalInWordsString}</p>
                            </div>
                         </div>
                     </div>
@@ -208,9 +224,10 @@ export function DetailedQuoteTemplate({ quote, client, settings }: { quote: Quot
               
                 <div className="flex-grow" />
 
-                <footer className="text-center text-gray-700 text-[7pt] border-t-2 border-[#002060] pt-1 mt-4">
-                 <p className="leading-tight">Ouagadougou secteur 07 RCCM: BF-OUA-01-2023-B12-07959 IFU: 00205600T</p>
-                 <p className="leading-tight">CMF N° 10001-010614200107 Tel: 25465512 / 70150699 / 76778393 E-mail: dlgbiomed@gmail.com</p>
+                <footer className="text-center text-gray-700 text-[7pt] border-t-2 border-[#002060] pt-1 mt-4 mb-2 shrink-0">
+                 <p className="leading-tight truncate">RCCM: {settings.companyRccm} | IFU: {settings.companyIfu}</p>
+                 <p className="leading-tight truncate">Siège : {settings.companyAddress} | Tel: {settings.companyPhone}</p>
+                 <p className="italic">Généré par BizBook Management Suite</p>
               </footer>
               </div>
             </div>
