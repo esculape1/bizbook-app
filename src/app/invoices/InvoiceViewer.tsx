@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Invoice, Client, Settings } from '@/lib/types';
@@ -6,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Printer } from 'lucide-react';
 import { DeliverySlipDialog } from './DeliverySlipDialog';
 import { ShippingLabelsDialog } from './ShippingLabelsDialog';
-import { ResponsiveA4Wrapper } from '@/components/ResponsiveA4Wrapper';
 
 type InvoiceViewerProps = {
   invoice: Invoice;
@@ -19,8 +19,7 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
     const content = document.getElementById('invoice-content');
     if (content) {
       const printWindow = window.open('', '_blank');
-      const suggestedFilename = `FACTURE-${invoice.invoiceNumber}`;
-      printWindow?.document.write(`<html><head><title>${suggestedFilename}</title>`);
+      printWindow?.document.write('<html><head><title>Impression Facture</title>');
       Array.from(document.styleSheets).forEach(styleSheet => {
         try {
           if (styleSheet.href) {
@@ -28,48 +27,27 @@ export function InvoiceViewer({ invoice, client, settings }: InvoiceViewerProps)
           } else if (styleSheet.cssRules) {
             printWindow?.document.write(`<style>${Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('')}</style>`);
           }
-        } catch (e) {
-          console.warn('Could not read stylesheet for printing', e);
-        }
+        } catch (e) {}
       });
-      printWindow?.document.write('<body class="p-0 m-0">');
+      printWindow?.document.write('</head><body>');
       printWindow?.document.write(content.innerHTML);
       printWindow?.document.write('</body></html>');
       printWindow?.document.close();
-      setTimeout(() => {
-        printWindow?.print();
-      }, 500);
+      setTimeout(() => printWindow?.print(), 500);
     }
   };
 
   return (
-    <div className="flex flex-col items-center gap-6 max-w-5xl mx-auto w-full pb-20">
-        {/* Actions au sommet */}
-        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4 px-4 mt-2">
-            <DeliverySlipDialog invoice={invoice} client={client} settings={settings} />
-            <Button 
-                onClick={handlePrint} 
-                size="lg" 
-                className="w-full h-14 text-lg font-black uppercase tracking-tight shadow-xl shadow-primary/20 bg-primary hover:bg-primary/90 transition-all active:scale-95"
-            >
-                <Printer className="mr-3 h-6 w-6" />
-                Imprimer la facture
-            </Button>
-        </div>
-
-        <div className="flex justify-center w-full px-4">
+    <div className="flex flex-col gap-6">
+        <div className="flex justify-between items-center bg-card p-4 rounded-lg border shadow-sm sticky top-0 z-10">
+            <div className="flex gap-2">
+                <Button onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> Imprimer</Button>
+                <DeliverySlipDialog invoice={invoice} client={client} settings={settings} />
+            </div>
             <ShippingLabelsDialog invoice={invoice} client={client} settings={settings} asTextButton />
         </div>
-
-        {/* Zone de prévisualisation avec ResponsiveA4Wrapper */}
-        <div className="w-full px-2">
-            <div className="bg-muted/30 rounded-[2rem] p-2 md:p-10 border-2 border-dashed border-primary/10 shadow-inner overflow-hidden">
-                <ResponsiveA4Wrapper>
-                    <div className="shadow-2xl mx-auto overflow-hidden rounded-sm ring-1 ring-black/5 bg-white">
-                        <DetailedTemplate invoice={invoice} client={client} settings={settings} />
-                    </div>
-                </ResponsiveA4Wrapper>
-            </div>
+        <div className="bg-white p-4 md:p-8 rounded-lg border shadow-lg overflow-auto">
+            <DetailedTemplate invoice={invoice} client={client} settings={settings} />
         </div>
     </div>
   );

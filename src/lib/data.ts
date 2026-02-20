@@ -3,7 +3,7 @@ import { db } from './firebase-admin';
 import type { Client, Product, Invoice, Expense, Settings, Quote, Supplier, Purchase, UserWithPassword, ClientOrder } from './types';
 
 /**
- * RÉCUPÉRATION DES DONNÉES DEPUIS FIRESTORE AVEC OPTIMISATION DES QUOTAS
+ * RÉCUPÉRATION DES DONNÉES DEPUIS FIRESTORE
  */
 
 export async function getUserByEmail(email: string): Promise<UserWithPassword | null> {
@@ -135,13 +135,9 @@ export async function deleteQuote(id: string) {
   await db.collection('quotes').doc(id).delete();
 }
 
-export async function getInvoices(startDate?: string): Promise<Invoice[]> {
+export async function getInvoices(): Promise<Invoice[]> {
   if (!db) return [];
-  let query = db.collection('invoices').orderBy('date', 'desc');
-  if (startDate) {
-    query = query.where('date', '>=', startDate);
-  }
-  const snap = await query.get();
+  const snap = await db.collection('invoices').orderBy('date', 'desc').get();
   return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Invoice));
 }
 
@@ -217,13 +213,9 @@ export async function getPurchaseById(id: string): Promise<Purchase | null> {
   return { id: doc.id, ...doc.data() } as Purchase;
 }
 
-export async function getExpenses(startDate?: string): Promise<Expense[]> {
+export async function getExpenses(): Promise<Expense[]> {
   if (!db) return [];
-  let query = db.collection('expenses').orderBy('date', 'desc');
-  if (startDate) {
-    query = query.where('date', '>=', startDate);
-  }
-  const snap = await query.get();
+  const snap = await db.collection('expenses').orderBy('date', 'desc').get();
   return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Expense));
 }
 
@@ -292,31 +284,16 @@ export async function updateSettings(data: Partial<Settings>) {
   await db.collection('settings').doc('global').set(data, { merge: true });
 }
 
-/**
- * Calcule les statistiques du tableau de bord à partir de données déjà chargées
- * pour éviter les lectures Firestore inutiles.
- * Utilise désormais le Net à Payer pour le CA et les alertes.
- */
 export function calculateDashboardStats(
   invoices: Invoice[], 
   expenses: Expense[], 
   clients: Client[], 
-  products: Product[],
-  fiscalYearStartDate: string
+  products: Product[]
 ) {
-  const invoicesForFiscalYear = invoices.filter(inv => 
-    inv.date >= fiscalYearStartDate && inv.status !== 'Cancelled'
-  );
-
-  const expensesForFiscalYear = expenses.filter(exp => 
-    exp.date >= fiscalYearStartDate
-  );
-
-  const totalRevenue = invoicesForFiscalYear.reduce((sum, i) => sum + (i.netAPayer ?? i.totalAmount), 0);
-  const totalExpenses = expensesForFiscalYear.reduce((sum, e) => sum + e.amount, 0);
-
   const activeInvoices = invoices.filter(i => i.status !== 'Cancelled');
-  const totalDue = activeInvoices.reduce((sum, i) => sum + ((i.netAPayer ?? i.totalAmount) - (i.amountPaid || 0)), 0);
+  const totalRevenue = activeInvoices.reduce((sum, i) => sum + i.totalAmount, 0);
+  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const totalDue = activeInvoices.reduce((sum, i) => sum + (i.totalAmount - (i.amountPaid || 0)), 0);
   const unpaidInvoicesCount = activeInvoices.filter(i => i.status === 'Unpaid' || i.status === 'Partially Paid').length;
 
   return {
@@ -330,29 +307,15 @@ export function calculateDashboardStats(
   };
 }
 
-// Fonction optimisée pour le tableau de bord
 export async function getDashboardStats() {
   if (!db) return null;
   
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  let fiscalYearStartDate: Date;
-
-  if (now.getMonth() < 11 || (now.getMonth() === 11 && now.getDate() < 25)) {
-    fiscalYearStartDate = new Date(currentYear - 1, 11, 25, 0, 0, 0, 0);
-  } else {
-    fiscalYearStartDate = new Date(currentYear, 11, 25, 0, 0, 0, 0);
-  }
-
-  const startDateIso = fiscalYearStartDate.toISOString();
-
-  // On récupère tout en une fois pour économiser les lectures
   const [invoices, expenses, clients, products] = await Promise.all([
-    getInvoices(), // Pour le recouvrement on a besoin de tout
-    getExpenses(startDateIso),
+    getInvoices(),
+    getExpenses(),
     getClients(),
     getProducts()
   ]);
 
-  return calculateDashboardStats(invoices, expenses, clients, products, startDateIso);
+  return calculateDashboardStats(invoices, expenses, clients, products);
 }

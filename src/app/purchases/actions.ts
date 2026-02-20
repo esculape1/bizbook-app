@@ -3,7 +3,6 @@
 
 import { z } from 'zod';
 import { db } from '@/lib/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
 import {
   addPurchase,
   getSuppliers,
@@ -41,36 +40,25 @@ export async function createPurchase(formData: unknown) {
   }
 
   const validatedFields = purchaseSchema.safeParse(formData);
-  if (!validatedFields.success) {
-    return { message: 'Champs invalides. Impossible de créer l\'achat.' };
-  }
+  if (!validatedFields.success) return { message: 'Champs invalides.' };
 
   try {
     const { supplierId, date, items, transportCost, otherFees, premierVersement, deuxiemeVersement } = validatedFields.data;
-    
     const suppliers = await getSuppliers();
-    const products = await getProducts();
-
     const supplier = suppliers.find(s => s.id === supplierId);
-    if (!supplier) {
-      return { message: 'Fournisseur non trouvé.' };
-    }
+    if (!supplier) return { message: 'Fournisseur non trouvé.' };
     
-    const purchaseItems: PurchaseItem[] = items.map(item => {
-      const product = products.find(p => p.id === item.productId);
-      if (!product) throw new Error(`Produit non trouvé: ${item.productId}`);
-      return {
+    const purchaseItems: PurchaseItem[] = items.map(item => ({
         productId: item.productId,
-        productName: product.name,
-        reference: product.reference,
+        productName: item.productName,
+        reference: item.reference,
         quantity: item.quantity,
-      };
-    });
+    }));
 
     const totalAmount = premierVersement + deuxiemeVersement + transportCost + otherFees;
 
-    const newPurchaseData: Omit<Purchase, 'id'> = {
-        purchaseNumber: '', // Sera généré par addPurchase
+    await addPurchase({
+        purchaseNumber: '',
         supplierId,
         supplierName: supplier.name,
         date: date.toISOString(),
@@ -81,76 +69,13 @@ export async function createPurchase(formData: unknown) {
         otherFees,
         totalAmount,
         status: 'Pending',
-    };
-    
-    await addPurchase(newPurchaseData);
+    });
 
     revalidateTag('purchases');
-    revalidateTag('products');
     revalidateTag('dashboard-stats');
     return {};
   } catch (error) {
-    console.error('Failed to create purchase:', error);
-    const message = error instanceof Error ? error.message : 'Erreur DB: Impossible de créer l\'achat.';
-    return { message };
-  }
-}
-
-export async function updatePurchase(id: string, purchaseNumber: string, formData: unknown) {
-  const session = await getSession();
-  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
-    return { message: "Action non autorisée." };
-  }
-
-  const validatedFields = purchaseSchema.safeParse(formData);
-
-  if (!validatedFields.success) {
-    return { message: 'Champs invalides. Impossible de mettre à jour l\'achat.' };
-  }
-  
-  try {
-    const { supplierId, date, items, premierVersement, deuxiemeVersement, transportCost, otherFees } = validatedFields.data;
-    
-    const [originalPurchase, suppliers] = await Promise.all([
-      getPurchaseById(id),
-      getSuppliers()
-    ]);
-    
-    if (!originalPurchase) return { message: 'Achat original non trouvé.' };
-    if (originalPurchase.status === 'Cancelled') {
-      return { message: 'Les achats annulés ne peuvent pas être modifiés.' };
-    }
-
-    const supplier = suppliers.find(c => c.id === supplierId);
-    if (!supplier) return { message: 'Fournisseur non trouvé.' };
-
-    const purchaseItems: PurchaseItem[] = items.map(item => {
-      return { productId: item.productId, productName: item.productName, reference: item.reference, quantity: item.quantity };
-    });
-    
-    const totalAmount = premierVersement + deuxiemeVersement + transportCost + otherFees;
-
-    const purchaseUpdateData: Partial<Omit<Purchase, 'id'>> = {
-      purchaseNumber,
-      supplierId,
-      supplierName: supplier.name,
-      date: date.toISOString(),
-      items: purchaseItems,
-      premierVersement,
-      deuxiemeVersement,
-      transportCost,
-      otherFees,
-      totalAmount,
-    };
-    
-    await updatePurchaseInDB(id, purchaseUpdateData);
-
-    revalidateTag('purchases');
-    return {};
-  } catch (error) {
-    console.error('Failed to update purchase:', error);
-    const message = error instanceof Error ? error.message : 'Erreur DB: Impossible de mettre à jour l\'achat.';
-    return { message };
+    return { message: 'Erreur technique.' };
   }
 }
 
@@ -160,62 +85,26 @@ export async function receivePurchase(id: string) {
       return { message: "Action non autorisée." };
     }
   
-    if (!db) throw new Error("La connexion à la base de données a échoué.");
-  
     try {
       const purchase = await getPurchaseById(id);
-      
-      if (!purchase) return { message: 'Achat non trouvé.' };
-      if (purchase.status === 'Received') return { message: 'Cet achat a déjà été réceptionné.' };
-      if (purchase.status === 'Cancelled') return { message: 'Cet achat est annulé et ne peut être réceptionné.' };
+      if (!purchase || purchase.status === 'Received') return { message: 'Invalide.' };
   
-      await db.runTransaction(async (transaction) => {
-        const purchaseRef = db.collection('purchases').doc(id);
-        
-        const productRefs = purchase.items.map(item => db.collection('products').doc(item.productId));
-        const productDocs = await transaction.getAll(...productRefs);
-        const productMap = new Map(productDocs.map(doc => [doc.id, doc.data() as Product]));
-
-        transaction.update(purchaseRef, { status: 'Received' });
-
-        for (const item of purchase.items) {
-          const productRef = db.collection('products').doc(item.productId);
-          const product = productMap.get(item.productId);
-          
-          if (product) {
-            const stockUpdate: { quantityInStock: FirebaseFirestore.FieldValue, purchasePrice?: number } = { 
-                quantityInStock: FieldValue.increment(item.quantity) 
-            };
-            
-            const totalItemsInPurchase = purchase.items.reduce((sum, i) => sum + i.quantity, 0);
-            if (totalItemsInPurchase > 0) {
-              const landedCostPerUnitInPurchase = purchase.totalAmount / totalItemsInPurchase;
-              const newItemsValue = landedCostPerUnitInPurchase * item.quantity;
-              const oldStockValue = (product.purchasePrice || 0) * (product.quantityInStock);
-              const newTotalStock = product.quantityInStock + item.quantity;
-              
-              if (newTotalStock > 0) {
-                const newAveragePurchasePrice = (oldStockValue + newItemsValue) / newTotalStock;
-                if (isFinite(newAveragePurchasePrice) && newAveragePurchasePrice > 0) {
-                    stockUpdate.purchasePrice = newAveragePurchasePrice;
-                }
-              }
-            }
-            
-            transaction.update(productRef, stockUpdate);
-          }
+      const products = await getProducts();
+      for (const item of purchase.items) {
+        const product = products.find(p => p.id === item.productId);
+        if (product) {
+          const newStock = product.quantityInStock + item.quantity;
+          await updateProduct(item.productId, { quantityInStock: newStock });
         }
-      });
-  
+      }
+
+      await updatePurchaseInDB(id, { status: 'Received' });
       revalidateTag('purchases');
       revalidateTag('products');
       revalidateTag('dashboard-stats');
       return { success: true };
-  
     } catch (error) {
-      console.error('Failed to receive purchase:', error);
-      const message = error instanceof Error ? error.message : 'Erreur DB: Impossible de réceptionner l\'achat.';
-      return { success: false, message };
+      return { success: false, message: "Erreur." };
     }
 }
 
@@ -226,38 +115,11 @@ export async function cancelPurchase(id: string) {
   }
 
   try {
-    const purchaseToCancel = await getPurchaseById(id);
-    if (!purchaseToCancel) throw new Error("Achat non trouvé.");
-
-    if (purchaseToCancel.status === 'Cancelled') {
-      return { success: false, message: 'Cet achat est déjà annulé.' };
-    }
-    
-    if (purchaseToCancel.status === 'Received' && db) {
-        const batch = db.batch();
-        const purchaseRef = db.collection('purchases').doc(id);
-        
-        // Déduction du stock lors de l'annulation d'un achat déjà réceptionné
-        for (const item of purchaseToCancel.items) {
-            const productRef = db.collection('products').doc(item.productId);
-            batch.update(productRef, {
-                quantityInStock: FieldValue.increment(-item.quantity)
-            });
-        }
-        
-        batch.update(purchaseRef, { status: 'Cancelled' });
-        await batch.commit();
-    } else {
-        await updatePurchaseInDB(id, { status: 'Cancelled' });
-    }
-
+    await updatePurchaseInDB(id, { status: 'Cancelled' });
     revalidateTag('purchases');
-    revalidateTag('products');
     revalidateTag('dashboard-stats');
     return { success: true };
   } catch (error) {
-    console.error("Échec de l'annulation de l'achat:", error);
-    const message = error instanceof Error ? error.message : "Erreur DB: Impossible d'annuler l'achat.";
-    return { success: false, message };
+    return { success: false, message: "Erreur." };
   }
 }

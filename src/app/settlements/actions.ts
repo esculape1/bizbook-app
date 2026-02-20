@@ -51,9 +51,6 @@ const settlementPayloadSchema = z.object({
 
 type SettlementPayload = z.infer<typeof settlementPayloadSchema>;
 
-/**
- * Traite les paiements de factures en se basant sur le Net à Payer.
- */
 export async function processMultipleInvoicePayments(payload: SettlementPayload): Promise<{ success: boolean; message?: string }> {
   const session = await getSession();
   if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
@@ -88,8 +85,7 @@ export async function processMultipleInvoicePayments(payload: SettlementPayload)
     }
     
     const totalDueOnSelected = invoicesToSettle.reduce((sum, inv) => {
-        const netToPay = inv.netAPayer ?? inv.totalAmount;
-        return sum + (netToPay - (inv.amountPaid || 0));
+        return sum + (inv.totalAmount - (inv.amountPaid || 0));
     }, 0);
     
     if (paymentAmount > totalDueOnSelected + 0.01) {
@@ -102,14 +98,12 @@ export async function processMultipleInvoicePayments(payload: SettlementPayload)
         if (amountToApply <= 0) break;
 
         const invoiceRef = db.collection('invoices').doc(invoice.id);
-        const netToPay = invoice.netAPayer ?? invoice.totalAmount;
-        const dueOnInvoice = netToPay - (invoice.amountPaid || 0);
+        const dueOnInvoice = invoice.totalAmount - (invoice.amountPaid || 0);
         const paymentForThisInvoice = Math.min(amountToApply, dueOnInvoice);
 
         if (paymentForThisInvoice > 0) {
             const newAmountPaid = (invoice.amountPaid || 0) + paymentForThisInvoice;
-            // Statut 'Paid' si le montant payé atteint le Net à Payer
-            const newStatus: Invoice['status'] = newAmountPaid >= netToPay - 0.01 ? 'Paid' : 'Partially Paid';
+            const newStatus: Invoice['status'] = newAmountPaid >= invoice.totalAmount - 0.01 ? 'Paid' : 'Partially Paid';
             
             const newPayment: Payment = {
                 id: randomUUID(),
