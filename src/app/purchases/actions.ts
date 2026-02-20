@@ -79,6 +79,51 @@ export async function createPurchase(formData: unknown) {
   }
 }
 
+export async function updatePurchase(id: string, purchaseNumber: string, formData: unknown) {
+  const session = await getSession();
+  if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {
+    return { message: "Action non autorisée." };
+  }
+
+  const validatedFields = purchaseSchema.safeParse(formData);
+  if (!validatedFields.success) return { message: 'Champs invalides.' };
+
+  try {
+    const { supplierId, date, items, transportCost, otherFees, premierVersement, deuxiemeVersement } = validatedFields.data;
+    const suppliers = await getSuppliers();
+    const supplier = suppliers.find(s => s.id === supplierId);
+    if (!supplier) return { message: 'Fournisseur non trouvé.' };
+
+    const purchaseItems: PurchaseItem[] = items.map(item => ({
+        productId: item.productId,
+        productName: item.productName,
+        reference: item.reference,
+        quantity: item.quantity,
+    }));
+
+    const totalAmount = premierVersement + deuxiemeVersement + transportCost + otherFees;
+
+    await updatePurchaseInDB(id, {
+        purchaseNumber,
+        supplierId,
+        supplierName: supplier.name,
+        date: date.toISOString(),
+        items: purchaseItems,
+        premierVersement,
+        deuxiemeVersement,
+        transportCost,
+        otherFees,
+        totalAmount,
+    });
+
+    revalidateTag('purchases');
+    revalidateTag('dashboard-stats');
+    return {};
+  } catch (error) {
+    return { message: 'Erreur technique lors de la mise à jour.' };
+  }
+}
+
 export async function receivePurchase(id: string) {
     const session = await getSession();
     if (session?.role !== ROLES.ADMIN && session?.role !== ROLES.SUPER_ADMIN) {

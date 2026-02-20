@@ -291,10 +291,19 @@ export function calculateDashboardStats(
   products: Product[]
 ) {
   const activeInvoices = invoices.filter(i => i.status !== 'Cancelled');
-  const totalRevenue = activeInvoices.reduce((sum, i) => sum + i.totalAmount, 0);
+  
+  // Utilisation systématique du netAPayer pour le CA et le reste dû
+  const totalRevenue = activeInvoices.reduce((sum, i) => sum + (i.netAPayer ?? i.totalAmount), 0);
   const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const totalDue = activeInvoices.reduce((sum, i) => sum + (i.totalAmount - (i.amountPaid || 0)), 0);
-  const unpaidInvoicesCount = activeInvoices.filter(i => i.status === 'Unpaid' || i.status === 'Partially Paid').length;
+  const totalDue = activeInvoices.reduce((sum, i) => {
+      const net = i.netAPayer ?? i.totalAmount;
+      return sum + (net - (i.amountPaid || 0));
+  }, 0);
+  
+  const unpaidInvoicesCount = activeInvoices.filter(i => {
+      const net = i.netAPayer ?? i.totalAmount;
+      return i.amountPaid < net - 0.05 && (i.status === 'Unpaid' || i.status === 'Partially Paid');
+  }).length;
 
   return {
     totalRevenue,
