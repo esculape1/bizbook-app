@@ -7,179 +7,134 @@ import Image from 'next/image';
 
 export function DeliverySlipTemplate({ invoice, client, settings }: { invoice: Invoice, client: Client, settings: Settings }) {
   const deliverySlipNumber = `BL-${invoice.invoiceNumber}`;
-  
-  const ITEMS_PER_PAGE = 13;
-  const pages = [];
-  for (let i = 0; i < invoice.items.length; i += ITEMS_PER_PAGE) {
-    pages.push(invoice.items.slice(i, i + ITEMS_PER_PAGE));
-  }
-   if (pages.length === 0) {
-    pages.push([]);
-  }
 
   return (
     <>
       <style>{`
-        @media screen {
-          .slip-container {
-            width: 100%;
-            max-width: 100vw;
-            margin: 0 auto;
-          }
-          @media (max-width: 480px) {
-            .printable-area { font-size: 8pt !important; }
-            .text-2xl { font-size: 1.25rem !important; }
-            th, td { padding: 4px 2px !important; }
-          }
+        .slip-wrapper {
+          width: 100%;
+          max-width: 210mm;
+          margin: 0 auto;
+          background: white;
+          font-family: 'Inter', sans-serif;
+          color: black;
+          font-size: 10pt;
+          line-height: 1.2;
+          position: relative;
+          box-sizing: border-box;
         }
-        @media print {
-          @page {
-            size: A4;
-            margin: 0;
-          }
-          body {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-          .page-container:not(:last-child) {
-             page-break-after: always;
-          }
+        .blue-bar {
+          position: absolute;
+          top: 0;
+          left: 0;
+          height: 100%;
+          width: 6mm;
+          background-color: #002060;
         }
-        .item-table { table-layout: fixed; width: 100%; }
-        .col-des { width: 40%; }
+        .content-inner {
+          padding: 10mm 10mm 15mm 15mm;
+          min-height: 297mm;
+          display: flex;
+          flex-direction: column;
+        }
+        .item-table { width: 100%; table-layout: fixed; border-collapse: collapse; }
+        .item-table th { background-color: #002060; color: white; padding: 6px 4px; font-weight: 900; font-size: 8pt; text-transform: uppercase; }
+        .item-table td { border-bottom: 1px solid #e5e7eb; padding: 10px 4px; vertical-align: middle; font-size: 9pt; }
+        
+        .col-des { width: 45%; }
         .col-qty-cmd { width: 15%; }
         .col-qty-liv { width: 15%; }
-        .col-obs { width: 30%; }
+        .col-obs { width: 25%; }
+
+        @media (max-width: 480px) {
+          .slip-wrapper { font-size: 8.5pt; }
+          .content-inner { padding: 8mm 5mm 10mm 10mm; }
+          .item-table td { font-size: 7.5pt; padding: 6px 2px; }
+          .item-table th { font-size: 6.5pt; }
+        }
+
+        @media print {
+          .slip-wrapper { max-width: none; width: 210mm; box-shadow: none; margin: 0; }
+          .blue-bar { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .item-table th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
       `}</style>
-      <div id="delivery-slip-content" className="slip-container bg-white text-black font-sans text-[10pt] leading-tight printable-area">
-        {pages.map((pageItems, pageIndex) => {
-          const isLastPage = pageIndex === pages.length - 1;
-          const emptyRowsCount = isLastPage ? ITEMS_PER_PAGE - pageItems.length : 0;
 
-          return (
-            <div
-              key={pageIndex}
-              className="page-container bg-white relative mx-auto w-full max-w-[210mm]"
-              style={{
-                minHeight: '297mm',
-                display: 'flex',
-                flexDirection: 'column',
-                boxSizing: 'border-box',
-                padding: '14mm 10mm 20mm 10mm',
-              }}
-            >
-              {/* Blue sidebar */}
-              <div className="absolute top-0 left-0 h-full w-[8mm] bg-[#002060]"></div>
-              
-              <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  flexGrow: 1,
-                  paddingLeft: '5mm',
-              }}>
-                {/* Header */}
-                <header className="mb-4">
-                  <div className="flex justify-between items-start gap-2">
-                      {/* Left Part: Logo & Title */}
-                      <div className="flex-1">
-                          {settings.logoUrl && (
-                              <Image 
-                                  src={settings.logoUrl} 
-                                  alt={`${settings.companyName} logo`} 
-                                  width={80}
-                                  height={40} 
-                                  className="object-contain"
-                                  data-ai-hint="logo"
-                              />
-                          )}
-                           <h1 className="text-xl md:text-2xl font-bold text-[#1f4e78] mt-2">BORDEREAU DE LIVRAISON</h1>
-                      </div>
+      <div id="delivery-slip-content" className="slip-wrapper">
+        <div className="blue-bar"></div>
+        <div className="content-inner">
+          <header className="flex justify-between items-start mb-6">
+            <div className="flex-1">
+              {settings.logoUrl && (
+                <Image src={settings.logoUrl} alt="Logo" width={80} height={40} className="object-contain" data-ai-hint="logo" />
+              )}
+              <h1 className="text-xl md:text-2xl font-black text-[#1f4e78] mt-2 tracking-tight uppercase">BORDEREAU DE LIVRAISON</h1>
+            </div>
+            <div className="text-right font-bold text-[8pt] md:text-[9pt] shrink-0">
+              <p>DATE: {format(new Date(invoice.date), 'dd/MM/yyyy', { locale: fr })}</p>
+              <p>N°: {deliverySlipNumber}</p>
+            </div>
+          </header>
 
-                      {/* Right Part: Date & Invoice Number */}
-                      <div className="text-right text-[8pt] md:text-[9pt] font-bold shrink-0">
-                          <p>DATE: {format(new Date(invoice.date), 'dd/MM/yyyy', { locale: fr })}</p>
-                          <p>N°: {deliverySlipNumber}</p>
-                      </div>
-                  </div>
+          <div className="flex justify-between items-start mb-8 gap-4 text-[8pt] md:text-[9pt]">
+            <div className="flex-1 border-l-2 border-[#1f4e78] pl-2">
+              <p className="font-black text-[#1f4e78] uppercase mb-1">Émetteur</p>
+              <p className="font-bold">{settings.legalName || settings.companyName}</p>
+              <p className="line-clamp-2">{settings.companyAddress}</p>
+              <p>Tel: {settings.companyPhone}</p>
+              <p className="text-[7pt] opacity-70">IFU: {settings.companyIfu} / RCCM: {settings.companyRccm}</p>
+            </div>
+            <div className="flex-1 border-l-2 border-[#1f4e78] pl-2">
+              <p className="font-black text-[#1f4e78] uppercase mb-1 underline">Client</p>
+              <p className="font-black uppercase">{client.name}</p>
+              <p className="italic line-clamp-2">{client.address || '-'}</p>
+              <p>Tel: {client.phone || '-'}</p>
+            </div>
+          </div>
 
-                  <div className="flex justify-between items-start mt-4 text-[8pt] md:text-[9pt] gap-4">
-                    {/* Company Info */}
-                    <div className="flex-1">
-                      <p className="font-bold text-[#1f4e78] uppercase border-b border-[#1f4e78] mb-1 pb-0.5">Émetteur</p>
-                      <p className="font-bold">{settings.legalName || settings.companyName}</p>
-                      <p className="line-clamp-2">{settings.companyAddress}</p>
-                      <p>Tél: {settings.companyPhone}</p>
-                      <p className="text-[7pt] md:text-[8pt]">IFU: {settings.companyIfu} / RCCM: {settings.companyRccm}</p>
-                    </div>
+          <main className="flex-grow">
+            <table className="item-table">
+              <thead>
+                <tr>
+                  <th className="col-des text-left">DÉSIGNATION</th>
+                  <th className="col-qty-cmd text-center">QTÉ CMD.</th>
+                  <th className="col-qty-liv text-center">QTÉ LIV.</th>
+                  <th className="col-obs text-center">OBSERVATIONS</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoice.items.map((item, index) => (
+                  <tr key={index}>
+                    <td className="font-bold text-[#002060] uppercase truncate">{item.productName}</td>
+                    <td className="text-center font-bold">{item.quantity}</td>
+                    <td className="text-center border-x border-gray-100"></td>
+                    <td className="text-center"></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </main>
 
-                    {/* Client Info */}
-                    <div className="flex-1">
-                      <p className="font-bold underline uppercase border-b border-[#1f4e78] mb-1 pb-0.5">Client</p>
-                      <p className="font-bold uppercase">{client.name}</p>
-                      <p className="line-clamp-2">{client.address}</p>
-                      <p>Tel: {client.phone}</p>
-                    </div>
-                  </div>
-                </header>
-                
-                <main className="flex-grow flex flex-col overflow-x-hidden">
-                  <div className="flex-grow">
-                    <table className="item-table border-collapse text-[8pt] md:text-[9pt]">
-                      <thead className="bg-[#002060] text-white">
-                          <tr>
-                              <th className="col-des py-1.5 px-1 md:px-2 text-left font-bold border-r border-white/20 uppercase">DÉSIGNATION</th>
-                              <th className="col-qty-cmd py-1.5 px-1 md:px-2 text-center font-bold border-r border-white/20 uppercase">QTÉ CMD.</th>
-                              <th className="col-qty-liv py-1.5 px-1 md:px-2 text-center font-bold border-r border-white/20 uppercase">QTÉ LIV.</th>
-                              <th className="col-obs py-1.5 px-1 md:px-2 text-center font-bold uppercase">OBSERVATIONS</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          {pageItems.map((item, index) => (
-                            <tr key={index} className="border-b border-gray-400">
-                                <td className="py-1.5 px-1 md:px-2 border-l border-r border-gray-400 align-middle font-bold uppercase truncate">{item.productName}</td>
-                                <td className="py-1.5 px-1 md:px-2 border-r border-gray-400 text-center align-middle">{item.quantity}</td>
-                                <td className="py-1.5 px-1 md:px-2 border-r border-gray-400 text-center align-middle"></td>
-                                <td className="py-1.5 px-1 md:px-2 border-r border-gray-400 text-center align-middle"></td>
-                            </tr>
-                          ))}
-                          {isLastPage && emptyRowsCount > 0 && Array.from({ length: emptyRowsCount }).map((_, index) => (
-                          <tr key={`empty-${index}`} className="border-b border-gray-400">
-                              <td className="py-1.5 px-1 md:px-2 border-l border-r border-gray-400">&nbsp;</td>
-                              <td className="py-1.5 px-1 md:px-2 border-r border-gray-400"></td>
-                              <td className="py-1.5 px-1 md:px-2 border-r border-gray-400"></td>
-                              <td className="py-1.5 px-1 md:px-2 border-r border-gray-400"></td>
-                          </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </main>
-                
-                {/* Footer */}
-                <footer className="pt-2 mt-auto shrink-0">
-                    {isLastPage && (
-                        <div className="flex justify-between items-start mt-8 pt-4 border-t-2 border-dashed gap-4">
-                            <div className="flex-1 text-center">
-                                <p className="font-bold text-[8pt] md:text-[9pt] uppercase underline">Cachet Entreprise</p>
-                                <div className="mt-12 border-b-2 border-gray-400"></div>
-                            </div>
-                            <div className="flex-1 text-center">
-                                <p className="font-bold text-[8pt] md:text-[9pt] uppercase underline">Visa Client</p>
-                                <div className="mt-12 border-b-2 border-gray-400"></div>
-                                <p className="text-[7pt] text-gray-500 mt-1 italic">("Reçu pour le compte de")</p>
-                            </div>
-                        </div>
-                    )}
-                    
-                    <div className="text-center text-gray-700 text-[7pt] md:text-[8pt] border-t-2 border-[#002060] pt-1 mt-4">
-                        <p className="truncate">RCCM: {settings.companyRccm} | IFU: {settings.companyIfu} | {settings.companyAddress}</p>
-                        <p className="truncate">Tel: {settings.companyPhone} | E-mail: dlgbiomed@gmail.com</p>
-                    </div>
-                </footer>
+          <div className="mt-auto">
+            <div className="flex justify-between items-start mb-8 pt-6 border-t-2 border-dashed border-gray-300">
+              <div className="flex-1 text-center">
+                <p className="font-black uppercase text-[7pt] md:text-[8pt] underline mb-16">Cachet Entreprise</p>
+                <div className="border-b-2 border-gray-400 mx-4"></div>
+              </div>
+              <div className="flex-1 text-center">
+                <p className="font-black uppercase text-[7pt] md:text-[8pt] underline mb-16">Visa Client</p>
+                <div className="border-b-2 border-gray-400 mx-4"></div>
+                <p className="text-[6.5pt] text-gray-500 mt-1 italic">("Reçu pour le compte de")</p>
               </div>
             </div>
-          );
-        })}
+
+            <footer className="text-center text-gray-700 text-[7pt] md:text-[7.5pt] border-t-2 border-[#002060] pt-2">
+              <p className="font-bold">RCCM: {settings.companyRccm} | IFU: {settings.companyIfu}</p>
+              <p className="truncate">Siège : {settings.companyAddress} | Tel: {settings.companyPhone}</p>
+              <p className="italic opacity-50 mt-1">Généré par BizBook Management Suite</p>
+            </footer>
+          </div>
+        </div>
       </div>
     </>
   );

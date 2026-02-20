@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import type { Invoice, Client, Settings } from '@/lib/types';
 import { DeliverySlipTemplate } from '@/components/delivery-slip/DeliverySlipTemplate';
 import { Button } from '@/components/ui/button';
@@ -15,31 +15,6 @@ type DeliverySlipDialogProps = {
 
 export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
-  
-  const ITEMS_PER_PAGE = 13;
-  const numPages = Math.max(1, Math.ceil(invoice.items.length / ITEMS_PER_PAGE));
-
-  useEffect(() => {
-    if (isOpen) {
-      const updateScale = () => {
-        if (containerRef.current) {
-          const containerWidth = containerRef.current.clientWidth;
-          const targetWidth = 800;
-          const newScale = containerWidth / targetWidth;
-          setScale(newScale > 1 ? 1 : newScale);
-        }
-      };
-
-      const timer = setTimeout(updateScale, 100);
-      window.addEventListener('resize', updateScale);
-      return () => {
-        clearTimeout(timer);
-        window.removeEventListener('resize', updateScale);
-      };
-    }
-  }, [isOpen]);
 
   const handlePrint = () => {
     const content = document.getElementById('delivery-slip-content');
@@ -99,20 +74,9 @@ export function DeliverySlipDialog({ invoice, client, settings }: DeliverySlipDi
             </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-10 flex justify-center bg-muted/30">
-            <div ref={containerRef} className="w-full flex justify-center">
-                <div 
-                    className="origin-top transition-all duration-500 ease-out"
-                    style={{ 
-                        width: '210mm', 
-                        transform: `scale(${scale})`,
-                        height: `calc(297mm * ${numPages} * ${scale})`,
-                        backgroundColor: 'white',
-                        boxShadow: '0 20px 50px rgba(0,0,0,0.15)'
-                    }}
-                >
-                    <DeliverySlipTemplate invoice={invoice} client={client} settings={settings} />
-                </div>
+        <div className="flex-1 overflow-y-auto p-2 md:p-10 bg-muted/10">
+            <div className="max-w-[210mm] mx-auto shadow-2xl rounded-sm ring-1 ring-black/5 overflow-hidden bg-white">
+                <DeliverySlipTemplate invoice={invoice} client={client} settings={settings} />
             </div>
         </div>
       </DialogContent>
